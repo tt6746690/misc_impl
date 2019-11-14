@@ -2,11 +2,10 @@ name: misc_impl
 channels:
     - pytorch
 dependencies:
-    - python=3.8
+    - python=3.7
     - numpy
     - matplotlib
     - jupyter
     - nb_conda
-    - jupyterlab
     - pytorch
     - julia
