@@ -8,4 +8,5 @@ dependencies:
     - jupyter
     - nb_conda
     - pytorch
+    - torchvision
     - julia
