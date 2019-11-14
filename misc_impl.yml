@@ -1,0 +1,12 @@
+name: misc_impl
+channels:
+    - pytorch
+dependencies:
+    - python=3.8
+    - numpy
+    - matplotlib
+    - jupyter
+    - nb_conda
+    - jupyterlab
+    - pytorch
+    - julia
