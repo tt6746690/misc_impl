@@ -47,6 +47,15 @@
     + latent variable model 
         + VAE
         + GAN
+            + optimal discriminator (nonparametric)
+                + generator minimizes Jensen-Shannon divergence !
+            + non-saturating gradient could still misbehave in presence of good discriminator
+            + vs. MLE
+                + MLE: need to allocate density to nearby (unnatural) images, sampling might introduce blurring images
+                + GAN: learns a sharp boundary
+            + biGAN
+                + able to do posterior inference p_z|x
+
 
 
 + Generative Adversarial Networks NIPS 2016 https://www.youtube.com/watch?v=HGYYEUSm-0Q
@@ -142,7 +151,35 @@
                 + use non-saturating cost and label smoothing
     + research frontiers
         + non-convergence problem 
-            + 
+            + game solving algorithms may not approach equilibirum at all!
+            + non-convexity 
+                + G,D are non-convexity parametric functions, not densities, problem with convergence
+            + oscillation
+                + can can train for a very long time, generating many different categories of samples, without clearly generating better samples
+            + mode collapse
+                + low output diversity: G makes similar images over and over again 
+                    + somewhat explains why conditional generation works pretty well
+                + problem with simultaneous gradient descent to train G and D
+                + reverse KL loss does not explain mode collapse! (still get mode collapse for forward KL)
+                + unrolled GAN 
+        + evaluation 
+            + models with good likelhood can produce bad samples (VAE)
+            + models with good samples can have bad likelihoods
+            + models sometimes cannot evaluate likelihood (GAN)
+            + not sure how to quantify how good the samples are
+        + discrete outputs 
+            + G must be differentiable, cannot different if output is discrete 
+            + workaround
+                + REINFORCE
+                + Gumbel-softmax
+                + concrete distributions
+        + learning interpretable latent codes / controlling the generation process
+        + domain-adversarial learning for domain adaptation 
+        + robust optimization 
+        + board games
+    + conclusion 
+        + GAN are generative models that use supervised learning to approximate an intractable cost function 
+        + finding Nash equilibria in high-dimensional, continuous, non-convex games
     + questions
         + how to sample data x ~ p_x ?
             + uniform sampling most straight-forward
