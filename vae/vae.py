@@ -14,13 +14,13 @@ def batch_indices(iter):
     return slice(idx * batch_size, (idx+1) * batch_size)
 
 
-# sampler from Diagonal Gaussian x~N(μ,σ^2 I) (hint: use reparameterization trick here)
+# sampler from Diagonal Gaussian x~N(μ,σ^2 I)
 #
-def sample_gaussian(mu,logsigma2):
+def sample_gaussian(mu,logvariance):
     # http://blog.shakirm.com/2015/10/machine-learning-trick-of-the-day-4-reparameterisation-tricks/
     #
-    epsilon = torch.randn_like(logsigma2)
-    return mu + torch.exp(0.5*logsigma2)*epsilon
+    epsilon = torch.randn_like(logvariance)
+    return mu + torch.exp(0.5*logvariance)*epsilon
 
 # sampler from Bernoulli
 #
@@ -33,14 +33,14 @@ def sample_bernoulli(p):
 # mu          (batch_size, n_x)
 # log_sigma2  (batch_size, n_x)
 #
-def logpdf_gaussian(x,mu,logsigma2):
+def logpdf_gaussian(x,mu,logvariance):
     # batch dot product: https://github.com/pytorch/pytorch/issues/18027
     #
     # overflow problem fix: put 1/sigma^2 \circ (x-mu) first, ....
     #
     return (-mu.shape[-1]/2)*math.log(2*math.pi) - \
-        (1/2)*torch.sum(logsigma2,dim=1) - \
-        (1/2)*torch.sum((1/torch.exp(logsigma2))*(x-mu)*(x-mu),-1)
+        (1/2)*torch.sum(logvariance,dim=1) - \
+        (1/2)*torch.sum((1/torch.exp(logvariance))*(x-mu)*(x-mu),-1)
 
 # log-pdf of x under Bernoulli 
 #
@@ -58,15 +58,15 @@ class Encoder(nn.Module):
         
         self.fc1= nn.Linear(n_x,n_hidden)
         self.fc2_mu = nn.Linear(n_hidden,n_z)
-        self.fc2_logsigma2 = nn.Linear(n_hidden,n_z)
+        self.fc2_logvariance = nn.Linear(n_hidden,n_z)
         
     def forward(self,x):
         
         h = torch.tanh(self.fc1(x))
         mu = self.fc2_mu(h)
-        logsigma2 = self.fc2_logsigma2(h)
+        logvariance = self.fc2_logvariance(h)
         
-        return mu, logsigma2
+        return mu, logvariance
     
 
 class StochasticLayer(nn.Module):
@@ -75,8 +75,8 @@ class StochasticLayer(nn.Module):
         super(StochasticLayer, self).__init__()
         pass
     
-    def forward(self,mu,logsigma2):
-        z = sample_gaussian(mu,logsigma2)
+    def forward(self,mu,logvariance):
+        z = sample_gaussian(mu,logvariance)
         return z
     
 class Decoder(nn.Module):
@@ -95,11 +95,11 @@ class Decoder(nn.Module):
 
 
 
-def variational_objective(x,mu,logsigma2,z,y):
+def variational_objective(x,mu,logvariance,z,y):
 
     # log_q(z|x) logprobability of z under approximate posterior N(μ,σ^2)
 
-    log_approxposterior_prob = logpdf_gaussian(z,mu,logsigma2)
+    log_approxposterior_prob = logpdf_gaussian(z,mu,logvariance)
 
     # log_p_z(z) log probability of z under prior
 
@@ -182,11 +182,11 @@ if __name__ == '__main__':
 
                 optimizer.zero_grad()
                 
-                mu, logsigma2 = encoder(iter_images)
-                z = stochasticlayer(mu, logsigma2)
+                mu, logvariance = encoder(iter_images)
+                z = stochasticlayer(mu, logvariance)
                 y = decoder(z)
 
-                loss = -variational_objective(iter_images,mu,logsigma2,z,y)
+                loss = -variational_objective(iter_images,mu,logvariance,z,y)
                 loss.backward()
             
                 optimizer.step()
@@ -206,18 +206,18 @@ if __name__ == '__main__':
 
     # ELBO on training set
 
-    mu, logsigma2 = encoder(train_images.to(device))
-    z = stochasticlayer(mu, logsigma2)
+    mu, logvariance = encoder(train_images.to(device))
+    z = stochasticlayer(mu, logvariance)
     y = decoder(z)
 
-    elbo_training = variational_objective(train_images.to(device),mu,logsigma2,z,y)
+    elbo_training = variational_objective(train_images.to(device),mu,logvariance,z,y)
     print(f"Training set ELBO = {elbo_training}")
 
     # ELBO on test set
 
-    mu, logsigma2 = encoder(test_images.to(device))
-    z = stochasticlayer(mu, logsigma2)
+    mu, logvariance = encoder(test_images.to(device))
+    z = stochasticlayer(mu, logvariance)
     y = decoder(z)
 
-    elbo_testing = variational_objective(test_images.to(device),mu,logsigma2,z,y)
+    elbo_testing = variational_objective(test_images.to(device),mu,logvariance,z,y)
     print(f"Training set ELBO = {elbo_testing}")

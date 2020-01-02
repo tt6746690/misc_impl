@@ -1,5 +1,11 @@
 
 
+## tutorials
+ 
+
++ pytorch sequential tips
+    + https://github.com/FrancescoSaverioZuppichini/Pytorch-how-and-when-to-use-Module-Sequential-ModuleList-and-ModuleDict
+
 ## Take-aways
 
 

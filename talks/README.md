@@ -186,3 +186,14 @@
                 + however most samples are wasted when trying to train the generator
             + importance sampling
                 + pick harder samples to better train the generator
+
+
+
++ From system 1 deep learning to system 2 deep learning Neurips 2019 keynote https://www.youtube.com/watch?v=FtUbMG3rlFs
+    + future 
+        + handle change in distribution generalization 
+        + reinforcement learning
+
+
++ Reinforcement Learning: Past, Present, and Future Perspectives | NeurIPS 2019 https://www.youtube.com/watch?v=1pBGb4_IpEw
+    + 
