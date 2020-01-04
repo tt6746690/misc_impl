@@ -134,7 +134,7 @@ def train(
             if conditional:
                 out = model(x, nn.functional.one_hot(y, conditional_size).float())
             else:
-                out = vae(x)
+                out = model(x)
             elbo_sum += model_cls.variational_objective(x, *out)
         return elbo_sum/len(dataloader)
 

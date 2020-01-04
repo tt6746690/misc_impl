@@ -1,9 +1,34 @@
 
+
+
 + implementation for
-    + [Auto-Encoding Variational Bayes
-](https://arxiv.org/abs/1312.6114)
-    + [Learning Structured Output Representation using Deep Conditional Generative Models
-](https://papers.nips.cc/paper/5775-learning-structured-output-representation-using-deep-conditional-generative-models)
+    + [Auto-Encoding Variational Bayes](https://arxiv.org/abs/1312.6114)
+    + [Learning Structured Output Representation using Deep Conditional Generative Models](https://papers.nips.cc/paper/5775-learning-structured-output-representation-using-deep-conditional-generative-models)
+
+
+
+## VAE 
+
+
+![](gifs/latent_space_vae.gif)
+![](gifs/latent_sample_decoded_vae.gif)
+![](gifs/decode_along_a_lattice_vae_c=3.gif)
+
+
+
+## CVAE
+
+![](gifs/latent_space_cvae.gif)
+![](gifs/latent_sample_decoded_cvae.gif)
+![](gifs/decode_along_a_lattice_cvae_c=3.gif)
+
+
+
+## Todos
+
+
++ interpolate between class labels for cvae
++ 
 
 
 ## tutorials
