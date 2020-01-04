@@ -125,6 +125,7 @@ class VAE(nn.Module):
 
         return mu, logvariance, z, y
 
+
     @staticmethod
     def variational_objective(x, mu, logvariance, z, y):
 
@@ -157,10 +158,16 @@ class CVAE(nn.Module):
     def __init__(self, enc_sizes, dec_sizes, prior_network_sizes):
         super(CVAE, self).__init__()
 
-        self.recognition_network = Encoder(enc_sizes)
-        self.recognition_sampling_layer = StochasticLayer()
         self.prior_network = Encoder(prior_network_sizes)
+        self.encoder = Encoder(enc_sizes)
+        self.stochasticlayer = StochasticLayer()
         self.decoder = Decoder(dec_sizes)
+
+    def combine_output_and_conditional(self, x, c):
+        return torch.cat((x, c), 1)
+
+    def combine_latent_and_conditional(self, z, c):
+        return torch.cat((z, c), 1)
 
     def forward(self, x, c):
         """
@@ -168,37 +175,58 @@ class CVAE(nn.Module):
             c       conditioned (input) variable
         """
 
-        xc = torch.cat((x, c), 1)
+        xc = self.combine_output_and_conditional(x, c)
 
-        rec_statistics = self.recognition_network(xc)
-        z = self.recognition_sampling_layer(*rec_statistics)
+        rec_statistics = self.encoder(xc)
+        z = self.stochasticlayer(*rec_statistics)
 
         pri_statistics = self.prior_network(c)
 
-        zc = torch.cat((z, c), 1)
+        zc = self.combine_latent_and_conditional(z, c)
         y = self.decoder(zc)
 
         return rec_statistics, z, pri_statistics, y
 
+
     @staticmethod
-    def variational_objective(x, rec_statistics, rec_z, pri_statistics, y):
+    def variational_objective(x, rec_statistics, z, pri_statistics, y):
 
-        # log_q(z|x,y) log conditional probability of z under approximate posterior N(μ,σ^2)
-
-        log_approxposterior_prob = logpdf_gaussian(rec_z, *rec_statistics)
-
-        # log_p_z(z|x) log conditional probability of z under prior network
-
-        log_prior_prob = logpdf_gaussian(rec_z, *pri_statistics)
-
-        # log_p(y|z,x) - log conditional probability of data given latents.
-
+        log_approxposterior_prob = logpdf_gaussian(z, *rec_statistics)
+        log_prior_prob = logpdf_gaussian(z, *pri_statistics)
         log_likelihood_prob = logpdf_bernoulli(x, y)
 
-        # number of samples = 1
         elbo = torch.mean(-log_approxposterior_prob + log_likelihood_prob + log_prior_prob)
 
         return elbo
+
+    def prediction(self, x, c):
+        """ predict y given x conditioned on c
+                z* = E[z|x]
+                y* = argmax_y p(y|x,z*)
+        """
+
+        z_star, _ = self.prior_network(c)
+
+        zc = self.combine_latent_and_conditional(z_star, c)
+
+        y_star = self.decoder(zc)
+
+        return y_star
+
+    def conditional_likelihood(self, x, c, S):
+        """ Computes conditional likelihood
+                p(x|c) = 1/S \sum_s p(x|c,z^s) where z^s ~ p(z|c)
+        """
+
+        c = c.unsqueeze(0).repeat(S,1)
+
+        pri_statistics = self.prior_network(c)
+        z = self.stochasticlayer(*pri_statistics)
+
+        zc = self.combine_latent_and_conditional(z, c)
+        y = self.decoder(zc)
+
+        return torch.mean(torch.exp(logpdf_bernoulli(x, y)))
 
 
 

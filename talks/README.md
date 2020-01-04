@@ -195,5 +195,5 @@
         + reinforcement learning
 
 
-+ Reinforcement Learning: Past, Present, and Future Perspectives | NeurIPS 2019 https://www.youtube.com/watch?v=1pBGb4_IpEw
++ Tamara Brokerick: Variational Bayes and Beyond ICML 2018 tutorial https://www.youtube.com/watch?v=Moo4-KR5qNg
     + 

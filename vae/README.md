@@ -1,10 +1,21 @@
 
++ implementation for
+    + [Auto-Encoding Variational Bayes
+](https://arxiv.org/abs/1312.6114)
+    + [Learning Structured Output Representation using Deep Conditional Generative Models
+](https://papers.nips.cc/paper/5775-learning-structured-output-representation-using-deep-conditional-generative-models)
+
 
 ## tutorials
  
 
 + pytorch sequential tips
     + https://github.com/FrancescoSaverioZuppichini/Pytorch-how-and-when-to-use-Module-Sequential-ModuleList-and-ModuleDict
++ cvae reference impl   
+    + https://github.com/jojonki/AutoEncoders/blob/master/cvae.ipynb
+    + https://github.com/Prasanna1991/pytorch-vae/blob/master/cvae.py
++ a nice blog post for vaes 
+    + https://lilianweng.github.io/lil-log/2018/08/12/from-autoencoder-to-beta-vae.html
 
 ## Take-aways
 
@@ -20,3 +31,4 @@
 ## Questions
 
 + approximate posterior should be Gaussian, by construction. Why would the true posterior p_z|x looks like Gaussian as well ?
++ in cvae, is it customary to replace recognition network `q_z|x,y` with prior network `p_z|x` ?
