@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=jupyt
-#SBATCH --output=/data/vision/polina/scratch/wpq/medical_vision/results/jupyter.out
+#SBATCH --job-name=jupyt_misc
+#SBATCH --output=/data/vision/polina/scratch/wpq/misc_impl/jupyter.out
 
 #SBATCH --time=1000:00:00
 #SBATCH --partition=gpu
@@ -11,10 +11,10 @@
 
 source ~/.bashrc
 conda init zsh
-conda activate pseg
+conda activate misc_impl
 
 export XDG_RUNTIME_DIR=""
 
-cd /data/vision/polina/scratch/wpq/medical_vision/notebooks
+cd /data/vision/polina/scratch/wpq/misc_impl
 
-jupyter notebook --no-browser --port=8889
+jupyter notebook --no-browser --port=8890

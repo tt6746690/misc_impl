@@ -8,3 +8,6 @@ data/
 
 # pytorch 
 *.pt
+
+# slurm 
+*.out

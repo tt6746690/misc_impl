@@ -49,47 +49,40 @@ def logpdf_bernoulli(x, p):
 
 
 """
-layer_sizes = [784, 500]
-latent_size = 2
-
-encoder = Encoder(layer_sizes, latent_size)
+encoder = Encoder([784, 500, 2])
 """
 class Encoder(nn.Module):
 
-    def __init__(self, layer_sizes, latent_size):
+    def __init__(self, layer_sizes):
         super(Encoder, self).__init__()
 
         self.mlp = nn.Sequential(*[
             mlp_block(in_size, out_size) 
-                for in_size, out_size in zip(layer_sizes[:-1], layer_sizes[1:])
+                for in_size, out_size in zip(layer_sizes[:-2], layer_sizes[1:-1])
         ])
 
-        self.fc_mu = nn.Linear(layer_sizes[-1], latent_size)
-        self.fc_logvariance = nn.Linear(layer_sizes[-1], latent_size)
+        self.fc_mu = nn.Linear(layer_sizes[-2], layer_sizes[-1])
+        self.fc_logvariance = nn.Linear(layer_sizes[-2], layer_sizes[-1])
         
     def forward(self, x):
 
         h = self.mlp(x)
-
         mu = self.fc_mu(h)
         logvariance = self.fc_logvariance(h)
         
         return mu, logvariance
 
 """
-layer_sizes = [784, 500]
-latent_size = 2
-
-decoder = Decoder(layer_sizes[::-1],latent_size)
+decoder = Decoder([2, 500, 784])
 """
 class Decoder(nn.Module):
     
-    def __init__(self, layer_sizes, latent_size):
+    def __init__(self, layer_sizes):
         super(Decoder, self).__init__()
 
         self.mlp = nn.Sequential(*[
             mlp_block(in_size, out_size)
-                for in_size, out_size in zip([latent_size]+layer_sizes[:-2], layer_sizes[:-1])
+                for in_size, out_size in zip(layer_sizes[:-2], layer_sizes[1:-1])
         ])
 
         self.last_layer = nn.Sequential(
@@ -117,12 +110,12 @@ class StochasticLayer(nn.Module):
 
 class VAE(nn.Module):
 
-    def __init__(self, enc_sizes, dec_sizes, latent_size):
+    def __init__(self, enc_sizes, dec_sizes):
         super(VAE, self).__init__()
 
-        self.encoder = Encoder(enc_sizes, latent_size)
+        self.encoder = Encoder(enc_sizes)
         self.stochasticlayer = StochasticLayer()
-        self.decoder = Decoder(dec_sizes, latent_size)
+        self.decoder = Decoder(dec_sizes)
 
     def forward(self, x):
 
@@ -133,7 +126,7 @@ class VAE(nn.Module):
         return mu, logvariance, z, y
 
     @staticmethod
-    def variational_objetive(x, mu, logvariance, z, y):
+    def variational_objective(x, mu, logvariance, z, y):
 
         # log_q(z|x) logprobability of z under approximate posterior N(μ,σ^2)
 
@@ -158,6 +151,55 @@ class VAE(nn.Module):
         elbo = torch.mean(-log_approxposterior_prob + log_likelihood_prob + log_prior_prob)
 
         return elbo
+
+class CVAE(nn.Module):
+
+    def __init__(self, enc_sizes, dec_sizes, prior_network_sizes):
+        super(CVAE, self).__init__()
+
+        self.recognition_network = Encoder(enc_sizes)
+        self.recognition_sampling_layer = StochasticLayer()
+        self.prior_network = Encoder(prior_network_sizes)
+        self.decoder = Decoder(dec_sizes)
+
+    def forward(self, x, c):
+        """
+            x       data (output) variable
+            c       conditioned (input) variable
+        """
+
+        xc = torch.cat((x, c), 1)
+
+        rec_statistics = self.recognition_network(xc)
+        z = self.recognition_sampling_layer(*rec_statistics)
+
+        pri_statistics = self.prior_network(c)
+
+        zc = torch.cat((z, c), 1)
+        y = self.decoder(zc)
+
+        return rec_statistics, z, pri_statistics, y
+
+    @staticmethod
+    def variational_objective(x, rec_statistics, rec_z, pri_statistics, y):
+
+        # log_q(z|x,y) log conditional probability of z under approximate posterior N(μ,σ^2)
+
+        log_approxposterior_prob = logpdf_gaussian(rec_z, *rec_statistics)
+
+        # log_p_z(z|x) log conditional probability of z under prior network
+
+        log_prior_prob = logpdf_gaussian(rec_z, *pri_statistics)
+
+        # log_p(y|z,x) - log conditional probability of data given latents.
+
+        log_likelihood_prob = logpdf_bernoulli(x, y)
+
+        # number of samples = 1
+        elbo = torch.mean(-log_approxposterior_prob + log_likelihood_prob + log_prior_prob)
+
+        return elbo
+
 
 
 def mlp_block(in_size, out_size):
