@@ -8,6 +8,7 @@
   - [Generative Adversarial Networks [Ian Goodfellow NIPS 2016 tutorial]](#generative-adversarial-networks-ian-goodfellow-nips-2016-tutorial)
   - [From system 1 deep learning to system 2 deep learning [Yoshia Bengio Neurips 2019 Keynote]](#from-system-1-deep-learning-to-system-2-deep-learning-yoshia-bengio-neurips-2019-keynote)
   - [Variational Bayes and Beyond: Bayesian inference for large [Tamara Brokerick ICML 2018 tutorial]](#variational-bayes-and-beyond-bayesian-inference-for-large-tamara-brokerick-icml-2018-tutorial)
+  - [Interpretable Comparison of Distributions and Models [Neurips 2020 tutorial, Arthur Gretton, Dougal Sutherland, Wittawat Jitkrittum]](#interpretable-comparison-of-distributions-and-models-neurips-2020-tutorial-arthur-gretton-dougal-sutherland-wittawat-jitkrittum)
 
 
 
@@ -215,3 +216,75 @@
 
 
 ## Variational Bayes and Beyond: Bayesian inference for large [[Tamara Brokerick ICML 2018 tutorial]](https://www.youtube.com/watch?v=Moo4-KR5qNg)
+
+
+
++ bayesian inference 
+    + analysis goal
+        + point estimates
+        + coherent uncertainties
+    + interpretability, complex, modular, export information
+    + software: https://en.wikipedia.org/wiki/Stan_(software)
+    + challenges
+      + fast (compute, user), reliable inference
++ variational bayes
+    + can be very fast! works on large data, large dimension
+    + eg
+        + text data
+        + structure in network/graph
++ bayesian inference
+    + build a model: choose prior & likelihood (like a generative model)
+    + compute the posterior (hard because no closed form)   
+        + compute evidence (denominator) requires integration over high-dim space
+        + MCMC goldstandard (accurate but slow)
+    + report a summary: posterior mean and (co)variances (hard)
++ approximate bayesian inference (compute evidence)
+    + optimization
+    + approximate posterior q* over a set of NICE approximate distributions
+    + want to find q* closest in distance (KL(q|p)) to p(theta|y)
+    + assumptions choices
+        + use approximate family distributino
+        + optimization: finds q* by minimizing some function/distance 
+        + variational bayes: use KL as distance
+        + mean field: factorizing assumption for q
+        + optimization algorithm
++ Variational Bayes
+    + KL divergence
+        + good practical performance (point estimates + prediction)
+        + fast streaming distributed
+        + argmin KL  <=>  argmax ELBO(q)
+        + forward KL, some terms are not computable
+    + mean field
+        + q factorizes coordinate-wise; often exponential family
+    + optimization 
+        + coordinate descent
+        + stochastic variational inference (SVI)
+        + automatic differentiation variational inference (ADVI)
++ midge wing length 
+    + a simple example where we know the exact answer, can evaluate approximate BI
++ microcredit experiment
++ uncertainty 
+    + if p multivariate Gaussian with large correlation
+    + MFVB q 
+        + underestimates variance
+        + no covariance estimates (since RV factors)
++ do not know exact solution, what can we do ?
+    + diagnostics
+        + KL vs ELBO
+    + nicer set of distributions; alternative divergences
+    + thoretical guarantees on finite-data quality
+
+
+
+## Interpretable Comparison of Distributions and Models [[Neurips 2020 tutorial, Arthur Gretton, Dougal Sutherland, Wittawat Jitkrittum]](https://slideslive.com/38921490/interpretable-comparison-of-distributions-and-models)
+
+s
++ divergence measures
+    + (P-Q) integral probability metrics (IPM)
+        + Wasserstein metrics
+        + maximum mean discrepancy
+    + (P/Q) phi/f - divergence
++ IPM
+    + find well behaved (smooth) function to maximize difference in expectation
+    + intuition: if points are clustered separately, they are probably from different distribution (easier to find such f which maxmizes IPM)
++ MMD
