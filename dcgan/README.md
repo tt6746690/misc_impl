@@ -3,10 +3,6 @@
 + implementation for
     + [Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks](https://arxiv.org/pdf/1511.06434.pdf)
 
-```
-sbatch --export=logdir=dcgan/logs scripts/tensorboard.sbatch
-```
-
 
 ## take-aways
 
@@ -14,3 +10,15 @@ sbatch --export=logdir=dcgan/logs scripts/tensorboard.sbatch
     + the normal distribution initialization worked better than default initialization
 + the number of feature layers for conv layers mattered 
     + changing from 128 -> 64 worked on MNIST
++ a stronger (more feature layers) generator definitely helped with convergence
+
+
+## tutorials
+
++ https://medium.com/@utk.is.here/keep-calm-and-train-a-gan-pitfalls-and-tips-on-training-generative-adversarial-networks-edd529764aa9
+    + large kernel more filters
+    + look at the gradients !
+        + want generator conv weights to have large gradients early in training
+    + flip labels (generated=1, data=0)
++ https://towardsdatascience.com/gan-ways-to-improve-gan-performance-acf37f9f59b
+    + 

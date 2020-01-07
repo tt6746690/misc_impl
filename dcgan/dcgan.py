@@ -121,7 +121,8 @@ def weights_initialization(m):
 
 def train(
     nz,
-    nf,
+    nfg,
+    nfd,
     nc,
     data_root,
     figure_root,
@@ -138,6 +139,7 @@ def train(
     n_batches_print,
     seed,
     n_workers,
+    gpu_id,
 ):
 
     os.makedirs(data_root, exist_ok=True)
@@ -157,14 +159,15 @@ def train(
                 ]))
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=n_workers)
 
+    os.environ['CUDA_VISIBLE_DEVICES'] = gpu_id
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    G = Generator(nz, nf, nc).to(device)
+    G = Generator(nz, nfg, nc).to(device)
     G.apply(weights_initialization)
     if load_weights_generator != '':
         G.load_state_dict(torch.load(load_weights_generator))
         
-    D = Discriminator(nc, nf).to(device)
+    D = Discriminator(nc, nfd).to(device)
     D.apply(weights_initialization)
     if load_weights_discriminator != '':
         D.load_state_dict(torch.load(load_weights_discriminator))
@@ -172,10 +175,11 @@ def train(
     criterion = nn.BCELoss()
 
     fixed_noise = torch.randn(batch_size, nz, 1, 1, device=device)
-    real_label = 1
-    fake_label = 0
 
-    # setup optimizer
+    # label flipping helps with training G!
+    real_label = 0
+    fake_label = 1
+
     optimizerD = torch.optim.Adam(D.parameters(), lr=lr, betas=(beta1, 0.999))
     optimizerG = torch.optim.Adam(G.parameters(), lr=lr, betas=(beta1, 0.999))
 
@@ -252,6 +256,8 @@ def train(
                 x_fake = G(fixed_noise)
                 vutils.save_image(x_fake.detach(), os.path.join(figure_root, f'{model_name}_fake_samples_epoch={epoch}_it={it}.png'))
 
+
+            if it == 0:
                 global_step = epoch*len(trainloader)+it
                 writer.add_scalar('discriminator/D(x)', D_x, global_step)
                 writer.add_scalar('discriminator/D(G(z1))', D_G_z1, global_step)
@@ -259,6 +265,10 @@ def train(
                 writer.add_scalar('loss/total', loss_D.item()+loss_G.item(), global_step)
                 writer.add_scalar('loss/D', loss_D.item(), global_step)
                 writer.add_scalar('loss/G', loss_G.item(), global_step)
+                writer.add_scalar('gradient/G_conv_W_first', G.model[0].weight.grad.mean().detach().cpu().item(), global_step)
+                writer.add_scalar('gradient/G_conv_W_last', G.model[-2].weight.grad.mean().detach().cpu().item(), global_step)
+                writer.add_scalar('gradient/D_conv_W_first', D.model[0].weight.grad.mean().detach().cpu().item(), global_step)
+                writer.add_scalar('gradient/D_conv_W_last', D.model[-2].weight.grad.mean().detach().cpu().item(), global_step)
                 writer.add_image('mnist', torchvision.utils.make_grid(x_fake), global_step)
 
         torch.save(G.state_dict(), os.path.join(model_root, f'G_epoch_{epoch}.pt'))
@@ -283,7 +293,7 @@ if __name__ == '__main__':
                         default='./figures',
                         help="figure folder")
     parser.add_argument("--log_root", type=str,
-                        default=f'./logs/{datetime.now().strftime("%Y%m%d-%H%M%S")}',
+                        default=f'./logs/',
                         help="log folder")
     parser.add_argument("--model_name", type=str,
                         default='dcgan',
@@ -295,7 +305,7 @@ if __name__ == '__main__':
                         default='',
                         help="optional .pt model file to initialize discriminator with")
     parser.add_argument("--epochs", type=int, dest='n_epochs',
-                        default=200,
+                        default=50,
                         help="number of epochs")
     parser.add_argument("--print_every", type=int, dest='n_batches_print',
                         default=100,
@@ -304,7 +314,7 @@ if __name__ == '__main__':
                         default=64,
                         help="batch_size")
     parser.add_argument("--seed", type=int,
-                        default=0,
+                        default=1,
                         help="rng seed")
     parser.add_argument("--learning_rate", type=float, dest='lr',
                         default=0.0002,
@@ -312,15 +322,21 @@ if __name__ == '__main__':
     parser.add_argument("--n_workers", type=int,
                         default=8,
                         help="number of CPU workers for processing input data")
+    parser.add_argument("--gpu_id", type=str,
+                        default='0',
+                        help="gpu id assigned by cluster")
     parser.add_argument("--beta1", type=float,
                         default=0.5,
                         help="ADAM parameter")
     parser.add_argument("--image_size", type=int,
                         default=64,
                         help="image size of the inputs")
-    parser.add_argument("--nf", type=int,
+    parser.add_argument("--nfg", type=int,
                         default=64,
                         help=" dimension of features in last conv layer of generator")
+    parser.add_argument("--nfd", type=int,
+                        default=64,
+                        help=" dimension of features in first conv layer of discriminator")
     parser.add_argument("--nz", type=int,
                         default=100,
                         help=" dimension of latent space")
@@ -329,4 +345,10 @@ if __name__ == '__main__':
                         help=" number of channels of input image")
 
     args = parser.parse_args()
+    args.model_name = f'{args.model_name}_{datetime.now().strftime("%Y.%m.%d-%H:%M:%S")}'
+
+    args.model_root = os.path.join(args.model_root, args.model_name)
+    args.figure_root = os.path.join(args.figure_root, args.model_name)
+    args.log_root = os.path.join(args.log_root, args.model_name)
+
     train(**vars(args))
