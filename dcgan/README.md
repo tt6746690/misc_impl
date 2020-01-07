@@ -4,6 +4,9 @@
     + [Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks](https://arxiv.org/pdf/1511.06434.pdf)
 
 
+![](gifs/dcgan_stronger_G_small.gif)
+
+
 ## take-aways
 
 + initialization mattered !
@@ -21,4 +24,7 @@
         + want generator conv weights to have large gradients early in training
     + flip labels (generated=1, data=0)
 + https://towardsdatascience.com/gan-ways-to-improve-gan-performance-acf37f9f59b
-    + 
+    + various variants of cost function
+    + impl tips
+        + scale between -1,1, use tanh as output layer for generator
+        + add noise to real/generated image before feeding into discrimiantor
