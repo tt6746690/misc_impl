@@ -4,12 +4,11 @@ import argparse
 from tqdm import tqdm
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
-import matplotlib.pyplot as plt
 import torchvision 
-import torchvision
 import torchvision.datasets as datasets
 
 import models

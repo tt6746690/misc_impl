@@ -17,4 +17,4 @@ export XDG_RUNTIME_DIR=""
 
 cd /data/vision/polina/scratch/wpq/misc_impl
 
-jupyter notebook --no-browser --port=8890
+jupyter notebook --no-browser --port=8891
