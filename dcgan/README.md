@@ -4,9 +4,17 @@
     + [Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks](https://arxiv.org/pdf/1511.06434.pdf)
 
 
+## this impl
 
 <p align="center">
-  <img src="gifs/dcgan_stronger_G_small.gif">
+  <img width='224', height='224' src="gifs/dcgan_stronger_G_small.gif">
+</p>
+
+## reference impl from pytorch-examples
+
+
+<p align="center">
+  <img width='224', height='224' src="gifs/dcgan_example_impl.gif">
 </p>
 
 

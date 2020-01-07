@@ -13,3 +13,11 @@ export DISPLAY=0.0 # for jupyter
 ## todo 
 
 + deep probabilistic generative modeling [mlss 2018 Ryan Adams]
++ infogan 
++ beta-vae
++ disentangle color from class label
+
+
+## interpretability
+
++ https://captum.ai

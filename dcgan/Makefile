@@ -17,3 +17,5 @@ gif:
 
 	convert -delay 5 -loop 0 `ls -v figures/dcgan_seed=1/dcgan*.png`	gifs/dcgan_stronger_G.gif
 	convert gifs/dcgan_stronger_G.gif -coalesce -resize 224x224 -layers OptimizeFrame gifs/dcgan_stronger_G_small.gif
+
+	convert -delay 50 -loop 0 `ls -v ../../pytorch-examples/dcgan/out/fake*.png`	dcgan/gifs/dcgan_example_impl.gif
