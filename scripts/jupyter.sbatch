@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=jupyt_misc
-#SBATCH --output=/data/vision/polina/scratch/wpq/misc_impl/jupyter.out
+#SBATCH --output=/data/vision/polina/scratch/wpq/misc_impl/scripts/jupyter.out
 
-#SBATCH --time=1000:00:00
+#SBATCH --time=1000-00:00:00
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
 #SBATCH --nodelist=chili

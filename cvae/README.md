@@ -26,10 +26,7 @@
 
 ## Todos
 
-
 + interpolate between class labels for cvae
-+ 
-
 
 ## tutorials
  

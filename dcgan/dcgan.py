@@ -1,16 +1,17 @@
 # reference: https://github.com/pytorch/examples/blob/master/dcgan/main.py
 #
 import os
-import itertools
-import argparse
-from tqdm import tqdm
+
+import numpy as np
+import matplotlib.pyplot as plt
 
 import torch
 import torch.nn as nn
 import torchvision 
 import torchvision.datasets as datasets
-
-
+import torchvision.transforms as transforms
+import torchvision.utils as vutils
+from torch.utils.tensorboard import SummaryWriter
 
 class Generator(nn.Module):
 
@@ -107,3 +108,225 @@ class Discriminator(nn.Module):
         x = self.model(x)
         return  x.view(-1, 1).squeeze(1)
         
+
+def weights_initialization(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        m.weight.data.normal_(0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        m.weight.data.normal_(1.0, 0.02)
+        m.bias.data.fill_(0)
+
+
+
+def train(
+    nz,
+    nf,
+    nc,
+    data_root,
+    figure_root,
+    model_root,
+    log_root,
+    model_name,
+    load_weights_generator,
+    load_weights_discriminator,
+    image_size,
+    batch_size,
+    lr,
+    beta1,
+    n_epochs,
+    n_batches_print,
+    seed,
+    n_workers,
+):
+
+    os.makedirs(data_root, exist_ok=True)
+    os.makedirs(model_root, exist_ok=True)
+    os.makedirs(figure_root, exist_ok=True)
+    os.makedirs(log_root, exist_ok=True)
+
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+
+    trainset = datasets.MNIST(root=data_root, download=True,
+                transform=transforms.Compose([
+                    transforms.Resize(image_size),
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.5,), (0.5,)),
+                ]))
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=n_workers)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    G = Generator(nz, nf, nc).to(device)
+    G.apply(weights_initialization)
+    if load_weights_generator != '':
+        G.load_state_dict(torch.load(load_weights_generator))
+        
+    D = Discriminator(nc, nf).to(device)
+    D.apply(weights_initialization)
+    if load_weights_discriminator != '':
+        D.load_state_dict(torch.load(load_weights_discriminator))
+
+    criterion = nn.BCELoss()
+
+    fixed_noise = torch.randn(batch_size, nz, 1, 1, device=device)
+    real_label = 1
+    fake_label = 0
+
+    # setup optimizer
+    optimizerD = torch.optim.Adam(D.parameters(), lr=lr, betas=(beta1, 0.999))
+    optimizerG = torch.optim.Adam(G.parameters(), lr=lr, betas=(beta1, 0.999))
+
+    writer = SummaryWriter(log_root)
+    writer.flush()
+
+    for epoch in range(n_epochs):
+        
+        for it, (x_real, _) in enumerate(trainloader):
+            
+            # batch_size for last batch might be different ...
+            batch_size = x_real.size(0)
+            real_labels = torch.full((batch_size,), real_label, device=device)
+            fake_labels = torch.full((batch_size,), fake_label, device=device)
+            
+            ##############################################################
+            # Update Discriminator: Maximize E[log(D(x))] + E[log(1 - D(G(z)))]
+            ##############################################################
+            
+            D.zero_grad()
+            
+            # a minibatch of samples from data distribution
+            x_real = x_real.to(device)
+            
+            y = D(x_real)
+            loss_D_real = criterion(y, real_labels)
+            loss_D_real.backward()
+            
+            D_x = y.mean().item()
+            
+            # a minibatch of samples from the model distribution
+            z = torch.randn(batch_size, nz, 1, 1, device=device)
+            
+            x_fake = G(z)
+            # https://github.com/pytorch/examples/issues/116
+            # If we do not detach, then, although x_fake is not needed for gradient update of D,
+            #   as a consequence of backward pass which clears all the variables in the graph
+            #   graph for G will not be available for gradient update of G
+            # Also for performance considerations, detaching x_fake will prevent computing 
+            #   gradients for parameters in G
+            y = D(x_fake.detach())
+            loss_D_fake = criterion(y, fake_labels)
+            loss_D_fake.backward()
+            
+            D_G_z1 = y.mean().item()
+            loss_D = loss_D_real + loss_D_fake
+            
+            optimizerD.step()
+            
+            ##############################################################
+            # Update Generator: Minimize E[log(1 - D(G(z)))] => Maximize E[log(D(G(z))))]
+            ##############################################################
+            
+            G.zero_grad()
+            
+            y = D(x_fake)
+            loss_G = criterion(y, real_labels)
+            loss_G.backward()
+            
+            D_G_z2 = y.mean().item()
+            
+            optimizerG.step()
+            
+            ##############################################################
+            # write/print
+            ##############################################################
+
+            if it % n_batches_print == n_batches_print-1:
+
+                # best loss: -log 4 = -1.38
+                # D_x: 1 D_G_z1: 0 D_G_z2: 1
+                print(f"[{epoch+1}/{n_epochs}][{it+1}/{len(trainloader)}] loss: {loss_D.item()+loss_G.item():.4} loss_D: {loss_D.item():.4}  loss_G: {loss_G.item():.4} D_x: {D_x:.4} D(G(z1)): {D_G_z1:.4} D(G(z2)): {D_G_z2:.4}" ) 
+
+                x_fake = G(fixed_noise)
+                vutils.save_image(x_fake.detach(), os.path.join(figure_root, f'{model_name}_fake_samples_epoch={epoch}_it={it}.png'))
+
+                global_step = epoch*len(trainloader)+it
+                writer.add_scalar('discriminator/D(x)', D_x, global_step)
+                writer.add_scalar('discriminator/D(G(z1))', D_G_z1, global_step)
+                writer.add_scalar('discriminator/D(G(z2))', D_G_z2, global_step)
+                writer.add_scalar('loss/total', loss_D.item()+loss_G.item(), global_step)
+                writer.add_scalar('loss/D', loss_D.item(), global_step)
+                writer.add_scalar('loss/G', loss_G.item(), global_step)
+                writer.add_image('mnist', torchvision.utils.make_grid(x_fake), global_step)
+
+        torch.save(G.state_dict(), os.path.join(model_root, f'G_epoch_{epoch}.pt'))
+        torch.save(D.state_dict(), os.path.join(model_root, f'D_epoch_{epoch}.pt'))
+
+
+
+if __name__ == '__main__':
+
+    import argparse
+    from datetime import datetime
+
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("--data_root", type=str,
+                        default='../data',
+                        help="data folder")
+    parser.add_argument("--model_root", type=str,
+                        default='./models',
+                        help="model folder")
+    parser.add_argument("--figure_root", type=str,
+                        default='./figures',
+                        help="figure folder")
+    parser.add_argument("--log_root", type=str,
+                        default=f'./logs/{datetime.now().strftime("%Y%m%d-%H%M%S")}',
+                        help="log folder")
+    parser.add_argument("--model_name", type=str,
+                        default='dcgan',
+                        help="name of the model")
+    parser.add_argument("--load_weights_generator", type=str,
+                        default='',
+                        help="optional .pt model file to initialize generator with")
+    parser.add_argument("--load_weights_discriminator", type=str,
+                        default='',
+                        help="optional .pt model file to initialize discriminator with")
+    parser.add_argument("--epochs", type=int, dest='n_epochs',
+                        default=200,
+                        help="number of epochs")
+    parser.add_argument("--print_every", type=int, dest='n_batches_print',
+                        default=100,
+                        help="number of batches to print loss / plot figures")
+    parser.add_argument("--batch_size", type=int,
+                        default=64,
+                        help="batch_size")
+    parser.add_argument("--seed", type=int,
+                        default=0,
+                        help="rng seed")
+    parser.add_argument("--learning_rate", type=float, dest='lr',
+                        default=0.0002,
+                        help="rng seed")
+    parser.add_argument("--n_workers", type=int,
+                        default=8,
+                        help="number of CPU workers for processing input data")
+    parser.add_argument("--beta1", type=float,
+                        default=0.5,
+                        help="ADAM parameter")
+    parser.add_argument("--image_size", type=int,
+                        default=64,
+                        help="image size of the inputs")
+    parser.add_argument("--nf", type=int,
+                        default=64,
+                        help=" dimension of features in last conv layer of generator")
+    parser.add_argument("--nz", type=int,
+                        default=100,
+                        help=" dimension of latent space")
+    parser.add_argument("--nc", type=int,
+                        default=1,
+                        help=" number of channels of input image")
+
+    args = parser.parse_args()
+    train(**vars(args))
