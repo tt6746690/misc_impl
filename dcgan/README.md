@@ -4,7 +4,10 @@
     + [Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks](https://arxiv.org/pdf/1511.06434.pdf)
 
 
-![](gifs/dcgan_stronger_G_small.gif)
+
+<p align="center">
+  <img src="gifs/dcgan_stronger_G_small.gif">
+</p>
 
 
 ## take-aways
