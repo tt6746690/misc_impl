@@ -12,3 +12,4 @@ dependencies:
     - julia
     - tqdm
     - tensorboard
+    - opencv

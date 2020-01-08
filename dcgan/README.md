@@ -4,18 +4,50 @@
     + [Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks](https://arxiv.org/pdf/1511.06434.pdf)
 
 
-## this impl
+#### Generating images (this impl)
 
 <p align="center">
   <img width='224', height='224' src="gifs/dcgan_stronger_G_small.gif">
 </p>
 
-## reference impl from pytorch-examples
-
+#### Generating images (reference impl from pytorch-examples)
 
 <p align="center">
   <img width='224', height='224' src="gifs/dcgan_example_impl.gif">
 </p>
+
+#### varying a single dimension of a latent vector in range [-0.05,0.05] with other dimension 0
+
+<p align="center">
+  <img width='224', height='224' src="gifs/single_dim_varying_z_0.05_small.gif">
+</p>
+
+#### varying all dimension of a latent vector in range [-1,1] with randomly sampled noise
+
+<p align="center">
+  <img width='224', height='224' src="gifs/all_dim_varying_z_1_small.gif">
+</p>
+
+
+#### interpolation between two randomly sampled latent vectors, alpha in [-0.5,1.5]
+
+<p align="center">
+  <img width='224', height='224' src="gifs/interpolate_small.gif">
+</p>
+
+#### vector arithmetics on MNIST didn't really work ..
+
++ `z1 - z2 + z3`
+  + `z1`: class=3, slanted
+  + `z2`: class=3, straight
+  + `z3`: class=6, arbitrary
+
+
+<p align="center">
+  <img width='224', height='224' src="gifs/arithmetics.png">
+</p>
+
+
 
 
 ## take-aways
