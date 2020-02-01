@@ -378,4 +378,38 @@
             + distance(X_i,X_j) < epsilon 
         + smalller epsilon, less bias but higher variance
             + OK for low dimensional settings, but in high-dim there will be fewer matches
-    + 
+    + propensity score based methods  
+        + high dimensional problem
+            + matching -> propensity score estimation
+        + e(X) = P(T=1|X)
+            + need to be estimated
+                + supervised learning (logistic regression)
+        + propensity score is sufficient to control/summarize information of confounders
+        + match by distance in e(X)
+            + distance(X_i,X_j) = |e(X_i) - e(X_j|
+    + inverse of propensity weighting (IPW)
+        + weight samples by inverse of propensity score
+        + induces distribution bias on confounders X, to make them similar
+            + i.e. pseudo-population where confounders are the same between treated and control groups
+        + problem
+            + requires model specification (i.e. classification model) for propensity score
+            + high variance when e is close to 0 or 1
+    + directly confounder balancing
+        + motivation 
+          +  non-parametric solution (no model specification)
+            + distribution of all moments of variables uniquely determines their distritutions
+        + methods
+            + learning sample weights by directly balancing confounders' moments in the two groups
+            + also minimize entropy of weights 
+        + problem
+            + need to know all confounders a priori or regard all variables as confounders 
++ differentiated confounder balancing
+    + motivation 
+        + identify confounder variables
+        + different confounder makes different confounding bias
+    + method
+        + simultaneously learn confounder wieghts (identify which variables are confounders, and its contributions) and sample weights (for confounder balancing)
++ future directions
+    + need to address
+        + binary -> continuous variable 
+        + single -> group of variables
