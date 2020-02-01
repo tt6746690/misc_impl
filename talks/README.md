@@ -3,13 +3,13 @@
 # Talks
 
 - [Talks](#talks)
-  - [Unsupervised Deep Learning [Neurips 2018 tutorial]](#unsupervised-deep-learning-neurips-2018-tutorial)
-  - [deep generative modeling [MIT 6.S191]](#deep-generative-modeling-mit-6s191)
-  - [Generative Adversarial Networks [Ian Goodfellow NIPS 2016 tutorial]](#generative-adversarial-networks-ian-goodfellow-nips-2016-tutorial)
-  - [From system 1 deep learning to system 2 deep learning [Yoshia Bengio Neurips 2019 Keynote]](#from-system-1-deep-learning-to-system-2-deep-learning-yoshia-bengio-neurips-2019-keynote)
-  - [Variational Bayes and Beyond: Bayesian inference for large [Tamara Brokerick ICML 2018 tutorial]](#variational-bayes-and-beyond-bayesian-inference-for-large-tamara-brokerick-icml-2018-tutorial)
-  - [Interpretable Comparison of Distributions and Models [Neurips 2020 tutorial, Arthur Gretton, Dougal Sutherland, Wittawat Jitkrittum]](#interpretable-comparison-of-distributions-and-models-neurips-2020-tutorial-arthur-gretton-dougal-sutherland-wittawat-jitkrittum)
-
+  - [Unsupervised Deep Learning [[Neurips 2018 tutorial]](https://www.youtube.com/watch?v=rjZCjosEFpI)](#unsupervised-deep-learning-neurips-2018-tutorial)
+  - [deep generative modeling [[MIT 6.S191]](https://www.youtube.com/watch?v=JVb54xhEw6Y)](#deep-generative-modeling-mit-6s191)
+  - [Generative Adversarial Networks [[NIPS 2016 tutorial Ian Goodfellow]](https://www.youtube.com/watch?v=HGYYEUSm-0Q)](#generative-adversarial-networks-nips-2016-tutorial-ian-goodfellow)
+  - [From system 1 deep learning to system 2 deep learning [[Neurips 2019 Keynote Yoshia Bengio]](https://www.youtube.com/watch?v=FtUbMG3rlFs)](#from-system-1-deep-learning-to-system-2-deep-learning-neurips-2019-keynote-yoshia-bengio)
+  - [Variational Bayes and Beyond: Bayesian inference for large [[ICML 2018 tutorial Tamara Brokerick]](https://www.youtube.com/watch?v=Moo4-KR5qNg)](#variational-bayes-and-beyond-bayesian-inference-for-large-icml-2018-tutorial-tamara-brokerick)
+  - [Interpretable Comparison of Distributions and Models [[Neurips 2020 tutorial, Arthur Gretton, Dougal Sutherland, Wittawat Jitkrittum]](https://slideslive.com/38921490/interpretable-comparison-of-distributions-and-models)](#interpretable-comparison-of-distributions-and-models-neurips-2020-tutorial-arthur-gretton-dougal-sutherland-wittawat-jitkrittum)
+  - [Causal Inference and Stable Learning[[ICML 2019 tutorial, Peng Cui, Tong Zhang]](https://slideslive.com/38917403/causal-inference-and-stable-learning)](#causal-inference-and-stable-learningicml-2019-tutorial-peng-cui-tong-zhang)
 
 
 
@@ -75,7 +75,7 @@
 
 
 
-## Generative Adversarial Networks [[Ian Goodfellow NIPS 2016 tutorial]](https://www.youtube.com/watch?v=HGYYEUSm-0Q)
+## Generative Adversarial Networks [[NIPS 2016 tutorial Ian Goodfellow]](https://www.youtube.com/watch?v=HGYYEUSm-0Q)
 
 + why study generative models
     + simulate possible futures by generation
@@ -207,7 +207,7 @@
 
 
 
-## From system 1 deep learning to system 2 deep learning [[Yoshia Bengio Neurips 2019 Keynote]](https://www.youtube.com/watch?v=FtUbMG3rlFs)
+## From system 1 deep learning to system 2 deep learning [[Neurips 2019 Keynote Yoshia Bengio]](https://www.youtube.com/watch?v=FtUbMG3rlFs)
 
 
 + future 
@@ -215,7 +215,7 @@
     + reinforcement learning
 
 
-## Variational Bayes and Beyond: Bayesian inference for large [[Tamara Brokerick ICML 2018 tutorial]](https://www.youtube.com/watch?v=Moo4-KR5qNg)
+## Variational Bayes and Beyond: Bayesian inference for large [[ICML 2018 tutorial Tamara Brokerick]](https://www.youtube.com/watch?v=Moo4-KR5qNg)
 
 
 
@@ -278,7 +278,7 @@
 
 ## Interpretable Comparison of Distributions and Models [[Neurips 2020 tutorial, Arthur Gretton, Dougal Sutherland, Wittawat Jitkrittum]](https://slideslive.com/38921490/interpretable-comparison-of-distributions-and-models)
 
-s
+
 + divergence measures
     + (P-Q) integral probability metrics (IPM)
         + Wasserstein metrics
@@ -288,3 +288,58 @@ s
     + find well behaved (smooth) function to maximize difference in expectation
     + intuition: if points are clustered separately, they are probably from different distribution (easier to find such f which maxmizes IPM)
 + MMD
+
+
+
+## Causal Inference and Stable Learning[[ICML 2019 tutorial, Peng Cui, Tong Zhang]](https://slideslive.com/38917403/causal-inference-and-stable-learning)
+
+
++ motivation 
+    + risk-sensitive areas: performance driven -> risk sensitive
++ the problems
+    + explainability
+        + human in the loop.
+        + the model should be understandable to humans so that human can cooperate with algorithm
+    + stability
+        + no performance guarantee when training/test data distribution are different
+        + this is in fact what needs to be addressed, instead of interpretability
+            + pacemaker for chest x-ray with disease, the model learns something different. This is due to training/test data distribution different
+            + think about linear models
++ where did explanability problem come from: __correlation__
+    + correlation is basics of ML, but is not unexplainable
+        + unstable  
+            + e.g. classifier of dog detects grass as highly indicative of dog in training datset, since grass is correlated with dog. But this correlation is not generalizable to test dataset where there are lots of examples where there is a dog but not grass.... So correlation is unstable
++ not the fault of correlation, but the way we use it!
+    + 3 sources of correlation
+        + causation
+            + causal mechanism
+            + T -> Y
+                + summer -> ice cream sales
+            + stable and explainable !
+        + confounding
+            + T <- X -> Y
+                + T,Y have spurious correlation
+                + X is income, T is product offer, Y is accepted
+                + T,Y independent conditioned on X, so they are not causal
+            + the model ignores X
+            + unstable and not explainable
+        + sample selection bias
+            + T -> S <- Y
+                + grass -> sample selection <- dog, i.e. training dataset selects samples with T and Y. But there is no causal relationship between them
+                + T,Y independent conditioned on S, so they are not causal
+            + unstable and not explainable
++ causality
+    + T causes Y <=> changing T leads to change in Y, while keeping everything else constant
+    + benefits
+        + 
+
+
+<div id="presentation-embed-38917403"></div>
+<script src='https://slideslive.com/embed_presentation.js'></script>
+<script>
+    embed = new SlidesLiveEmbed('presentation-embed-38917403', {
+        presentationId: '38917403',
+        autoPlay: false, // change to true to autoplay the embedded presentation
+        verticalEnabled: true
+    });
+</script>
