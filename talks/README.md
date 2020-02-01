@@ -12,7 +12,6 @@
   - [Causal Inference and Stable Learning[[ICML 2019 tutorial, Peng Cui, Tong Zhang]](https://slideslive.com/38917403/causal-inference-and-stable-learning)](#causal-inference-and-stable-learningicml-2019-tutorial-peng-cui-tong-zhang)
 
 
-
 ## Unsupervised Deep Learning [[Neurips 2018 tutorial]](https://www.youtube.com/watch?v=rjZCjosEFpI)
 
 
@@ -331,15 +330,52 @@
 + causality
     + T causes Y <=> changing T leads to change in Y, while keeping everything else constant
     + benefits
-        + 
-
-
-<div id="presentation-embed-38917403"></div>
-<script src='https://slideslive.com/embed_presentation.js'></script>
-<script>
-    embed = new SlidesLiveEmbed('presentation-embed-38917403', {
-        presentationId: '38917403',
-        autoPlay: false, // change to true to autoplay the embedded presentation
-        verticalEnabled: true
-    });
-</script>
+        + more explainable and more stable
+    + the gap 
+        + how to evaluate the outcome of a causal model
+        + in the wild
+            + high-dimensional
+            + highly noisy
+            + little prior knowledge (model specification, confounding structures)
+        + target problems
+            + understanding (causality) vs. prediction (learning)
+            + depth vs. scale and performance
++ structural causal model 
+    + use graphical model to describe causal mechanisms
+    + back door criterion to identify which variable to control to identify causal effect
+    + causal estimation with do calculus
++ discover causal structure
+    + by definition from some expert, but not generally feasible
+    + approaches
+        + constraint-based: conditional independence
+            + a generative model with strong expressive power, but induces complexity
+            + combinatorial problem
+        + potential outcome framework (https://en.wikipedia.org/wiki/Rubin_causal_model)
+            + simpler
+            + suppose all confounders of T are known a priori, and observed
+            + computational complexity affordable
+            + a discriminative way to estimate treatment's partial effect on outcome
+                + estimate Y from T, given all confounder, i.e. children of T and Y
++ causal effect estimation (potential outcome framework)
+    + Average causal effect of treatment (ATE)
+        + ATE = E[Y(T=1) - Y(T=0)] 
+    + counterfactual problem
+        + for each person, observe Y_t=1 or Y_t=0; but different groups (t=0,t=1) something else are not constant
+    + ideal solution: counterfactual world
+        + everything is same, except for T=1 or T=0
+        + randomized experiments are gold standards
+            + cost
+            + unethical
+            + unrealistic
+                + cannot control data generation process
+    + in reality: use observational data only   
+        + we cannot estimate ATE by comparing average outcome between two groups with observational data only, since X might not be same due to confounding effects
+        + need to balance confounders' effect in T=0 and T=1 group
++ confounder balancing
+    + matching
+        + large scale data
+        + can identify pairs of T=0 and T=1 units whose confounders X are similar or identical to each other
+            + distance(X_i,X_j) < epsilon 
+        + smalller epsilon, less bias but higher variance
+            + OK for low dimensional settings, but in high-dim there will be fewer matches
+    + 
