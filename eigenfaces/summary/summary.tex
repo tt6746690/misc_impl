@@ -68,6 +68,15 @@ We know that $\hat{cov}(\rx)$ is a symmetric matrix and therefore can be written
 \]
 where $\bQ^T\bQ = \bI$. The \textit{principal components} of $\bX$ are column vectors of $\bP$, i.e. eigenvectors for $\hat{cov}(\rx)$. $\ry$ is decorrelated and $\hat{\sigma}^2(\ry_i)$ is the variance of $\rx$ along $i$-th principal component.
 
+\subsection{Solving PCA using Singular Value Decomposition}
+
+
+The singular value decomposition of an arbitrary matrix $\bX \in \R^{N\times p}$ is
+\[
+    \bX = \bU \boldsymbol{\Sigma} \bV^T
+\]
+where $\bU \in \R^{N\times N}$ is orthogonal, $\boldsymbol{\Sigma} \in \R^{N\times p}$ is diagonal, $\bV \in \R^{p\times p}$ is orthogonal.
+
 
 
 
