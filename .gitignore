@@ -22,3 +22,8 @@ logs/
 *.fls
 *.log
 *.synctex.gz
+*.blg
+*.bcf
+*.run.xml
+*.bbl
+*-blx.bib

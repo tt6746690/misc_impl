@@ -5,6 +5,8 @@
 \graphicspath{{./assets}}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true, linktoc=all, linkcolor=blue, citecolor=red}
+\usepackage[backend=bibtex,sorting=none]{biblatex}
+\addbibresource{references.bib}
 
 \newcommand\ry{\ensuremath{\mathsf{y}}}
 \newcommand\rx{\ensuremath{\mathsf{x}}}
@@ -15,9 +17,9 @@
 
 \section{Principal Component Analysis}
 
-\subsection{Motivation}
+\subsection{Motivation} 
 
-PCA wants to identify a \textit{meaningful} basis to re-express the dataset. PCA assumes that a \textit{meaningful} data representation is one which
+PCA wants to identify a \textit{meaningful} basis to re-express the dataset \cite{shlensTutorialPrincipalComponent2014}. PCA assumes that a \textit{meaningful} data representation is one which
 \begin{enumerate}
     \item the features with large variance have meaningful structure and should be preserved
     \item the features with small variance are noise and should be discarded
@@ -39,7 +41,7 @@ Note that for a random variable $\rx$ with stacked observations $\bX\in\R^{N\tim
 \]
 where $\bX_i,\bX_j$ are $i$ and $j$-th column of $\bX$ and $\overline{\bX}_i = \frac{1}{N} \sum_j \bX_{ji}$. So then,
 \[
-    \hat{cov}(\rx) 
+    \widehat{\cov}(\rx) 
     = \begin{bmatrix}
         \hat{\sigma}(\rx_i,\rx_j)
     \end{bmatrix}_{i,j=1}^p
@@ -51,31 +53,52 @@ where $\overline{\bX}$ is column wise feature average of $\bX$. For zero mean ob
 
 We first write covariance matrix for $\bY$,
 \[
-    \hat{cov}(\ry)
+    \widehat{\cov}(\ry)
     = \frac{1}{N} \bY^T \bY
     = \frac{1}{N} (\bX\bP)^T (\bX\bP)
     = \bP^T \left( \frac{1}{N} \bX^T\bX \right) \bP
-    = \bP^T \hat{cov}(\rx) \bP
+    = \bP^T \widehat{\cov}(\rx) \bP
 \]
-We know that $\hat{cov}(\rx)$ is a symmetric matrix and therefore can be written as $\hat{cov}(\rx) = \bQ \boldsymbol{\Lambda} \bQ^T$ where $\bQ \in \R^{p\times p}$ are eigenvectors of $\hat{cov}(\rx)$ with corresponding eigenvalues along diagonal entries in $\boldsymbol{\Lambda}$. Setting projection to be eigenvectors of $\hat{cov}(\rx)$ diagonalizes $\hat{cov}(\ry)$,
+We know that $\widehat{\cov}(\rx)$ is a symmetric matrix and therefore can be written as $\widehat{\cov}(\rx) = \bQ \boldsymbol{\Lambda} \bQ^T$ where $\bQ \in \R^{p\times p}$ are eigenvectors of $\widehat{\cov}(\rx)$ with corresponding eigenvalues along diagonal entries in $\boldsymbol{\Lambda}$. Setting projection to be eigenvectors of $\widehat{\cov}(\rx)$ diagonalizes $\widehat{\cov}(\ry)$,
 \[
     \bP \leftarrow \bQ
     \quad\quad \Rightarrow \quad\quad
-    \hat{cov}(\ry)
-    = \bP^T \hat{cov}(\rx) \bP
+    \widehat{\cov}(\ry)
+    = \bP^T \widehat{\cov}(\rx) \bP
     = \bQ^T \bQ \boldsymbol{\Lambda} \bQ^T \bQ
     = \boldsymbol{\Lambda} 
 \]
-where $\bQ^T\bQ = \bI$. The \textit{principal components} of $\bX$ are column vectors of $\bP$, i.e. eigenvectors for $\hat{cov}(\rx)$. $\ry$ is decorrelated and $\hat{\sigma}^2(\ry_i)$ is the variance of $\rx$ along $i$-th principal component.
+where $\bQ^T\bQ = \bI$. The \textit{principal components} of $\bX$ are column vectors of $\bP$, i.e. eigenvectors for $\widehat{\cov}(\rx)$. $\ry$ is decorrelated and $\hat{\sigma}^2(\ry_i)$ is the variance of $\rx$ along $i$-th principal component.
 
-\subsection{Solving PCA using Singular Value Decomposition}
+\subsection{Singular Value Decomposition}
 
 
 The singular value decomposition of an arbitrary matrix $\bX \in \R^{N\times p}$ is
 \[
     \bX = \bU \boldsymbol{\Sigma} \bV^T
 \]
-where $\bU \in \R^{N\times N}$ is orthogonal, $\boldsymbol{\Sigma} \in \R^{N\times p}$ is diagonal, $\bV \in \R^{p\times p}$ is orthogonal.
+where left singular vectors $\bU \in \R^{N\times N}$ is orthogonal, singular values $\boldsymbol{\Sigma} \in \R^{N\times p}$ is diagonal, right singular vectors $\bV \in \R^{p\times p}$ is orthogonal. If $\bX^T\bX$ is has rank $r$, then column vectors of $\bV$ are eigenvectors with eigenvalues $\{\lambda_i\}_{i=1}^r$ (assuming descending ordering) for symmetric matrix $\bX^T\bX$, i.e. $(\bX^T\bX) \bv_i = \lambda_i \bv_i$. Entries along the diagonals of $\boldsymbol{\Sigma}$ are singular values $\sigma_i = \sqrt{\lambda_i}$. The column vectors of $\bU$ are given by $\bu_i = \frac{1}{\sigma_i} \bX \bv_i$. We can show that column vectors of $\bU$ are unit orthonormal vectors. Grouping linear relationships $\bX \bv_i = \sigma_i \bu_i$ yield $\bX \bV = \boldsymbol{\Sigma}\bU$. Note, $\bV$ acts similarly to the projection matrix $\bP$. 
+
+\subsection{PCA and SVD}
+
+From previous, the principal components of $\bX$ are the eigenvectors of $\widehat{\cov}(\rx)$. Let $\bW = \frac{1}{\sqrt{N}} \bX$, then right singular vectors of $\bW$ are the principal components desired,
+\[
+    \bW^T\bW 
+    = \left( \frac{1}{\sqrt{N}} \bX \right)^T \left( \frac{1}{\sqrt{N}} \bX \right)
+    = \frac{1}{N} \bX^T\bX
+    = \widehat{\cov(\rx)}
+\]
+and that $\hat{\sigma}^2(y_i) = \boldsymbol{\Sigma}_{ii}^2$
+
+\section{Eigenfaces for Recognition}
+
+Eigenfaces project a set of faces to the \textit{face space}, spanned by a set of orthonormal \textit{eigenfaces}, which best encode variation amongst faces \cite{pentlandFaceRecognitionUsing1991,turkEigenfacesRecognition1991,junzhangFaceRecognitionEigenface1997}. In practice this means doing SVD on the set of zero mean faces $\bX$, pick first $M$ right singular vectors $\bV\in\R^{p\times M}$ associated with largest singular values. columns of $\bV$ are called \textit{eigenfaces} and $col(\bV)$ is the \textit{face space}. We can project a new image $\bx \in \R^{1\times p}$ to the face space, $\by = (\bx-\overline{\bX})\bV$ and classify faces to class $k = \argmin_{k\in 1:N} \norm{ \by - (\bX\bV)_k }$.
+
+
+
+
+
+\printbibliography 
 
 
 
