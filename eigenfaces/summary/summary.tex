@@ -1,0 +1,74 @@
+\documentclass[11pt]{article}
+\input{\string~/.macros}
+\usepackage[a4paper, total={6in, 9in}]{geometry}
+\usepackage{graphicx}
+\graphicspath{{./assets}}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linktoc=all, linkcolor=blue, citecolor=red}
+
+\newcommand\ry{\ensuremath{\mathsf{y}}}
+\newcommand\rx{\ensuremath{\mathsf{x}}}
+
+
+\begin{document}
+
+
+\section{Principal Component Analysis}
+
+\subsection{Motivation}
+
+PCA wants to identify a \textit{meaningful} basis to re-express the dataset. PCA assumes that a \textit{meaningful} data representation is one which
+\begin{enumerate}
+    \item the features with large variance have meaningful structure and should be preserved
+    \item the features with small variance are noise and should be discarded
+    \item correlated features indicate redundancy and should be made uncorrelated
+\end{enumerate}
+Suppose we have observations $\{x_i\}_{i=1}^N$ where $x_i\in \R^p$ for some random variable $\rx$. We want to find linear transformation of $\rx$ to obtain $\ry$. In particular, let $\bX \in \R^{N\times p}$ be stacked observations, we want to find a linear map $\bP \in \R^{p\times q}$, where columns of $\bP$ are orthonormal basis for feature space, i.e. $row(\bX)$, to re-express data $\bX$ to $\bY \in \R^{N\times q}$.
+\[
+    \bY = \bX \bP    
+\]
+$\bY$ has a meaningful representation if $cov(\bY)$ is a diagonal matrix (decorrelated), and that successive dimension in $\bY$ are rank-ordered according to variance (preserve, discard noise). 
+
+\subsection{Empirical Covariance Matrix}
+
+Note that for a random variable $\rx$ with stacked observations $\bX\in\R^{N\times p}$, the empirical covariance for $\rx_i,\rx_j$ is given by 
+\[
+    \hat{\sigma}^2(\rx_i,\rx_j)
+    = \frac{1}{N} \sum_i (x_i-\overline{x}_i)(x_j-\overline{x}_j) 
+    = \frac{1}{N} \left( \bX_i - \overline{\bX}_i \mathbf{1}_N \right)^T \left( \bX_j - \overline{\bX}_j \mathbf{1}_N \right)
+\]
+where $\bX_i,\bX_j$ are $i$ and $j$-th column of $\bX$ and $\overline{\bX}_i = \frac{1}{N} \sum_j \bX_{ji}$. So then,
+\[
+    \hat{cov}(\rx) 
+    = \begin{bmatrix}
+        \hat{\sigma}(\rx_i,\rx_j)
+    \end{bmatrix}_{i,j=1}^p
+    = \frac{1}{N} \left( \bX - \overline{\bX} \mathbf{1}_N \right)^T \left( \bX - \overline{\bX} \mathbf{1}_N \right)
+\]
+where $\overline{\bX}$ is column wise feature average of $\bX$. For zero mean observation matrix, the empirical covariance matrix is simply $\frac{1}{N} \bX^T \bX$
+
+\subsection{Solving PCA using Eigenvector Decomposition}
+
+We first write covariance matrix for $\bY$,
+\[
+    \hat{cov}(\ry)
+    = \frac{1}{N} \bY^T \bY
+    = \frac{1}{N} (\bX\bP)^T (\bX\bP)
+    = \bP^T \left( \frac{1}{N} \bX^T\bX \right) \bP
+    = \bP^T \hat{cov}(\rx) \bP
+\]
+We know that $\hat{cov}(\rx)$ is a symmetric matrix and therefore can be written as $\hat{cov}(\rx) = \bQ \boldsymbol{\Lambda} \bQ^T$ where $\bQ \in \R^{p\times p}$ are eigenvectors of $\hat{cov}(\rx)$ with corresponding eigenvalues along diagonal entries in $\boldsymbol{\Lambda}$. Setting projection to be eigenvectors of $\hat{cov}(\rx)$ diagonalizes $\hat{cov}(\ry)$,
+\[
+    \bP \leftarrow \bQ
+    \quad\quad \Rightarrow \quad\quad
+    \hat{cov}(\ry)
+    = \bP^T \hat{cov}(\rx) \bP
+    = \bQ^T \bQ \boldsymbol{\Lambda} \bQ^T \bQ
+    = \boldsymbol{\Lambda} 
+\]
+where $\bQ^T\bQ = \bI$. The \textit{principal components} of $\bX$ are column vectors of $\bP$, i.e. eigenvectors for $\hat{cov}(\rx)$. $\ry$ is decorrelated and $\hat{\sigma}^2(\ry_i)$ is the variance of $\rx$ along $i$-th principal component.
+
+
+
+
+\end{document}

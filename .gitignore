@@ -14,3 +14,11 @@ logs/
 
 # slurm 
 *.out
+
+
+# latex 
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.synctex.gz
