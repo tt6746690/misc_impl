@@ -57,6 +57,8 @@
 + the number of feature layers for conv layers mattered 
     + changing from 128 -> 64 worked on MNIST
 + a stronger (more feature layers) generator definitely helped with convergence
++ training GAN 
+    + stability, saturation problem, needs to read more on GAN-training tricks
 
 
 ## tutorials
