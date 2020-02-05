@@ -10,6 +10,11 @@
 
 \newcommand\ry{\ensuremath{\mathsf{y}}}
 \newcommand\rx{\ensuremath{\mathsf{x}}}
+\newcommand\rb{\ensuremath{\mathsf{b}}}
+
+\renewcommand\bmu{\ensuremath{\boldsymbol{\mu}}}
+\newcommand\bSigma{\ensuremath{\boldsymbol{\Sigma}}}
+
 
 
 \begin{document}
@@ -29,7 +34,7 @@ Suppose we have observations $\{x_i\}_{i=1}^N$ where $x_i\in \R^p$ for some rand
 \[
     \bY = \bX \bP    
 \]
-$\bY$ has a meaningful representation if $cov(\bY)$ is a diagonal matrix (decorrelated), and that successive dimension in $\bY$ are rank-ordered according to variance (preserve, discard noise). 
+$\bY$ has a meaningful representation if $cov(\bY)$ is a diagonal matrix (decorrelated), and that successive dimension in $\bY$ are rank-ordered according to variance (preserve struture, discard noise). 
 
 \subsection{Empirical Covariance Matrix}
 
@@ -79,7 +84,7 @@ The singular value decomposition of an arbitrary matrix $\bX \in \R^{N\times p}$
 \]
 where left singular vectors $\bU \in \R^{N\times N}$ is orthogonal, singular values $\boldsymbol{\Sigma} \in \R^{N\times p}$ is diagonal, right singular vectors $\bV \in \R^{p\times p}$ is orthogonal. If $\bX^T\bX$ is has rank $r$, then column vectors of $\bV$ are eigenvectors with eigenvalues $\{\lambda_i\}_{i=1}^r$ (assuming descending ordering) for symmetric matrix $\bX^T\bX$, i.e. $(\bX^T\bX) \bv_i = \lambda_i \bv_i$. Entries along the diagonals of $\boldsymbol{\Sigma}$ are singular values $\sigma_i = \sqrt{\lambda_i}$. The column vectors of $\bU$ are given by $\bu_i = \frac{1}{\sigma_i} \bX \bv_i$. We can show that column vectors of $\bU$ are unit orthonormal vectors. Grouping linear relationships $\bX \bv_i = \sigma_i \bu_i$ yield $\bX \bV = \boldsymbol{\Sigma}\bU$. Note, $\bV$ acts similarly to the projection matrix $\bP$. 
 
-\subsection{PCA and SVD}
+\subsection{Solving PCA using SVD}
 
 From previous, the principal components of $\bX$ are the eigenvectors of $\widehat{\cov}(\rx)$. Let $\bW = \frac{1}{\sqrt{N}} \bX$, then right singular vectors of $\bW$ are the principal components desired,
 \[
@@ -90,14 +95,25 @@ From previous, the principal components of $\bX$ are the eigenvectors of $\wideh
 \]
 and that $\hat{\sigma}^2(y_i) = \boldsymbol{\Sigma}_{ii}^2$
 
+
+\subsection{Limitations}
+
+PCA works well with Gaussian observations, in particular the transformed data is guaranteed to be independent. If $\rx$ is jointly Gaussian, then any linear function of $\rx$ is also jointly Gaussian. Suppose $\rb \sim \sN(\boldsymbol{\mu}_{\rb},\boldsymbol{\Sigma}_{\rb})$
+\[
+    \rx \sim \sN(\bmu_{\rx},\bSigma_{\rx})
+    \quad\quad \Rightarrow \quad\quad
+    A\rx + \rb \sim \sN(A\bmu_{\rx} + \bmu_{\rb}, A\bSigma_{\rx} A^T + \bSigma_{\rb})
+\]
+Therefore, the transformed data $\ry$ are jointly Gaussian. Any two variables $\ry_i,\ry_j$ are un-correlated (by diagonal $\widehat{\cov}(\ry)$) and therefore independent (by $\ry$ jointly Gaussian). For non jointly Gaussian data, we can not assume independence in the transformed data. In other words, PCA is not able to reveal non-linear relationships between features.
+
+
+
 \section{Eigenfaces for Recognition}
 
 Eigenfaces project a set of faces to the \textit{face space}, spanned by a set of orthonormal \textit{eigenfaces}, which best encode variation amongst faces \cite{pentlandFaceRecognitionUsing1991,turkEigenfacesRecognition1991,junzhangFaceRecognitionEigenface1997}. In practice this means doing SVD on the set of zero mean faces $\bX$, pick first $M$ right singular vectors $\bV\in\R^{p\times M}$ associated with largest singular values. columns of $\bV$ are called \textit{eigenfaces} and $col(\bV)$ is the \textit{face space}. We can project a new image $\bx \in \R^{1\times p}$ to the face space, $\by = (\bx-\overline{\bX})\bV$ and classify faces to class $k = \argmin_{k\in 1:N} \norm{ \by - (\bX\bV)_k }$.
 
 
-
-
-
+\newpage
 \printbibliography 
 
 
