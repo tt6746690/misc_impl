@@ -31,37 +31,38 @@ PCA wants to identify a \textit{meaningful} basis to re-express the dataset \cit
     \item correlated features indicate redundancy and should be made uncorrelated
 \end{enumerate}
 Suppose we have observations $\{x_i\}_{i=1}^N$ where $x_i\in \R^p$ for some random variable $\rx$. We want to find linear transformation of $\rx$ to obtain $\ry$. In particular, let $\bX \in \R^{N\times p}$ be stacked observations, we want to find a linear map $\bP \in \R^{p\times q}$, where columns of $\bP$ are orthonormal basis for feature space, i.e. $row(\bX)$, to re-express data $\bX$ to $\bY \in \R^{N\times q}$.
-\[
-    \bY = \bX \bP    
-\]
-$\bY$ has a meaningful representation if $cov(\bY)$ is a diagonal matrix (decorrelated), and that successive dimension in $\bY$ are rank-ordered according to variance (preserve struture, discard noise). 
+\begin{equation}
+    \label{eq:1}
+    \bY = \bX \bP
+\end{equation}
+$\bY$ has a meaningful representation if $cov(\bY)$ is a diagonal matrix (decorrelated), and that successive dimension in $\bY$ are rank-ordered according to variance (preserve struture, discard noise). We might want to take the first $k$ principal components that accounts for the majority of variation in data, i.e. $\bP \leftarrow \begin{bmatrix} \bP_1,\cdots,\bP_k \end{bmatrix}$ and compute the projected data according to (\ref{eq:1}). We can un-project the data to the original feature space by $\widehat{\bX} = \bY\bP^T$
 
 \subsection{Empirical Covariance Matrix}
 
 Note that for a random variable $\rx$ with stacked observations $\bX\in\R^{N\times p}$, the empirical covariance for $\rx_i,\rx_j$ is given by 
 \[
     \hat{\sigma}^2(\rx_i,\rx_j)
-    = \frac{1}{N} \sum_i (x_i-\overline{x}_i)(x_j-\overline{x}_j) 
-    = \frac{1}{N} \left( \bX_i - \overline{\bX}_i \mathbf{1}_N \right)^T \left( \bX_j - \overline{\bX}_j \mathbf{1}_N \right)
+    = \frac{1}{N-1} \sum_i (x_i-\overline{x}_i)(x_j-\overline{x}_j) 
+    = \frac{1}{N-1} \left( \bX_i - \overline{\bX}_i \mathbf{1}_N \right)^T \left( \bX_j - \overline{\bX}_j \mathbf{1}_N \right)
 \]
-where $\bX_i,\bX_j$ are $i$ and $j$-th column of $\bX$ and $\overline{\bX}_i = \frac{1}{N} \sum_j \bX_{ji}$. So then,
+where $\bX_i,\bX_j$ are $i$ and $j$-th column of $\bX$ and $\overline{\bX}_i = \frac{1}{N-1} \sum_j \bX_{ji}$. So then,
 \[
     \widehat{\cov}(\rx) 
     = \begin{bmatrix}
         \hat{\sigma}(\rx_i,\rx_j)
     \end{bmatrix}_{i,j=1}^p
-    = \frac{1}{N} \left( \bX - \overline{\bX} \mathbf{1}_N \right)^T \left( \bX - \overline{\bX} \mathbf{1}_N \right)
+    = \frac{1}{N-1} \left( \bX - \overline{\bX} \mathbf{1}_N \right)^T \left( \bX - \overline{\bX} \mathbf{1}_N \right)
 \]
-where $\overline{\bX}$ is column wise feature average of $\bX$. For zero mean observation matrix, the empirical covariance matrix is simply $\frac{1}{N} \bX^T \bX$
+where $\overline{\bX}$ is column wise feature average of $\bX$. For zero mean observation matrix, the empirical covariance matrix is simply $\frac{1}{N-1} \bX^T \bX$
 
 \subsection{Solving PCA using Eigenvector Decomposition}
 
 We first write covariance matrix for $\bY$,
 \[
     \widehat{\cov}(\ry)
-    = \frac{1}{N} \bY^T \bY
-    = \frac{1}{N} (\bX\bP)^T (\bX\bP)
-    = \bP^T \left( \frac{1}{N} \bX^T\bX \right) \bP
+    = \frac{1}{N-1} \bY^T \bY
+    = \frac{1}{N-1} (\bX\bP)^T (\bX\bP)
+    = \bP^T \left( \frac{1}{N-1} \bX^T\bX \right) \bP
     = \bP^T \widehat{\cov}(\rx) \bP
 \]
 We know that $\widehat{\cov}(\rx)$ is a symmetric matrix and therefore can be written as $\widehat{\cov}(\rx) = \bQ \boldsymbol{\Lambda} \bQ^T$ where $\bQ \in \R^{p\times p}$ are eigenvectors of $\widehat{\cov}(\rx)$ with corresponding eigenvalues along diagonal entries in $\boldsymbol{\Lambda}$. Setting projection to be eigenvectors of $\widehat{\cov}(\rx)$ diagonalizes $\widehat{\cov}(\ry)$,
@@ -86,25 +87,26 @@ where left singular vectors $\bU \in \R^{N\times N}$ is orthogonal, singular val
 
 \subsection{Solving PCA using SVD}
 
-From previous, the principal components of $\bX$ are the eigenvectors of $\widehat{\cov}(\rx)$. Let $\bW = \frac{1}{\sqrt{N}} \bX$, then right singular vectors of $\bW$ are the principal components desired,
+From previous, the principal components of $\bX$ are the eigenvectors of $\widehat{\cov}(\rx)$. Let $\bW = \frac{1}{\sqrt{N-1}} \bX$, then right singular vectors of $\bW$ are the principal components desired
 \[
     \bW^T\bW 
-    = \left( \frac{1}{\sqrt{N}} \bX \right)^T \left( \frac{1}{\sqrt{N}} \bX \right)
-    = \frac{1}{N} \bX^T\bX
+    = \left( \frac{1}{\sqrt{N-1}} \bX \right)^T \left( \frac{1}{\sqrt{N-1}} \bX \right)
+    = \frac{1}{N-1} \bX^T\bX
     = \widehat{\cov(\rx)}
 \]
-and that $\hat{\sigma}^2(y_i) = \boldsymbol{\Sigma}_{ii}^2$
+and that $\hat{\sigma}^2(y_i) = \boldsymbol{\Sigma}_{ii}^2$. In particular, the projected data is 
+\[
+    \bY = \bX\bP = (\bU\bSigma\bV^T)\bV = \bU\bSigma    
+\]
 
 
 \subsection{Limitations}
 
-PCA works well with Gaussian observations, in particular the transformed data is guaranteed to be independent. If $\rx$ is jointly Gaussian, then any linear function of $\rx$ is also jointly Gaussian. Suppose $\rb \sim \sN(\boldsymbol{\mu}_{\rb},\boldsymbol{\Sigma}_{\rb})$
+PCA works well with Gaussian observations, in particular the transformed data is guaranteed to be independent. If $\rx$ is jointly Gaussian, then any linear function of $\rx$ is also jointly Gaussian. Suppose $\rx \sim \sN(\bmu_{\rx},\bSigma_{\rx})$ and $\rb \sim \sN(\boldsymbol{\mu}_{\rb},\boldsymbol{\Sigma}_{\rb})$, then
 \[
-    \rx \sim \sN(\bmu_{\rx},\bSigma_{\rx})
-    \quad\quad \Rightarrow \quad\quad
     A\rx + \rb \sim \sN(A\bmu_{\rx} + \bmu_{\rb}, A\bSigma_{\rx} A^T + \bSigma_{\rb})
 \]
-Therefore, the transformed data $\ry$ are jointly Gaussian. Any two variables $\ry_i,\ry_j$ are un-correlated (by diagonal $\widehat{\cov}(\ry)$) and therefore independent (by $\ry$ jointly Gaussian). For non jointly Gaussian data, we can not assume independence in the transformed data. In other words, PCA is not able to reveal non-linear relationships between features.
+i.e. the transformed data $\ry$ are jointly Gaussian. Any two variables $\ry_i,\ry_j$ are un-correlated (by diagonal $\widehat{\cov}(\ry)$) and therefore independent (by $\ry$ jointly Gaussian). For non jointly Gaussian $\rx$, we can not assume independence in $\ry$. In other words, PCA is not able to reveal non-linear relationships between features.
 
 
 

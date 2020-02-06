@@ -13,3 +13,5 @@ dependencies:
     - tqdm
     - tensorboard
     - opencv
+    - scikit-learn
+    - pylint
