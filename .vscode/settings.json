@@ -1,5 +1,5 @@
 {
     "python.linting.pylintEnabled": true,
     "python.linting.enabled": true,
-    "python.pythonPath": "/Users/wpq/opt/miniconda3/envs/misc_impl/bin/python"
+    "python.pythonPath": "/Users/markwang/miniconda3/envs/cv_project/bin/python"
 }

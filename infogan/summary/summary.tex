@@ -1,0 +1,80 @@
+\documentclass[11pt]{article}
+\input{\string~/.macros}
+\usepackage[a4paper, total={6in, 9in}]{geometry}
+\usepackage{graphicx}
+\graphicspath{{./assets}}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linktoc=all, linkcolor=blue, citecolor=red}
+\usepackage[backend=bibtex,sorting=none]{biblatex}
+\addbibresource{information_theory.bib}
+\addbibresource{generative_GAN.bib}
+\addbibresource{generative_approximate.bib}
+
+
+\newcommand\ry{\ensuremath{\mathsf{y}}}
+\newcommand\rx{\ensuremath{\mathsf{x}}}
+\newcommand\rb{\ensuremath{\mathsf{b}}}
+\newcommand\rc{\ensuremath{\mathsf{c}}}
+\newcommand\rz{\ensuremath{\mathsf{z}}}
+
+
+\renewcommand\bmu{\ensuremath{\boldsymbol{\mu}}}
+\newcommand\bSigma{\ensuremath{\boldsymbol{\Sigma}}}
+
+
+
+\begin{document}
+
+
+\section{InfoGAN}
+
+InfoGAN extends the GAN objective to include a new term which encourages high mutual information between generated data and a subset of latent codes \cite{chenInfoGANInterpretableRepresentation2016}. Let $(\rc,\rz)$ be latent variable, where $\rc$ are latent codes capturing semantic features of the data distribution and $\rz$ are source of incompressible noise.
+
+\subsection{Probabilistic Interpretation}
+
+\fig{graph}{1in}
+A simpler view of method presented in the paper is to consider the above generative model. The joint density can be factorized as follows
+\[
+    p_{\rc,\rx} = p_{\rc}(c) p_{\rx|\rc}(x|c) = \prod_{l=1}^L p_{\rc_l}(c_l) p_{\rx|\rc}(x|c)
+\]
+The paper implicitly model $p_{\rx|\rc}$ by using a combination of 1) a deterministic generator $G:\sC\times\sZ\to\sX$ and 2) a stochastic noise sampler $\rz \sim p_{\rz}$. In particular, $f:\sC\to \sX; c \mapsto G(c,z)$ for some $z\sim p_{\rz}$ is trained to sample from $p_{\rx|\rc}(\cdot|c)$ using the adversarial loss \cite{goodfellowGenerativeAdversarialNetworks2014}.
+
+\subsection{Variational Maximization of Mutual Information}
+
+The paper is motivated to construct latent code in such a way such that when given a sample, we would be quite certain what the latent codes are. In other words, we are interested in the following optimization problem 
+\begin{equation}
+    \label{eq:1}
+    \min_{G} H(\rc|\rx) 
+    \quad\quad \text{where}\quad\quad
+    \rx = G(\rc,\rz)
+\end{equation}
+If we know the parametric family of distribution $\rc$ is in, this is equivalent to maximizing mutual information between latent codes and generated sample. Given $H(\rc|\rx) = H(\rc) - I(\rc;\rx)$, we can rewrite (\ref{eq:1}) as
+\[
+    \max_G I(\rc; \rx) 
+        = \E_{\rc,\rx}\left[ \ln \frac{p_{\rc,\rx}(c,x) }{p_{\rc}(c) p_{\rx}(x)} \right]
+\]
+which is intractable, since we do not know the implicit likelihood $p_{\rx|\rc}$ nor the posterior $p_{\rc|\rx}$. Instead we use $q_{\rc|\rx}$, parameterize by a neural network, as the variational distribution and derived a lower bound for optimization \cite{barberIMAlgorithmVariational2003,pooleVariationalBoundsMutual2019},
+\begin{align*}
+    I(\rc;\rx)
+        &= H(\rc) - H(\rc|\rx) \\
+        &= \sum_{x} p_{\rx}(x) \sum_{c} p_{\rc|\rx}(c|x) \ln p_{\rc|\rx}(c|x) + H(\rc) \\
+        &= \sum_{x} p_{\rx}(x) \sum_{c} p_{\rc|\rx}(c|x) \ln \frac{p_{\rc|\rx}(c|x)}{q_{\rc|\rx}(c|x)} + \sum_{x} p_{\rx}(x) \sum_{c} p_{\rc|\rx}(c|x) \ln q_{\rc|\rx}(c|x) + H(\rc) \\
+        &= \E_{\rx} \left[ KL(p_{\rc|\rx}(c|x) || q_{\rc|\rx}(c|x)) \right] + \E_{\rc,\rx} \left[ \ln q_{\rc|\rx}(c|x) \right] + H(\rc) \\
+        &\geq  \E_{\rc,\rx} \left[ \ln q_{\rc|\rx}(c|x) \right] + H(\rc)  \tag{$KL \geq 0$}
+\end{align*}
+This lower bound can be optimized using stochastic gradient via Monte Carlo estimation,
+\begin{align*}
+    \nabla_{\theta} I(\rc;\rx) 
+        &= \nabla_{\theta} \E_{\rc,\rx} \left[ \ln q_{\rc|\rx}(c|x) \right] \\
+        &= \E_{\rc,\rz} \left[ \nabla_{\theta} \ln q_{\rc|\rx}(c|G(c,z)) \right] \\
+        &\approx \sum_{i=1}^N  \nabla_{\theta} \ln q_{\rc|\rx}(c^{(i)}|G(c^{(i)},z^{(i)}) \\
+        &\quad\quad\text{where} \quad c^{(i)} \sim p_{\rc} \quad z^{(i)} \sim p_{\rz} \quad\quad i=1,\cdots,N
+\end{align*}
+We could also interpret the idea of randomizing the generator using a noise sampler as performing the reparameterization trick \cite{kingmaAutoEncodingVariationalBayes2014}. We avoid taking gradient of expectation with respect to $p_{\rx|\rc}$; Instead, we take sample from a known distribution $z\sim p_{\rz}$ and then compute the desired sample $x = G(c,z)$ via a deterministic function.
+
+\printbibliography 
+
+
+
+
+\end{document}
