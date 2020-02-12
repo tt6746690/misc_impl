@@ -51,26 +51,46 @@ The paper is motivated to construct latent code in such a way such that when giv
 If we know the parametric family of distribution $\rc$ is in, this is equivalent to maximizing mutual information between latent codes and generated sample. Given $H(\rc|\rx) = H(\rc) - I(\rc;\rx)$, we can rewrite (\ref{eq:1}) as
 \[
     \max_G I(\rc; \rx) 
-        = \E_{\rc,\rx}\left[ \ln \frac{p_{\rc,\rx}(c,x) }{p_{\rc}(c) p_{\rx}(x)} \right]
+        = \E_{\rc,\rx}\left[ \log \frac{p_{\rc,\rx}(c,x) }{p_{\rc}(c) p_{\rx}(x)} \right]
 \]
 which is intractable, since we do not know the implicit likelihood $p_{\rx|\rc}$ nor the posterior $p_{\rc|\rx}$. Instead we approximate $p_{\rc|\rx}$ with using $q_{\rc|\rx}$, parameterize by a neural network, and derive a lower bound for the objective \cite{barberIMAlgorithmVariational2003,pooleVariationalBoundsMutual2019},
 \begin{align*}
     I(\rc;\rx)
         &= H(\rc) - H(\rc|\rx) \\
-        &= \sum_{x} p_{\rx}(x) \sum_{c} p_{\rc|\rx}(c|x) \ln p_{\rc|\rx}(c|x) + H(\rc) \\
-        &= \sum_{x} p_{\rx}(x) \sum_{c} p_{\rc|\rx}(c|x) \ln \frac{p_{\rc|\rx}(c|x)}{q_{\rc|\rx}(c|x)} + \sum_{x} p_{\rx}(x) \sum_{c} p_{\rc|\rx}(c|x) \ln q_{\rc|\rx}(c|x) + H(\rc) \\
-        &= \E_{\rx} \left[ KL(p_{\rc|\rx}(c|x) || q_{\rc|\rx}(c|x)) \right] + \E_{\rc,\rx} \left[ \ln q_{\rc|\rx}(c|x) \right] + H(\rc) \\
-        &\geq  \E_{\rc,\rx} \left[ \ln q_{\rc|\rx}(c|x) \right] + H(\rc)  \tag{$KL \geq 0$}
+        &= \sum_{x} p_{\rx}(x) \sum_{c} p_{\rc|\rx}(c|x) \log p_{\rc|\rx}(c|x) + H(\rc) \\
+        &= \sum_{x} p_{\rx}(x) \sum_{c} p_{\rc|\rx}(c|x) \log \frac{p_{\rc|\rx}(c|x)}{q_{\rc|\rx}(c|x)} + \sum_{x} p_{\rx}(x) \sum_{c} p_{\rc|\rx}(c|x) \log q_{\rc|\rx}(c|x) + H(\rc) \\
+        &= \E_{\rx} \left[ KL(p_{\rc|\rx}(c|x) || q_{\rc|\rx}(c|x)) \right] + \E_{\rc,\rx} \left[ \log q_{\rc|\rx}(c|x) \right] + H(\rc) \\
+        &\geq  \E_{\rc,\rx} \left[ \log q_{\rc|\rx}(c|x) \right] + H(\rc)  \tag{$KL \geq 0$} \\
+        &= \E_{\rc,\rz} \pb{ \log q_{\rc|\rx}(c|G(c,z)) } + H(\rc)
 \end{align*}
+
+\subsection{Gradient Estimator}
+
 This lower bound can be optimized using stochastic gradient via Monte Carlo estimation,
 \begin{align*}
     \nabla_{\theta} I(\rc;\rx) 
-        &= \nabla_{\theta} \E_{\rc,\rx} \left[ \ln q_{\rc|\rx}(c|x) \right] \\
-        &= \E_{\rc,\rz} \left[ \nabla_{\theta} \ln q_{\rc|\rx}(c|G(c,z)) \right] \\
-        &\approx \sum_{i=1}^N  \nabla_{\theta} \ln q_{\rc|\rx}(c^{(i)}|G(c^{(i)},z^{(i)})) \\
+        &= \nabla_{\theta} \E_{\rc,\rx} \left[ \log q_{\rc|\rx}(c|x) \right] \\
+        &= \E_{\rc,\rz} \left[ \nabla_{\theta} \log q_{\rc|\rx}(c|G(c,z)) \right] \\
+        &\approx \sum_{i=1}^N  \nabla_{\theta} \log q_{\rc|\rx}(c^{(i)}|G(c^{(i)},z^{(i)})) \\
         &\quad\quad\text{where} \quad c^{(i)} \sim p_{\rc} \quad z^{(i)} \sim p_{\rz} \quad\quad i=1,\cdots,N
 \end{align*}
 We could also interpret the idea of randomizing the generator using a noise sampler as performing the reparameterization trick \cite{kingmaAutoEncodingVariationalBayes2014}. We avoid taking gradient of expectation with respect to $p_{\rx|\rc}$; Instead, we take sample from a known distribution $z\sim p_{\rz}$ and then compute the desired sample $x = G(c,z)$ via a deterministic function.
+
+
+
+\subsection{Optimization}
+
+Note $q_{\rc|\rx}$ is parameterized by a neural netowrk Q. Given the loss
+\begin{align*}
+    \sL_{GAN}(D,G) 
+        &= \E_{x\sim p_{data}}\pb{\log D(x)} + \E_{z\sim p_{niose}} \pb{ \log(1-D(G(z))) } \\\
+    \sL_{MI}(Q,G)
+        &= \E_{\rc\sim \p{c},\rx\sim }
+\end{align*}
+
+
+
+
 
 \printbibliography 
 
