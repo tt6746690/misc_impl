@@ -1,5 +1,6 @@
 \documentclass[11pt]{article}
 \input{\string~/.macros}
+\usepackage{bbm}
 \usepackage[a4paper, total={6in, 9in}]{geometry}
 \usepackage{graphicx}
 \graphicspath{{./assets}}
@@ -9,6 +10,7 @@
 \addbibresource{information_theory.bib}
 \addbibresource{generative_GAN.bib}
 \addbibresource{generative_approximate.bib}
+\addbibresource{estimation.bib}
 
 
 \newcommand\ry{\ensuremath{\mathsf{y}}}
@@ -16,6 +18,13 @@
 \newcommand\rb{\ensuremath{\mathsf{b}}}
 \newcommand\rc{\ensuremath{\mathsf{c}}}
 \newcommand\rz{\ensuremath{\mathsf{z}}}
+\newcommand\ru{\ensuremath{\mathsf{u}}}
+
+
+\newcommand\rbx{\ensuremath{\mathsf{\mathbf{x}}}}
+\newcommand\rby{\ensuremath{\mathsf{\mathbf{y}}}}
+\newcommand\rbu{\ensuremath{\mathsf{\mathbf{u}}}}
+
 
 
 \renewcommand\bmu{\ensuremath{\boldsymbol{\mu}}}
@@ -23,7 +32,7 @@
 
 
 
-\begin{document}
+\begin{document} 
 
 
 \section{InfoGAN}
@@ -61,15 +70,14 @@ which is intractable, since we do not know the implicit likelihood $p_{\rx|\rc}$
         &= \sum_{x} p_{\rx}(x) \sum_{c} p_{\rc|\rx}(c|x) \log \frac{p_{\rc|\rx}(c|x)}{q_{\rc|\rx}(c|x)} + \sum_{x} p_{\rx}(x) \sum_{c} p_{\rc|\rx}(c|x) \log q_{\rc|\rx}(c|x) + H(\rc) \\
         &= \E_{\rx} \left[ KL(p_{\rc|\rx}(c|x) || q_{\rc|\rx}(c|x)) \right] + \E_{\rc,\rx} \left[ \log q_{\rc|\rx}(c|x) \right] + H(\rc) \\
         &\geq  \E_{\rc,\rx} \left[ \log q_{\rc|\rx}(c|x) \right] + H(\rc)  \tag{$KL \geq 0$} \\
-        &= \E_{\rc,\rz} \pb{ \log q_{\rc|\rx}(c|G(c,z)) } + H(\rc)
+        &= \E_{\rc,\rz} \pb{ \log q_{\rc|\rx}(c|G(c,z)) } + H(\rc) \tag{LOTUS}
 \end{align*}
 
 \subsection{Gradient Estimator}
 
 This lower bound can be optimized using stochastic gradient via Monte Carlo estimation,
 \begin{align*}
-    \nabla_{\theta} I(\rc;\rx) 
-        &= \nabla_{\theta} \E_{\rc,\rx} \left[ \log q_{\rc|\rx}(c|x) \right] \\
+    \nabla_{\theta} \pc{ \E_{\rc,\rz} \pb{ \log q_{\rc|\rx}(c|G(c,z)) } + H(\rc) } 
         &= \E_{\rc,\rz} \left[ \nabla_{\theta} \log q_{\rc|\rx}(c|G(c,z)) \right] \\
         &\approx \sum_{i=1}^N  \nabla_{\theta} \log q_{\rc|\rx}(c^{(i)}|G(c^{(i)},z^{(i)})) \\
         &\quad\quad\text{where} \quad c^{(i)} \sim p_{\rc} \quad z^{(i)} \sim p_{\rz} \quad\quad i=1,\cdots,N
@@ -80,13 +88,108 @@ We could also interpret the idea of randomizing the generator using a noise samp
 
 \subsection{Optimization}
 
-Note $q_{\rc|\rx}$ is parameterized by a neural netowrk Q. Given the loss
+Note $q_{\rc|\rx}$ is parameterized by a neural netowrk Q, which shares all convolutional layer with $D$ except for the last fully connected layer. We assume $q_{\rc|\rx}$ to be factored, i.e. $q_{\rc|\rx} = \prod_i q_{\rc_i|\rx}$. The paper only considers the case where each $\rc_i$ is parameteric. For each $i$, $Q(c_i|x)$ outputs the parameters for $\rc_i$, e.g. apply softmax nonlinearity to output probabilities for $\rc_i$ that follows a categorical distribution and outputs mean and variance for $\rc_i$ that follows a simple Gaussian distribution. Following convention in section (\ref{sec:gan_loss}), we parameterize G,D,Q with $\theta_G,\theta_D,\theta_Q$ respectively. Then
 \begin{align*}
-    \sL_{GAN}(D,G) 
-        &= \E_{x\sim p_{data}}\pb{\log D(x)} + \E_{z\sim p_{niose}} \pb{ \log(1-D(G(z))) } \\\
-    \sL_{MI}(Q,G)
-        &= \E_{\rc\sim \p{c},\rx\sim }
+    \sL_{GAN}(\theta_D,\theta_G) 
+        &= \E_{\rx}\pb{ -\log D(x;\theta_D) } +  \E_{\rc,\rz}\pb{ -\log \left( 1- D(G(c,z;\theta_G);\theta_D) \right) }    \\
+    \sL_{I}(\theta_D,\theta_Q)
+        &= \E_{\rc,\rz}\pb{ \log(Q(G(c,z;\theta_G);\theta_Q)) } 
 \end{align*}
+We are interested in the following optimization problem
+\begin{align*}
+    \min_{\theta_G,\theta_Q} \max_{\theta_D} \;
+        &\sL_{GAN}(\theta_D,\theta_G) + \sL_{I}(\theta_D,\theta_Q) \\
+    \min_{\theta_G,\theta_Q} \max_{\theta_D} \;
+        &\E_{\rx}\pb{\log D(x;\theta_D)} + \E_{\rx'} \pb{ \log (1-D(x';\theta_D))- \lambda \log Q(x';\theta_Q) }\\
+        &\quad\quad\text{where}\quad\quad x' = G(c,z;\theta_G)
+\end{align*}
+Similar to equation (\ref{eq:alternating_loss}), we can write
+\begin{align*}
+    \min_{\theta_D} \;
+        &\E_{\rx}\pb{ -\log D(x;\theta_D) } + \E_{\rx'}\pb{ -\log \left( 1- D(x;\theta_D) \right) }  \\
+    \min_{\theta_G} \;
+        &\E_{\rc,\rz}\pb{ \log \left( 1- D(G(c,z;\theta_G)) - \lambda \log Q(G(c,z;\theta_G))  \right)  } \\
+    \min_{\theta_Q} \;
+        &\lambda \E_{\rx'}\pb{ -\log Q(x';\theta_Q) }
+\end{align*}
+
+
+\newpage
+\section{Clarification on GAN's loss} \label{sec:gan_loss}
+
+Formulation of GAN loss bears assemblance to the idea of \textit{learning by comparison} in the noise contrastive estimation (NCE) paper \cite{gutmannNoisecontrastiveEstimationNew2010}. It turns out the connection between hypothesis testing and learning implicit generative models is quite extensively studied \cite{mohamedLearningImplicitGenerative2017}. Here is a reproduction of a subset of ideas in these two papers, in addition to a brief comparison between NCE and GAN. 
+
+\subsection{Learning by Comparison}
+
+The goal of both GAN and NCE is to approximate the true data distribution $p_d(\cdot)$ with a parameterized model $p_m(\cdot)$, where learning is driven by classification of which data distribution the sample come from. We formulate this idea below. Let $\sX_d = \{x_1,\cdots,x_N\}$ be the training dataset and $\sX_g = \{x_1',\cdots,x_N'\}$ be the generated dataset. Let $\ru$ be a random variable that takes value on $\sU = \sX_d\cup \sX_g$. We can assign all data points in $\sU$ binary class labels $\sY = \{y_i \mid y_i = \mathbbm{1}_{u_i\in \sX_d} \}$, i.e. assign value of 1 to real data point and 0 to generated data point. We can think of each label following a Bernoulli distribution $\ry_i\sim\text{Bern}(p)$. We want to build a \textit{max a posterior} classifier to classify $\ry$ given $\ru$,
+\begin{align*}
+    \hat{y}(u) 
+        &= \argmax_{y\in\pc{0,1}} p_{\ry|\ru}(y|u)
+\end{align*}
+Equivalently, we can arrive at an equivalent decision rule based on (log) density ratio and notice its similarity to logistic regression. Let $\ry\sim\text{Bern}(1/2)$ and use Bayes rule,
+\begin{align*}
+    p_{\ry|\ru}(1|u)
+        &= \frac{ p_{\ru|\ry}(u|1)p_{\ry}(1) }{ p_{\ru|\ry}(u|1)p_{\ry}(1) + p_{\ru|\ry}(u|0)p_{\ry}(0) } 
+        = \sigma\left(
+            \log \frac{ p_{\ru|\ry}(u|1) }{ p_{\ru|\ry}(u|0) }
+        \right) \\
+    p_{\ry|\ru}(0|u)
+        &= 1 - p_{\ry|\ru}(1|u)
+\end{align*}
+Let $\phi$ be parameters for our classifier $\hat{y}(\cdot)$. We want our data $\pc{(u_i,y_i)}_{i=1}^{2N}$ to be likely under the result of classification. This is equivalent to maximizing log likelihood of parameters $\phi$
+\begin{align}
+    \label{eq:1}
+    \ell(\phi)
+        &= \frac{1}{2N} \log \prod_{i=1}^{2N} p_{\ry|\ru}(y_i|u_i;\phi) \notag \\
+        &= \frac{1}{2N} \left( \sum_{i=1}^{2N} y\log p_{\ry|\ru}(1|u_i;\phi) + (1-y) \log p_{\ry|\ru}(0|u_i;\phi) \right) \notag\\
+        &= \frac{1}{2N} \sum_{i=1}^{N} \left(  \log p_{\ry|\ru}(1|x_i;\phi) + \log \left( 1- p_{\ry|\ru}(1|x_i';\phi) \right)  \right) \notag\\
+        &= \frac{1}{2N} \left( \E_{p_d}\pb{ \log p_{\ry|\ru}(1|x;\phi) } +  \E_{p_g}\pb{ \log \left( 1- p_{\ry|\ru}(1|x;\phi) \right) } \right)
+\end{align}
+
+\subsection{NCE}
+
+In NCE, we model the class conditional likelihood with parametric distributions,
+\begin{align*}
+    p_{\ru|\ry}(u|1)
+        &= p_m(u; \phi) \tag{model distribution} \\
+    p_{\ru|\ry}(u|0)
+        &= p_n(u) \tag{fixed noise distribution}
+\end{align*}
+In essence, we estimate parameters for the data distribution by learning the parameters for the classifier, $\phi$ by maximizing the objective function (\ref{eq:1}).
+
+
+\subsection{GAN}
+
+In GAN, we model the posterior directly with a discriminator network $D:\sU\to[0,1]$
+\begin{align*}
+    p_{\ry|\ru}(1|u)
+        &= D(u; \phi) \\
+    p_{\ry|\ru}(1|u)
+        &= 1-D(u; \phi)
+\end{align*}
+We can interpret the score that the discriminator network computes as an approximation for the log likelihood ratio. In addition to classification, GAN uses a generator network $D:\sZ\to\sX$, which takes a sample from a latent distribution $z\sim p_{\rz}$ to generate samples for an implicit model data distribution $p_m(\cdot)$. GAN's loss can be derived from (\ref{eq:1})
+\begin{align*}
+    \sL
+        &=  \E_{p_d}\pb{ -\log D(x;\phi) } +  \E_{p_g}\pb{ -\log \left( 1- D(x;\phi) \right) } \\
+        &=  \E_{p_d}\pb{ -\log D(x;\phi) } +  \E_{p_z}\pb{ -\log \left( 1- D(G(z;\theta);\phi) \right) } \tag{LOTUS}
+\end{align*}
+We form a minimax game where the discriminator tries to identify counterfakes and the generator tries to generate realistic samples. 
+\[
+    \min_{G} \max_{D} \;  \E_{p_d}\pb{ -\log D(x;\phi) } +  \E_{p_z}\pb{ -\log \left( 1- D(G(z;\theta);\phi) \right) }    
+\]
+Note $\sL$ is separable with respect to $\phi,\theta$, so we can do alternating optimization, 
+\begin{align}
+    \label{eq:alternating_loss}
+    \min_{\phi} \;
+        &\E_{p_d}\pb{ -\log D(x;\phi) } + \E_{p_g}\pb{ -\log \left( 1- D(x;\phi) \right) }  \notag \\
+    \min_{\theta} \;
+        &\E_{p_z}\pb{ \log \left( 1- D(G(z;\theta)) \right) }
+\end{align}
+
+
+
+
+
 
 
 

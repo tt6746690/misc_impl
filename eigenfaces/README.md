@@ -16,7 +16,7 @@
     <img src="assets/eigenfaces.png">
 </p>
 
-#### Reconstructed data using first 5, 50, 100, 500
+#### Reconstructed data using first 5, 50, 100, 500 principal components
 
 <p align="center">
     <img src="assets/Yhat_npc=5.png">
