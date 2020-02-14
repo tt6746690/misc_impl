@@ -38,14 +38,67 @@ def logpdf_gaussian(x, mu, logvariance):
         (1/2)*torch.sum(logvariance,dim=1) - \
         (1/2)*torch.sum((1/torch.exp(logvariance))*(x-mu)*(x-mu),-1)
 
-"""
-log-pdf of x under Bernoulli 
+def logpdf_bernoulli(x, p, reduction='sum'):
+    """ Evaluate log p(x|p) where x~Bern(p)
+        
+            Equivalent to nn.BCELoss()
+            
+            ```
+            p = torch.randn(3, requires_grad=True)
+            x = torch.tensor([1,0,1])
+            x_onehot = torch.nn.functional.one_hot(x,2)
+            x = x.float()
 
-    x    (batch_size, n_x)
-    p    (batch_size, n_x)
-"""
-def logpdf_bernoulli(x, p):
-    return torch.sum(dist.bernoulli.Bernoulli(probs=p).log_prob(x),dim=-1)
+            p = torch.nn.Sigmoid()(p)
+
+            assert(-torch.nn.BCELoss()(p, x) == logpdf_bernoulli(x, p, reduction='mean'))
+            ```
+        
+        
+        x    (batch_size,)
+             batch of bernoulli samples
+        p    (batch_size, n_classes)
+             batch of class probabilities
+    """
+    log_probs = dist.bernoulli.Bernoulli(probs=p).log_prob(x)
+    if reduction == 'mean':
+        return torch.mean(log_probs,dim=-1)
+    elif reduction == 'sum':
+        return torch.sum(log_probs,dim=-1)
+    else:
+        raise Exception
+
+
+def logpdf_categorical(x, p, reduction='mean'):
+    """ Evaluates log p(x|p) where x~Cat({p_k})
+
+            Equivalent to nn.NLLLoss(),
+            
+            ```
+            p = torch.randn(3, 5, requires_grad=True)
+            x = torch.tensor([1,0,4])
+            x_onehot = torch.nn.functional.one_hot(x,5)
+            
+            logp = torch.nn.LogSoftmax(dim=1)(p)
+            p = torch.nn.Softmax(dim=1)(p)
+            
+            log_likelihood = -torch.nn.NLLLoss()(logp, x)
+            logpdf_cat = logpdf_categorical(x, p, reduction='mean')
+            
+            assert(log_likelihood == logpdf_cat)
+            ```
+        x    (batch_size,)
+             batch of categorical samples 
+        p    (batch_size, n_classes)
+             batch of class probabilities
+    """
+    log_probs = dist.categorical.Categorical(probs=p).log_prob(x)
+    if reduction == 'mean':
+        return torch.mean(log_probs,dim=-1)
+    elif reduction == 'sum':
+        return torch.sum(log_probs,dim=-1)
+    else:
+        raise Exception
 
 
 """
