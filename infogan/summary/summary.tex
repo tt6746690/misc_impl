@@ -88,30 +88,43 @@ We could also interpret the idea of randomizing the generator using a noise samp
 
 \subsection{Optimization}
 
-Note $q_{\rc|\rx}$ is parameterized by a neural netowrk Q, which shares all convolutional layer with $D$ except for the last fully connected layer. We assume $q_{\rc|\rx}$ to be factored, i.e. $q_{\rc|\rx} = \prod_i q_{\rc_i|\rx}$. The paper only considers the case where each $\rc_i$ is parameteric. For each $i$, $Q(c_i|x)$ outputs the parameters for $\rc_i$, e.g. apply softmax nonlinearity to output probabilities for $\rc_i$ that follows a categorical distribution and outputs mean and variance for $\rc_i$ that follows a simple Gaussian distribution. Following convention in section (\ref{sec:gan_loss}), we parameterize G,D,Q with $\theta_G,\theta_D,\theta_Q$ respectively. Then
+Note, Bernoulli distributed $p_{\ry|\rx}$ is approximated with the discriminator network $D$, parameterized by $\theta_D$. Similarly, $q_{\rc|\rx}$ is approximated by a neural netowrk Q, parameterized by $\theta_Q$. We assume $q_{\rc|\rx}$ to be factored, i.e. $q_{\rc|\rx} = \prod_i q_{\rc_i|\rx}$. For each $i$, $Q(c_i|x)$ outputs the parameters for distributions of $\rc_i$, e.g. class probabilities for categorical $\rc_i$ and mean and variance for Gaussian $\rc_i$.
+\begin{align*}
+    p_{\ry|\rx}(y|x;\theta_D) 
+        &= p_1(x;\theta_D)^{\mathbbm{1}_{y=1}} ( 1-p_1 ) (x;\theta_D)^{\mathbbm{1}_{y=0}}
+        &\quad\quad p_1(x;\theta_D) \leftarrow D(x;\theta_D) \\
+    q_{\rc_i|\rx}(c_i|x;\theta_Q) 
+        &= \prod_{i=1}^K p_k(x;\theta_Q)^{\mathbbm{1}_{c_i=k}}
+        &\quad\quad \pc{p_k(x;\theta_Q)}_{k=1}^K \leftarrow Q(x;\theta_Q) \\
+    q_{\rc_i|\rx}(c_i|x;\theta_Q) 
+        &= \sN(c_i; \mu(x;\theta_Q), \sigma^2(x;\theta_Q))
+        &\quad\quad (\mu(x;\theta_Q), \sigma^2(x;\theta_Q)) \leftarrow Q(x;\theta_Q)
+\end{align*}
+Let $\theta_G$ be parameters for the generator. Following convention in section (\ref{sec:gan_loss}), we can write
 \begin{align*}
     \sL_{GAN}(\theta_D,\theta_G) 
-        &= \E_{\rx}\pb{ -\log D(x;\theta_D) } +  \E_{\rc,\rz}\pb{ -\log \left( 1- D(G(c,z;\theta_G);\theta_D) \right) }    \\
+        &= \E_{\rx}\pb{ -\log p_{\ry|\rx}(1|x;\theta_D) } +  \E_{\rc,\rz}\pb{ -\log \left( 1- p_{\ry|\rx}(1|G(c,z;\theta_G);\theta_D) \right) }    \\
     \sL_{I}(\theta_D,\theta_Q)
-        &= \E_{\rc,\rz}\pb{ \log(Q(G(c,z;\theta_G);\theta_Q)) } 
+        &= \E_{\rc,\rz}\pb{ \log q_{\rc|\rx}(c|G(c,z;\theta_G);\theta_Q) } 
 \end{align*}
 We are interested in the following optimization problem
 \begin{align*}
     \min_{\theta_G,\theta_Q} \max_{\theta_D} \;
         &\sL_{GAN}(\theta_D,\theta_G) + \sL_{I}(\theta_D,\theta_Q) \\
     \min_{\theta_G,\theta_Q} \max_{\theta_D} \;
-        &\E_{\rx}\pb{\log D(x;\theta_D)} + \E_{\rx'} \pb{ \log (1-D(x';\theta_D))- \lambda \log Q(x';\theta_Q) }\\
+        &\E_{\rx}\pb{\log p_{\ry|\rx}(1;x;\theta_D)} + \E_{\rx'} \pb{ \log (1-p_{\ry|\rx}(1|x';\theta_D))- \lambda \log q_{\rc|\rx}(c|x';\theta_Q) }\\
         &\quad\quad\text{where}\quad\quad x' = G(c,z;\theta_G)
 \end{align*}
-Similar to equation (\ref{eq:alternating_loss}), we can write
+Similar to equation (\ref{eq:alternating_loss}), we can optimizing in an alternating fashion
 \begin{align*}
     \min_{\theta_D} \;
-        &\E_{\rx}\pb{ -\log D(x;\theta_D) } + \E_{\rx'}\pb{ -\log \left( 1- D(x;\theta_D) \right) }  \\
+        &\E_{\rx}\pb{ -\log p_{\ry|\rx}(1|x;\theta_D) } + \E_{\rx'}\pb{ -\log \left( 1- p_{\ry|\rx}(1|x';\theta_D) \right) }  \\
     \min_{\theta_G} \;
-        &\E_{\rc,\rz}\pb{ \log \left( 1- D(G(c,z;\theta_G)) - \lambda \log Q(G(c,z;\theta_G))  \right)  } \\
+        &\E_{\rc,\rz}\pb{ \log \left( 1- p_{\ry|\rx}(1|G(c,z;\theta_G)) - \lambda \log q_{\rc|\rx}(c|G(c,z;\theta_G))  \right)  } \\
     \min_{\theta_Q} \;
-        &\lambda \E_{\rx'}\pb{ -\log Q(x';\theta_Q) }
+        &\lambda \E_{\rx'}\pb{ -\log q_{\rc|\rx}(c|x';\theta_Q) }
 \end{align*}
+
 
 
 \newpage
