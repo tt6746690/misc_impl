@@ -24,5 +24,5 @@ cd /data/vision/polina/scratch/wpq/misc_impl/infogan
 
 python infogan.py \
    --seed $SLURM_ARRAY_TASK_ID \
-   --model_name infogan_seed=$SLURM_ARRAY_TASK_ID \
+   --model_name infogan_labelflip_seed=$SLURM_ARRAY_TASK_ID \
    --gpu_id=$SLURM_JOB_GPUS

@@ -35,7 +35,7 @@ class Generator(nn.Module):
                 *( [nn.BatchNorm2d(out_channels)] if batch_norm else [] ),
                 nonlinearity]
 
-        self.model = nn.Sequential(
+        self.conv_blocks = nn.Sequential(
             *block(nz+10+nc_gaussian,   4*nf, stride=1, padding=0),
             *block(4*nf, 2*nf),
             *block(2*nf,   nf),
@@ -56,7 +56,7 @@ class Generator(nn.Module):
         if len(c.shape) != 4:
             c = c.view(c.shape[0], c.shape[1], 1, 1)
     
-        return self.model(torch.cat((z, c), 1))
+        return self.conv_blocks(torch.cat((z, c), 1))
     
 
 class Discriminator(nn.Module):
@@ -88,7 +88,7 @@ class Discriminator(nn.Module):
             nn.Sigmoid())
 
         # q(c|x) 
-        self.fc_cat = nn.Sequential(
+        self.fc_categorical = nn.Sequential(
             nn.Linear(n_in_units, 10),
             nn.LogSoftmax(dim=1))
         self.fc_mu = nn.Sequential(
@@ -101,7 +101,7 @@ class Discriminator(nn.Module):
         """
             x        (N, nc, h, w)
             Returns
-                y    (N, 1)
+                y    (N,)
                     classification probability that x comes from data distribution
                 logp (N, 10)
                     log probability for 1D categorical latent code
@@ -111,9 +111,9 @@ class Discriminator(nn.Module):
         h = self.conv_blocks(x)
         h = h.view(h.shape[0], -1)
         
-        y = self.fc_y(h)
+        y = self.fc_y(h).squeeze()
         
-        logp = self.fc_cat(h)
+        logp = self.fc_categorical(h)
         mu = self.fc_mu(h)
         logvariance = self.fc_logvariance(h)
 
@@ -126,6 +126,14 @@ def weights_initialization(m):
     elif classname.find('BatchNorm') != -1:
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
+
+
+def filter_module_param(module, substr='', include_params=True):
+    if include_params:
+        return list([(name, parameter) for name, parameter in module.named_parameters() if substr in name])
+    else:
+        return list([name for name, parameter in module.named_parameters() if substr in name])
+
 
 def train(
     nz,
@@ -185,10 +193,10 @@ def train(
         
     D_loss = nn.BCELoss()
     Q_cat_loss = nn.NLLLoss()
-    Q_gaussian_loss = nn.CrossEntropyLoss()
 
-    real_label = 1
-    fake_label = 0
+    # flip labels ...
+    real_label = 0
+    fake_label = 1
 
     optimizerD = torch.optim.Adam(chain(
         D.conv_blocks.parameters(),
@@ -197,7 +205,7 @@ def train(
         G.parameters(), lr=lr, betas=(beta1, 0.999))
     optimizerQ = torch.optim.Adam(chain(
         D.conv_blocks.parameters(),
-        D.fc_cat.parameters(),
+        D.fc_categorical.parameters(),
         D.fc_mu.parameters(),
         D.fc_logvariance.parameters()), lr=lr, betas=(beta1, 0.999))
 
@@ -298,7 +306,7 @@ def train(
             loss_G = loss_G.item()
             loss_Q = loss_Q.item()
 
-            loss_total = loss_D + weight_param*loss_Q
+            loss_total = loss_D_real + loss_bce + weight_param*loss_Q
 
             if it % n_batches_print == n_batches_print-1:
                 print(f'[{epoch+1}/{n_epochs}][{it+1}/{len(trainloader)}]'
@@ -306,18 +314,29 @@ def train(
                     f'loss_D: {loss_D:.4}\t'
                     f'loss_G: {loss_G:.4}\t'
                     f'loss_Q: {loss_Q:.4}')
-                vutils.save_image(G(fixed_z, fixed_c).detach(),
+                x_fake = G(fixed_z, fixed_c)
+                vutils.save_image(x_fake.detach(),
                     os.path.join(figure_root,
                         f'{model_name}_fake_samples_epoch={epoch}_it={it}.png'))
 
-            if it == 0:
-                global_step = epoch*len(trainloader)+it
-                writer.add_scalar('loss/total', loss_total, global_step)
-                writer.add_scalar('loss/D', loss_D, global_step)
-                writer.add_scalar('loss/G', loss_G, global_step)
-                writer.add_scalar('loss/Q', loss_Q, global_step)
-                writer.add_image('mnist', torchvision.utils.make_grid(x_fake), global_step)
-            
+            # if it == 0:
+            global_step = epoch*len(trainloader)+it
+            writer.add_scalar('loss/total', loss_total, global_step)
+            writer.add_scalar('loss/D', loss_D, global_step)
+            writer.add_scalar('loss/G', loss_G, global_step)
+            writer.add_scalar('loss/Q', loss_Q, global_step)
+            writer.add_image('mnist', torchvision.utils.make_grid(G(fixed_z, fixed_c).detach()), global_step)
+
+            for module, substr, scalar_name in [
+                    (D, 'conv_blocks.0', 'grad/D_conv_weights_first'),
+                    (D, 'fc_y', 'grad/D_fc_y'),
+                    (G, 'conv_blocks.0', 'grad/G_conv_weights_first'),
+                    (G, 'conv_blocks.9', 'grad/G_conv_weights_last'),
+                ]:
+                _, parameters = filter_module_param(module, substr)[0]
+                scalar = torch.mean(parameters).cpu().item()
+                writer.add_scalar(scalar_name, scalar, global_step)
+        
             
         torch.save(G.state_dict(), os.path.join(model_root, f'G_epoch_{epoch}.pt'))
         torch.save(D.state_dict(), os.path.join(model_root, f'D_epoch_{epoch}.pt'))
