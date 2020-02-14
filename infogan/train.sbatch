@@ -10,7 +10,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=3GB
 
-#SBATCH --array=1
+#SBATCH --array=2-5
 
 if [[ ${SLURM_ARRAY_TASK_ID} == "" ]]; then
   SLURM_ARRAY_TASK_ID=1
@@ -24,5 +24,5 @@ cd /data/vision/polina/scratch/wpq/misc_impl/infogan
 
 python infogan.py \
    --seed $SLURM_ARRAY_TASK_ID \
-   --model_name infogan_labelflip_seed=$SLURM_ARRAY_TASK_ID \
+   --model_name infogan_seed=$SLURM_ARRAY_TASK_ID \
    --gpu_id=$SLURM_JOB_GPUS

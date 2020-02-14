@@ -150,7 +150,8 @@ def train(
     load_weights_discriminator,
     image_size,
     batch_size,
-    weight_param,
+    weight_discrete,
+    weight_continuous,
     lr,
     beta1,
     n_epochs,
@@ -213,7 +214,7 @@ def train(
     writer.flush()
 
     pdf_c_cat = dist.Categorical(torch.ones(10)/10)
-    pdf_c_gaussian = dist.MultivariateNormal(torch.zeros(2), torch.eye(2))
+    pdf_c_gaussian = dist.MultivariateNormal(torch.zeros(nc_gaussian), torch.eye(nc_gaussian))
 
     def sample_latents(batch_size):
         # sample noise
@@ -226,12 +227,23 @@ def train(
 
         return z, c, c_cat, c_gaussian
 
-    fixed_z, fixed_c, _, _ = sample_latents(batch_size)
+    fixed_z = torch.randn(100, nz, device=device)
+    fixed_c_cat = torch.arange(10).repeat(10)
+    fixed_c_cat_onehot = nn.functional.one_hot(fixed_c_cat, 10)
+    fixed_c_gaussian = torch.linspace(-1,1,10).repeat_interleave(10).view(100,1)
+    fixed_c = torch.cat([fixed_c_cat_onehot.float(), fixed_c_gaussian], dim=-1).to(device)
 
+    alpha = 0
 
     for epoch in range(n_epochs):
 
+        if alpha < 1:
+            alpha += 0.1
+        w_d = alpha*weight_discrete
+        w_c = alpha*weight_continuous
+
         for it, (x_real, _) in enumerate(trainloader):
+
 
             # batch_size for last batch might be different ...
             batch_size = x_real.size(0)
@@ -254,8 +266,6 @@ def train(
             loss_D_real = D_loss(y, real_labels)
             loss_D_real.backward()
 
-            D_x = y.mean().item()
-
             z, c, c_cat, c_gaussian = sample_latents(batch_size)
             x_fake = G(z, c)
             
@@ -269,7 +279,6 @@ def train(
             loss_D_fake = D_loss(y, fake_labels)
             loss_D_fake.backward()
 
-            D_G_z1 = y.mean().item()
             loss_D = loss_D_real + loss_D_fake
             optimizerD.step()
 
@@ -288,9 +297,9 @@ def train(
             
             loss_c_cat_nll = Q_cat_loss(logp, c_cat)
             loss_c_gaussian_nll = -logpdf_gaussian(c_gaussian, mu, logvariance)
-            loss_Q = loss_c_cat_nll + loss_c_gaussian_nll
+            loss_Q = w_d*loss_c_cat_nll + w_c*loss_c_gaussian_nll
 
-            loss_G = loss_bce + weight_param*loss_Q
+            loss_G = loss_bce + loss_Q
             loss_G.backward()
             
             optimizerG.step()
@@ -306,26 +315,16 @@ def train(
             loss_G = loss_G.item()
             loss_Q = loss_Q.item()
 
-            loss_total = loss_D_real + loss_bce + weight_param*loss_Q
+            loss_total = loss_D_real + loss_bce + loss_Q
 
-            if it % n_batches_print == n_batches_print-1:
-                print(f'[{epoch+1}/{n_epochs}][{it+1}/{len(trainloader)}]'
-                    f'loss: {loss_total:.4}\t'
-                    f'loss_D: {loss_D:.4}\t'
-                    f'loss_G: {loss_G:.4}\t'
-                    f'loss_Q: {loss_Q:.4}')
-                x_fake = G(fixed_z, fixed_c)
-                vutils.save_image(x_fake.detach(),
-                    os.path.join(figure_root,
-                        f'{model_name}_fake_samples_epoch={epoch}_it={it}.png'))
+            lb = -(loss_c_cat_nll.item() + loss_c_gaussian_nll.item())
 
-            # if it == 0:
             global_step = epoch*len(trainloader)+it
             writer.add_scalar('loss/total', loss_total, global_step)
             writer.add_scalar('loss/D', loss_D, global_step)
             writer.add_scalar('loss/G', loss_G, global_step)
             writer.add_scalar('loss/Q', loss_Q, global_step)
-            writer.add_image('mnist', torchvision.utils.make_grid(G(fixed_z, fixed_c).detach()), global_step)
+            writer.add_scalar('loss/lb', lb, global_step)
 
             for module, substr, scalar_name in [
                     (D, 'conv_blocks.0', 'grad/D_conv_weights_first'),
@@ -336,7 +335,21 @@ def train(
                 _, parameters = filter_module_param(module, substr)[0]
                 scalar = torch.mean(parameters).cpu().item()
                 writer.add_scalar(scalar_name, scalar, global_step)
-        
+
+
+            if it % n_batches_print == n_batches_print-1:
+                print(f'[{epoch+1}/{n_epochs}][{it+1}/{len(trainloader)}]'
+                    f'loss: {loss_total:.4}\t'
+                    f'loss_D: {loss_D:.4}\t'
+                    f'loss_G: {loss_G:.4}\t'
+                    f'loss_Q: {loss_Q:.4}\t'
+                    f'low bound: {lb:.4}')
+                x_fake = G(fixed_z, fixed_c)
+                vutils.save_image(x_fake.detach(),
+                    os.path.join(figure_root,
+                        f'{model_name}_fake_samples_epoch={epoch}_it={it}.png'), nrow=10)
+
+                writer.add_image('mnist', vutils.make_grid(G(fixed_z, fixed_c).detach(), nrow=10, normalize=True), global_step)
             
         torch.save(G.state_dict(), os.path.join(model_root, f'G_epoch_{epoch}.pt'))
         torch.save(D.state_dict(), os.path.join(model_root, f'D_epoch_{epoch}.pt'))
@@ -360,19 +373,20 @@ if __name__ == '__main__':
     parser.add_argument("--load_weights_discriminator", type=str, default='', help="optional .pt model file to initialize discriminator with")
     parser.add_argument("--epochs", type=int, dest='n_epochs', default=50, help="number of epochs")
     parser.add_argument("--print_every", type=int, dest='n_batches_print', default=100,  help="number of batches to print loss / plot figures")
-    parser.add_argument("--batch_size", type=int, default=64, help="batch_size")
+    parser.add_argument("--batch_size", type=int, default=32, help="batch_size")
     parser.add_argument("--seed", type=int, default=1, help="rng seed")
     parser.add_argument("--learning_rate", type=float, dest='lr', default=0.0002, help="rng seed")
     parser.add_argument("--n_workers", type=int, default=8, help="number of CPU workers for processing input data")
     parser.add_argument("--gpu_id", type=str, default='0', help="gpu id assigned by cluster")
     parser.add_argument("--beta1", type=float, default=0.5, help="ADAM parameter")
     parser.add_argument("--image_size", type=int, default=32, help="image size of the inputs")
-    parser.add_argument("--nfg", type=int, default=64, help=" dimension of features in last conv layer of generator")
-    parser.add_argument("--nfd", type=int, default=64, help=" dimension of features in first conv layer of discriminator")
-    parser.add_argument("--nz", type=int, default=100, help=" dimension of latent space")
-    parser.add_argument("--nc", type=int, default=1, help=" number of channels of input image")
-    parser.add_argument("--weight_param", type=float, default=1, help=" lambda for the mutual information regularizer")
-    parser.add_argument("--nc_gaussian", type=float, default=2, help=" number of Gaussian latent codes")
+    parser.add_argument("--nfg", type=int, default=64, help="dimension of features in last conv layer of generator")
+    parser.add_argument("--nfd", type=int, default=64, help="dimension of features in first conv layer of discriminator")
+    parser.add_argument("--nz", type=int, default=64, help="dimension of latent space")
+    parser.add_argument("--nc", type=int, default=1, help="number of channels of input image")
+    parser.add_argument("--nc_gaussian", type=float, default=1, help="number of Gaussian latent codes")
+    parser.add_argument("--weight_discrete", type=float, default=1, help="lambda regularizing discrete latent codes")
+    parser.add_argument("--weight_continuous", type=float, default=0.1, help="lambda for regularizing continuous latent codes")
 
     args = parser.parse_args()
     args.model_name = f'{args.model_name}_{datetime.now().strftime("%Y.%m.%d-%H:%M:%S")}'
