@@ -91,8 +91,8 @@ We could also interpret the idea of randomizing the generator using a noise samp
 Note, Bernoulli distributed $p_{\ry|\rx}$ is approximated with the discriminator network $D$, parameterized by $\theta_D$. Similarly, $q_{\rc|\rx}$ is approximated by a neural netowrk Q, parameterized by $\theta_Q$. We assume $q_{\rc|\rx}$ to be factored, i.e. $q_{\rc|\rx} = \prod_i q_{\rc_i|\rx}$. For each $i$, $Q(c_i|x)$ outputs the parameters for distributions of $\rc_i$, e.g. class probabilities for categorical $\rc_i$ and mean and variance for Gaussian $\rc_i$.
 \begin{align*}
     p_{\ry|\rx}(y|x;\theta_D) 
-        &= p_1(x;\theta_D)^{\mathbbm{1}_{y=1}} ( 1-p_1 ) (x;\theta_D)^{\mathbbm{1}_{y=0}}
-        &\quad\quad p_1(x;\theta_D) \leftarrow D(x;\theta_D) \\
+        &= p(x;\theta_D)^{\mathbbm{1}_{y=1}} ( 1-p(x;\theta_D) )^{\mathbbm{1}_{y=0}}
+        &\quad\quad p(x;\theta_D) \leftarrow D(x;\theta_D) \\
     q_{\rc_i|\rx}(c_i|x;\theta_Q) 
         &= \prod_{i=1}^K p_k(x;\theta_Q)^{\mathbbm{1}_{c_i=k}}
         &\quad\quad \pc{p_k(x;\theta_Q)}_{k=1}^K \leftarrow Q(x;\theta_Q) \\
@@ -139,7 +139,7 @@ The goal of both GAN and NCE is to approximate the true data distribution $p_d(\
     \hat{y}(u) 
         &= \argmax_{y\in\pc{0,1}} p_{\ry|\ru}(y|u)
 \end{align*}
-Equivalently, we can arrive at an equivalent decision rule based on (log) density ratio and notice its similarity to logistic regression. Let $\ry\sim\text{Bern}(1/2)$ and use Bayes rule,
+Equivalently, we can arrive at an equivalent decision rule based on (log) density ratio. Let $\ry\sim\text{Bern}(1/2)$ and use Bayes rule,
 \begin{align*}
     p_{\ry|\ru}(1|u)
         &= \frac{ p_{\ru|\ry}(u|1)p_{\ry}(1) }{ p_{\ru|\ry}(u|1)p_{\ry}(1) + p_{\ru|\ry}(u|0)p_{\ry}(0) } 
@@ -154,7 +154,7 @@ Let $\phi$ be parameters for our classifier $\hat{y}(\cdot)$. We want our data $
     \label{eq:1}
     \ell(\phi)
         &= \frac{1}{2N} \log \prod_{i=1}^{2N} p_{\ry|\ru}(y_i|u_i;\phi) \notag \\
-        &= \frac{1}{2N} \left( \sum_{i=1}^{2N} y\log p_{\ry|\ru}(1|u_i;\phi) + (1-y) \log p_{\ry|\ru}(0|u_i;\phi) \right) \notag\\
+        &= \frac{1}{2N} \sum_{i=1}^{2N}\left(  y\log p_{\ry|\ru}(1|u_i;\phi) + (1-y) \log p_{\ry|\ru}(0|u_i;\phi) \right) \notag\\
         &= \frac{1}{2N} \sum_{i=1}^{N} \left(  \log p_{\ry|\ru}(1|x_i;\phi) + \log \left( 1- p_{\ry|\ru}(1|x_i';\phi) \right)  \right) \notag\\
         &= \frac{1}{2N} \left( \E_{p_d}\pb{ \log p_{\ry|\ru}(1|x;\phi) } +  \E_{p_g}\pb{ \log \left( 1- p_{\ry|\ru}(1|x;\phi) \right) } \right)
 \end{align}
