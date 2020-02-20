@@ -1,0 +1,448 @@
+
+@article{choiStarGANUnifiedGenerative2018,
+	title = {{StarGAN}: Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation},
+	url = {http://arxiv.org/abs/1711.09020},
+	shorttitle = {{StarGAN}},
+	abstract = {Recent studies have shown remarkable success in image-to-image translation for two domains. However, existing approaches have limited scalability and robustness in handling more than two domains, since different models should be built independently for every pair of image domains. To address this limitation, we propose {StarGAN}, a novel and scalable approach that can perform image-to-image translations for multiple domains using only a single model. Such a unified model architecture of {StarGAN} allows simultaneous training of multiple datasets with different domains within a single network. This leads to {StarGAN}'s superior quality of translated images compared to existing models as well as the novel capability of flexibly translating an input image to any desired target domain. We empirically demonstrate the effectiveness of our approach on a facial attribute transfer and a facial expression synthesis tasks.},
+	journaltitle = {{arXiv}:1711.09020 [cs]},
+	author = {Choi, Yunjey and Choi, Minje and Kim, Munyoung and Ha, Jung-Woo and Kim, Sunghun and Choo, Jaegul},
+	urldate = {2020-01-17},
+	date = {2018-09-21},
+	eprinttype = {arxiv},
+	eprint = {1711.09020},
+	file = {Choi et al_2018_StarGAN - Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation.pdf:/Users/wpq/Dropbox (MIT)/zotero/Choi et al_2018_StarGAN - Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation.pdf:application/pdf}
+}
+
+@inproceedings{nguyenPlugPlayGenerative2017,
+	location = {Honolulu, {HI}},
+	title = {Plug \& Play Generative Networks: Conditional Iterative Generation of Images in Latent Space},
+	isbn = {978-1-5386-0457-1},
+	url = {http://ieeexplore.ieee.org/document/8099857/},
+	doi = {10.1109/CVPR.2017.374},
+	shorttitle = {Plug \& Play Generative Networks},
+	abstract = {Generating high-resolution, photo-realistic images has been a long-standing goal in machine learning. Recently, Nguyen et al. [37] showed one interesting way to synthesize novel images by performing gradient ascent in the latent space of a generator network to maximize the activations of one or multiple neurons in a separate classiﬁer network. In this paper we extend this method by introducing an additional prior on the latent code, improving both sample quality and sample diversity, leading to a state-of-the-art generative model that produces high quality images at higher resolutions (227 × 227) than previous generative models, and does so for all 1000 {ImageNet} categories. In addition, we provide a uniﬁed probabilistic interpretation of related activation maximization methods and call the general class of models “Plug and Play Generative Networks.” {PPGNs} are composed of 1) a generator network G that is capable of drawing a wide range of image types and 2) a replaceable “condition” network C that tells the generator what to draw. We demonstrate the generation of images conditioned on a class (when C is an {ImageNet} or {MIT} Places classiﬁcation network) and also conditioned on a caption (when C is an image captioning network). Our method also improves the state of the art of Multifaceted Feature Visualization [40], which generates the set of synthetic inputs that activate a neuron in order to better understand how deep neural networks operate. Finally, we show that our model performs reasonably well at the task of image inpainting. While image models are used in this paper, the approach is modality-agnostic and can be applied to many types of data.},
+	eventtitle = {2017 {IEEE} Conference on Computer Vision and Pattern Recognition ({CVPR})},
+	pages = {3510--3520},
+	booktitle = {2017 {IEEE} Conference on Computer Vision and Pattern Recognition ({CVPR})},
+	publisher = {{IEEE}},
+	author = {Nguyen, Anh and Clune, Jeff and Bengio, Yoshua and Dosovitskiy, Alexey and Yosinski, Jason},
+	urldate = {2020-01-16},
+	date = {2017-07},
+	langid = {english},
+	file = {Nguyen et al_2017_Plug & Play Generative Networks - Conditional Iterative Generation of Images in Latent Space.pdf:/Users/wpq/Dropbox (MIT)/zotero/Nguyen et al_2017_Plug & Play Generative Networks - Conditional Iterative Generation of Images in Latent Space.pdf:application/pdf}
+}
+
+@article{mirzaConditionalGenerativeAdversarial2014,
+	title = {Conditional Generative Adversarial Nets},
+	url = {http://arxiv.org/abs/1411.1784},
+	abstract = {Generative Adversarial Nets [8] were recently introduced as a novel way to train generative models. In this work we introduce the conditional version of generative adversarial nets, which can be constructed by simply feeding the data, y, we wish to condition on to both the generator and discriminator. We show that this model can generate {MNIST} digits conditioned on class labels. We also illustrate how this model could be used to learn a multi-modal model, and provide preliminary examples of an application to image tagging in which we demonstrate how this approach can generate descriptive tags which are not part of training labels.},
+	journaltitle = {{arXiv}:1411.1784 [cs, stat]},
+	author = {Mirza, Mehdi and Osindero, Simon},
+	urldate = {2020-01-11},
+	date = {2014-11-06},
+	eprinttype = {arxiv},
+	eprint = {1411.1784},
+	file = {Mirza_Osindero_2014_Conditional Generative Adversarial Nets.pdf:/Users/wpq/Dropbox (MIT)/zotero/Mirza_Osindero_2014_Conditional Generative Adversarial Nets.pdf:application/pdf}
+}
+
+@article{ledigPhotoRealisticSingleImage2017,
+	title = {Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network},
+	url = {http://arxiv.org/abs/1609.04802},
+	abstract = {Despite the breakthroughs in accuracy and speed of single image super-resolution using faster and deeper convolutional neural networks, one central problem remains largely unsolved: how do we recover the finer texture details when we super-resolve at large upscaling factors? The behavior of optimization-based super-resolution methods is principally driven by the choice of the objective function. Recent work has largely focused on minimizing the mean squared reconstruction error. The resulting estimates have high peak signal-to-noise ratios, but they are often lacking high-frequency details and are perceptually unsatisfying in the sense that they fail to match the fidelity expected at the higher resolution. In this paper, we present {SRGAN}, a generative adversarial network ({GAN}) for image super-resolution ({SR}). To our knowledge, it is the first framework capable of inferring photo-realistic natural images for 4x upscaling factors. To achieve this, we propose a perceptual loss function which consists of an adversarial loss and a content loss. The adversarial loss pushes our solution to the natural image manifold using a discriminator network that is trained to differentiate between the super-resolved images and original photo-realistic images. In addition, we use a content loss motivated by perceptual similarity instead of similarity in pixel space. Our deep residual network is able to recover photo-realistic textures from heavily downsampled images on public benchmarks. An extensive mean-opinion-score ({MOS}) test shows hugely significant gains in perceptual quality using {SRGAN}. The {MOS} scores obtained with {SRGAN} are closer to those of the original high-resolution images than to those obtained with any state-of-the-art method.},
+	journaltitle = {{arXiv}:1609.04802 [cs, stat]},
+	author = {Ledig, Christian and Theis, Lucas and Huszar, Ferenc and Caballero, Jose and Cunningham, Andrew and Acosta, Alejandro and Aitken, Andrew and Tejani, Alykhan and Totz, Johannes and Wang, Zehan and Shi, Wenzhe},
+	urldate = {2020-01-11},
+	date = {2017-05-25},
+	eprinttype = {arxiv},
+	eprint = {1609.04802},
+	file = {Ledig et al_2017_Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network.pdf:/Users/wpq/Dropbox (MIT)/zotero/Ledig et al_2017_Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network.pdf:application/pdf}
+}
+
+@article{sonderbyAmortisedMAPInference2017,
+	title = {Amortised {MAP} Inference for Image Super-resolution},
+	url = {http://arxiv.org/abs/1610.04490},
+	abstract = {Image super-resolution ({SR}) is an underdetermined inverse problem, where a large number of plausible high-resolution images can explain the same downsampled image. Most current single image {SR} methods use empirical risk minimisation, often with a pixel-wise mean squared error ({MSE}) loss. However, the outputs from such methods tend to be blurry, over-smoothed and generally appear implausible. A more desirable approach would employ Maximum a Posteriori ({MAP}) inference, preferring solutions that always have a high probability under the image prior, and thus appear more plausible. Direct {MAP} estimation for {SR} is non-trivial, as it requires us to build a model for the image prior from samples. Furthermore, {MAP} inference is often performed via optimisation-based iterative algorithms which don't compare well with the efficiency of neural-network-based alternatives. Here we introduce new methods for amortised {MAP} inference whereby we calculate the {MAP} estimate directly using a convolutional neural network. We first introduce a novel neural network architecture that performs a projection to the affine subspace of valid {SR} solutions ensuring that the high resolution output of the network is always consistent with the low resolution input. We show that, using this architecture, the amortised {MAP} inference problem reduces to minimising the cross-entropy between two distributions, similar to training generative models. We propose three methods to solve this optimisation problem: (1) Generative Adversarial Networks ({GAN}) (2) denoiser-guided {SR} which backpropagates gradient-estimates from denoising to train the network, and (3) a baseline method using a maximum-likelihood-trained image prior. Our experiments show that the {GAN} based approach performs best on real image data. Lastly, we establish a connection between {GANs} and amortised variational inference as in e.g. variational autoencoders.},
+	journaltitle = {{arXiv}:1610.04490 [cs, stat]},
+	author = {Sønderby, Casper Kaae and Caballero, Jose and Theis, Lucas and Shi, Wenzhe and Huszár, Ferenc},
+	urldate = {2020-01-10},
+	date = {2017-02-21},
+	eprinttype = {arxiv},
+	eprint = {1610.04490},
+	file = {Sonderby et al_2017_Amortised MAP Inference for Image Super-resolution.pdf:/Users/wpq/Dropbox (MIT)/zotero/Sonderby et al_2017_Amortised MAP Inference for Image Super-resolution.pdf:application/pdf}
+}
+
+@article{goodfellowNIPS2016Tutorial2017,
+	title = {{NIPS} 2016 Tutorial: Generative Adversarial Networks},
+	url = {http://arxiv.org/abs/1701.00160},
+	shorttitle = {{NIPS} 2016 Tutorial},
+	abstract = {This report summarizes the tutorial presented by the author at {NIPS} 2016 on generative adversarial networks ({GANs}). The tutorial describes: (1) Why generative modeling is a topic worth studying, (2) how generative models work, and how {GANs} compare to other generative models, (3) the details of how {GANs} work, (4) research frontiers in {GANs}, and (5) state-of-the-art image models that combine {GANs} with other methods. Finally, the tutorial contains three exercises for readers to complete, and the solutions to these exercises.},
+	journaltitle = {{arXiv}:1701.00160 [cs]},
+	author = {Goodfellow, Ian},
+	urldate = {2020-01-06},
+	date = {2017-04-03},
+	eprinttype = {arxiv},
+	eprint = {1701.00160},
+	file = {Goodfellow_2017_NIPS 2016 Tutorial - Generative Adversarial Networks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Goodfellow_2017_NIPS 2016 Tutorial - Generative Adversarial Networks.pdf:application/pdf}
+}
+
+@article{zhuUnpairedImagetoImageTranslation2018,
+	title = {Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks},
+	url = {http://arxiv.org/abs/1703.10593},
+	abstract = {Image-to-image translation is a class of vision and graphics problems where the goal is to learn the mapping between an input image and an output image using a training set of aligned image pairs. However, for many tasks, paired training data will not be available. We present an approach for learning to translate an image from a source domain \$X\$ to a target domain \$Y\$ in the absence of paired examples. Our goal is to learn a mapping \$G: X {\textbackslash}rightarrow Y\$ such that the distribution of images from \$G(X)\$ is indistinguishable from the distribution \$Y\$ using an adversarial loss. Because this mapping is highly under-constrained, we couple it with an inverse mapping \$F: Y {\textbackslash}rightarrow X\$ and introduce a cycle consistency loss to push \$F(G(X)) {\textbackslash}approx X\$ (and vice versa). Qualitative results are presented on several tasks where paired training data does not exist, including collection style transfer, object transfiguration, season transfer, photo enhancement, etc. Quantitative comparisons against several prior methods demonstrate the superiority of our approach.},
+	journaltitle = {{arXiv}:1703.10593 [cs]},
+	author = {Zhu, Jun-Yan and Park, Taesung and Isola, Phillip and Efros, Alexei A.},
+	urldate = {2019-12-12},
+	date = {2018-11-15},
+	eprinttype = {arxiv},
+	eprint = {1703.10593},
+	file = {Zhu et al_2018_Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Zhu et al_2018_Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks.pdf:application/pdf}
+}
+
+@article{donahueAdversarialFeatureLearning2017,
+	title = {Adversarial Feature Learning},
+	url = {http://arxiv.org/abs/1605.09782},
+	abstract = {The ability of the Generative Adversarial Networks ({GANs}) framework to learn generative models mapping from simple latent distributions to arbitrarily complex data distributions has been demonstrated empirically, with compelling results showing that the latent space of such generators captures semantic variation in the data distribution. Intuitively, models trained to predict these semantic latent representations given data may serve as useful feature representations for auxiliary problems where semantics are relevant. However, in their existing form, {GANs} have no means of learning the inverse mapping -- projecting data back into the latent space. We propose Bidirectional Generative Adversarial Networks ({BiGANs}) as a means of learning this inverse mapping, and demonstrate that the resulting learned feature representation is useful for auxiliary supervised discrimination tasks, competitive with contemporary approaches to unsupervised and self-supervised feature learning.},
+	journaltitle = {{arXiv}:1605.09782 [cs, stat]},
+	author = {Donahue, Jeff and Krähenbühl, Philipp and Darrell, Trevor},
+	urldate = {2019-12-12},
+	date = {2017-04-03},
+	eprinttype = {arxiv},
+	eprint = {1605.09782},
+	file = {Donahue et al_2017_Adversarial Feature Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Donahue et al_2017_Adversarial Feature Learning.pdf:application/pdf}
+}
+
+@article{theisNoteEvaluationGenerative2016,
+	title = {A note on the evaluation of generative models},
+	url = {http://arxiv.org/abs/1511.01844},
+	abstract = {Probabilistic generative models can be used for compression, denoising, inpainting, texture synthesis, semi-supervised learning, unsupervised feature learning, and other tasks. Given this wide range of applications, it is not surprising that a lot of heterogeneity exists in the way these models are formulated, trained, and evaluated. As a consequence, direct comparison between models is often difficult. This article reviews mostly known but often underappreciated properties relating to the evaluation and interpretation of generative models with a focus on image models. In particular, we show that three of the currently most commonly used criteria---average log-likelihood, Parzen window estimates, and visual fidelity of samples---are largely independent of each other when the data is high-dimensional. Good performance with respect to one criterion therefore need not imply good performance with respect to the other criteria. Our results show that extrapolation from one criterion to another is not warranted and generative models need to be evaluated directly with respect to the application(s) they were intended for. In addition, we provide examples demonstrating that Parzen window estimates should generally be avoided.},
+	journaltitle = {{arXiv}:1511.01844 [cs, stat]},
+	author = {Theis, Lucas and Oord, Aäron van den and Bethge, Matthias},
+	urldate = {2019-12-12},
+	date = {2016-04-24},
+	eprinttype = {arxiv},
+	eprint = {1511.01844},
+	file = {Theis et al_2016_A note on the evaluation of generative models.pdf:/Users/wpq/Dropbox (MIT)/zotero/Theis et al_2016_A note on the evaluation of generative models.pdf:application/pdf}
+}
+
+@article{reedGenerativeAdversarialText2016,
+	title = {Generative Adversarial Text to Image Synthesis},
+	url = {http://arxiv.org/abs/1605.05396},
+	abstract = {Automatic synthesis of realistic images from text would be interesting and useful, but current {AI} systems are still far from this goal. However, in recent years generic and powerful recurrent neural network architectures have been developed to learn discriminative text feature representations. Meanwhile, deep convolutional generative adversarial networks ({GANs}) have begun to generate highly compelling images of specific categories, such as faces, album covers, and room interiors. In this work, we develop a novel deep architecture and {GAN} formulation to effectively bridge these advances in text and image model- ing, translating visual concepts from characters to pixels. We demonstrate the capability of our model to generate plausible images of birds and flowers from detailed text descriptions.},
+	journaltitle = {{arXiv}:1605.05396 [cs]},
+	author = {Reed, Scott and Akata, Zeynep and Yan, Xinchen and Logeswaran, Lajanugen and Schiele, Bernt and Lee, Honglak},
+	urldate = {2019-12-12},
+	date = {2016-06-05},
+	eprinttype = {arxiv},
+	eprint = {1605.05396},
+	file = {Reed et al_2016_Generative Adversarial Text to Image Synthesis.pdf:/Users/wpq/Dropbox (MIT)/zotero/Reed et al_2016_Generative Adversarial Text to Image Synthesis.pdf:application/pdf}
+}
+
+@article{metzUnrolledGenerativeAdversarial2017,
+	title = {Unrolled Generative Adversarial Networks},
+	url = {http://arxiv.org/abs/1611.02163},
+	abstract = {We introduce a method to stabilize Generative Adversarial Networks ({GANs}) by defining the generator objective with respect to an unrolled optimization of the discriminator. This allows training to be adjusted between using the optimal discriminator in the generator's objective, which is ideal but infeasible in practice, and using the current value of the discriminator, which is often unstable and leads to poor solutions. We show how this technique solves the common problem of mode collapse, stabilizes training of {GANs} with complex recurrent generators, and increases diversity and coverage of the data distribution by the generator.},
+	journaltitle = {{arXiv}:1611.02163 [cs, stat]},
+	author = {Metz, Luke and Poole, Ben and Pfau, David and Sohl-Dickstein, Jascha},
+	urldate = {2019-12-12},
+	date = {2017-05-12},
+	eprinttype = {arxiv},
+	eprint = {1611.02163},
+	file = {Metz et al_2017_Unrolled Generative Adversarial Networks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Metz et al_2017_Unrolled Generative Adversarial Networks.pdf:application/pdf}
+}
+
+@article{goodfellowGenerativeAdversarialNetworks2014,
+	title = {Generative Adversarial Networks},
+	url = {http://arxiv.org/abs/1406.2661},
+	abstract = {We propose a new framework for estimating generative models via an adversarial process, in which we simultaneously train two models: a generative model G that captures the data distribution, and a discriminative model D that estimates the probability that a sample came from the training data rather than G. The training procedure for G is to maximize the probability of D making a mistake. This framework corresponds to a minimax two-player game. In the space of arbitrary functions G and D, a unique solution exists, with G recovering the training data distribution and D equal to 1/2 everywhere. In the case where G and D are defined by multilayer perceptrons, the entire system can be trained with backpropagation. There is no need for any Markov chains or unrolled approximate inference networks during either training or generation of samples. Experiments demonstrate the potential of the framework through qualitative and quantitative evaluation of the generated samples.},
+	journaltitle = {{arXiv}:1406.2661 [cs, stat]},
+	author = {Goodfellow, Ian J. and Pouget-Abadie, Jean and Mirza, Mehdi and Xu, Bing and Warde-Farley, David and Ozair, Sherjil and Courville, Aaron and Bengio, Yoshua},
+	urldate = {2019-12-12},
+	date = {2014-06-10},
+	eprinttype = {arxiv},
+	eprint = {1406.2661},
+	file = {Goodfellow et al_2014_Generative Adversarial Networks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Goodfellow et al_2014_Generative Adversarial Networks.pdf:application/pdf}
+}
+
+@article{salimansImprovedTechniquesTraining2016,
+	title = {Improved Techniques for Training {GANs}},
+	url = {http://arxiv.org/abs/1606.03498},
+	abstract = {We present a variety of new architectural features and training procedures that we apply to the generative adversarial networks ({GANs}) framework. We focus on two applications of {GANs}: semi-supervised learning, and the generation of images that humans find visually realistic. Unlike most work on generative models, our primary goal is not to train a model that assigns high likelihood to test data, nor do we require the model to be able to learn well without using any labels. Using our new techniques, we achieve state-of-the-art results in semi-supervised classification on {MNIST}, {CIFAR}-10 and {SVHN}. The generated images are of high quality as confirmed by a visual Turing test: our model generates {MNIST} samples that humans cannot distinguish from real data, and {CIFAR}-10 samples that yield a human error rate of 21.3\%. We also present {ImageNet} samples with unprecedented resolution and show that our methods enable the model to learn recognizable features of {ImageNet} classes.},
+	journaltitle = {{arXiv}:1606.03498 [cs]},
+	author = {Salimans, Tim and Goodfellow, Ian and Zaremba, Wojciech and Cheung, Vicki and Radford, Alec and Chen, Xi},
+	urldate = {2019-12-12},
+	date = {2016-06-10},
+	eprinttype = {arxiv},
+	eprint = {1606.03498},
+	file = {Salimans et al_2016_Improved Techniques for Training GANs.pdf:/Users/wpq/Dropbox (MIT)/zotero/Salimans et al_2016_Improved Techniques for Training GANs2.pdf:application/pdf}
+}
+
+@incollection{dentonDeepGenerativeImage2015,
+	title = {Deep Generative Image Models using a ￼Laplacian Pyramid of Adversarial Networks},
+	url = {http://papers.nips.cc/paper/5773-deep-generative-image-models-using-a-laplacian-pyramid-of-adversarial-networks.pdf},
+	pages = {1486--1494},
+	booktitle = {Advances in Neural Information Processing Systems 28},
+	publisher = {Curran Associates, Inc.},
+	author = {Denton, Emily L and Chintala, Soumith and szlam, arthur and Fergus, Rob},
+	editor = {Cortes, C. and Lawrence, N. D. and Lee, D. D. and Sugiyama, M. and Garnett, R.},
+	urldate = {2019-12-12},
+	date = {2015},
+	file = {Denton et al_2015_Deep Generative Image Models using a ￼Laplacian Pyramid of Adversarial Networks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Denton et al_2015_Deep Generative Image Models using a ￼Laplacian Pyramid of Adversarial Networks.pdf:application/pdf}
+}
+
+@article{goodfellowDistinguishabilityCriteriaEstimating2015,
+	title = {On distinguishability criteria for estimating generative models},
+	url = {http://arxiv.org/abs/1412.6515},
+	abstract = {Two recently introduced criteria for estimation of generative models are both based on a reduction to binary classification. Noise-contrastive estimation ({NCE}) is an estimation procedure in which a generative model is trained to be able to distinguish data samples from noise samples. Generative adversarial networks ({GANs}) are pairs of generator and discriminator networks, with the generator network learning to generate samples by attempting to fool the discriminator network into believing its samples are real data. Both estimation procedures use the same function to drive learning, which naturally raises questions about how they are related to each other, as well as whether this function is related to maximum likelihood estimation ({MLE}). {NCE} corresponds to training an internal data model belonging to the \{{\textbackslash}em discriminator\} network but using a fixed generator network. We show that a variant of {NCE}, with a dynamic generator network, is equivalent to maximum likelihood estimation. Since pairing a learned discriminator with an appropriate dynamically selected generator recovers {MLE}, one might expect the reverse to hold for pairing a learned generator with a certain discriminator. However, we show that recovering {MLE} for a learned generator requires departing from the distinguishability game. Specifically: (i) The expected gradient of the {NCE} discriminator can be made to match the expected gradient of {MLE}, if one is allowed to use a non-stationary noise distribution for {NCE}, (ii) No choice of discriminator network can make the expected gradient for the {GAN} generator match that of {MLE}, and (iii) The existing theory does not guarantee that {GANs} will converge in the non-convex case. This suggests that the key next step in {GAN} research is to determine whether {GANs} converge, and if not, to modify their training algorithm to force convergence.},
+	journaltitle = {{arXiv}:1412.6515 [stat]},
+	author = {Goodfellow, Ian J.},
+	urldate = {2019-12-12},
+	date = {2015-05-21},
+	eprinttype = {arxiv},
+	eprint = {1412.6515},
+	file = {Goodfellow_2015_On distinguishability criteria for estimating generative models.pdf:/Users/wpq/Dropbox (MIT)/zotero/Goodfellow_2015_On distinguishability criteria for estimating generative models.pdf:application/pdf}
+}
+
+@article{radfordUnsupervisedRepresentationLearning2016,
+	title = {Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks},
+	url = {http://arxiv.org/abs/1511.06434},
+	abstract = {In recent years, supervised learning with convolutional networks ({CNNs}) has seen huge adoption in computer vision applications. Comparatively, unsupervised learning with {CNNs} has received less attention. In this work we hope to help bridge the gap between the success of {CNNs} for supervised learning and unsupervised learning. We introduce a class of {CNNs} called deep convolutional generative adversarial networks ({DCGANs}), that have certain architectural constraints, and demonstrate that they are a strong candidate for unsupervised learning. Training on various image datasets, we show convincing evidence that our deep convolutional adversarial pair learns a hierarchy of representations from object parts to scenes in both the generator and discriminator. Additionally, we use the learned features for novel tasks - demonstrating their applicability as general image representations.},
+	journaltitle = {{arXiv}:1511.06434 [cs]},
+	author = {Radford, Alec and Metz, Luke and Chintala, Soumith},
+	urldate = {2019-12-12},
+	date = {2016-01-07},
+	eprinttype = {arxiv},
+	eprint = {1511.06434},
+	file = {Radford et al_2016_Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Radford et al_2016_Unsupervised Representation Learning with Deep Convolutional Generative Adversarial Networks.pdf:application/pdf}
+}
+
+@article{chenInfoGANInterpretableRepresentation2016,
+	title = {{InfoGAN}: Interpretable Representation Learning by Information Maximizing Generative Adversarial Nets},
+	url = {http://arxiv.org/abs/1606.03657},
+	shorttitle = {{InfoGAN}},
+	abstract = {This paper describes {InfoGAN}, an information-theoretic extension to the Generative Adversarial Network that is able to learn disentangled representations in a completely unsupervised manner. {InfoGAN} is a generative adversarial network that also maximizes the mutual information between a small subset of the latent variables and the observation. We derive a lower bound to the mutual information objective that can be optimized efficiently, and show that our training procedure can be interpreted as a variation of the Wake-Sleep algorithm. Specifically, {InfoGAN} successfully disentangles writing styles from digit shapes on the {MNIST} dataset, pose from lighting of 3D rendered images, and background digits from the central digit on the {SVHN} dataset. It also discovers visual concepts that include hair styles, presence/absence of eyeglasses, and emotions on the {CelebA} face dataset. Experiments show that {InfoGAN} learns interpretable representations that are competitive with representations learned by existing fully supervised methods.},
+	journaltitle = {{arXiv}:1606.03657 [cs, stat]},
+	author = {Chen, Xi and Duan, Yan and Houthooft, Rein and Schulman, John and Sutskever, Ilya and Abbeel, Pieter},
+	urldate = {2019-12-04},
+	date = {2016-06-11},
+	eprinttype = {arxiv},
+	eprint = {1606.03657},
+	file = {Chen et al_2016_InfoGAN - Interpretable Representation Learning by Information Maximizing Generative Adversarial Nets.pdf:/Users/wpq/Dropbox (MIT)/zotero/Chen et al_2016_InfoGAN - Interpretable Representation Learning by Information Maximizing Generative Adversarial Nets.pdf:application/pdf}
+}
+
+@article{jahanianSteerabilityGenerativeAdversarial2019,
+	title = {On the ''steerability" of generative adversarial networks},
+	url = {http://arxiv.org/abs/1907.07171},
+	abstract = {An open secret in contemporary machine learning is that many models work beautifully on standard benchmarks but fail to generalize outside the lab. This has been attributed to training on biased data, which provide poor coverage over real world events. Generative models are no exception, but recent advances in generative adversarial networks ({GANs}) suggest otherwise -- these models can now synthesize strikingly realistic and diverse images. Is generative modeling of photos a solved problem? We show that although current {GANs} can fit standard datasets very well, they still fall short of being comprehensive models of the visual manifold. In particular, we study their ability to fit simple transformations such as camera movements and color changes. We find that the models reflect the biases of the datasets on which they are trained (e.g., centered objects), but that they also exhibit some capacity for generalization: by "steering" in latent space, we can shift the distribution while still creating realistic images. We hypothesize that the degree of distributional shift is related to the breadth of the training data distribution, and conduct experiments that demonstrate this. Code is released on our project page: https://ali-design.github.io/gan\_steerability/},
+	journaltitle = {{arXiv}:1907.07171 [cs]},
+	author = {Jahanian, Ali and Chai, Lucy and Isola, Phillip},
+	urldate = {2019-09-14},
+	date = {2019-07-16},
+	eprinttype = {arxiv},
+	eprint = {1907.07171},
+	file = {Jahanian et al_2019_On the ''steerability of generative adversarial networks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Jahanian et al_2019_On the ''steerability of generative adversarial networks.pdf:application/pdf}
+}
+
+@article{mohamedLearningImplicitGenerative2017,
+	title = {Learning in Implicit Generative Models},
+	url = {http://arxiv.org/abs/1610.03483},
+	abstract = {Generative adversarial networks ({GANs}) provide an algorithmic framework for constructing generative models with several appealing properties: they do not require a likelihood function to be specified, only a generating procedure; they provide samples that are sharp and compelling; and they allow us to harness our knowledge of building highly accurate neural network classifiers. Here, we develop our understanding of {GANs} with the aim of forming a rich view of this growing area of machine learning---to build connections to the diverse set of statistical thinking on this topic, of which much can be gained by a mutual exchange of ideas. We frame {GANs} within the wider landscape of algorithms for learning in implicit generative models--models that only specify a stochastic procedure with which to generate data--and relate these ideas to modelling problems in related fields, such as econometrics and approximate Bayesian computation. We develop likelihood-free inference methods and highlight hypothesis testing as a principle for learning in implicit generative models, using which we are able to derive the objective function used by {GANs}, and many other related objectives. The testing viewpoint directs our focus to the general problem of density ratio estimation. There are four approaches for density ratio estimation, one of which is a solution using classifiers to distinguish real from generated data. Other approaches such as divergence minimisation and moment matching have also been explored in the {GAN} literature, and we synthesise these views to form an understanding in terms of the relationships between them and the wider literature, highlighting avenues for future exploration and cross-pollination.},
+	journaltitle = {{arXiv}:1610.03483 [cs, stat]},
+	author = {Mohamed, Shakir and Lakshminarayanan, Balaji},
+	urldate = {2020-01-27},
+	date = {2017-02-27},
+	eprinttype = {arxiv},
+	eprint = {1610.03483},
+	file = {Mohamed_Lakshminarayanan_2017_Learning in Implicit Generative Models.pdf:/Users/wpq/Dropbox (MIT)/zotero/Mohamed_Lakshminarayanan_2017_Learning in Implicit Generative Models.pdf:application/pdf}
+}
+
+@article{miyatoCGANsProjectionDiscriminator2018,
+	title = {{cGANs} with Projection Discriminator},
+	url = {http://arxiv.org/abs/1802.05637},
+	abstract = {We propose a novel, projection based way to incorporate the conditional information into the discriminator of {GANs} that respects the role of the conditional information in the underlining probabilistic model. This approach is in contrast with most frameworks of conditional {GANs} used in application today, which use the conditional information by concatenating the (embedded) conditional vector to the feature vectors. With this modification, we were able to significantly improve the quality of the class conditional image generation on {ILSVRC}2012 ({ImageNet}) 1000-class image dataset from the current state-of-the-art result, and we achieved this with a single pair of a discriminator and a generator. We were also able to extend the application to super-resolution and succeeded in producing highly discriminative super-resolution images. This new structure also enabled high quality category transformation based on parametric functional transformation of conditional batch normalization layers in the generator.},
+	journaltitle = {{arXiv}:1802.05637 [cs, stat]},
+	author = {Miyato, Takeru and Koyama, Masanori},
+	urldate = {2020-02-03},
+	date = {2018-08-14},
+	eprinttype = {arxiv},
+	eprint = {1802.05637},
+	file = {Miyato_Koyama_2018_cGANs with Projection Discriminator.pdf:/Users/wpq/Dropbox (MIT)/zotero/Miyato_Koyama_2018_cGANs with Projection Discriminator.pdf:application/pdf}
+}
+
+@inproceedings{odenaConditionalImageSynthesis2017,
+	title = {Conditional Image Synthesis with Auxiliary Classifier {GANs}},
+	url = {http://proceedings.mlr.press/v70/odena17a.html},
+	abstract = {In this paper we introduce new methods for the improved training of generative adversarial networks ({GANs}) for image synthesis. We construct a variant of {GANs} employing label conditioning that resu...},
+	eventtitle = {International Conference on Machine Learning},
+	pages = {2642--2651},
+	booktitle = {International Conference on Machine Learning},
+	author = {Odena, Augustus and Olah, Christopher and Shlens, Jonathon},
+	urldate = {2020-02-03},
+	date = {2017-07-17},
+	langid = {english},
+	file = {Odena et al_2017_Conditional Image Synthesis with Auxiliary Classifier GANs.pdf:/Users/wpq/Dropbox (MIT)/zotero/Odena et al_2017_Conditional Image Synthesis with Auxiliary Classifier GANs2.pdf:application/pdf}
+}
+
+@article{arjovskyWassersteinGAN2017a,
+	title = {Wasserstein {GAN}},
+	url = {http://arxiv.org/abs/1701.07875},
+	abstract = {We introduce a new algorithm named {WGAN}, an alternative to traditional {GAN} training. In this new model, we show that we can improve the stability of learning, get rid of problems like mode collapse, and provide meaningful learning curves useful for debugging and hyperparameter searches. Furthermore, we show that the corresponding optimization problem is sound, and provide extensive theoretical work highlighting the deep connections to other distances between distributions.},
+	journaltitle = {{arXiv}:1701.07875 [cs, stat]},
+	author = {Arjovsky, Martin and Chintala, Soumith and Bottou, Léon},
+	urldate = {2020-02-14},
+	date = {2017-12-06},
+	eprinttype = {arxiv},
+	eprint = {1701.07875},
+	file = {Arjovsky et al_2017_Wasserstein GAN.pdf:/Users/wpq/Dropbox (MIT)/zotero/Arjovsky et al_2017_Wasserstein GAN2.pdf:application/pdf}
+}
+
+@article{gulrajaniImprovedTrainingWasserstein2017,
+	title = {Improved Training of Wasserstein {GANs}},
+	url = {http://arxiv.org/abs/1704.00028},
+	abstract = {Generative Adversarial Networks ({GANs}) are powerful generative models, but suffer from training instability. The recently proposed Wasserstein {GAN} ({WGAN}) makes progress toward stable training of {GANs}, but sometimes can still generate only low-quality samples or fail to converge. We find that these problems are often due to the use of weight clipping in {WGAN} to enforce a Lipschitz constraint on the critic, which can lead to undesired behavior. We propose an alternative to clipping weights: penalize the norm of gradient of the critic with respect to its input. Our proposed method performs better than standard {WGAN} and enables stable training of a wide variety of {GAN} architectures with almost no hyperparameter tuning, including 101-layer {ResNets} and language models over discrete data. We also achieve high quality generations on {CIFAR}-10 and {LSUN} bedrooms.},
+	journaltitle = {{arXiv}:1704.00028 [cs, stat]},
+	author = {Gulrajani, Ishaan and Ahmed, Faruk and Arjovsky, Martin and Dumoulin, Vincent and Courville, Aaron},
+	urldate = {2020-02-14},
+	date = {2017-12-25},
+	eprinttype = {arxiv},
+	eprint = {1704.00028},
+	file = {Gulrajani et al_2017_Improved Training of Wasserstein GANs.pdf:/Users/wpq/Dropbox (MIT)/zotero/Gulrajani et al_2017_Improved Training of Wasserstein GANs.pdf:application/pdf}
+}
+
+@article{huUnifyingDeepGenerative2018,
+	title = {On Unifying Deep Generative Models},
+	url = {http://arxiv.org/abs/1706.00550},
+	abstract = {Deep generative models have achieved impressive success in recent years. Generative Adversarial Networks ({GANs}) and Variational Autoencoders ({VAEs}), as emerging families for generative model learning, have largely been considered as two distinct paradigms and received extensive independent studies respectively. This paper aims to establish formal connections between {GANs} and {VAEs} through a new formulation of them. We interpret sample generation in {GANs} as performing posterior inference, and show that {GANs} and {VAEs} involve minimizing {KL} divergences of respective posterior and inference distributions with opposite directions, extending the two learning phases of classic wake-sleep algorithm, respectively. The unified view provides a powerful tool to analyze a diverse set of existing model variants, and enables to transfer techniques across research lines in a principled way. For example, we apply the importance weighting method in {VAE} literatures for improved {GAN} learning, and enhance {VAEs} with an adversarial mechanism that leverages generated samples. Experiments show generality and effectiveness of the transferred techniques.},
+	journaltitle = {{arXiv}:1706.00550 [cs, stat]},
+	author = {Hu, Zhiting and Yang, Zichao and Salakhutdinov, Ruslan and Xing, Eric P.},
+	urldate = {2020-02-15},
+	date = {2018-07-11},
+	eprinttype = {arxiv},
+	eprint = {1706.00550},
+	file = {Hu et al_2018_On Unifying Deep Generative Models.pdf:/Users/wpq/Dropbox (MIT)/zotero/Hu et al_2018_On Unifying Deep Generative Models.pdf:application/pdf}
+}
+
+@article{limGeometricGAN2017,
+	title = {Geometric {GAN}},
+	url = {http://arxiv.org/abs/1705.02894},
+	abstract = {Generative Adversarial Nets ({GANs}) represent an important milestone for effective generative models, which has inspired numerous variants seemingly different from each other. One of the main contributions of this paper is to reveal a unified geometric structure in {GAN} and its variants. Specifically, we show that the adversarial generative model training can be decomposed into three geometric steps: separating hyperplane search, discriminator parameter update away from the separating hyperplane, and the generator update along the normal vector direction of the separating hyperplane. This geometric intuition reveals the limitations of the existing approaches and leads us to propose a new formulation called geometric {GAN} using {SVM} separating hyperplane that maximizes the margin. Our theoretical analysis shows that the geometric {GAN} converges to a Nash equilibrium between the discriminator and generator. In addition, extensive numerical results show that the superior performance of geometric {GAN}.},
+	journaltitle = {{arXiv}:1705.02894 [cond-mat, stat]},
+	author = {Lim, Jae Hyun and Ye, Jong Chul},
+	urldate = {2020-02-15},
+	date = {2017-05-08},
+	eprinttype = {arxiv},
+	eprint = {1705.02894},
+	file = {Lim_Ye_2017_Geometric GAN.pdf:/Users/wpq/Dropbox (MIT)/zotero/Lim_Ye_2017_Geometric GAN.pdf:application/pdf}
+}
+
+@article{zhouActivationMaximizationGenerative2018,
+	title = {Activation Maximization Generative Adversarial Nets},
+	url = {http://arxiv.org/abs/1703.02000},
+	abstract = {Class labels have been empirically shown useful in improving the sample quality of generative adversarial nets ({GANs}). In this paper, we mathematically study the properties of the current variants of {GANs} that make use of class label information. With class aware gradient and cross-entropy decomposition, we reveal how class labels and associated losses influence {GAN}'s training. Based on that, we propose Activation Maximization Generative Adversarial Networks ({AM}-{GAN}) as an advanced solution. Comprehensive experiments have been conducted to validate our analysis and evaluate the effectiveness of our solution, where {AM}-{GAN} outperforms other strong baselines and achieves state-of-the-art Inception Score (8.91) on {CIFAR}-10. In addition, we demonstrate that, with the Inception {ImageNet} classifier, Inception Score mainly tracks the diversity of the generator, and there is, however, no reliable evidence that it can reflect the true sample quality. We thus propose a new metric, called {AM} Score, to provide a more accurate estimation of the sample quality. Our proposed model also outperforms the baseline methods in the new metric.},
+	journaltitle = {{arXiv}:1703.02000 [cs, stat]},
+	author = {Zhou, Zhiming and Cai, Han and Rong, Shu and Song, Yuxuan and Ren, Kan and Zhang, Weinan and Yu, Yong and Wang, Jun},
+	urldate = {2020-02-15},
+	date = {2018-11-16},
+	eprinttype = {arxiv},
+	eprint = {1703.02000},
+	file = {Zhou et al_2018_Activation Maximization Generative Adversarial Nets.pdf:/Users/wpq/Dropbox (MIT)/zotero/Zhou et al_2018_Activation Maximization Generative Adversarial Nets.pdf:application/pdf}
+}
+
+@article{zhaoEnergybasedGenerativeAdversarial2017,
+	title = {Energy-based Generative Adversarial Network},
+	url = {http://arxiv.org/abs/1609.03126},
+	abstract = {We introduce the "Energy-based Generative Adversarial Network" model ({EBGAN}) which views the discriminator as an energy function that attributes low energies to the regions near the data manifold and higher energies to other regions. Similar to the probabilistic {GANs}, a generator is seen as being trained to produce contrastive samples with minimal energies, while the discriminator is trained to assign high energies to these generated samples. Viewing the discriminator as an energy function allows to use a wide variety of architectures and loss functionals in addition to the usual binary classifier with logistic output. Among them, we show one instantiation of {EBGAN} framework as using an auto-encoder architecture, with the energy being the reconstruction error, in place of the discriminator. We show that this form of {EBGAN} exhibits more stable behavior than regular {GANs} during training. We also show that a single-scale architecture can be trained to generate high-resolution images.},
+	journaltitle = {{arXiv}:1609.03126 [cs, stat]},
+	author = {Zhao, Junbo and Mathieu, Michael and {LeCun}, Yann},
+	urldate = {2020-02-15},
+	date = {2017-03-06},
+	eprinttype = {arxiv},
+	eprint = {1609.03126},
+	note = {version: 4},
+	file = {Zhao et al_2017_Energy-based Generative Adversarial Network.pdf:/Users/wpq/Dropbox (MIT)/zotero/Zhao et al_2017_Energy-based Generative Adversarial Network.pdf:application/pdf}
+}
+
+@article{nowozinFGANTrainingGenerative2016,
+	title = {f-{GAN}: Training Generative Neural Samplers using Variational Divergence Minimization},
+	url = {http://arxiv.org/abs/1606.00709},
+	shorttitle = {f-{GAN}},
+	abstract = {Generative neural samplers are probabilistic models that implement sampling using feedforward neural networks: they take a random input vector and produce a sample from a probability distribution deﬁned by the network weights. These models are expressive and allow efﬁcient computation of samples and derivatives, but cannot be used for computing likelihoods or for marginalization. The generativeadversarial training method allows to train such models through the use of an auxiliary discriminative neural network. We show that the generative-adversarial approach is a special case of an existing more general variational divergence estimation approach. We show that any f -divergence can be used for training generative neural samplers. We discuss the beneﬁts of various choices of divergence functions on training complexity and the quality of the obtained generative models.},
+	journaltitle = {{arXiv}:1606.00709 [cs, stat]},
+	author = {Nowozin, Sebastian and Cseke, Botond and Tomioka, Ryota},
+	urldate = {2020-02-15},
+	date = {2016-06-02},
+	langid = {english},
+	eprinttype = {arxiv},
+	eprint = {1606.00709},
+	file = {Nowozin et al_2016_f-GAN - Training Generative Neural Samplers using Variational Divergence Minimization.pdf:/Users/wpq/Dropbox (MIT)/zotero/Nowozin et al_2016_f-GAN - Training Generative Neural Samplers using Variational Divergence Minimization.pdf:application/pdf}
+}
+
+@article{dziugaiteTrainingGenerativeNeural2015,
+	title = {Training generative neural networks via Maximum Mean Discrepancy optimization},
+	url = {http://arxiv.org/abs/1505.03906},
+	abstract = {We consider training a deep neural network to generate samples from an unknown distribution given i.i.d. data. We frame learning as an optimization minimizing a two-sample test statistic---informally speaking, a good generator network produces samples that cause a two-sample test to fail to reject the null hypothesis. As our two-sample test statistic, we use an unbiased estimate of the maximum mean discrepancy, which is the centerpiece of the nonparametric kernel two-sample test proposed by Gretton et al. (2012). We compare to the adversarial nets framework introduced by Goodfellow et al. (2014), in which learning is a two-player game between a generator network and an adversarial discriminator network, both trained to outwit the other. From this perspective, the {MMD} statistic plays the role of the discriminator. In addition to empirical comparisons, we prove bounds on the generalization error incurred by optimizing the empirical {MMD}.},
+	journaltitle = {{arXiv}:1505.03906 [cs, stat]},
+	author = {Dziugaite, Gintare Karolina and Roy, Daniel M. and Ghahramani, Zoubin},
+	urldate = {2020-02-15},
+	date = {2015-05-14},
+	eprinttype = {arxiv},
+	eprint = {1505.03906},
+	file = {Dziugaite et al_2015_Training generative neural networks via Maximum Mean Discrepancy optimization.pdf:/Users/wpq/Dropbox (MIT)/zotero/Dziugaite et al_2015_Training generative neural networks via Maximum Mean Discrepancy optimization.pdf:application/pdf}
+}
+
+@inproceedings{baoCVAEGANFineGrainedImage2017,
+	location = {Venice},
+	title = {{CVAE}-{GAN}: Fine-Grained Image Generation through Asymmetric Training},
+	isbn = {978-1-5386-1032-9},
+	url = {http://ieeexplore.ieee.org/document/8237561/},
+	doi = {10.1109/ICCV.2017.299},
+	shorttitle = {{CVAE}-{GAN}},
+	abstract = {We present variational generative adversarial networks, a general learning framework that combines a variational auto-encoder with a generative adversarial network, for synthesizing images in ﬁne-grained categories, such as faces of a speciﬁc person or objects in a category. Our approach models an image as a composition of label and latent attributes in a probabilistic model. By varying the ﬁne-grained category label fed into the resulting generative model, we can generate images in a speciﬁc category with randomly drawn values on a latent attribute vector. Our approach has two novel aspects. First, we adopt a cross entropy loss for the discriminative and classiﬁer network, but a mean discrepancy objective for the generative network. This kind of asymmetric loss function makes the {GAN} training more stable. Second, we adopt an encoder network to learn the relationship between the latent space and the real image space, and use pairwise feature matching to keep the structure of generated images. We experiment with natural images of faces, ﬂowers, and birds, and demonstrate that the proposed models are capable of generating realistic and diverse samples with ﬁne-grained category labels. We further show that our models can be applied to other tasks, such as image inpainting, super-resolution, and data augmentation for training better face recognition models.},
+	eventtitle = {2017 {IEEE} International Conference on Computer Vision ({ICCV})},
+	pages = {2764--2773},
+	booktitle = {2017 {IEEE} International Conference on Computer Vision ({ICCV})},
+	publisher = {{IEEE}},
+	author = {Bao, Jianmin and Chen, Dong and Wen, Fang and Li, Houqiang and Hua, Gang},
+	urldate = {2020-02-15},
+	date = {2017-10},
+	langid = {english},
+	file = {Bao et al_2017_CVAE-GAN - Fine-Grained Image Generation through Asymmetric Training.pdf:/Users/wpq/Dropbox (MIT)/zotero/Bao et al_2017_CVAE-GAN - Fine-Grained Image Generation through Asymmetric Training.pdf:application/pdf}
+}
+
+@article{miyatoSpectralNormalizationGenerative2018,
+	title = {Spectral Normalization for Generative Adversarial Networks},
+	url = {http://arxiv.org/abs/1802.05957},
+	abstract = {One of the challenges in the study of generative adversarial networks is the instability of its training. In this paper, we propose a novel weight normalization technique called spectral normalization to stabilize the training of the discriminator. Our new normalization technique is computationally light and easy to incorporate into existing implementations. We tested the efficacy of spectral normalization on {CIFAR}10, {STL}-10, and {ILSVRC}2012 dataset, and we experimentally confirmed that spectrally normalized {GANs} ({SN}-{GANs}) is capable of generating images of better or equal quality relative to the previous training stabilization techniques.},
+	journaltitle = {{arXiv}:1802.05957 [cs, stat]},
+	author = {Miyato, Takeru and Kataoka, Toshiki and Koyama, Masanori and Yoshida, Yuichi},
+	urldate = {2020-02-15},
+	date = {2018-02-16},
+	eprinttype = {arxiv},
+	eprint = {1802.05957},
+	file = {Miyato et al_2018_Spectral Normalization for Generative Adversarial Networks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Miyato et al_2018_Spectral Normalization for Generative Adversarial Networks2.pdf:application/pdf}
+}
+
+@article{brockLargeScaleGAN2019,
+	title = {Large Scale {GAN} Training for High Fidelity Natural Image Synthesis},
+	url = {http://arxiv.org/abs/1809.11096},
+	abstract = {Despite recent progress in generative image modeling, successfully generating high-resolution, diverse samples from complex datasets such as {ImageNet} remains an elusive goal. To this end, we train Generative Adversarial Networks at the largest scale yet attempted, and study the instabilities specific to such scale. We find that applying orthogonal regularization to the generator renders it amenable to a simple "truncation trick," allowing fine control over the trade-off between sample fidelity and variety by reducing the variance of the Generator's input. Our modifications lead to models which set the new state of the art in class-conditional image synthesis. When trained on {ImageNet} at 128x128 resolution, our models ({BigGANs}) achieve an Inception Score ({IS}) of 166.5 and Frechet Inception Distance ({FID}) of 7.4, improving over the previous best {IS} of 52.52 and {FID} of 18.6.},
+	journaltitle = {{arXiv}:1809.11096 [cs, stat]},
+	author = {Brock, Andrew and Donahue, Jeff and Simonyan, Karen},
+	urldate = {2020-02-15},
+	date = {2019-02-25},
+	eprinttype = {arxiv},
+	eprint = {1809.11096},
+	file = {Brock et al_2019_Large Scale GAN Training for High Fidelity Natural Image Synthesis.pdf:/Users/wpq/Dropbox (MIT)/zotero/Brock et al_2019_Large Scale GAN Training for High Fidelity Natural Image Synthesis.pdf:application/pdf}
+}
+
+@article{zhaoEnergybasedGenerativeAdversarial2017a,
+	title = {Energy-based Generative Adversarial Network},
+	url = {http://arxiv.org/abs/1609.03126},
+	abstract = {We introduce the "Energy-based Generative Adversarial Network" model ({EBGAN}) which views the discriminator as an energy function that attributes low energies to the regions near the data manifold and higher energies to other regions. Similar to the probabilistic {GANs}, a generator is seen as being trained to produce contrastive samples with minimal energies, while the discriminator is trained to assign high energies to these generated samples. Viewing the discriminator as an energy function allows to use a wide variety of architectures and loss functionals in addition to the usual binary classifier with logistic output. Among them, we show one instantiation of {EBGAN} framework as using an auto-encoder architecture, with the energy being the reconstruction error, in place of the discriminator. We show that this form of {EBGAN} exhibits more stable behavior than regular {GANs} during training. We also show that a single-scale architecture can be trained to generate high-resolution images.},
+	journaltitle = {{arXiv}:1609.03126 [cs, stat]},
+	author = {Zhao, Junbo and Mathieu, Michael and {LeCun}, Yann},
+	urldate = {2020-02-20},
+	date = {2017-03-06},
+	eprinttype = {arxiv},
+	eprint = {1609.03126},
+	file = {Zhao et al_2017_Energy-based Generative Adversarial Network.pdf:/Users/wpq/Dropbox (MIT)/zotero/Zhao et al_2017_Energy-based Generative Adversarial Network2.pdf:application/pdf}
+}
