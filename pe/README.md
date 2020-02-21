@@ -1,7 +1,5 @@
 
 
-+ implementation for 
-    + https://github.com/crcrpar/pytorch.sngan_projection.git
 
 ## resources
 

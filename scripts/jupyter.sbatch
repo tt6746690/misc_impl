@@ -2,7 +2,6 @@
 #SBATCH --job-name=jupyt_misc
 #SBATCH --output=/data/vision/polina/scratch/wpq/misc_impl/scripts/jupyter.out
 
-#SBATCH --exclusive
 #SBATCH --time=1000-00:00:00
 #SBATCH --partition=gpu
 #SBATCH --gres=gpu:1
