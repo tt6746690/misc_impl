@@ -15,3 +15,5 @@ dependencies:
     - opencv
     - scikit-learn
     - pylint
+    - seaborn
+    - pil
