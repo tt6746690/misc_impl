@@ -50,7 +50,7 @@ The paper implicitly model $p_{\rx|\rc}$ by using a combination of 1) a determin
 
 \subsection{Variational Maximization of Mutual Information}
 
-The paper is motivated to construct latent code in such a way such that when given a sample, we would be quite certain what the latent codes are. In other words, we are interested in the following optimization problem 
+The paper is motivated to construct latent code in such a way such that when given a generated sample, we would be quite certain what the latent codes are. In other words, we want the generator to be making use of the latent code as much as possible. We are interested in the following optimization problem, 
 \begin{equation}
     \label{eq:1}
     \min_{G} H(\rc|\rx) 
