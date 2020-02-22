@@ -158,7 +158,7 @@ if __name__ == '__main__':
     parser.add_argument("--gpu_id", type=str, default='0', help="gpu id assigned by cluster")
     parser.add_argument("--n_workers", type=int, default=8, help="number of CPU workers for processing input data")
     parser.add_argument("--learning_rate", type=float, dest='lr', default=0.0002, help="rng seed")
-    parser.add_argument("--epochs", type=int, dest='n_epochs', default=20, help="number of epochs")
+    parser.add_argument("--epochs", type=int, dest='n_epochs', default=5, help="number of epochs")
     parser.add_argument("--log_interval", type=int, dest='log_interval', default=100,  help="number of batches to print loss / plot figures")
     parser.add_argument("--target_type", type=str, dest='target_type', default='digit', help="in {'digit', 'color'}")
 
