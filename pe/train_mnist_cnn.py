@@ -129,7 +129,7 @@ def evaluate(model, test_loader, device, target_type):
             y = select_target(y_digit, y_color)
             x, y  = x.to(device), y.to(device)
             output = model(x)
-            test_loss += criterion(output.view_as(y), y, reduction='sum').item()
+            test_loss += criterion(output, y, reduction='sum').item()
             pred = compute_decision(output)
             correct += pred.eq(y.view_as(pred)).sum().item()
         test_loss /= len(test_loader.dataset)
