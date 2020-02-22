@@ -41,6 +41,7 @@ class ColorMNIST(VisionDataset):
                '5 - five', '6 - six', '7 - seven', '8 - eight', '9 - nine']
 
     classes_color = ['0 - blue', '1 - red']
+
     c1 = torch.tensor([1,0,0], dtype=torch.float32)
     c2 = torch.tensor([0,0,1], dtype=torch.float32)
 
@@ -76,7 +77,7 @@ class ColorMNIST(VisionDataset):
 
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image
-        img = Image.fromarray(torch.transpose(img, 2, 0).numpy(), mode='RGB')
+        img = Image.fromarray(img.permute(1, 2, 0).numpy(), mode='RGB')
 
         if self.transform is not None:
             img = self.transform(img)
@@ -162,27 +163,25 @@ class ColorMNIST(VisionDataset):
         """ color foreground pixel in digits by random sampling 
             color from a line between two color vectors
         """
-
-        npr.seed(0)
         n_ims = ims.shape[0]
-
-        def interpolate_linear(x, y, theta):
-            return theta*x + (1-theta)*y
 
         # n_ims, 3, 28, 28
         color_targets = torch.from_numpy(npr.uniform(size=(n_ims,)))
 
-        c1 = c1.reshape(1,3,1,1).repeat(n_ims, 1, 28, 28)
-        c2 = c2.reshape(1,3,1,1).repeat(n_ims, 1, 28, 28)
-        thetas = color_targets.view(-1,1,1,1)
-        shade = thetas*c1 + (1-thetas)*c2
+        c1 = c1.reshape(1, 3, 1, 1).repeat(n_ims, 1, 28, 28)
+        c2 = c2.reshape(1, 3, 1, 1).repeat(n_ims, 1, 28, 28)
+        thetas = color_targets.view(-1, 1, 1, 1)
+        shade = self._interpolate_linear(c1, c2, thetas)
 
-        ims = ims.reshape(-1,1,28,28).repeat(1,3,1,1)
+        ims = ims.reshape(-1, 1, 28, 28).repeat(1, 3, 1, 1)
         mask = (ims.clone()>0)
 
         ims[mask==1] = (ims[mask==1]*shade[mask==1]).to(torch.uint8)
 
         return ims, color_targets
+
+    def _interpolate_linear(self, x, y, theta):
+        return theta*x + (1-theta)*y
     
 
 def get_int(b):
