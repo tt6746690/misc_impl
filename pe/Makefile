@@ -1,7 +1,7 @@
 
 nb_start:
 	scancel --name tsboard
-	sbatch --export=logdir=./cgan/logs ../scripts/tensorboard.sbatch
+	sbatch --export=logdir=./pe/logs ../scripts/tensorboard.sbatch
 
 	sleep 0.5
 	squeue -u wpq
