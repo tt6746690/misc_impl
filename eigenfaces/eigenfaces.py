@@ -1,27 +1,27 @@
 import numpy as np
 
-def pca_with_eig(X, n_components=None):
+def pca_with_eig(X, k=None):
     N = X.shape[0]
     X = X - np.mean(X,axis=0)
     C = 1/(N-1)*X.T@X
     w, P = np.linalg.eig(C)
     I = np.argsort(-w)
     P = P[:,I]
-    if n_components:
-        assert(n_components <= P.shape[1])
-        P = P[:,:n_components]
+    if k:
+        assert(k <= P.shape[1])
+        P = P[:,:k]
     Y = X@P
     return Y, P
 
-def pca_with_svd(X, n_components=None):
+def pca_with_svd(X, k=None):
     N = X.shape[0]
     X = X - np.mean(X,axis=0)
     W = X/(N-1)
     _, _, VT = np.linalg.svd(W)
     P = VT.T
-    if n_components:
-        assert(n_components <= P.shape[1])
-        P = P[:,:n_components]
+    if k:
+        assert(k <= P.shape[1])
+        P = P[:,:k]
     Y = X@P
     return Y, P
 
