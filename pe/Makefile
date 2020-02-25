@@ -33,5 +33,7 @@ gif:
 	# delay 10 -> 100/10 = 10fps
 	# delay 20 -> 100/20 = 5fps
 
-	convert -delay 10 -loop 0 `ls -v figures/infogan_seed=3_2020.02.14-02:07:54/*.png` gifs/visualize_training.gif
-	convert gifs/visualize_training.gif -coalesce -resize 224x224 -layers OptimizeFrame gifs/visualize_training.gif
+
+
+	convert -delay 10 -loop 0 `ls -v figures/mnist_cgan/*.png` gifs/mnist_cgan_training.gif
+	convert gifs/mnist_cgan_training.gif -coalesce -resize 224x224 -layers OptimizeFrame gifs/mnist_cgan_training.gif

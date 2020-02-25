@@ -112,13 +112,13 @@ class OptimizedDBlock(nn.Module):
 
 class Discriminator(nn.Module):
 
-    def __init__(self, num_features=64, num_classes=0, activation=F.relu):
+    def __init__(self, num_features=64, num_classes=0, activation=F.relu, im_channels=3):
         super(Discriminator, self).__init__()
         self.num_features = num_features
         self.num_classes = num_classes
         self.activation = activation
 
-        self.block1 = OptimizedDBlock(3, num_features)
+        self.block1 = OptimizedDBlock(im_channels, num_features)
         self.block2 = DBlock(num_features, num_features * 2,
                             activation=activation, downsample=True)
         self.block3 = DBlock(num_features * 2, num_features * 4,
@@ -225,7 +225,8 @@ class Generator(nn.Module):
     """Generator generates 32x32."""
 
     def __init__(self, num_features=64, dim_z=128, bottom_width=4,
-                 activation=F.relu, num_classes=0, distribution='normal'):
+                 activation=F.relu, num_classes=0, distribution='normal',
+                 im_channels=3):
         super(Generator, self).__init__()
         self.num_features = num_features
         self.dim_z = dim_z
@@ -246,7 +247,7 @@ class Generator(nn.Module):
                             activation=activation, upsample=True,
                             num_classes=num_classes)
         self.b5 = nn.BatchNorm2d(num_features)
-        self.conv5 = nn.Conv2d(num_features, 3, 1, 1)
+        self.conv5 = nn.Conv2d(num_features, im_channels, 1, 1)
 
     def _initialize(self):
         init.xavier_uniform_(self.l1.weight.tensor)
