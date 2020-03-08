@@ -48,7 +48,7 @@ def train(
     G_bottom_width,
     n_classes,
     im_channels,
-    dataset_func,
+    dataset_type,
     model_activation,
     loss_type):
 
@@ -70,11 +70,11 @@ def train(
     ])
 
     train_loader = torch.utils.data.DataLoader(
-        dataset_func(
+        dataset_type(
             root=data_root, download=True, train=True, transform=transforms),
         batch_size=batch_size, shuffle=True, num_workers=n_workers, pin_memory=True)
     test_loader = torch.utils.data.DataLoader(
-        dataset_func(
+        dataset_type(
             root=data_root, download=True, train=False, transform=transforms),
         batch_size=batch_size, shuffle=True, num_workers=n_workers, pin_memory=True)
 
@@ -104,13 +104,13 @@ def train(
         z = torch.empty(batch_size, dim_z, dtype=torch.float32, device=device).normal_()
         # conditioned variable
         c = torch.from_numpy(np.random.randint(low=0, high=n_classes, size=(batch_size,)))
-        c = y.type(torch.long).to(device)
+        c = c.type(torch.long).to(device)
 
         x_fake = G(z, c)
         return x_fake, c
 
     fixed_z = torch.empty(100, G_dim_z, dtype=torch.float32, device=device).normal_()
-    fixed_y = torch.arange(10).repeat(10).type(torch.long).to(device)
+    fixed_c = torch.arange(10).repeat(10).type(torch.long).to(device)
 
     real_label, fake_label = 0, 1
         
@@ -123,9 +123,9 @@ def train(
             real_labels = torch.full((batch_size,), real_label, device=device)
             fake_labels = torch.full((batch_size,), fake_label, device=device)
             
-            if loss_type == 'original':
-                criterion_G = lambda D_xf, D_xr: loss_bce(F.sigmoid(D_xf), real_labels)
-                criterion_D = lambda D_xf, D_xr: loss_bce(F.sigmoid(D_xf), fake_labels) + loss_bce(F.sigmoid(D_xr), real_labels)
+            if loss_type == 'minimax':
+                criterion_G = lambda D_xf, D_xr: loss_bce(torch.sigmoid(D_xf), real_labels)
+                criterion_D = lambda D_xf, D_xr: loss_bce(torch.sigmoid(D_xf), fake_labels) + loss_bce(torch.sigmoid(D_xr), real_labels)
 
             if target_type == 'color':
                 x, y = x.to(device), (y_color < 0.5).long().to(device)
@@ -179,12 +179,12 @@ def train(
                     f'loss_D: {loss_D:.4}\t'
                     f'loss_G: {loss_G:.4}\t')
                 
-                x_fake = G(fixed_z, fixed_y).detach()
+                x_fake = G(fixed_z, fixed_c).detach()
                 tv_utils.save_image(x_fake,
                     os.path.join(figure_root,
                         f'{model_name}_fake_samples_epoch={epoch}_it={it}.png'), nrow=10)
 
-                writer.add_image('mnist', tv_utils.make_grid(x_fake), global_step)
+                writer.add_image('mnist', tv_utils.make_grid(x_fake, nrow=10), global_step)
             
 
         torch.save(G.state_dict(), os.path.join(model_root, f'G_epoch_{epoch}.pt'))
@@ -219,27 +219,29 @@ if __name__ == '__main__':
     parser.add_argument("--G_dim_z", type=int, dest='G_dim_z', default=32,  help="dimension for latent noise vector of G")
     parser.add_argument("--G_bottom_width", type=int, dest='G_bottom_width', default=4,  help="dimension of feature map before 1st conv in G")
     parser.add_argument("--target_type", type=str, dest='target_type', default='digit', help="in {'digit', 'color'}")
-    parser.add_argument("--dataset_func", type=str, dest='dataset_func', default='colorMNIST', help="in {'MNIST', 'colorMNIST'}")
-    parser.add_argument("--loss_type", type=str, dest='loss_type', default='original', help="in {'hinge', 'dcgan', 'original'}")
+    parser.add_argument("--dataset_type", type=str, dest='dataset_type', default='ColorMNIST', help="in {'MNIST', 'ColorMNIST'}")
+    parser.add_argument("--loss_type", type=str, dest='loss_type', default='minimax', help="in {'hinge', 'dcgan', 'minimax'}")
+
 
 
     args = parser.parse_args()
 
-    if args.target_type not in ['digit', 'color']:
-        print('target type should be either "digit" or "color"')
+    assert(args.target_type in ['digit', 'color'])
+    assert(args.dataset_type in ['MNIST', 'ColorMNIST'])
+    assert(args.loss_type in ['hinge', 'dcgan', 'minimax'])
 
     d = vars(args)
 
     d['model_activation'] = nn.LeakyReLU(0.2)
 
-    if args.dataset_func == 'MNIST':
+    if args.dataset_type == 'MNIST':
         d['im_channels'] = 1
-        d['dataset_func'] = MNIST
+        d['dataset_type'] = MNIST
         d['n_classes'] = 10
         d['target_type'] = 'digit'
-    elif args.dataset_func == 'colorMNIST':
+    elif args.dataset_type == 'ColorMNIST':
         d['im_channels'] = 3
-        d['dataset_func'] = ColorMNIST
+        d['dataset_type'] = ColorMNIST
         if args.target_type == 'digit':
             d['n_classes'] = 10
         elif args.target_type == 'color':
@@ -247,12 +249,9 @@ if __name__ == '__main__':
         else:
             raise Exception()
 
-
-    args.model_name  = f'{args.model_name}_{args.target_type}'
+    args.model_name  = f'{args.model_name}'
     args.model_root  = os.path.join(args.model_root, args.model_name)
     args.log_root    = os.path.join(args.log_root,   args.model_name)
     args.figure_root = os.path.join(args.figure_root,args.model_name)
-
-    print(d)
 
     train(**d)
