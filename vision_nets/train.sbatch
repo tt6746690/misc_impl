@@ -10,7 +10,7 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem-per-cpu=3GB
 
-#SBATCH --array=1
+#SBATCH --array=1-2
 
 if [[ ${SLURM_ARRAY_TASK_ID} == "" ]]; then
   SLURM_ARRAY_TASK_ID=1
@@ -22,11 +22,16 @@ conda activate misc_impl
 
 cd /data/vision/polina/scratch/wpq/misc_impl/vision_nets
 
-python train_resgan.py \
+if [[ ${SLURM_ARRAY_TASK_ID} == "1" ]]; then
+  python train_resgan.py \
    --model_name resgan_use_sn=True \
    --gpu_id=$SLURM_JOB_GPUS
    --use_sn
+fi
 
-python train_resgan.py \
-   --model_name resgan_use_sn=False \
-   --gpu_id=$SLURM_JOB_GPUS
+
+if [[ ${SLURM_ARRAY_TASK_ID} == "2" ]]; then
+    python train_resgan.py \
+    --model_name resgan_use_sn=False \
+    --gpu_id=$SLURM_JOB_GPUS
+fi

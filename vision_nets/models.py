@@ -101,19 +101,19 @@ class ResidualBlock(nn.Module):
             shortcut_conv_resample = conv1x1(in_channels, out_channels, 1, use_sn=use_sn)
 
         self.residual = nn.Sequential()
-        self.residual.add_module('Normalization_1', norm_layer(in_channels))
-        self.residual.add_module('Nonlinearity_1', nn.Identity() if resblk_1st else nonlinearity)
-        self.residual.add_module('Conv_1', residual_conv_resample)
-        self.residual.add_module('Normalization_2', norm_layer(out_channels))
-        self.residual.add_module('Nonlinearity_2', nonlinearity)
-        self.residual.add_module('Conv_2', conv3x3(out_channels, out_channels, use_sn=use_sn))
+        self.residual.add_module('normalization_1', norm_layer(in_channels))
+        self.residual.add_module('nonlinearity_1', nn.Identity() if resblk_1st else nonlinearity)
+        self.residual.add_module('conv_1', residual_conv_resample)
+        self.residual.add_module('normalization_2', norm_layer(out_channels))
+        self.residual.add_module('nonlinearity_2', nonlinearity)
+        self.residual.add_module('conv_2', conv3x3(out_channels, out_channels, use_sn=use_sn))
         
         if in_channels == out_channels and resample == None:
             self.shortcut = nn.Identity()
         else:
             self.shortcut = nn.Sequential()
-            self.shortcut.add_module('Normalization_1', norm_layer(in_channels))
-            self.shortcut.add_module('Conv_1', shortcut_conv_resample)
+            self.shortcut.add_module('normalization_1', norm_layer(in_channels))
+            self.shortcut.add_module('conv_1', shortcut_conv_resample)
             
         
     def forward(self, x):
@@ -142,34 +142,34 @@ class Generator(nn.Module):
         assert(n_convs == len(conv_upsample))
         
         self.bottom_width = 4
-        nonlinearity = nn.ReLU(inplace=True)
+        self.nonlinearity = nn.ReLU(inplace=True)
         
-        self.Linear = nn.Linear(dim_z, (self.bottom_width**2) * conv_channels[0])
+        self.linear = nn.Linear(dim_z, (self.bottom_width**2) * conv_channels[0])
         
-        self.ResidualBlocks = nn.Sequential()
+        self.residual_blocks = nn.Sequential()
         for i in range(n_convs):
             upsample = conv_upsample[i]
-            self.ResidualBlocks.add_module(f'ResBlock{"Up" if upsample else ""}_{i}',
+            self.residual_blocks.add_module(f'residual_block{"_up" if upsample else ""}_{i}',
                   ResidualBlock(conv_channels[i], conv_channels[i+1],
                                 resample = "up" if upsample else None,
                                 norm_layer = nn.BatchNorm2d,
-                                nonlinearity = nonlinearity))
+                                nonlinearity = self.nonlinearity))
         
-        self.NormalizationFinal = nn.BatchNorm2d(conv_channels[-1])
-        self.NonlinearityFinal = nonlinearity
-        self.ConvFinal = conv3x3(conv_channels[-1], im_channnels)
-        self.Tanh = nn.Tanh()
+        self.normalization_final = nn.BatchNorm2d(conv_channels[-1])
+        self.conv_final = conv3x3(conv_channels[-1], im_channnels)
+        self.nonlinearity_final = nn.Tanh()
 
     def forward(self, x):
         # 128
-        x = self.Linear(x)
+        x = self.linear(x)
         x = x.view(x.shape[0], -1, self.bottom_width, self.bottom_width)
         # 1024x4x4
-        x = self.ResidualBlocks(x)
+        x = self.residual_blocks(x)
         # 64x128x128
-        x = self.NormalizationFinal(x)
-        x = self.NonlinearityFinal(x)
-        x = self.Tanh(self.ConvFinal(x))
+        x = self.normalization_final(x)
+        x = self.nonlinearity(x)
+        x = self.conv_final(x)
+        x = self.nonlinearity_final(x)
         # 3x128x128
         return x
 
@@ -196,29 +196,28 @@ class Discriminator(nn.Module):
         assert(n_convs > 0)
         assert(n_convs == len(conv_dnsample))
         
-        nonlinearity = nn.LeakyReLU(0.2, inplace=True)
+        self.nonlinearity = nn.LeakyReLU(0.2, inplace=True)
         
-        self.ResidualBlocks = nn.Sequential()
+        self.residual_blocks = nn.Sequential()
         for i in range(n_convs):
             downsample = conv_dnsample[i]
-            self.ResidualBlocks.add_module(f'ResBlock{"Dn" if downsample else ""}_{i}',
+            self.residual_blocks.add_module(f'residual_block{"_dn" if downsample else ""}_{i}',
                   ResidualBlock(conv_channels[i], conv_channels[i+1],
                                 resample = "dn" if downsample else None,
                                 norm_layer = nn.Identity,
-                                nonlinearity = nonlinearity,
+                                nonlinearity = self.nonlinearity,
                                 resblk_1st = True if i == 0 else False,
                                 use_sn = use_sn))
-        
-        self.NonlinearityFinal = nonlinearity
-        self.LinearFinal = apply_sn(nn.Linear(conv_channels[-1], 1), use_sn)
+
+        self.linear = apply_sn(nn.Linear(conv_channels[-1], 1), use_sn)
 
     def forward(self, x):
         # 3x128x128
-        x = self.ResidualBlocks(x)
+        x = self.residual_blocks(x)
         # 1024x4x4
-        x = self.NonlinearityFinal(x)
+        x = self.nonlinearity(x)
         x = torch.sum(x, dim=(2,3))   # (global sum pooling)
         # 1024
-        x = self.LinearFinal(x)
+        x = self.linear(x)
         # 1
         return x

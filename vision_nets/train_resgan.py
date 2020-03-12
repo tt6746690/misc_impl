@@ -18,11 +18,11 @@ from models import Generator, Discriminator
 ################################################
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--model_name", type=str, default='resgan', help="name of the model")
 parser.add_argument("--data_root", type=str, default='../data', help="data folder")
-parser.add_argument("--model_root", type=str, default='./models/resgan', help="model folder")
-parser.add_argument("--log_root", type=str, default=f'./logs/resgan', help="log folder")
-parser.add_argument("--figure_root", type=str, default=f'./figures/resgan', help="log folder")
-parser.add_argument("--model_name", type=str, default='residual_GAN', help="name of the model")
+parser.add_argument("--model_root", type=str, default='./models/', help="model folder")
+parser.add_argument("--log_root", type=str, default=f'./logs/', help="log folder")
+parser.add_argument("--figure_root", type=str, default=f'./figures/', help="log folder")
 parser.add_argument("--seed", type=int, default=0, help="rng seed")
 parser.add_argument("--image_size", type=int, default=32, help="image size of the inputs")
 parser.add_argument("--batch_size", type=int, default=32, help="batch_size")
@@ -33,6 +33,10 @@ parser.add_argument("--epochs", type=int, dest='n_epochs', default=5, help="numb
 parser.add_argument("--log_interval", type=int, dest='log_interval', default=100,  help="number of batches to record history")
 parser.add_argument("--use_sn", dest='use_sn', default=False, action='store_true', help="use spectral normalization")
 args = parser.parse_args()
+
+args.figure_root = os.path.join(args.figure_root, args.model_name)
+args.model_root = os.path.join(args.model_root, args.model_name)
+
 locals().update(vars(args))
 
 dim_z = 50
