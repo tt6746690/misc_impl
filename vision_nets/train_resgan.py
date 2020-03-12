@@ -31,7 +31,7 @@ parser.add_argument("--n_workers", type=int, default=8, help="number of CPU work
 parser.add_argument("--learning_rate", type=float, dest='lr', default=0.0002, help="rng seed")
 parser.add_argument("--epochs", type=int, dest='n_epochs', default=5, help="number of epochs")
 parser.add_argument("--log_interval", type=int, dest='log_interval', default=100,  help="number of batches to record history")
-parser.add_argument("--target_type", type=str, dest='target_type', default='digit', help="in {'digit', 'color'}")
+parser.add_argument("--use_sn", dest='use_sn', default=False, action='store_true', help="use spectral normalization")
 args = parser.parse_args()
 locals().update(vars(args))
 
