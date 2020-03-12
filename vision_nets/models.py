@@ -1,16 +1,26 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn.utils import spectral_norm
 
-def conv3x3(in_planes, out_planes, stride=1, dilation=1):
+
+def apply_sn(module, use_sn):
+    if use_sn:
+        return spectral_norm(module)
+    else:
+        return module
+
+def conv3x3(in_planes, out_planes, stride=1, dilation=1, use_sn=False):
     """3x3 convolution with padding"""
-    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
+    module = nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
                      padding=dilation, bias=False, dilation=dilation)
+    return apply_sn(module, use_sn)
 
 
-def conv1x1(in_planes, out_planes, stride=1):
+def conv1x1(in_planes, out_planes, stride=1, use_sn=False):
     """1x1 convolution"""
-    return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
+    module = nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
+    return apply_sn(module, use_sn)
 
 
 class UpsampleConv(nn.Module):
@@ -19,11 +29,11 @@ class UpsampleConv(nn.Module):
             https://github.com/pytorch/examples/blob/master/fast_neural_style/neural_style/transformer_net.py
     """
     
-    def __init__(self, in_channels, out_channels, kernel_size, stride, scale_factor):
+    def __init__(self, in_channels, out_channels, kernel_size, stride, scale_factor, use_sn=False):
         super(UpsampleConv, self).__init__()
         self.scale_factor = scale_factor
-        self.pad  = torch.nn.ReflectionPad2d(kernel_size // 2)
-        self.conv = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride)
+        self.pad  = torch.nn.ReflectionPad2d(kernel_size // 2)        
+        self.conv = apply_sn(torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride), use_sn)
         
     def forward(self, x):
         x = F.interpolate(x, mode='nearest', scale_factor=self.scale_factor)
@@ -32,12 +42,12 @@ class UpsampleConv(nn.Module):
         return x
     
 
-def deconv3x3(in_planes, out_planes, stride=1, dilation=1):
-    return UpsampleConv(in_planes, out_planes, kernel_size=3, stride=1, scale_factor=2)
+def deconv3x3(in_planes, out_planes, stride=1, dilation=1, use_sn=False):
+    return UpsampleConv(in_planes, out_planes, kernel_size=3, stride=1, scale_factor=2, use_sn=use_sn)
 
 
-def deconv1x1(in_planes, out_planes, stride=1, dilation=1):
-    return UpsampleConv(in_planes, out_planes, kernel_size=1, stride=1, scale_factor=2)
+def deconv1x1(in_planes, out_planes, stride=1, dilation=1, use_sn=False):
+    return UpsampleConv(in_planes, out_planes, kernel_size=1, stride=1, scale_factor=2, use_sn=use_sn)
 
 
 class ResidualBlock(nn.Module):
@@ -59,7 +69,11 @@ class ResidualBlock(nn.Module):
     """
 
     def __init__(self, in_channels, out_channels, 
-        resample=None, norm_layer=nn.Identity, nonlinearity=nn.ReLU(inplace=True), resblk_1st=False):
+                 resample=None,
+                 norm_layer=nn.Identity,
+                 nonlinearity=nn.ReLU(inplace=True),
+                 resblk_1st=False,
+                 use_sn=False):
         """
             resample
                 \in {None, 'up', 'dn'}
@@ -71,18 +85,20 @@ class ResidualBlock(nn.Module):
                     nn.LeakyReLU(slope=0.2)
             resblk_1st
                 if True, no nonlinearity before first `conv_1`
+            use_sn
+                Apply spectral normalization for each linear/conv layers
         """
         super(ResidualBlock, self).__init__()
         
         if   resample == 'dn':
-            residual_conv_resample = conv3x3(in_channels, out_channels, 2)
-            shortcut_conv_resample = conv1x1(in_channels, out_channels, 2)
+            residual_conv_resample = conv3x3(in_channels, out_channels, 2, use_sn=use_sn)
+            shortcut_conv_resample = conv1x1(in_channels, out_channels, 2, use_sn=use_sn)
         elif resample == 'up':
-            residual_conv_resample = deconv3x3(in_channels, out_channels)
-            shortcut_conv_resample = deconv1x1(in_channels, out_channels)
+            residual_conv_resample = deconv3x3(in_channels, out_channels, use_sn=use_sn)
+            shortcut_conv_resample = deconv1x1(in_channels, out_channels, use_sn=use_sn)
         else:
-            residual_conv_resample = conv3x3(in_channels, out_channels, 1)
-            shortcut_conv_resample = conv1x1(in_channels, out_channels, 1)
+            residual_conv_resample = conv3x3(in_channels, out_channels, 1, use_sn=use_sn)
+            shortcut_conv_resample = conv1x1(in_channels, out_channels, 1, use_sn=use_sn)
 
         self.residual = nn.Sequential()
         self.residual.add_module('Normalization_1', norm_layer(in_channels))
@@ -90,7 +106,7 @@ class ResidualBlock(nn.Module):
         self.residual.add_module('Conv_1', residual_conv_resample)
         self.residual.add_module('Normalization_2', norm_layer(out_channels))
         self.residual.add_module('Nonlinearity_2', nonlinearity)
-        self.residual.add_module('Conv_2', conv3x3(out_channels, out_channels))
+        self.residual.add_module('Conv_2', conv3x3(out_channels, out_channels, use_sn=use_sn))
         
         if in_channels == out_channels and resample == None:
             self.shortcut = nn.Identity()
@@ -160,7 +176,7 @@ class Generator(nn.Module):
         
 class Discriminator(nn.Module):
     
-    def __init__(self, conv_channels = None, conv_dnsample = None):
+    def __init__(self, conv_channels = None, conv_dnsample = None, use_sn=True):
         """
             conv_channels
                 [3, 64, 128, 256, 512, 1024, 1024]
@@ -190,11 +206,11 @@ class Discriminator(nn.Module):
                                 resample = "dn" if downsample else None,
                                 norm_layer = nn.Identity,
                                 nonlinearity = nonlinearity,
-                                resblk_1st = True if i == 0 else False))
+                                resblk_1st = True if i == 0 else False,
+                                use_sn = use_sn))
         
         self.NonlinearityFinal = nonlinearity
-        self.LinearFinal = nn.Linear(conv_channels[-1], 1)
-        
+        self.LinearFinal = apply_sn(nn.Linear(conv_channels[-1], 1), use_sn)
 
     def forward(self, x):
         # 3x128x128
