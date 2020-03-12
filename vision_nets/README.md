@@ -17,9 +17,7 @@
 <p align="center">
     <img width='200', height='200' src="assets/resgan_use_sn=True.gif">
     <img width='200', height='200' src="assets/resgan_use_sn=True_epoch=0.png">
-    <img width='200', height='200' src="assets/resgan_use_sn=True_epoch=1.png">
     <img width='200', height='200' src="assets/resgan_use_sn=True_epoch=2.png">
-    <img width='200', height='200' src="assets/resgan_use_sn=True_epoch=3.png">
     <img width='200', height='200' src="assets/resgan_use_sn=True_epoch=4.png">
 </p>
 
@@ -29,8 +27,6 @@
 <p align="center">
     <img width='200', height='200' src="assets/resgan_use_sn=False.gif">
     <img width='200', height='200' src="assets/resgan_use_sn=False_epoch=0.png">
-    <img width='200', height='200' src="assets/resgan_use_sn=False_epoch=1.png">
     <img width='200', height='200' src="assets/resgan_use_sn=False_epoch=2.png">
-    <img width='200', height='200' src="assets/resgan_use_sn=False_epoch=3.png">
     <img width='200', height='200' src="assets/resgan_use_sn=False_epoch=4.png">
 </p>
