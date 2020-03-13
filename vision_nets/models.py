@@ -122,7 +122,7 @@ class ResidualBlock(nn.Module):
     
 class Generator(nn.Module):
     
-    def __init__(self, conv_channels = None, conv_upsample = None, dim_z = 128, im_channnels = 3):
+    def __init__(self, conv_channels, conv_upsample, dim_z = 128, im_channnels = 3):
         """
             conv_channels
                 [1024, 1024, 512, 256, 128, 64]
@@ -160,6 +160,11 @@ class Generator(nn.Module):
         self.nonlinearity_final = nn.Tanh()
 
     def forward(self, x):
+        # bottom_width = 4
+        # conv_channels = [1024, 1024, 512, 256, 128, 64]
+        # conv_upsample = [True, True, True, True, True]
+        # im_channnels = 3
+        #
         # 128
         x = self.linear(x)
         x = x.view(x.shape[0], -1, self.bottom_width, self.bottom_width)
@@ -173,10 +178,10 @@ class Generator(nn.Module):
         # 3x128x128
         return x
 
-        
+
 class Discriminator(nn.Module):
     
-    def __init__(self, conv_channels = None, conv_dnsample = None, use_sn=True):
+    def __init__(self, conv_channels, conv_dnsample, use_sn=True):
         """
             conv_channels
                 [3, 64, 128, 256, 512, 1024, 1024]
@@ -212,6 +217,9 @@ class Discriminator(nn.Module):
         self.linear = apply_sn(nn.Linear(conv_channels[-1], 1), use_sn)
 
     def forward(self, x):
+        # conv_channels = [3, 64, 128, 256, 512, 1024, 1024]
+        # conv_dnsample = [True, True, True, True, True]
+        #
         # 3x128x128
         x = self.residual_blocks(x)
         # 1024x4x4
@@ -221,3 +229,34 @@ class Discriminator(nn.Module):
         x = self.linear(x)
         # 1
         return x
+    
+    
+class ConditionalDiscriminator(Discriminator):
+    
+    def __init__(self, conv_channels, conv_dnsample, num_embeddings, use_sn=True):
+        super(ConditionalDiscriminator, self).__init__(conv_channels, conv_dnsample, use_sn=use_sn)
+        
+        self.c_embed = apply_sn(nn.Embedding(num_embeddings, conv_channels[-1]), use_sn)
+        
+    def forward(self, x, c):
+        """ x    batch_size x im_channels x h x w
+            c    batch_size x 1
+        """
+        # conv_channels = [3, 64, 128, 256, 512, 1024, 1024]
+        # conv_dnsample = [True, True, True, True, True]
+        #
+        # 3x128x128
+        x = self.residual_blocks(x)
+        # 1024x4x4
+        x = self.nonlinearity(x)
+        x = torch.sum(x, dim=(2,3))   # (global sum pooling)
+        # 1024
+        
+        # sigmoid^-1(p(real/fake|x,c)) =
+        #     log(p_data(x)/p_model(x)) + 
+        #     log(p_data(c|x)/p_model(c|x))
+        x = self.linear(x) + \
+            torch.sum(self.c_embed(c.view(-1)) * x, dim=1, keepdim=True)
+        # 1
+        return x
+        
