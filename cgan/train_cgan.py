@@ -18,7 +18,7 @@ from models import Generator, Discriminator, ConditionalGenerator, ConditionalDi
 ################################################
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--model_name", type=str, default='resgan', help="name of the model")
+parser.add_argument("--model_name", type=str, default='cgan', help="name of the model")
 parser.add_argument("--data_root", type=str, default='../data', help="data folder")
 parser.add_argument("--model_root", type=str, default='./models/', help="model folder")
 parser.add_argument("--log_root", type=str, default=f'./logs/', help="log folder")
