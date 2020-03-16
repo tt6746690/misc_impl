@@ -68,14 +68,18 @@ assets:
 
 
 	cp figures/resgan_conditional_both/resgan_conditional_both_epoch=0_it=199.png assets/resgan_conditional_both_epoch=0.png
-	cp figures/resgan_conditional_both/resgan_conditional_both_epoch=1_it=199.png assets/resgan_conditional_both_epoch=1.png
-	cp figures/resgan_conditional_both/resgan_conditional_both_epoch=2_it=199.png assets/resgan_conditional_both_epoch=2.png
 	cp figures/resgan_conditional_both/resgan_conditional_both_epoch=3_it=199.png assets/resgan_conditional_both_epoch=3.png
-	cp figures/resgan_conditional_both/resgan_conditional_both_epoch=4_it=199.png assets/resgan_conditional_both_epoch=4.png
+	cp figures/resgan_conditional_both/resgan_conditional_both_epoch=6_it=199.png assets/resgan_conditional_both_epoch=6.png
+	cp figures/resgan_conditional_both/resgan_conditional_both_epoch=9_it=199.png assets/resgan_conditional_both_epoch=9.png
+	cp figures/resgan_conditional_both/resgan_conditional_both_epoch=12_it=199.png assets/resgan_conditional_both_epoch=12.png
+	cp figures/resgan_conditional_both/resgan_conditional_both_epoch=15_it=199.png assets/resgan_conditional_both_epoch=15.png
+	cp figures/resgan_conditional_both/resgan_conditional_both_epoch=18_it=199.png assets/resgan_conditional_both_epoch=18.png
 
 
 	cp figures/resgan_conditional_D_concat_G/resgan_conditional_D_concat_G_epoch=0_it=199.png assets/resgan_conditional_D_concat_G_epoch=0.png
-	cp figures/resgan_conditional_D_concat_G/resgan_conditional_D_concat_G_epoch=1_it=199.png assets/resgan_conditional_D_concat_G_epoch=1.png
-	cp figures/resgan_conditional_D_concat_G/resgan_conditional_D_concat_G_epoch=2_it=199.png assets/resgan_conditional_D_concat_G_epoch=2.png
 	cp figures/resgan_conditional_D_concat_G/resgan_conditional_D_concat_G_epoch=3_it=199.png assets/resgan_conditional_D_concat_G_epoch=3.png
-	cp figures/resgan_conditional_D_concat_G/resgan_conditional_D_concat_G_epoch=4_it=199.png assets/resgan_conditional_D_concat_G_epoch=4.png
+	cp figures/resgan_conditional_D_concat_G/resgan_conditional_D_concat_G_epoch=6_it=199.png assets/resgan_conditional_D_concat_G_epoch=6.png
+	cp figures/resgan_conditional_D_concat_G/resgan_conditional_D_concat_G_epoch=9_it=199.png assets/resgan_conditional_D_concat_G_epoch=9.png
+	cp figures/resgan_conditional_D_concat_G/resgan_conditional_D_concat_G_epoch=12_it=199.png assets/resgan_conditional_D_concat_G_epoch=12.png
+	cp figures/resgan_conditional_D_concat_G/resgan_conditional_D_concat_G_epoch=15_it=199.png assets/resgan_conditional_D_concat_G_epoch=15.png
+	cp figures/resgan_conditional_D_concat_G/resgan_conditional_D_concat_G_epoch=18_it=199.png assets/resgan_conditional_D_concat_G_epoch=18.png
