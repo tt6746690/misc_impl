@@ -29,6 +29,7 @@ def apply_sn(module, use_sn):
     else:
         return module
 
+
 def conv3x3(in_planes, out_planes, stride=1, dilation=1, use_sn=False):
     """3x3 convolution with padding"""
     module = nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
@@ -131,8 +132,7 @@ class ResidualBlock(nn.Module):
         if not self.identity_shortcut:
             self.shortcut_normalization_1 = norm_layer(in_channels)
             self.shortcut_conv_1 = shortcut_conv_resample
-            
-        
+
     def forward(self, x):
 
         identity = x
@@ -150,8 +150,7 @@ class ResidualBlock(nn.Module):
         x = self.residual_nonlinearity_2(x)
         x = self.residual_conv_2(x)
         
-        return x + s
-    
+        return x + s 
     
     
 class ConditionalResidualBlock(ResidualBlock):
@@ -300,7 +299,6 @@ class ConditionalGenerator(Generator):
         x = self.nonlinearity_final(x)
         # 3x128x128
         return x
-
     
 
 class Discriminator(nn.Module):
@@ -314,10 +312,6 @@ class Discriminator(nn.Module):
                 128x128 -> 4x4    [True, True, True, True, True, False]
                 64x64 -> 4x4      [True, True, True, True]
                 32x32 -> 4x4      [True, True, True]
-                
-        Projection cGAN 
-            conv_channels = [3, 64, 128, 256, 512, 1024, 1024]
-            conv_dnsample = [True, True, True, True, True, False]
         """
         super(Discriminator, self).__init__()
         
@@ -358,6 +352,11 @@ class Discriminator(nn.Module):
 class ConditionalDiscriminator(Discriminator):
     
     def __init__(self, conv_channels, conv_dnsample, num_classes, use_sn=True):
+        """
+            Projection cGAN (ImageNet)
+                conv_channels = [3, 64, 128, 256, 512, 1024, 1024]
+                conv_dnsample = [True, True, True, True, True, False]
+        """
         super(ConditionalDiscriminator, self).__init__(conv_channels, conv_dnsample, use_sn=use_sn)
         
         self.c_embed = apply_sn(nn.Embedding(num_classes, conv_channels[-1]), use_sn)
