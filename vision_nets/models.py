@@ -4,6 +4,25 @@ import torch.nn.functional as F
 from torch.nn.utils import spectral_norm
 
 
+class ConditionalBatchNorm2d(nn.Module):
+    """ https://github.com/pytorch/pytorch/issues/8985#issuecomment-405080775
+    """
+    
+    def __init__(self, num_features, num_classes):
+        super(ConditionalBatchNorm2d, self).__init__()
+        self.num_features = num_features
+        self.bn = nn.BatchNorm2d(num_features, affine=False)
+        self.embed = nn.Embedding(num_classes, num_features * 2)
+        self.embed.weight.data[:, :num_features].normal_(1, 0.02)  # Initialise scale at N(1, 0.02)
+        self.embed.weight.data[:, num_features:].zero_()  # Initialise bias at 0
+
+    def forward(self, x, c):
+        out = self.bn(x)
+        gamma, beta = self.embed(c.view(-1)).chunk(2, 1)
+        out = gamma.view(-1, self.num_features, 1, 1) * out + beta.view(-1, self.num_features, 1, 1)
+        return out
+
+
 def apply_sn(module, use_sn):
     if use_sn:
         return spectral_norm(module)
@@ -71,7 +90,7 @@ class ResidualBlock(nn.Module):
     def __init__(self, in_channels, out_channels, 
                  resample=None,
                  norm_layer=nn.Identity,
-                 nonlinearity=nn.ReLU(inplace=True),
+                 nonlinearity=nn.ReLU(),
                  resblk_1st=False,
                  use_sn=False):
         """
@@ -90,6 +109,8 @@ class ResidualBlock(nn.Module):
         """
         super(ResidualBlock, self).__init__()
         
+        self.identity_shortcut = (in_channels == out_channels and resample == None)
+        
         if   resample == 'dn':
             residual_conv_resample = conv3x3(in_channels, out_channels, 2, use_sn=use_sn)
             shortcut_conv_resample = conv1x1(in_channels, out_channels, 2, use_sn=use_sn)
@@ -100,29 +121,89 @@ class ResidualBlock(nn.Module):
             residual_conv_resample = conv3x3(in_channels, out_channels, 1, use_sn=use_sn)
             shortcut_conv_resample = conv1x1(in_channels, out_channels, 1, use_sn=use_sn)
 
-        self.residual = nn.Sequential()
-        self.residual.add_module('normalization_1', norm_layer(in_channels))
-        self.residual.add_module('nonlinearity_1', nn.Identity() if resblk_1st else nonlinearity)
-        self.residual.add_module('conv_1', residual_conv_resample)
-        self.residual.add_module('normalization_2', norm_layer(out_channels))
-        self.residual.add_module('nonlinearity_2', nonlinearity)
-        self.residual.add_module('conv_2', conv3x3(out_channels, out_channels, use_sn=use_sn))
+        self.residual_normalization_1 = norm_layer(in_channels)
+        self.residual_nonlinearity_1 = nn.Identity() if resblk_1st else nonlinearity
+        self.residual_conv_1 = residual_conv_resample
+        self.residual_normalization_2 = norm_layer(out_channels)
+        self.residual_nonlinearity_2 = nonlinearity
+        self.residual_conv_2 = conv3x3(out_channels, out_channels, use_sn=use_sn)
         
-        if in_channels == out_channels and resample == None:
-            self.shortcut = nn.Identity()
-        else:
-            self.shortcut = nn.Sequential()
-            self.shortcut.add_module('normalization_1', norm_layer(in_channels))
-            self.shortcut.add_module('conv_1', shortcut_conv_resample)
+        if not self.identity_shortcut:
+            self.shortcut_normalization_1 = norm_layer(in_channels)
+            self.shortcut_conv_1 = shortcut_conv_resample
             
         
     def forward(self, x):
-        return self.residual(x) + self.shortcut(x)
+
+        identity = x
+        
+        if self.identity_shortcut:
+            s = identity
+        else:
+            s = self.shortcut_normalization_1(identity)
+            s = self.shortcut_conv_1(s)
+            
+        x = self.residual_normalization_1(x)
+        x = self.residual_nonlinearity_1(x)
+        x = self.residual_conv_1(x)
+        x = self.residual_normalization_2(x)
+        x = self.residual_nonlinearity_2(x)
+        x = self.residual_conv_2(x)
+        
+        return x + s
     
     
+    
+class ConditionalResidualBlock(ResidualBlock):
+    """ Residual block w/ categorical conditional BatchNorm2d
+    """
+    
+    def __init__(self, in_channels, out_channels,
+                 resample=None,
+                 norm_layer=nn.BatchNorm2d,
+                 nonlinearity=nn.ReLU(inplace=True),
+                 resblk_1st=False,
+                 use_sn=False):
+        """
+            norm_layer
+                initialize w/ num_features
+        """
+        
+        super(ConditionalResidualBlock, self).__init__(
+            in_channels, out_channels,
+            resample = resample,
+            norm_layer = norm_layer,
+            nonlinearity = nonlinearity,
+            resblk_1st = resblk_1st,
+            use_sn = use_sn)
+        
+    def forward(self, x, c):
+        
+        identity = x
+        
+        if self.identity_shortcut:
+            s = identity
+        else:
+            s = self.shortcut_normalization_1(identity, c)
+            s = self.shortcut_conv_1(s)
+            
+        x = self.residual_normalization_1(x, c)
+        x = self.residual_nonlinearity_1(x)
+        x = self.residual_conv_1(x)
+        x = self.residual_normalization_2(x, c)
+        x = self.residual_nonlinearity_2(x)
+        x = self.residual_conv_2(x)
+        
+        return x + s
+        
+        
 class Generator(nn.Module):
     
-    def __init__(self, conv_channels, conv_upsample, dim_z = 128, im_channnels = 3):
+    def __init__(self, conv_channels, conv_upsample,
+                 resblk_cls = ResidualBlock,
+                 norm_layer = nn.BatchNorm2d,
+                 dim_z = 128,
+                 im_channels = 3):
         """
             conv_channels
                 [1024, 1024, 512, 256, 128, 64]
@@ -134,6 +215,8 @@ class Generator(nn.Module):
             im_channnels
                 3 for color image
                 1 for grayscale image
+            num_classes
+                if not None, use conditional batchnorm
         """
         super(Generator, self).__init__()
         
@@ -141,22 +224,23 @@ class Generator(nn.Module):
         assert(n_convs > 0)
         assert(n_convs == len(conv_upsample))
         
+        self.n_convs = n_convs
         self.bottom_width = 4
-        self.nonlinearity = nn.ReLU(inplace=True)
+        self.nonlinearity = nn.ReLU()
         
         self.linear = nn.Linear(dim_z, (self.bottom_width**2) * conv_channels[0])
         
-        self.residual_blocks = nn.Sequential()
         for i in range(n_convs):
             upsample = conv_upsample[i]
-            self.residual_blocks.add_module(f'residual_block{"_up" if upsample else ""}_{i}',
-                  ResidualBlock(conv_channels[i], conv_channels[i+1],
-                                resample = "up" if upsample else None,
-                                norm_layer = nn.BatchNorm2d,
-                                nonlinearity = self.nonlinearity))
+            self.add_module(
+                f'residual_block_{i}',
+                resblk_cls(conv_channels[i], conv_channels[i+1],
+                           resample = "up" if upsample else None,
+                           norm_layer = norm_layer,
+                           nonlinearity = self.nonlinearity))
         
-        self.normalization_final = nn.BatchNorm2d(conv_channels[-1])
-        self.conv_final = conv3x3(conv_channels[-1], im_channnels)
+        self.normalization_final = norm_layer(conv_channels[-1])
+        self.conv_final = conv3x3(conv_channels[-1], im_channels)
         self.nonlinearity_final = nn.Tanh()
 
     def forward(self, x):
@@ -169,7 +253,8 @@ class Generator(nn.Module):
         x = self.linear(x)
         x = x.view(x.shape[0], -1, self.bottom_width, self.bottom_width)
         # 1024x4x4
-        x = self.residual_blocks(x)
+        for i in range(self.n_convs):
+            x = getattr(self, f'residual_block_{i}')(x)
         # 64x128x128
         x = self.normalization_final(x)
         x = self.nonlinearity(x)
@@ -177,7 +262,46 @@ class Generator(nn.Module):
         x = self.nonlinearity_final(x)
         # 3x128x128
         return x
+    
+    
+class ConditionalGenerator(Generator):
+    
+    def __init__(self, conv_channels, conv_upsample, num_classes,
+                 dim_z = 128,
+                 im_channels = 3):
+        """
+            norm_layer = lambda num_features: ConditionalBatchNorm2d(num_features, num_classes)
+        """ 
+        resblk_cls = ConditionalResidualBlock
+        norm_layer = lambda num_features: ConditionalBatchNorm2d(num_features, num_classes)
+        
+        super(ConditionalGenerator, self).__init__(conv_channels, conv_upsample,
+            resblk_cls = resblk_cls,
+            norm_layer = norm_layer,
+            dim_z = dim_z,
+            im_channels = im_channels)
 
+    def forward(self, x, c):
+        """ x    batch_size x im_channels x h x w
+            c    batch_size
+        """
+        c = c.view(-1)
+        #
+        # 128
+        x = self.linear(x)
+        x = x.view(x.shape[0], -1, self.bottom_width, self.bottom_width)
+        # 1024x4x4
+        for i in range(self.n_convs):
+            x = getattr(self, f'residual_block_{i}')(x, c)
+        # 64x128x128
+        x = self.normalization_final(x, c)
+        x = self.nonlinearity(x)
+        x = self.conv_final(x)
+        x = self.nonlinearity_final(x)
+        # 3x128x128
+        return x
+
+    
 
 class Discriminator(nn.Module):
     
@@ -201,12 +325,12 @@ class Discriminator(nn.Module):
         assert(n_convs > 0)
         assert(n_convs == len(conv_dnsample))
         
-        self.nonlinearity = nn.LeakyReLU(0.2, inplace=True)
-        
+        self.nonlinearity = nn.LeakyReLU(0.2)
+
         self.residual_blocks = nn.Sequential()
         for i in range(n_convs):
             downsample = conv_dnsample[i]
-            self.residual_blocks.add_module(f'residual_block{"_dn" if downsample else ""}_{i}',
+            self.residual_blocks.add_module(f'residual_block_{i}',
                   ResidualBlock(conv_channels[i], conv_channels[i+1],
                                 resample = "dn" if downsample else None,
                                 norm_layer = nn.Identity,
@@ -233,15 +357,16 @@ class Discriminator(nn.Module):
     
 class ConditionalDiscriminator(Discriminator):
     
-    def __init__(self, conv_channels, conv_dnsample, num_embeddings, use_sn=True):
+    def __init__(self, conv_channels, conv_dnsample, num_classes, use_sn=True):
         super(ConditionalDiscriminator, self).__init__(conv_channels, conv_dnsample, use_sn=use_sn)
         
-        self.c_embed = apply_sn(nn.Embedding(num_embeddings, conv_channels[-1]), use_sn)
+        self.c_embed = apply_sn(nn.Embedding(num_classes, conv_channels[-1]), use_sn)
         
     def forward(self, x, c):
         """ x    batch_size x im_channels x h x w
-            c    batch_size x 1
+            c    batch_size
         """
+        c = c.view(-1)
         # conv_channels = [3, 64, 128, 256, 512, 1024, 1024]
         # conv_dnsample = [True, True, True, True, True]
         #
@@ -256,7 +381,7 @@ class ConditionalDiscriminator(Discriminator):
         #     log(p_data(x)/p_model(x)) + 
         #     log(p_data(c|x)/p_model(c|x))
         x = self.linear(x) + \
-            torch.sum(self.c_embed(c.view(-1)) * x, dim=1, keepdim=True)
+            torch.sum(self.c_embed(c) * x, dim=1, keepdim=True)
         # 1
         return x
         
