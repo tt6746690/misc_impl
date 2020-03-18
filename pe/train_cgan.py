@@ -97,7 +97,6 @@ dec_channels = [256, 128, 64, 64]
 conv_channels = [im_channels, 64, 128, 256]
 conv_dnsample = [True, True, True]
 
-# G = ConditionalAutoencoder(enc_channels, dec_channels, num_classes=num_classes, dim_z=dim_z, im_channels=im_channels).to(device)
 G = ConditionalGenerator(conv_channels, conv_upsample, num_classes=num_classes, dim_z=dim_z, im_channels=im_channels).to(device)
 D = OrdinalConditionalDiscriminator(conv_channels, conv_dnsample, num_classes, use_sn=True).to(device)
 
@@ -201,6 +200,3 @@ for epoch in range(n_epochs):
 
             writer.add_image('mnist', tv_utils.make_grid(x_fake, nrow=10, normalize=True), global_step)
         
-
-#     torch.save(G.state_dict(), os.path.join(model_root, f'G_epoch_{epoch}.pt'))
-#     torch.save(D.state_dict(), os.path.join(model_root, f'D_epoch_{epoch}.pt'))
