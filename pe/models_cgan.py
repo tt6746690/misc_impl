@@ -384,9 +384,6 @@ class ConditionalDiscriminator(Discriminator):
         # 1
         return x
         
-
-
-
 class OrdinalConditionalDiscriminator(Discriminator):
     """ conditional discriminator where the conditioned variable is ordinal
     
@@ -432,7 +429,7 @@ class OrdinalConditionalDiscriminator(Discriminator):
         x = f_1 + f_2
         # 1
         return x
-    
+
 
 class ConditionalAutoencoder(nn.Module):
     
