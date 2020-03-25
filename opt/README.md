@@ -7,12 +7,16 @@
 
 ## Resources
 
++ NAG blog
+    + strongly cvd proof https://blogs.princeton.edu/imabandit/2013/04/01/acceleratedgradientdescent/
+    + 
 + NAG impl 
     + https://github.com/GRYE/Nesterov-accelerated-gradient-descent/blob/master/nesterov_method.py
     + https://github.com/idc9/optimization_algos/blob/master/opt_algos/accelerated_gradient_descent.py
 + setup julia https://github.com/mitmath/julia-mit
 + slides on impl http://www.princeton.edu/~yc5/ele522_optimization/lectures/accelerated_gradient.pdf
 
+## Setup
 
 ```
 # 1. Install julia v1.0.5 @ https://julialang.org/downloads/
