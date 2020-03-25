@@ -7,9 +7,11 @@
 
 ## Resources
 
++ Optim.jl nonconvex optimization https://julianlsolvers.github.io/Optim.jl/stable/#
++ GD impl 
+    + matlab https://github.com/hiroyuki-kasai/GDLibrary
 + NAG blog
-    + strongly cvd proof https://blogs.princeton.edu/imabandit/2013/04/01/acceleratedgradientdescent/
-    + 
+    + strongly convex proof https://blogs.princeton.edu/imabandit/2013/04/01/acceleratedgradientdescent/
 + NAG impl 
     + https://github.com/GRYE/Nesterov-accelerated-gradient-descent/blob/master/nesterov_method.py
     + https://github.com/idc9/optimization_algos/blob/master/opt_algos/accelerated_gradient_descent.py
