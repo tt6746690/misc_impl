@@ -21,25 +21,29 @@
 ## Setup
 
 ```
-# 1. Install julia v1.0.5 @ https://julialang.org/downloads/
+# Install julia v1.0.5 @ https://julialang.org/downloads/
 
-# 2. Open julia repl
+# Open julia repl
 $ julia
 
-# 3. Enter package mode
+# Enter package mode
 julia> ]
 
-# 4. Activate package 
+# Activate package 
 (v0.7) pkg> activate .
 
-# 5. Download dependencies
+# Download dependencies
 (opt) pkg> instantiate
 
-# 6. Update package and precompile modules
+# Update package and precompile modules
 (opt) pkg> update; precompile
 
-# 7. Back to julia repl, and start hacking!
+# Back to julia repl, and start hacking!
 julia> using opt
+
+# condigure PyCall to use conda envs
+julia> ENV["CONDA_JL_HOME"] = "/data/vision/polina/shared_software/miniconda3/envs/misc_impl
+(opt) pkg> build Conda
 ```
 
 ```
