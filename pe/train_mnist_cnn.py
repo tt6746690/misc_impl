@@ -8,7 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 import torchvision 
 import torchvision.transforms as tv_transforms
 
-import models
+from models_classifier import MnistCNN
 import datasets
 from utils import makedirs_exists_ok, seed_rng, set_cuda_visible_devices, load_weights_from_file
 
@@ -67,7 +67,7 @@ def train(
         criterion = nn.BCEWithLogitsLoss()
         select_target = lambda y_digit, y_color: (y_color < 0.5).float().view(-1, 1)
 
-    model = models.MnistCNN(3, n_classes, 32).to(device)
+    model = MnistCNN(3, n_classes, 32).to(device)
     load_weights_from_file(model, load_weights)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
@@ -147,10 +147,10 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--data_root", type=str, default='../data', help="data folder")
-    parser.add_argument("--model_root", type=str, default='./models/mnist_cnn', help="model folder")
-    parser.add_argument("--log_root", type=str, default=f'./logs/mnist_cnn', help="log folder")
     parser.add_argument("--model_name", type=str, default='mnist_cnn', help="name of the model")
+    parser.add_argument("--data_root", type=str, default='../data', help="data folder")
+    parser.add_argument("--model_root", type=str, default='./models/', help="model folder")
+    parser.add_argument("--log_root", type=str, default=f'./logs/', help="log folder")
     parser.add_argument("--load_weights", type=str, default='', help="optional .pt model file to initialize generator with")
     parser.add_argument("--seed", type=int, default=0, help="rng seed")
     parser.add_argument("--image_size", type=int, default=32, help="image size of the inputs")
@@ -158,7 +158,7 @@ if __name__ == '__main__':
     parser.add_argument("--gpu_id", type=str, default='0', help="gpu id assigned by cluster")
     parser.add_argument("--n_workers", type=int, default=8, help="number of CPU workers for processing input data")
     parser.add_argument("--learning_rate", type=float, dest='lr', default=0.0002, help="rng seed")
-    parser.add_argument("--epochs", type=int, dest='n_epochs', default=5, help="number of epochs")
+    parser.add_argument("--epochs", type=int, dest='n_epochs', default=50, help="number of epochs")
     parser.add_argument("--log_interval", type=int, dest='log_interval', default=100,  help="number of batches to print loss / plot figures")
     parser.add_argument("--target_type", type=str, dest='target_type', default='digit', help="in {'digit', 'color'}")
 

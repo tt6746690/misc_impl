@@ -6,19 +6,19 @@ import torchvision
 
 def plot_im(
     ims,
-    n_row=8,
+    nrow=8,
     normalize=True,
     plot_title=None,
     im_path=None,
-    fig_size=None):
+    figsize=None):
     
     if isinstance(ims, torch.Tensor):
         ims = ims.cpu().detach()
         ims = ims.float()
     ims = torchvision.utils.make_grid(
-        ims, padding=1, normalize=normalize, nrow=n_row)
+        ims, padding=1, normalize=normalize, nrow=nrow)
     ims = np.transpose(ims, (1,2,0))
-    plt.figure(figsize=fig_size)
+    plt.figure(figsize=figsize)
     plt.imshow(ims)
     plt.axis('off')
     if plot_title:
