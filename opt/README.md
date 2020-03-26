@@ -42,7 +42,7 @@ julia> ]
 julia> using opt
 
 # condigure PyCall to use conda envs
-julia> ENV["CONDA_JL_HOME"] = "/data/vision/polina/shared_software/miniconda3/envs/misc_impl
+julia> ENV["PYTHON"] = "/data/vision/polina/shared_software/miniconda3/envs/misc_impl"
 (opt) pkg> build Conda
 ```
 
