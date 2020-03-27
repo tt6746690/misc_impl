@@ -1,4 +1,3 @@
-
 function rosenbrock(dim)
     dim == 2 || error("only supports 2d Rosenbrock for now")
 
