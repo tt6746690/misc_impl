@@ -9,7 +9,6 @@ dependencies:
     - nb_conda
     - pytorch
     - torchvision
-    - julia
     - tqdm
     - tensorboard
     - opencv

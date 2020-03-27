@@ -7,6 +7,8 @@
 
 ## Resources
 
++ plotting
+    + surface https://jakevdp.github.io/PythonDataScienceHandbook/04.12-three-dimensional-plotting.html
 + Optim.jl nonconvex optimization https://julianlsolvers.github.io/Optim.jl/stable/#
 + GD impl 
     + matlab https://github.com/hiroyuki-kasai/GDLibrary
