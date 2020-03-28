@@ -39,7 +39,7 @@ function gradient_descent(
         @. x = s.x + α*(-s.g)
 
         if norm(s.g) <= g_abstol
-            println("Terminate at k=$k: |∇f(x)| = $(norm(s.g)) <= $g_abstol")
+            println("Terminate at k=$k: |∇f(xᵏ)| = $(norm(s.g)) <= $g_abstol")
             break
         end
     end

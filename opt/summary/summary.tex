@@ -1,14 +1,15 @@
 \documentclass[11pt]{article}
 \input{\string~/.macros}
+\usepackage{mathrsfs}
 \usepackage{bbm}
 \usepackage[a4paper, total={7in, 9in}]{geometry}
 \usepackage{graphicx}
-\graphicspath{{./assets}}
+\graphicspath{{./assets/}}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true, linktoc=all, linkcolor=blue, citecolor=red}
 \usepackage[backend=bibtex,sorting=none]{biblatex}
 \addbibresource{opt_convex.bib}
-\usepackage{mathrsfs}
+
 
 \newcommand\ry{\ensuremath{\mathsf{y}}}
 \newcommand\rx{\ensuremath{\mathsf{x}}}
@@ -126,16 +127,19 @@ There are several equivalent algorithm for Nesterov's Accelerated Gradient Metho
 \end{align*}
 We can simplify the expression by noting that (\href{http://www.princeton.edu/~yc5/ele522_optimization/lectures/accelerated_gradient.pdf}{slides})
 \[
-    \frac{t_k - 1}{t_{k+1}} 
+    \beta_k
+        = \frac{t_k - 1}{t_{k+1}} 
         = 1 - \frac{3}{k} + o(\frac{1}{k})
         = \frac{k-3}{k} + o(\frac{1}{k})
 \]
-The momentum coefficient is asymptotically equivalent to $\frac{k}{k+3}$. And updates is now given by
-\begin{align*}
-    x^{k+1}
+The momentum coefficient is asymptotically equivalent to $\frac{k}{k+3}$ or $\frac{k-1}{k+2}$. The momentum term $\frac{k-1}{k+2}$ seems to be a good choice, since $\beta_1 = \frac{t_1-1}{t_{2}} = 0$.
+\fig{asymptotic_behavior_of_momentum_term}{4in}
+And updates is now given by
+\begin{align*}  
+    x^{k+1} 
         &= y^k - \frac{1}{L} \nabla f(y^k) \\
     y^{k+1}
-        &= x^{k+1} + \frac{k}{k+3} \left( x^{k+1} - x^k \right)
+        &= x^{k+1} + \frac{k-1}{k+2} \left( x^{k+1} - x^k \right)
 \end{align*}
 Another formulation of the algorithm comes from Nesterov's textbook \cite{nesterovIntroductoryLecturesConvex2004}. If we take a constant step, i.e. $\frac{1}{L}$, to find the $x^{k+1}$, and that we pick $\alpha_0 = \sqrt{\frac{\mu}{L}} = 1/\sqrt{\kappa}$, which is the interpolating coefficient for recursive construction of the estimating sequence. Then we have the follwing updates
 \begin{align*}
@@ -147,6 +151,11 @@ Another formulation of the algorithm comes from Nesterov's textbook \cite{nester
 However, in practice the condition number $\kappa$ is hard to compute.
 
 
+\section{Numerical Experiments}
+
+We are given a hard least squares problem of minimizing $f(x) = \frac{1}{2}\norm{D^Tx-b}_2^2$ where $D\in\R^{n\times (n+1)}$ is the differencing matrix, with all -1 on the main diagonal and all 1 on the superdiagonal. The gradient is given by $\nabla f(x) = D(D^Tx-b)$. We compare gradient descent with either constant stepsize or using barzilai borwein stepsize, and nesterov's accelerated gradient descent.
+\fig{compare_gd_10000}{7in}
+We see that the barzilai borwein stepsize is the fastest method, followed by nesterov's accelerated gradient, then the naive gradient descent method.
 
 \printbibliography 
 

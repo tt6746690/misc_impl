@@ -33,7 +33,8 @@ function gradient_descent_barzilaiborwein(
     barzilaiborwein_type = 1,
     n_iterations = nothing,
     access_state = (state -> nothing),
-    g_abstol = 1e-8)
+    g_abstol = 1e-8,
+    varargs...)
 
     x = copy(x0)
     g = copy(x0); grad!(g, x)
@@ -67,7 +68,7 @@ function gradient_descent_barzilaiborwein(
         grad!(g, x)
     
         if norm(s.g) <= g_abstol
-            println("Terminate at k=$k: |∇f(x)| = $(norm(s.g)) <= $g_abstol")
+            println("Terminate at k=$k: |∇f(xᵏ)| = $(norm(s.g)) <= $g_abstol")
             break
         end
     end
