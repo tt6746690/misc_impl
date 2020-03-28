@@ -10,6 +10,7 @@
 + plotting
     + surface https://jakevdp.github.io/PythonDataScienceHandbook/04.12-three-dimensional-plotting.html
 + Optim.jl nonconvex optimization https://julianlsolvers.github.io/Optim.jl/stable/#
+    + Nesterov's correction https://github.com/JuliaNLSolvers/Optim.jl/blob/master/src/multivariate/solvers/first_order/accelerated_gradient_descent.jl
 + GD impl 
     + matlab https://github.com/hiroyuki-kasai/GDLibrary
 + NAG blog

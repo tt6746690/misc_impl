@@ -8,6 +8,7 @@
 \hypersetup{colorlinks=true, linktoc=all, linkcolor=blue, citecolor=red}
 \usepackage[backend=bibtex,sorting=none]{biblatex}
 \addbibresource{opt_convex.bib}
+\usepackage{mathrsfs}
 
 \newcommand\ry{\ensuremath{\mathsf{y}}}
 \newcommand\rx{\ensuremath{\mathsf{x}}}
@@ -24,6 +25,10 @@
 \renewcommand\bmu{\ensuremath{\boldsymbol{\mu}}}
 \newcommand\bSigma{\ensuremath{\boldsymbol{\Sigma}}}
 
+\newcommand\scrF{\ensuremath{\mathscr{F}}}
+\newcommand\scrS{\ensuremath{\mathscr{S}}}
+
+
 
 \begin{document} 
 
@@ -39,11 +44,11 @@ We may impose additional assumption on $f$, i.e. convex, $L$-lipschitz, $\mu$-st
 
 Gradient descent updates according to 
 \begin{align*}
-    x^{k+1} \leftarrow x^k - \alpha_k \nabla f(x^k)
+    x^{k+1} = x^k - \alpha_k \nabla f(x^k)
 \end{align*}
-for some stepsize $\alpha_k \geq 0$.
+for some stepsize $\alpha_k \geq 0$. Note $\alpha_k = \frac{1}{L}$ is the optimal stepsize.
 
-\subsection{Barzilai \& Borwein stepsizes}
+\subsection{Barzilai \& Borwein Stepsize}
 
 A particular choice of stepsize that relaxes the constraint on monotonic descent is given by Barzilai \& Borwein \cite{barzilaiTwoPointStepSize1988}. The idea is to choose $\alpha_k$ such that $\alpha_k g^k$ approximates the Newton update.
 \begin{align*}
@@ -60,14 +65,86 @@ where
 
 \section{Nesterov's Accelerated Gradient}
 
-If $f \in S_{L,\mu}^{1}$, then Nesterov's accelerated gradient updates according to 
+Nesterov's accelerated gradient achieves lower bound for minimization of function $f\in \scrS_{L,\mu}^1$ and improves the rate for gradient descent from $\sO(\kappa\log \frac{1}{\epsilon})$ to $\sO(\sqrt{\kappa}\log \frac{1}{\epsilon})$. Similarly, acceleration improves convergence rate for function $ f\in\scrF_{L}^1$ from $\sO(\frac{1}{\epsilon})$ to $\sO(\frac{1}{\sqrt{\epsilon}})$.
+
+\subsection{Intuition}
+
+The following comes from Nesterov's book \cite{nesterovIntroductoryLecturesConvex2004} and \href{https://nisheethvishnoi.files.wordpress.com/2018/05/lecture52.pdf}{lecture note}.
+\begin{definition*}
+    A pair of sequences $(\pc{\phi_k(x)}_{k=0}^{\infty}, \pc{\lambda_k}_{k=0}^{\infty})$ where $\lambda_k \geq 0$ are called the estimating sequences of the function $f(\cdot)$ if 
+    \begin{enumerate}
+        \item $\lambda_k \to 0$ and
+        \item (\textbf{lower bound}) for any $x\in\R^n$ and for all $k\geq 0$, $\phi_k(x) \leq (1-\lambda_k)f(x) + \lambda_k \phi_0(x)$ 
+    \end{enumerate}
+\end{definition*}
+\noindent In addition, If we can find some sequence of points $\pc{x^k}_{k=0}^{\infty}$ such that
+\begin{enumerate}
+    \setcounter{enumi}{2}
+    \item \textit{\textbf{(upper bound)} for any $x\in\R^n$, $f(x^k) \leq \phi_k(x)$}
+\end{enumerate}
+then the rate of convergence can be derived from convergence rate of $\lambda_k$, i.e. 
+\[
+    f(x^k) - f^* \leq \lambda_k \pc{ \phi_0^* - f^* } \to 0
+\]
+where $\phi_k^* = \min_{x\in\R^n} \phi_k(x)$. Intuitively, $\phi_k(\cdot)$ are approximations for $f(\cdot)$, providing tighter and tighter bound on the optimality gap $f(x^k) - f^*$ as $\lambda_k \to 0$. In addition, from (2) and (3), we have that the sequence $\pc{x^k}$ converges to the minimizer of $f$. 
+\[
+    f(x^k) \leq \phi_k(x^*) \leq f(x^*)   
+\]
+In \cite{nesterovIntroductoryLecturesConvex2004}, Nesterov showed that for $f\in\scrS_{\mu,L}^1$, we can construct estimating sequences for $f$ recursively
+\begin{align*}
+    \lambda_{k+1}
+        &= (1-\alpha_k) \lambda_k \\
+    \phi_{k+1}(x)
+        &= (1-\alpha_k) \phi_k(x) + \alpha_k L_k(x) \\
+        &\quad \text{where} \quad 
+        L_k(x) = f(y^k) + \inner{\nabla f(y^k)}{x - y^k} + \frac{\mu}{2} \norm{x-y^k}^2
+\end{align*}
+where $\pc{y^k}_{k=0}^{\infty}$ is an arbitrary sequence of points, coefficients $\pc{\alpha_k}_{k=0}^{\infty}$ satisfy $\alpha_k \in (0,1)$ and $\sum_k \alpha_k = \infty$ with $\lambda_0 = 1$ and that $\phi_0(\cdot)$ is an arbitrary convex function. Note that $\phi_k$ is simply a convex combination of the previous approximate $\phi_{k-1}$ and a quadratic lower bound $L_{k-1}$ on $f$, at some carefully chosen point $y^{k-1}$. If we let $\phi_0(x) = \phi_0^* + \frac{\gamma_0}{2} \norm{x-v_0}^2$ be a quadratic function, then $\phi_k(\cdot)$ has a convenient closed form expression
+\[
+    \phi_k(x)
+        = \phi_k^* + \frac{\gamma_k}{2} \norm{x-v_k}^2    
+\]
+where $\pc{\gamma_k}, \pc{v_k}, \pc{\phi_k^*}$ follow certain recurrence relation detailed in \cite{nesterovIntroductoryLecturesConvex2004}. Additional constraint needs to be satisfied to ensure (3) holds. 
+\begin{enumerate}
+    \item For (3) to hold, it must be that $f(y^k) - \frac{1}{2L} \norm{\nabla f(y^k)}^2 \geq f(x^{k+1})$, which can be achieved if we obtain $x^{k+1}$ by taking a gradient step $x^{k+1} = y^k - \frac{1}{L} \nabla f(y^k)$ at $y^k$ and apply descent lemma.
+    \item To apply the previous, we need the coefficient before $\norm{\nabla f(y^k)}^2$ to agree, i.e. want $\alpha_k$ such that $L\alpha_k^2 = (a-\alpha_k) \gamma_k + \alpha_k \mu$.
+    \item Choose $y^k$ accordingly to ensure (3) holds
+\end{enumerate}
+By making these constraints invariant to iterative updates, we arrive at the accelerated gradient methods. In addition to the algebra tricks, there are efforts that tries to interpret what Nesterov's method is doing under the hoold. For example, \cite{allen-zhuLinearCouplingUltimate2016} interpreted Nesterov's accelerated method as a linear coupling of gradient descent and mirror descent . \cite{suDifferentialEquationModeling2015} showed that in the limit of small stepsizes (when taking the gradient step to obtain $x^{k+1}$) is equivalent to the dynamics of some continous second-order ODE.
+
+
+\subsection{Algorithm}
+
+There are several equivalent algorithm for Nesterov's Accelerated Gradient Method. The following came from the original paper by Nesterov in 1983 \cite{nesterovMethodSolvingConvex1983} and later adapted to LASSO \cite{beckFastIterativeShrinkageThresholding2009a}. Assume $f\in \scrF_{L}^1$ is in the class of convex, $L$-Lipschitz continuous functions. Given $t_1 = 1$ and $y_1 = x_0$, accelerated gradient updates according to
+\begin{align*}
+    x^{k+1}
+        &= y^k - \frac{1}{L} \nabla f(y^k) \\
+    t_{k+1} 
+        &= \frac{1 + \sqrt{1 + 4t_k^2} }{2} \\
+    y^{k+1}
+        &= x^{k+1} + \frac{t_k - 1}{t_{k+1}} \left( x^{k+1} - x^{k} \right)
+\end{align*}
+We can simplify the expression by noting that (\href{http://www.princeton.edu/~yc5/ele522_optimization/lectures/accelerated_gradient.pdf}{slides})
+\[
+    \frac{t_k - 1}{t_{k+1}} 
+        = 1 - \frac{3}{k} + o(\frac{1}{k})
+        = \frac{k-3}{k} + o(\frac{1}{k})
+\]
+The momentum coefficient is asymptotically equivalent to $\frac{k}{k+3}$. And updates is now given by
+\begin{align*}
+    x^{k+1}
+        &= y^k - \frac{1}{L} \nabla f(y^k) \\
+    y^{k+1}
+        &= x^{k+1} + \frac{k}{k+3} \left( x^{k+1} - x^k \right)
+\end{align*}
+Another formulation of the algorithm comes from Nesterov's textbook \cite{nesterovIntroductoryLecturesConvex2004}. If we take a constant step, i.e. $\frac{1}{L}$, to find the $x^{k+1}$, and that we pick $\alpha_0 = \sqrt{\frac{\mu}{L}} = 1/\sqrt{\kappa}$, which is the interpolating coefficient for recursive construction of the estimating sequence. Then we have the follwing updates
 \begin{align*}
     x^{k+1} 
         &=  y^k - \frac{1}{L} \nabla f(y^k) \\
     y^{k+1}
-        &= x^{k+1} + \frac{k-1}{k+2} (x^{k+1} - x^k)
+        &= x^{k+1} + \frac{\sqrt{\kappa} - 1}{\sqrt{\kappa} + 1} (x^{k+1} - x^k)
 \end{align*}
-
+However, in practice the condition number $\kappa$ is hard to compute.
 
 
 
