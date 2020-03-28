@@ -2,28 +2,24 @@
 
 
 
-
++ implementations for 
+    + gradient descent 
+    + [Two-Point Step Size Gradient Methods](https://academic.oup.com/imajna/article/8/1/141/802460) (gradient descent with Barzilai Borwein stepsize)
+    + [A Method of Solving a Convex Programming Problem with Convergence Rate o(1/k^2)](http://mpawankumar.info/teaching/cdt-big-data/nesterov83.pdf) (Nesterov Accelerated Gradient)
 
 
 ## Resources
 
-+ plotting
-    + surface https://jakevdp.github.io/PythonDataScienceHandbook/04.12-three-dimensional-plotting.html
 + Optim.jl nonconvex optimization https://julianlsolvers.github.io/Optim.jl/stable/#
-    + Nesterov's correction https://github.com/JuliaNLSolvers/Optim.jl/blob/master/src/multivariate/solvers/first_order/accelerated_gradient_descent.jl
-+ GD impl 
-    + matlab https://github.com/hiroyuki-kasai/GDLibrary
-+ NAG blog
-    + strongly convex proof https://blogs.princeton.edu/imabandit/2013/04/01/acceleratedgradientdescent/
+    + [Nesterov's correction](https://github.com/JuliaNLSolvers/Optim.jl/blob/master/src/multivariate/solvers/first_order/accelerated_gradient_descent.jl)
 + NAG impl 
     + https://github.com/GRYE/Nesterov-accelerated-gradient-descent/blob/master/nesterov_method.py
     + https://github.com/idc9/optimization_algos/blob/master/opt_algos/accelerated_gradient_descent.py
-+ setup julia https://github.com/mitmath/julia-mit
-+ slides on impl http://www.princeton.edu/~yc5/ele522_optimization/lectures/accelerated_gradient.pdf
 
 ## Setup
 
 ```
+# setup julia https://github.com/mitmath/julia-mit
 # Install julia v1.0.5 @ https://julialang.org/downloads/
 
 # Open julia repl
