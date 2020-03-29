@@ -187,11 +187,12 @@ We are given data $\sD = \pc{(x_i,y_i) \mid x_i\in\R^n \; y_i \in \pc{\pm 1}}$, 
 Support vector machines can be solved using subgradient method. We first find a subgradient of $f$
 \begin{align*}
     g_w
-        &= w - C\sum_{i=[m]: y_i(w^Tx_i + b) < 0 } y_i x_i \\
+        &= w - C\sum_{i=[m]: y_i(w^Tx_i + b) < 1 } y_i x_i \\
     g_b
-        &= C\sum_{i=[m]: y_i(w^Tx_i + b) < 0 } y_i
+        &= -C\sum_{i=[m]: y_i(w^Tx_i + b) < 1 } y_i
 \end{align*}
-where we haved picked $0\in\partial (\max{0, 1- y_i(w^Tx_i + b)})$ when $y_i(w^Tx_i + b) = 1$, the only case where the \textit{max term} is non-differentiable.
+where we haved picked $0\in\partial (\max{0, 1- y_i(w^Tx_i + b)})$ when $y_i(w^Tx_i + b) = 1$, the only case where the \textit{max term} is non-differentiable. When tested on the Iris dataset, subgradient method worked!
+\fig{svm_subgradient}{4in}
 
 \printbibliography 
 
