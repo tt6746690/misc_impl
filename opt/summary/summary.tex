@@ -33,25 +33,27 @@
 
 \begin{document} 
 
-\section{The Problem}
 
-We are interested in unconstrained minimization of $f:\R^n \to \R$ given first order oracle
+\section{Smooth Convex Optimization}
+
+
+We are interested in unconstrained minimization of convex and smooth $f:\R^n \to \R$ given first order oracle
 \[
     \text{minimize}_{x\in\R^n}\; f(x)
 \]
-We may impose additional assumption on $f$, i.e. convex, $L$-lipschitz, $\mu$-strongly convex
+We may impose additional assumption on $f$, i.e. $L$-lipschitz, $\mu$-strongly convex
 
-\section{Gradient Descent}
+\subsection{Gradient Descent}
 
-Gradient descent updates according to 
+Gradient descent achieves sublinear convergence $\sO(\frac{1}{\epsilon})$ for $f\in \scrF_{L}^1$ and $\sO(\log \frac{1}{\epsilon})$ for $f\in\scrS_{L,\mu}^1$. 
 \begin{align*}
     x^{k+1} = x^k - \alpha_k \nabla f(x^k)
 \end{align*}
-for some stepsize $\alpha_k \geq 0$. Note $\alpha_k = \frac{1}{L}$ is the optimal stepsize.
+for some stepsize $\alpha_k \geq 0$. Note $\alpha_k = \frac{1}{L}$ is the optimal stepsize. 
 
-\subsection{Barzilai \& Borwein Stepsize}
+\subsection{Gradient Descent with Barzilai \& Borwein Stepsize}
 
-A particular choice of stepsize that relaxes the constraint on monotonic descent is given by Barzilai \& Borwein \cite{barzilaiTwoPointStepSize1988}. The idea is to choose $\alpha_k$ such that $\alpha_k g^k$ approximates the Newton update.
+Barzilai \& Borwein stepsize relaxes the constraint on monotonic descent \cite{barzilaiTwoPointStepSize1988}. The idea is to choose $\alpha_k$ such that $\alpha_k g^k$ approximates the Newton update.
 \begin{align*}
     \alpha_k = \frac{\inner{u^k}{v^k}}{\norm{v^k}^2}
     \quad\quad\text{or}\quad\quad
@@ -63,12 +65,13 @@ where
     \quad\quad
     v^k = \nabla f(x^k) - \nabla f(x^{k-1})
 \]
+This algorithm enjoys fast empirical convergence.
 
-\section{Nesterov's Accelerated Gradient}
+\subsection{Nesterov's Accelerated Gradient}
 
 Nesterov's accelerated gradient achieves lower bound for minimization of function $f\in \scrS_{L,\mu}^1$ and improves the rate for gradient descent from $\sO(\kappa\log \frac{1}{\epsilon})$ to $\sO(\sqrt{\kappa}\log \frac{1}{\epsilon})$. Similarly, acceleration improves convergence rate for function $ f\in\scrF_{L}^1$ from $\sO(\frac{1}{\epsilon})$ to $\sO(\frac{1}{\sqrt{\epsilon}})$.
 
-\subsection{Intuition}
+\subsubsection{Intuition}
 
 The following comes from Nesterov's book \cite{nesterovIntroductoryLecturesConvex2004} and \href{https://nisheethvishnoi.files.wordpress.com/2018/05/lecture52.pdf}{lecture note}.
 \begin{definition*}
@@ -114,9 +117,9 @@ where $\pc{\gamma_k}, \pc{v_k}, \pc{\phi_k^*}$ follow certain recurrence relatio
 By making these constraints invariant to iterative updates, we arrive at the accelerated gradient methods. In addition to the algebra tricks, there are efforts that tries to interpret what Nesterov's method is doing under the hoold. For example, \cite{allen-zhuLinearCouplingUltimate2016} interpreted Nesterov's accelerated method as a linear coupling of gradient descent and mirror descent . \cite{suDifferentialEquationModeling2015} showed that in the limit of small stepsizes (when taking the gradient step to obtain $x^{k+1}$) is equivalent to the dynamics of some continous second-order ODE.
 
 
-\subsection{Algorithm}
+\subsubsection{The Algorithm}
 
-There are several equivalent algorithm for Nesterov's Accelerated Gradient Method. The following came from the original paper by Nesterov in 1983 \cite{nesterovMethodSolvingConvex1983} and later adapted to LASSO \cite{beckFastIterativeShrinkageThresholding2009a}. Assume $f\in \scrF_{L}^1$ is in the class of convex, $L$-Lipschitz continuous functions. Given $t_1 = 1$ and $y_1 = x_0$, accelerated gradient updates according to
+There are several equivalent algorithm for Nesterov's Accelerated Gradient Method. The following came from the original paper by Nesterov in 1983 \cite{nesterovMethodSolvingConvex1983} and later adapted to LASSO \cite{beckFastIterativeShrinkageThresholding2009a}. Assume $f\in \scrF_{L}^1$. Given $t_1 = 1$ and $y_1 = x_0$, accelerated gradient updates according to
 \begin{align*}
     x^{k+1}
         &= y^k - \frac{1}{L} \nabla f(y^k) \\
@@ -127,12 +130,11 @@ There are several equivalent algorithm for Nesterov's Accelerated Gradient Metho
 \end{align*}
 We can simplify the expression by noting that (\href{http://www.princeton.edu/~yc5/ele522_optimization/lectures/accelerated_gradient.pdf}{slides})
 \[
-    \beta_k
         = \frac{t_k - 1}{t_{k+1}} 
         = 1 - \frac{3}{k} + o(\frac{1}{k})
         = \frac{k-3}{k} + o(\frac{1}{k})
 \]
-The momentum coefficient is asymptotically equivalent to $\frac{k}{k+3}$ or $\frac{k-1}{k+2}$. The momentum term $\frac{k-1}{k+2}$ seems to be a good choice, since $\beta_1 = \frac{t_1-1}{t_{2}} = 0$.
+The momentum coefficient is asymptotically equivalent to $\frac{k-1}{k+2}$ ($\frac{t_1-1}{t_{2}} = 0$)
 \fig{asymptotic_behavior_of_momentum_term}{4in}
 And updates is now given by
 \begin{align*}  
@@ -151,11 +153,45 @@ Another formulation of the algorithm comes from Nesterov's textbook \cite{nester
 However, in practice the condition number $\kappa$ is hard to compute.
 
 
-\section{Numerical Experiments}
+\subsection{Numerical Experiments}
 
 We are given a hard least squares problem of minimizing $f(x) = \frac{1}{2}\norm{D^Tx-b}_2^2$ where $D\in\R^{n\times (n+1)}$ is the differencing matrix, with all -1 on the main diagonal and all 1 on the superdiagonal. The gradient is given by $\nabla f(x) = D(D^Tx-b)$. We compare gradient descent with either constant stepsize or using barzilai borwein stepsize, and nesterov's accelerated gradient descent.
 \fig{compare_gd_10000}{7in}
 We see that the barzilai borwein stepsize is the fastest method, followed by nesterov's accelerated gradient, then the naive gradient descent method.
+
+\section{Nonsmooth Convex Optimization}
+
+We are interested in unconstrained minimization of convex, possibly nondifferentiable, $f:\R^n \to \R$ 
+\[
+    \text{minimize}_{x\in\R^n}\; f(x)
+\]
+given first order oracle
+
+\subsection{Subgradient Method}
+
+Given bounded subgradient $\norm{g^k}\leq G$ and bounded domain $\norm{x^0 - x^*} \leq R$, subgradient method is in a sense optimal as it achieves the lower bound $\sO(\frac{1}{\epsilon^2})$ for this problem class. Subgradient method iteratively updates as follows
+\[
+    x^{k+1}
+        = x^k - \alpha_k g^k    
+\]
+where $g^k \in\partial f(x^k)$ is \textit{any} subgradient of $f$. First order optimality condition is now $0\in\partial f(x^*)$, which is impossible to test for nontrivial function $f$. Therefore, using $\norm{g^k}\leq \epsilon$ is not informative and subgradient method does not really have a stopping criterion.
+
+\subsubsection{Solving Support Vector Machine w/ Subgradient Method}
+
+We are given data $\sD = \pc{(x_i,y_i) \mid x_i\in\R^n \; y_i \in \pc{\pm 1}}$, support vector machine is supervised learning model that tries to find $w\in\R^n$ and $b\in\R$ such that the empirical risk and regularizer on $w$ is minimized
+\begin{align*}
+    \text{minimize}_{w,b} \quad
+        \frac{1}{2} \norm{w}_2^2 + C \sum_{i=1}^m \max\pb{0, 1 - y_i(w^Tx_i + b)} 
+        \quad \left( := f(w,b) \right)
+\end{align*}
+Support vector machines can be solved using subgradient method. We first find a subgradient of $f$
+\begin{align*}
+    g_w
+        &= w - C\sum_{i=[m]: y_i(w^Tx_i + b) < 0 } y_i x_i \\
+    g_b
+        &= C\sum_{i=[m]: y_i(w^Tx_i + b) < 0 } y_i
+\end{align*}
+where we haved picked $0\in\partial (\max{0, 1- y_i(w^Tx_i + b)})$ when $y_i(w^Tx_i + b) = 1$, the only case where the \textit{max term} is non-differentiable.
 
 \printbibliography 
 
