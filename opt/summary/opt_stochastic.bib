@@ -1,0 +1,117 @@
+
+@inproceedings{wellingBayesianLearningStochastic2011,
+	title = {Bayesian Learning via Stochastic Gradient Langevin Dynamics},
+	abstract = {In this paper we propose a new framework for learning from large scale datasets based on iterative learning from small mini-batches. By adding the right amount of noise to a standard stochastic gradient optimization algorithm we show that the iterates will converge to samples from the true posterior distribution as we anneal the stepsize. This seamless transition between optimization and Bayesian posterior sampling provides an inbuilt protection against overfitting. We also propose a practical method for Monte Carlo estimates of posterior statistics which monitors a "sampling threshold" and collects samples after it has been surpassed. We apply the method to three models: a mixture of Gaussians, logistic regression and {ICA} with natural gradients.},
+	booktitle = {{ICML}},
+	author = {Welling, Max and Teh, Yee Whye},
+	date = {2011},
+	file = {Welling_Teh_2011_Bayesian Learning via Stochastic Gradient Langevin Dynamics.pdf:/Users/wpq/Dropbox (MIT)/zotero/Welling_Teh_2011_Bayesian Learning via Stochastic Gradient Langevin Dynamics.pdf:application/pdf}
+}
+
+@article{robbinsStochasticApproximationMethod1951,
+	title = {A Stochastic Approximation Method},
+	volume = {22},
+	issn = {0003-4851, 2168-8990},
+	url = {https://projecteuclid.org/euclid.aoms/1177729586},
+	doi = {10.1214/aoms/1177729586},
+	abstract = {Let M(x)M(x)M(x) denote the expected value at level xxx of the response to a certain experiment. M(x)M(x)M(x) is assumed to be a monotone function of xxx but is unknown to the experimenter, and it is desired to find the solution x=θx=θx = {\textbackslash}theta of the equation M(x)=αM(x)=αM(x) = {\textbackslash}alpha, where αα{\textbackslash}alpha is a given constant. We give a method for making successive experiments at levels x1,x2,⋯x1,x2,⋯x\_1,x\_2,{\textbackslash}cdots in such a way that xnxnx\_n will tend to θθ{\textbackslash}theta in probability.},
+	pages = {400--407},
+	number = {3},
+	journaltitle = {The Annals of Mathematical Statistics},
+	shortjournal = {Ann. Math. Statist.},
+	author = {Robbins, Herbert and Monro, Sutton},
+	urldate = {2019-11-16},
+	date = {1951-09},
+	mrnumber = {MR42668},
+	zmnumber = {0054.05901},
+	file = {Robbins_Monro_1951_A Stochastic Approximation Method.pdf:/Users/wpq/Dropbox (MIT)/zotero/Robbins_Monro_1951_A Stochastic Approximation Method.pdf:application/pdf}
+}
+
+@incollection{fangSPIDERNearOptimalNonConvex2018,
+	title = {{SPIDER}: Near-Optimal Non-Convex Optimization via Stochastic Path-Integrated Differential Estimator},
+	url = {http://papers.nips.cc/paper/7349-spider-near-optimal-non-convex-optimization-via-stochastic-path-integrated-differential-estimator.pdf},
+	shorttitle = {{SPIDER}},
+	pages = {689--699},
+	booktitle = {Advances in Neural Information Processing Systems 31},
+	publisher = {Curran Associates, Inc.},
+	author = {Fang, Cong and Li, Chris Junchi and Lin, Zhouchen and Zhang, Tong},
+	editor = {Bengio, S. and Wallach, H. and Larochelle, H. and Grauman, K. and Cesa-Bianchi, N. and Garnett, R.},
+	urldate = {2020-02-28},
+	date = {2018},
+	file = {Fang et al_2018_SPIDER - Near-Optimal Non-Convex Optimization via Stochastic Path-Integrated Differential Estimator.pdf:/Users/wpq/Dropbox (MIT)/zotero/Fang et al_2018_SPIDER - Near-Optimal Non-Convex Optimization via Stochastic Path-Integrated Differential Estimator.pdf:application/pdf}
+}
+
+@article{safranHowGoodSGD2020,
+	title = {How Good is {SGD} with Random Shuffling?},
+	url = {http://arxiv.org/abs/1908.00045},
+	abstract = {We study the performance of stochastic gradient descent ({SGD}) on smooth and strongly-convex finite-sum optimization problems. In contrast to the majority of existing theoretical works, which assume that individual functions are sampled with replacement, we focus here on popular but poorly-understood heuristics, which involve going over random permutations of the individual functions. This setting has been investigated in several recent works, but the optimal error rates remain unclear. In this paper, we provide lower bounds on the expected optimization error with these heuristics (using {SGD} with any constant step size), which elucidate their advantages and disadvantages. In particular, we prove that after \$k\$ passes over \$n\$ individual functions, if the functions are re-shuffled after every pass, the best possible optimization error for {SGD} is at least \${\textbackslash}Omega{\textbackslash}left(1/(nk){\textasciicircum}2+1/nk{\textasciicircum}3{\textbackslash}right)\$, which partially corresponds to recently derived upper bounds. Moreover, if the functions are only shuffled once, then the lower bound increases to \${\textbackslash}Omega(1/nk{\textasciicircum}2)\$. Since there are strictly smaller upper bounds for repeated reshuffling, this proves an inherent performance gap between {SGD} with single shuffling and repeated shuffling. As a more minor contribution, we also provide a non-asymptotic \${\textbackslash}Omega(1/k{\textasciicircum}2)\$ lower bound (independent of \$n\$) for the incremental gradient method, when no random shuffling takes place. Finally, we provide an indication that our lower bounds are tight, by proving matching upper bounds for univariate quadratic functions.},
+	journaltitle = {{arXiv}:1908.00045 [cs, math, stat]},
+	author = {Safran, Itay and Shamir, Ohad},
+	urldate = {2020-02-28},
+	date = {2020-01-28},
+	eprinttype = {arxiv},
+	eprint = {1908.00045},
+	file = {Safran_Shamir_2020_How Good is SGD with Random Shuffling.pdf:/Users/wpq/Dropbox (MIT)/zotero/Safran_Shamir_2020_How Good is SGD with Random Shuffling.pdf:application/pdf}
+}
+
+@article{haochenRandomShufflingBeats2019,
+	title = {Random Shuffling Beats {SGD} after Finite Epochs},
+	url = {http://arxiv.org/abs/1806.10077},
+	abstract = {A long-standing problem in the theory of stochastic gradient descent ({SGD}) is to prove that its without-replacement version {RandomShuffle} converges faster than the usual with-replacement version. We present the first (to our knowledge) non-asymptotic solution to this problem, which shows that after a "reasonable" number of epochs {RandomShuffle} indeed converges faster than {SGD}. Specifically, we prove that under strong convexity and second-order smoothness, the sequence generated by {RandomShuffle} converges to the optimal solution at the rate O(1/T{\textasciicircum}2 + n{\textasciicircum}3/T{\textasciicircum}3), where n is the number of components in the objective, and T is the total number of iterations. This result shows that after a reasonable number of epochs {RandomShuffle} is strictly better than {SGD} (which converges as O(1/T)). The key step toward showing this better dependence on T is the introduction of n into the bound; and as our analysis will show, in general a dependence on n is unavoidable without further changes to the algorithm. We show that for sparse data {RandomShuffle} has the rate O(1/T{\textasciicircum}2), again strictly better than {SGD}. Furthermore, we discuss extensions to nonconvex gradient dominated functions, as well as non-strongly convex settings.},
+	journaltitle = {{arXiv}:1806.10077 [math, stat]},
+	author = {{HaoChen}, Jeff Z. and Sra, Suvrit},
+	urldate = {2020-02-28},
+	date = {2019-10-07},
+	eprinttype = {arxiv},
+	eprint = {1806.10077},
+	file = {HaoChen_Sra_2019_Random Shuffling Beats SGD after Finite Epochs.pdf:/Users/wpq/Dropbox (MIT)/zotero/HaoChen_Sra_2019_Random Shuffling Beats SGD after Finite Epochs.pdf:application/pdf}
+}
+
+@article{nemirovskiRobustStochasticApproximation2009,
+	title = {Robust Stochastic Approximation Approach to Stochastic Programming},
+	volume = {19},
+	issn = {1052-6234},
+	url = {https://epubs.siam.org/doi/abs/10.1137/070704277},
+	doi = {10.1137/070704277},
+	abstract = {In this paper we consider optimization problems where the objective function is given in a form of the expectation. A basic difficulty of solving such stochastic optimization problems is that the involved multidimensional integrals (expectations) cannot be computed with high accuracy. The aim of this paper is to compare two computational approaches based on Monte Carlo sampling techniques, namely, the stochastic approximation ({SA}) and the sample average approximation ({SAA}) methods. Both approaches, the {SA} and {SAA} methods, have a long history. Current opinion is that the {SAA} method can efficiently use a specific (say, linear) structure of the considered problem, while the {SA} approach is a crude subgradient method, which often performs poorly in practice. We intend to demonstrate that a properly modified {SA} approach can be competitive and even significantly outperform the {SAA} method for a certain class of convex stochastic problems. We extend the analysis to the case of convex-concave stochastic saddle point problems and present (in our opinion highly encouraging) results of numerical experiments.},
+	pages = {1574--1609},
+	number = {4},
+	journaltitle = {{SIAM} Journal on Optimization},
+	shortjournal = {{SIAM} J. Optim.},
+	author = {Nemirovski, A. and Juditsky, A. and Lan, G. and Shapiro, A.},
+	urldate = {2020-04-01},
+	date = {2009-01-01},
+	note = {Publisher: Society for Industrial and Applied Mathematics},
+	file = {Nemirovski et al_2009_Robust Stochastic Approximation Approach to Stochastic Programming.pdf:/Users/wpq/Dropbox (MIT)/zotero/Nemirovski et al_2009_Robust Stochastic Approximation Approach to Stochastic Programming.pdf:application/pdf}
+}
+
+@article{bottouOptimizationMethodsLargeScale2018,
+	title = {Optimization Methods for Large-Scale Machine Learning},
+	url = {http://arxiv.org/abs/1606.04838},
+	abstract = {This paper provides a review and commentary on the past, present, and future of numerical optimization algorithms in the context of machine learning applications. Through case studies on text classification and the training of deep neural networks, we discuss how optimization problems arise in machine learning and what makes them challenging. A major theme of our study is that large-scale machine learning represents a distinctive setting in which the stochastic gradient ({SG}) method has traditionally played a central role while conventional gradient-based nonlinear optimization techniques typically falter. Based on this viewpoint, we present a comprehensive theory of a straightforward, yet versatile {SG} algorithm, discuss its practical behavior, and highlight opportunities for designing algorithms with improved performance. This leads to a discussion about the next generation of optimization methods for large-scale machine learning, including an investigation of two main streams of research on techniques that diminish noise in the stochastic directions and methods that make use of second-order derivative approximations.},
+	journaltitle = {{arXiv}:1606.04838 [cs, math, stat]},
+	author = {Bottou, Léon and Curtis, Frank E. and Nocedal, Jorge},
+	urldate = {2020-04-01},
+	date = {2018-02-08},
+	eprinttype = {arxiv},
+	eprint = {1606.04838},
+	file = {Bottou et al_2018_Optimization Methods for Large-Scale Machine Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Bottou et al_2018_Optimization Methods for Large-Scale Machine Learning.pdf:application/pdf}
+}
+
+@article{polyakAccelerationStochasticApproximation1992,
+	title = {Acceleration of Stochastic Approximation by Averaging},
+	volume = {30},
+	issn = {0363-0129, 1095-7138},
+	url = {http://epubs.siam.org/doi/10.1137/0330046},
+	doi = {10.1137/0330046},
+	abstract = {A new recursive algorithm of stochastic approximation type with the averaging of trajectories is investigated. Convergence with probability one is proved for a variety of classical optimization and identification problems. It is also demonstrated for these problems that the proposed algorithm achieves the highest possible rate of convergence.},
+	pages = {838--855},
+	number = {4},
+	journaltitle = {{SIAM} Journal on Control and Optimization},
+	shortjournal = {{SIAM} J. Control Optim.},
+	author = {Polyak, B. T. and Juditsky, A. B.},
+	urldate = {2020-04-01},
+	date = {1992-07},
+	langid = {english},
+	file = {Polyak and Juditsky - 1992 - Acceleration of Stochastic Approximation by Averag.pdf:/Users/wpq/Zotero/storage/MQ3ZMSSS/Polyak and Juditsky - 1992 - Acceleration of Stochastic Approximation by Averag.pdf:application/pdf}
+}
