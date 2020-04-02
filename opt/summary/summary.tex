@@ -228,7 +228,7 @@ where $\alpha_k > 0$ are stepsizes, $\Pi_{\sX}(\cdot)$ is the projection operato
 
 \subsection{Convergence}
 
-Derivations copies from \cite{nemirovskiRobustStochasticApproximation2009}, \cite{bottouOptimizationMethodsLargeScale2018}. We assume 
+Derivations copied from \cite{nemirovskiRobustStochasticApproximation2009}, \cite{bottouOptimizationMethodsLargeScale2018} and \href{http://www.princeton.edu/~yc5/ele522_optimization/lectures/stochastic_gradient.pdf}{slides}. We assume 
 \begin{enumerate}
     \item bounded variance for stochastic subgradient, which translates to $\E_{\xi}\pb{G(x,\xi)} \leq M^2$ given $x\in\sX$.
     \item bounded $\sX$ where radius given by $D_{\sX} = \max_{x\in\sX}\norm{x-x^*}_2$.
@@ -309,7 +309,7 @@ If $f\in\scrS_{L,\mu}^1$, using (\ref{eq:bound_residual}), we have
         \leq r_k - 2\alpha_k \E\pb{\norm{x^k-x^*}^2} + \alpha_k^2 M^2
         = (1-2\mu \alpha_k ) r_k + \alpha_k^2M^2
 \end{align*}
-If we choose $\alpha_k = \theta/(k+1)$, where $\theta > 1/(2\mu)$. It could be shown by induction that
+If we choose $\alpha_k = \theta/(k+1)$, where $\theta > 1/(2\mu)$. It could be shown by induction that \cite{nemirovskiRobustStochasticApproximation2009}
 \begin{align*}
     r_k 
         &\leq \frac{c_{\theta}}{k+1}
