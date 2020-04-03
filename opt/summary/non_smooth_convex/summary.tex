@@ -1,0 +1,41 @@
+\documentclass[../summary.tex]{subfiles}
+
+\begin{document}
+
+\section{Nonsmooth Convex Optimization}
+
+We are interested in unconstrained minimization of convex, possibly nondifferentiable, $f:\R^n \to \R$ 
+\[
+    \text{minimize}_{x\in\R^n}\; f(x)
+\]
+given first order oracle
+
+\subsection{Subgradient Method}
+
+Given bounded subgradient $\norm{g^k}\leq G$ and bounded domain $\norm{x^0 - x^*} \leq R$, subgradient method is in a sense optimal as it achieves the lower bound $\sO(\frac{1}{\epsilon^2})$ for this problem class. Subgradient method iteratively updates as follows
+\[
+    x^{k+1}
+        = x^k - \alpha_k g^k    
+\]
+where $g^k \in\partial f(x^k)$ is \textit{any} subgradient of $f$. First order optimality condition is now $0\in\partial f(x^*)$, which is impossible to test for nontrivial function $f$. Therefore, using $\norm{g^k}\leq \epsilon$ is not informative and subgradient method does not really have a stopping criterion.
+
+\subsubsection{Solving Support Vector Machine w/ Subgradient Method}
+
+We are given data $\sD = \pc{(x_i,y_i) \mid x_i\in\R^n \; y_i \in \pc{\pm 1}}$, support vector machine is supervised learning model that tries to find $w\in\R^n$ and $b\in\R$ such that the empirical risk and regularizer on $w$ is minimized
+\begin{align*}
+    \text{minimize}_{w,b} \quad
+        \frac{1}{2} \norm{w}_2^2 + \lambda \sum_{i=1}^m \max\pb{0, 1 - y_i(w^Tx_i + b)} 
+        \quad \left( := f(w,b) \right)
+\end{align*}
+Support vector machines can be solved using subgradient method. We first find a subgradient of $f$
+\begin{align*}
+    g_w^k
+        &= w^k - \lambda \sum_{i\in[m]: y_i(w^Tx_i + b) < 1 } y_i x_i \\
+    g_b
+        &= -\lambda \sum_{i\in[m]: y_i(w^Tx_i + b) < 1 } y_i
+\end{align*}
+where we haved picked $0\in\partial (\max{0, 1- y_i(w^Tx_i + b)})$ when $y_i(w^Tx_i + b) = 1$, the only case where the \textit{max term} is non-differentiable. When tested on the Iris dataset, subgradient method worked!
+\fig{svm_subgradient}{4in}
+
+
+\end{document}
