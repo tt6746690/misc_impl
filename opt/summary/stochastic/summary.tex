@@ -9,7 +9,7 @@ We are interested in constrained minimization of $f:\R^n\to\R$
         f(x) = \E\pb{F(x,\xi)}
     }
 \]
-where $\sX \subset \R^n$ is closed, bounded convex set. $\xi$ is a random variable, and $F(\cdot,\xi)$ is convex for all $\xi\in\Xi$, and therefore $f(\cdot)$ is convex. For uniform $p_{\xi}$ over finite alphabets of size $n$, the problem reduces to finite sum problem (or sample average approximation (SAA))
+where $\sX \subset \R^n$ is closed, bounded convex set. $\xi$ is a random variable, and $F(\cdot,\xi)$ is convex for all $\xi\in\Xi$, and therefore $f(\cdot)$ is convex. For uniform $p_{\xi}$ over finite alphabets of size $n$, the problem reduces to finite sum problem
 \[
     \text{minimize}_{x\in\sX}\; \pb{
         f(x) = \frac{1}{n} \sum_{i=1}^n f_i(x)
@@ -26,9 +26,9 @@ Assume we can
 
 We can show that if $f\in\scrS_{L,\mu}^1$, the choice of $\alpha_k = \sO(1/k)$ yields sublinear convergence of $\sO(\frac{1}{\epsilon})$ for last iterates. If $f\in\scrF_{L}^1$, the choice of $\alpha_k=\sO(\frac{1}{\sqrt{k}})$ yields a sublinear convergence of $\sO(\frac{1}{\epsilon^2})$ for average iterates. Stochastic gradient method (or Stochastic Approximation (SA) algorithms) solves the problem by 
 \[
-    x^{k+1} = \Pi_{\sX}\left( x^k - \alpha_k G(x^k, \xi_k) \right)    
+    x^{k+1} = \sP_{\sX}\left( x^k - \alpha_k G(x^k, \xi_k) \right)    
 \]
-where $\alpha_k > 0$ are stepsizes, $\Pi_{\sX}(\cdot)$ is the projection operator to convex set. It is important to note that the current iterate $x^k$ are functions of random variables $x^k := x^k(\xi_{[k-1]})$ where $\xi_{[k-1]} = (\xi_1,\cdots,\xi_{k-1})$, and therefore are random variables themselves. In addition, $x^k \indep \xi_k$. 
+where $\alpha_k > 0$ are stepsizes, $\sP_{\sX}(y) =  \argmin_{x\in\sX} \frac{1}{2}\norm{x-y}_2^2$ is the euclidean projection onto a convex set. It is important to note that the current iterate $x^k$ are functions of random variables $x^k := x^k(\xi_{[k-1]})$ where $\xi_{[k-1]} = (\xi_1,\cdots,\xi_{k-1})$, and therefore are random variables themselves. In addition, $x^k \indep \xi_k$. 
 
 \subsection{Convergence}
 
@@ -93,10 +93,10 @@ where the expectation is taken w.r.t $\xi_{[k-1]}$. We first derive a bound on $
 \begin{align*}
     R_{k+1}
         &= \norm{x^k-x^*}^2 \\
-        &= \norm{ \Pi_{\sX}\left( x^k - \alpha_k G(x^k,\xi_k) \right) - \Pi_{\sX}(x^*)  }
-            \tag{$\Pi_{\sX}(x^*) = x^*$} \\
-        &\leq \norm{ x^k - \alpha_k(G*x^k,\xi_k) - x^* }^2
-            \tag{nonexpansive of $\Pi(\cdot)$ $\norm{\Pi_{\sX}(x')-\Pi_{\sX}(x)} \leq \norm{x'-x}$} \\ 
+        &= \norm{ \sP_{\sX}\left( x^k - \alpha_k G(x^k,\xi_k) \right) - \sP_{\sX}(x^*)  }
+            \tag{$\sP_{\sX}(x^*) = x^*$} \\
+        &\leq \norm{ x^k - \alpha_k G(x^k,\xi_k) - x^* }^2
+            \tag{nonexpansive of $\sP(\cdot)$ $\norm{\sP_{\sX}(x')-\sP_{\sX}(x)} \leq \norm{x'-x}$} \\ 
         &\leq R^k - 2\alpha_k\inner{G(x^k,\xi_k)}{x^k-x^*} + \alpha_k^2\norm{G(x^k,\xi_k)}^2 \\
     r_{k+1}
         &\leq r_k - 2\alpha_k \E\pb{ \inner{G(x^k,\xi_k)}{x^k-x^*} } + \alpha_k^2 \E\pb{ \norm{G(x^k,\xi_k)}^2 }
