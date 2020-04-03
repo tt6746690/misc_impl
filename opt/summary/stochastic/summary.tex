@@ -94,9 +94,9 @@ where the expectation is taken w.r.t $\xi_{[k-1]}$. We first derive a bound on $
     R_{k+1}
         &= \norm{x^k-x^*}^2 \\
         &= \norm{ \sP_{\sX}\left( x^k - \alpha_k G(x^k,\xi_k) \right) - \sP_{\sX}(x^*)  }
-            \tag{$\sP_{\sX}(x^*) = x^*$} \\
+            \tag{$x^*$ is fixed point of $\sP$, $\sP_{\sX}(x^*) = x^*$} \\
         &\leq \norm{ x^k - \alpha_k G(x^k,\xi_k) - x^* }^2
-            \tag{nonexpansive of $\sP(\cdot)$ $\norm{\sP_{\sX}(x')-\sP_{\sX}(x)} \leq \norm{x'-x}$} \\ 
+            \tag{Nonexpansive of $\sP$, $\norm{\sP_{\sX}(x')-\sP_{\sX}(x)} \leq \norm{x'-x}$} \\ 
         &\leq R^k - 2\alpha_k\inner{G(x^k,\xi_k)}{x^k-x^*} + \alpha_k^2\norm{G(x^k,\xi_k)}^2 \\
     r_{k+1}
         &\leq r_k - 2\alpha_k \E\pb{ \inner{G(x^k,\xi_k)}{x^k-x^*} } + \alpha_k^2 \E\pb{ \norm{G(x^k,\xi_k)}^2 }

@@ -19,7 +19,7 @@ import .Opt
 iris = dataset("datasets", "iris")
 
 categories = Dict(
-    "setosa"     => 1,
+    "setosa"     => 0,
     "versicolor" => -1,
     "virginica"  => 1
 )
