@@ -1,13 +1,17 @@
 \documentclass[11pt]{article}
 \input{\string~/.macros}
+\usepackage{mathrsfs}
 \usepackage{bbm}
 \usepackage[a4paper, total={7in, 9in}]{geometry}
 \usepackage{graphicx}
-\graphicspath{{./assets}}
+\graphicspath{{./assets/}{../assets/}}
 \usepackage{hyperref}
 \hypersetup{colorlinks=true, linktoc=all, linkcolor=blue, citecolor=red}
 \usepackage[backend=bibtex,sorting=none]{biblatex}
 \addbibresource{opt_convex.bib}
+\addbibresource{opt_stochastic.bib}
+
+\newcommand{\indep}{\perp \!\!\! \perp}
 
 \newcommand\ry{\ensuremath{\mathsf{y}}}
 \newcommand\rx{\ensuremath{\mathsf{x}}}
@@ -15,8 +19,6 @@
 \newcommand\rc{\ensuremath{\mathsf{c}}}
 \newcommand\rz{\ensuremath{\mathsf{z}}}
 \newcommand\ru{\ensuremath{\mathsf{u}}}
-
-
 \newcommand\rbx{\ensuremath{\mathsf{\mathbf{x}}}}
 \newcommand\rby{\ensuremath{\mathsf{\mathbf{y}}}}
 \newcommand\rbu{\ensuremath{\mathsf{\mathbf{u}}}}
@@ -24,53 +26,19 @@
 \renewcommand\bmu{\ensuremath{\boldsymbol{\mu}}}
 \newcommand\bSigma{\ensuremath{\boldsymbol{\Sigma}}}
 
+\newcommand\scrF{\ensuremath{\mathscr{F}}}
+\newcommand\scrS{\ensuremath{\mathscr{S}}}
+
+\usepackage{subfiles} 
+ 
 
 \begin{document} 
 
-\section{The Problem}
-
-We are interested in unconstrained minimization of $f:\R^n \to \R$ given first order oracle
-\[
-    \text{minimize}_{x\in\R^n}\; f(x)
-\]
-We may impose additional assumption on $f$, i.e. convex, $L$-lipschitz, $\mu$-strongly convex
-
-\section{Gradient Descent}
-
-Gradient descent updates according to 
-\begin{align*}
-    x^{k+1} \leftarrow x^k - \alpha_k \nabla f(x^k)
-\end{align*}
-for some stepsize $\alpha_k \geq 0$.
-
-\subsection{Barzilai \& Borwein stepsizes}
-
-A particular choice of stepsize that relaxes the constraint on monotonic descent is given by Barzilai \& Borwein \cite{barzilaiTwoPointStepSize1988}. The idea is to choose $\alpha_k$ such that $\alpha_k g^k$ approximates the Newton update.
-\begin{align*}
-    \alpha_k = \frac{\inner{u^k}{v^k}}{\norm{v^k}^2}
-    \quad\quad\text{or}\quad\quad
-    \alpha_k = \frac{\norm{u^k}^2}{\inner{u^k}{v^k}}
-\end{align*}
-where 
-\[
-    u^k = x^k - x^{k-1}
-    \quad\quad
-    v^k = \nabla f(x^k) - \nabla f(x^{k-1})
-\]
-
-\section{Nesterov's Accelerated Gradient}
-
-If $f \in S_{L,\mu}^{1}$, then Nesterov's accelerated gradient updates according to 
-\begin{align*}
-    x^{k+1} 
-        &=  y^k - \frac{1}{L} \nabla f(y^k) \\
-    y^{k+1}
-        &= x^{k+1} + \frac{k-1}{k+2} (x^{k+1} - x^k)
-\end{align*}
-
-
-
-
+\subfile{smooth_convex/summary}
+\subfile{non_smooth_convex/summary}
+\subfile{stochastic/summary}
+ 
+ 
 \printbibliography 
 
 \end{document}
