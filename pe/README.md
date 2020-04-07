@@ -14,3 +14,25 @@
 
 + pytorch implementation of cGAN with projection 
     + https://github.com/crcrpar/pytorch.sngan_projection
+
+
+
+## ColorMNIST 
+
+ColorMNIST for prototyping models
++ Similar to chest X-ray
++ Interpolate between two colors 
++ Binary color label, 0-blue 1-red
+
+
+<p align="center">
+    <img width='224', height='224' src="assets/color_mnist_100.png">
+</p>
+
+
+## PE on Color MNIST 
+
+
+<p align="center">
+    <img width='224', height='224' src="assets/pe_training.gif">
+</p>
