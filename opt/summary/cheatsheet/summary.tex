@@ -44,6 +44,13 @@
         &\leq f(x) - \frac{1}{2L}\norm{\nabla f(x)}^2
         \label{eq:descent_lemma_Lsmooth_simplified}
 \end{align}
+Note (\ref{eq:descent_lemma_Lsmooth}) implies that quadratic functions $\phi_{-}(\cdot),\phi_+(\cdot)$ are global lower/upper bound of $f(\cdot)$ respectively, i.e. $\phi_{-}(y) \leq f(y) \leq \phi_+(y)$ for any $x\in\R^n$, where
+\begin{align*}
+    \phi_{-}(y)
+        &= f(x) + \inner{\nabla f(x)}{y-x} - \frac{L}{2} \norm{y-x}^2 \\
+    \phi_+(y)
+        &= f(x) + \inner{\nabla f(x)}{y-x} + \frac{L}{2} \norm{y-x}^2
+\end{align*} 
 Note (\ref{eq:descent_lemma_Lsmooth_simplified}) is important in proving convergence of descent methods, where we see progress made in reducing function value of iterates by steping in $-\frac{1}{L}\nabla f(x)$ is at least some constant times the gradient norm.
 
 \noindent Property for $f\in C_{M}^{2,2}(\R^n)$,
@@ -103,15 +110,18 @@ Note (\ref{eq:descent_lemma_Lsmooth_simplified}) is important in proving converg
 \begin{align}
     0 
         \leq f(y) - f(x) - \inner{\nabla f(x)}{y-x}
-        &\leq \frac{L}{2}\norm{x-y}^2 \\
+        &\leq \frac{L}{2}\norm{x-y}^2 
+        \label{eq:smooth_convex_1} \\
     f(x) + \inner{\nabla f(x)}{y-x} + \frac{1}{2L} \norm{\nabla f(x)- \nabla f(y)}^2_* 
-        &\leq f(y) \\ 
+        &\leq f(y) 
+        \label{eq:smooth_convex_2} \\ 
     \frac{1}{L} \norm{\nabla f(x) - \nabla f(y)}_*^2
         &\leq \inner{\nabla f(x) - \nabla f(y)}{x-y} \\
     0 
         \leq \inner{\nabla f(x) - \nabla f(y)}{x-y}
         &\leq L \norm{x-y}^2
 \end{align}
+Note (\ref{eq:smooth_convex_1}) implies a tighter (linear) lower bound to $f(\cdot)$ if we assume convexity. In fact, the lower bound can be improved further to a upward quadratic by (\ref{eq:smooth_convex_2}).
 
 \subsection{Strongly Convex}
 
@@ -133,7 +143,7 @@ Note (\ref{eq:descent_lemma_Lsmooth_simplified}) is important in proving converg
     \inner{\nabla f(x) - \nabla f(y)}{x-y}
         &\geq \mu \norm{x-y}^2 \\
     \lambda f(x) + (1-\lambda) f(y)
-        &\geq f(\lambda x + (1-\lambda )y) + \lambda (1-\lambda )\frac{\mu}{2}\norm{x-y}^2 \\
+        &\geq f(\lambda x + (1-\lambda )y) + \lambda (1-\lambda )\frac{\mu}{2}\norm{x-y}^2
 \end{align}
 
 \subsection{Smooth \& Strongly Convex}
