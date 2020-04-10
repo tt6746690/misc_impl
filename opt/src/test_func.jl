@@ -41,6 +41,12 @@ function hard_leastsquares_problem(n)
         """ ∇f(x) = D(Dᵀx -b) """
         g .= DDᵀ * x - Db
     end
+
+    dense_DDᵀ = Array(DDᵀ)
     
-    return f, grad!
+    function hess!(h, x)
+        h .= dense_DDᵀ
+    end
+    
+    return f, grad!, hess!
 end
