@@ -1,0 +1,152 @@
+\documentclass[../summary.tex]{subfiles}
+
+\begin{document}
+
+\section{Cheat Sheet} 
+
+\subsection{Lipschitz Continuous}
+
+\begin{definition}
+    $f\in C_{L}^{k,p}(Q)$ is $k$ times continuously differentiable on $Q$ if for all $x,y\in Q$,
+    \begin{align}
+        \norm{\nabla^p f(y) - \nabla^p f(x)} 
+            &\leq L\norm{y-x}
+            \label{eq:definition_lipschitz_continuity}
+    \end{align} 
+    $f\in C_{L}^{1,1}(\R^n)$ is continously differentiable on $\R^n$ if for all $x,y\in\R^n$
+    \begin{align}
+        \norm{\nabla f(y) - \nabla f(x)} 
+            &\leq L\norm{y-x}
+            \label{eq:definition_Lsmooth_bounded_gradient}
+    \end{align}
+\end{definition}
+
+\begin{definition}
+    $f\in C_L^{2,1}(\R^n) \subset C_{L}^{1,1}(\R^n)$ if for all $x\in\R^n$, either condition is satisfied
+    \begin{align}
+        \norm{\nabla^2 f(x)}
+            &\leq L 
+            \label{eq:definition_Lsmooth_bounded_hessian} \\
+        -L\bI \preceq \nabla^2 f(x) \preceq L\bI 
+            \label{eq:definition_Lsmooth_bounded_hessian_matrixineq}
+    \end{align}
+\end{definition}
+
+\noindent Property for $f\in C_L^{1,1}(\R^n)$, 
+\begin{align}
+    \left| 
+        f(y) - f(x) - \inner{\nabla f(x)}{y-x}  \right|
+        &\leq \frac{L}{2} \norm{y-x}^2
+        \label{eq:descent_lemma_Lsmooth} \\
+    f\left( x - \alpha \nabla f(x) \right)
+        &\leq f(x) - \alpha\left( 1 - \frac{\alpha}{2}L\right) \norm{\nabla f(x)}^2 \\ 
+    f\left( x - \frac{1}{L} \nabla f(x) \right)
+        &\leq f(x) - \frac{1}{2L}\norm{\nabla f(x)}^2
+        \label{eq:descent_lemma_Lsmooth_simplified}
+\end{align}
+Note (\ref{eq:descent_lemma_Lsmooth_simplified}) is important in proving convergence of descent methods, where we see progress made in reducing function value of iterates by steping in $-\frac{1}{L}\nabla f(x)$ is at least some constant times the gradient norm.
+
+\noindent Property for $f\in C_{M}^{2,2}(\R^n)$,
+\begin{align}
+    \norm{\nabla f(y) - \nabla f(x) - \nabla^2 f(x)(y-x)}
+        &\leq \frac{M}{2} \norm{y-x}^2 \\
+    \nabla^2 f(x) - C 
+        &\preceq \nabla^2 f(y) 
+        \preceq \nabla^2 f(x) + C
+        \quad\text{where}\quad
+        c = M\norm{y-x}\bI
+\end{align}
+
+
+\subsection{Convex}
+
+\begin{definition}
+    The following are equivalent
+    \begin{enumerate}
+        \item A continuously differentiable function $f$ is convex on convex set $Q$ ($f\in\scrF^1(Q)$) 
+        \item For all $x,y\in Q$
+        \begin{align}
+            f(y)
+                &\geq f(x) + \inner{\nabla f(x)}{y-x}
+                \label{eq:definition_convex}
+        \end{align}
+        \item For all $x,y\in Q$ and $\lambda \in[0,1]$,
+        \begin{align}
+            f(\lambda x + (1-\lambda)y) 
+                \leq \lambda f(x) + (1-\lambda )f(y)
+        \end{align}
+        \item For all $x,y\in Q$, 
+        \begin{align}
+            \inner{\nabla f(x) - \nabla f(y)}{x - y} > 0
+        \end{align}
+    \end{enumerate}
+\end{definition}
+
+\begin{definition}
+    A twice differentiable function $f$ belongs to $\scrF^2(Q)$ if for any $x\in Q$, 
+    \begin{align}
+        \nabla^2 f(x) \succeq 0
+    \end{align}
+\end{definition}
+
+\subsection{Smooth \& Convex}
+
+\begin{definition}
+    $f\in \scrF^{1,1}_L(Q, \norm{\cdot})$ if $f$ is convex with Lipschitz continous gradient, i.e. for all $x,y\in Q$,
+    \begin{align}
+        \norm{\nabla f(x) - \nabla f(y)}_*
+            \leq L\norm{x-y}
+    \end{align}
+\end{definition}
+
+\noindent Property of $f\in \scrF^{1,1}(\R^n, \norm{\cdot})$. Let $x,y\in\R^n$ and $\lambda \in [0,1]$
+\begin{align}
+    0 
+        \leq f(y) - f(x) - \inner{\nabla f(x)}{y-x}
+        &\leq \frac{L}{2}\norm{x-y}^2 \\
+    f(x) + \inner{\nabla f(x)}{y-x} + \frac{1}{2L} \norm{\nabla f(x)- \nabla f(y)}^2_* 
+        &\leq f(y) \\ 
+    \frac{1}{L} \norm{\nabla f(x) - \nabla f(y)}_*^2
+        &\leq \inner{\nabla f(x) - \nabla f(y)}{x-y} \\
+    0 
+        \leq \inner{\nabla f(x) - \nabla f(y)}{x-y}
+        &\leq L \norm{x-y}^2
+\end{align}
+
+\subsection{Strongly Convex}
+
+\begin{definition}
+    A continuously differentiable function $f$ is strongly convex on $\R^n$ ($f\in \scrS_{\mu}^1(Q,\norm{\cdot})$) if there exists a convexity parameter $\mu > 0$ such that for all $x,y\in Q$, 
+    \begin{align}
+        f(y)
+            \geq f(x) + \inner{\nabla f(x)}{y-x} + \frac{\mu}{2}\norm{y-x}^2
+    \end{align}
+\end{definition}
+
+\noindent Property for $f \in \scrS_{\mu}^1(\R^n)$. Let $x,y\in Q$ and $\lambda \in [0,1]$,
+\begin{align}
+    f(x)
+        &\geq f(x^*) + \frac{\mu}{2} \norm{x-x^*}^2
+        \quad\text{where}\quad
+        \nabla f(x^*) = 0
+            \label{eq:strongly_convex_1} \\
+    \inner{\nabla f(x) - \nabla f(y)}{x-y}
+        &\geq \mu \norm{x-y}^2 \\
+    \lambda f(x) + (1-\lambda) f(y)
+        &\geq f(\lambda x + (1-\lambda )y) + \lambda (1-\lambda )\frac{\mu}{2}\norm{x-y}^2 \\
+\end{align}
+
+\subsection{Smooth \& Strongly Convex}
+
+\begin{definition}
+    A continuously differentiable function $f$ that is strongly convex with $L$-lipschitz continuous gradients ($f\in\scrS^{1,1}_{L,\mu}(\R^n)$). Note $\kappa = L/\mu \geq 1$ is the condition number of $f$.
+\end{definition}
+
+\noindent Property for $f\in\scrS_{\mu,L}^{1,1}(\R^n)$. For any $x,y\in\R^n$
+\begin{align}
+    \inner{\nabla f(x) - \nabla f(y)}{x-y}
+        &\geq \frac{\mu L}{\mu + L}\norm{x-y}^2 + \frac{1}{\mu+L} \norm{\nabla f(x) - \nabla f(y)}^2
+\end{align}
+
+
+\end{document}

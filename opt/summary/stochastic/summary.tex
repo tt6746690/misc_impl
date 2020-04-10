@@ -37,8 +37,6 @@ Derivations copied from \cite{nemirovskiRobustStochasticApproximation2009}, \cit
     \item bounded variance for stochastic subgradient, which translates to $\E_{\xi}\pb{G(x,\xi)} \leq M^2$ given $x\in\sX$.
     \item bounded $\sX$ where radius given by $D_{\sX} = \max_{x\in\sX}\norm{x-x^*}_2$.
 \end{enumerate}
-
-
 We outline implications of some assumptions
 \begin{enumerate}
     \item If $f$ is convex, then
@@ -157,7 +155,7 @@ We derive tighest bound by finding minimal value of $\alpha_k = \alpha$ of the b
     \E\pb{f(\tilde{x}^k) - f(x^*)}
         \leq \frac{D_{\sX}M}{\sqrt{k}}
         \quad\quad
-        \alpha_k = D_{\sX} / (M\sqrt{k})
+        \alpha_k = \frac{D_{\sX}}{M\sqrt{k}}
 \]
 Therefore, the choice of $\alpha_k = \sO(\frac{1}{\sqrt{k}})$ yields average iterate convergence rate of $\sO(\frac{1}{\epsilon^2})$
 
