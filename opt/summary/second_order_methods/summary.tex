@@ -1,0 +1,25 @@
+\documentclass[../summary.tex]{subfiles}
+
+\begin{document}
+ 
+\section{Second Order Methods}
+
+For unconstrained problem $\min_{x\in\R^n} f(x)$, the standard Newton scheme updates according to
+\begin{align} 
+    x^{k=1} 
+        = x^k - \pb{\nabla^2 f(x^k)}^{-1} \nabla f(x^k)
+\end{align} 
+where $f \in C_{L}^{2,2}(\R^n)$. The method has quadratic local convergence rate when initial iterate is close to the optimum of $f$ \cite{nesterovIntroductoryLecturesConvex2004}. Cubic regularized Newton's Method converges globally to second order stationary points ($\nabla f(x) = 0$ and $\nabla^2 f(x) \succeq 0$) assuming $f\in C_{L}^{2,2}$, i.e. twice continuously differentiable with lipschitz continuous hessian \cite{nesterovCubicRegularizationNewton2006, nesterovCubicRegularizationNewton2006a}. The idea is to iteratively minimize a global upper bound of the objective,
+\begin{align}
+    x^{k+1} =  \argmin_{y\in\R^n} \tilde{f}_{x^k}{y}
+\end{align}
+where $\tilde{f}(y)$ is a cubic regularized quadratic model of the objective,
+\begin{align} 
+    \tilde{f}_{x}(y)
+        = f(x) + \inner{\nabla f(x)}{y-x} + \frac{1}{2}\inner{\nabla^2 f(x)(y-x)}{y-x} + \frac{L}{6}\norm{y-x}^3
+\end{align} 
+This modified Newton step ensures that function values of iterates are monotonic non-increasing.
+
+
+
+\end{document} 

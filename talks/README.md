@@ -10,6 +10,8 @@
   - [Variational Bayes and Beyond: Bayesian inference for large [[ICML 2018 tutorial Tamara Brokerick]](https://www.youtube.com/watch?v=Moo4-KR5qNg)](#variational-bayes-and-beyond-bayesian-inference-for-large-icml-2018-tutorial-tamara-brokerick)
   - [Interpretable Comparison of Distributions and Models [[Neurips 2020 tutorial, Arthur Gretton, Dougal Sutherland, Wittawat Jitkrittum]](https://slideslive.com/38921490/interpretable-comparison-of-distributions-and-models)](#interpretable-comparison-of-distributions-and-models-neurips-2020-tutorial-arthur-gretton-dougal-sutherland-wittawat-jitkrittum)
   - [Causal Inference and Stable Learning[[ICML 2019 tutorial, Peng Cui, Tong Zhang]](https://slideslive.com/38917403/causal-inference-and-stable-learning)](#causal-inference-and-stable-learningicml-2019-tutorial-peng-cui-tong-zhang)
+  - [Post-selection Inference for Forward Stepwise Regression, Lasso and other procedures [[NIPS 2015 talk, Robert Tibshirani]](https://www.youtube.com/watch?v=RKQJEvc02hc)](#post-selection-inference-for-forward-stepwise-regression-lasso-and-other-procedures-nips-2015-talk-robert-tibshirani)
+  - [Knockoffs: using ML for finite-sample controlled variable selection in nonparametric models (video)[http://www.birs.ca/events/2018/5-day-workshops/18w5054/videos/watch/201801171110-Janson.html]](#knockoffs-using-ml-for-finite-sample-controlled-variable-selection-in-nonparametric-models-videohttpwwwbirscaevents20185-day-workshops18w5054videoswatch201801171110-jansonhtml)
 
 
 ## Unsupervised Deep Learning [[Neurips 2018 tutorial]](https://www.youtube.com/watch?v=rjZCjosEFpI)
@@ -413,3 +415,21 @@
     + need to address
         + binary -> continuous variable 
         + single -> group of variables
+
+
+
+## Post-selection Inference for Forward Stepwise Regression, Lasso and other procedures [[NIPS 2015 talk, Robert Tibshirani]](https://www.youtube.com/watch?v=RKQJEvc02hc)
+
++ post-selection inference
+    + collect data -> select model -> test hypothesis
+        + model selection dependent on data
+    + p-value, confidence interval used in classical inference applied to post selection inference are not valid anymore
++ polyhedral lemma
+    + LAR, Lasso with fixed lambda, forward stepwise selection emits polyhedral constraint set
+    + can compute p-value, CI exactly in closed form
+
+
+
+## Knockoffs: using ML for finite-sample controlled variable selection in nonparametric models (video)[http://www.birs.ca/events/2018/5-day-workshops/18w5054/videos/watch/201801171110-Janson.html]
+
++ pretty clear talk !
