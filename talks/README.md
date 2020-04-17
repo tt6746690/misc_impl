@@ -3,19 +3,19 @@
 # Talks
 
 - [Talks](#talks)
-  - [Unsupervised Deep Learning [[Neurips 2018 tutorial]](https://www.youtube.com/watch?v=rjZCjosEFpI)](#unsupervised-deep-learning-neurips-2018-tutorial)
-  - [deep generative modeling [[MIT 6.S191]](https://www.youtube.com/watch?v=JVb54xhEw6Y)](#deep-generative-modeling-mit-6s191)
-  - [Generative Adversarial Networks [[NIPS 2016 tutorial Ian Goodfellow]](https://www.youtube.com/watch?v=HGYYEUSm-0Q)](#generative-adversarial-networks-nips-2016-tutorial-ian-goodfellow)
-  - [From system 1 deep learning to system 2 deep learning [[Neurips 2019 Keynote Yoshia Bengio]](https://www.youtube.com/watch?v=FtUbMG3rlFs)](#from-system-1-deep-learning-to-system-2-deep-learning-neurips-2019-keynote-yoshia-bengio)
-  - [Variational Bayes and Beyond: Bayesian inference for large [[ICML 2018 tutorial Tamara Brokerick]](https://www.youtube.com/watch?v=Moo4-KR5qNg)](#variational-bayes-and-beyond-bayesian-inference-for-large-icml-2018-tutorial-tamara-brokerick)
-  - [Interpretable Comparison of Distributions and Models [[Neurips 2020 tutorial, Arthur Gretton, Dougal Sutherland, Wittawat Jitkrittum]](https://slideslive.com/38921490/interpretable-comparison-of-distributions-and-models)](#interpretable-comparison-of-distributions-and-models-neurips-2020-tutorial-arthur-gretton-dougal-sutherland-wittawat-jitkrittum)
-  - [Causal Inference and Stable Learning[[ICML 2019 tutorial, Peng Cui, Tong Zhang]](https://slideslive.com/38917403/causal-inference-and-stable-learning)](#causal-inference-and-stable-learningicml-2019-tutorial-peng-cui-tong-zhang)
-  - [Post-selection Inference for Forward Stepwise Regression, Lasso and other procedures [[NIPS 2015 talk, Robert Tibshirani]](https://www.youtube.com/watch?v=RKQJEvc02hc)](#post-selection-inference-for-forward-stepwise-regression-lasso-and-other-procedures-nips-2015-talk-robert-tibshirani)
-  - [Knockoffs: using ML for finite-sample controlled variable selection in nonparametric models (video)[http://www.birs.ca/events/2018/5-day-workshops/18w5054/videos/watch/201801171110-Janson.html]](#knockoffs-using-ml-for-finite-sample-controlled-variable-selection-in-nonparametric-models-videohttpwwwbirscaevents20185-day-workshops18w5054videoswatch201801171110-jansonhtml)
+  - [Unsupervised Deep Learning (Neurips 2018 tutorial)](#unsupervised-deep-learning-neurips-2018-tutorial)
+  - [deep generative modeling (MIT 6.S191)](#deep-generative-modeling-mit-6s191)
+  - [Generative Adversarial Networks (NIPS 2016 tutorial Ian Goodfellow)](#generative-adversarial-networks-nips-2016-tutorial-ian-goodfellow)
+  - [From system 1 deep learning to system 2 deep learning (Neurips 2019 Keynote Yoshia Bengio)](#from-system-1-deep-learning-to-system-2-deep-learning-neurips-2019-keynote-yoshia-bengio)
+  - [Variational Bayes and Beyond: Bayesian inference for large (ICML 2018 tutorial Tamara Brokerick)](#variational-bayes-and-beyond-bayesian-inference-for-large-icml-2018-tutorial-tamara-brokerick)
+  - [Interpretable Comparison of Distributions and Models (Neurips 2020 tutorial, Arthur Gretton, Dougal Sutherland, Wittawat Jitkrittum)](#interpretable-comparison-of-distributions-and-models-neurips-2020-tutorial-arthur-gretton-dougal-sutherland-wittawat-jitkrittum)
+  - [Causal Inference and Stable Learning (ICML 2019 tutorial, Peng Cui, Tong Zhang)](#causal-inference-and-stable-learning-icml-2019-tutorial-peng-cui-tong-zhang)
+  - [Post-selection Inference for Forward Stepwise Regression, Lasso and other procedures (NIPS 2015 talk, Robert Tibshirani)](#post-selection-inference-for-forward-stepwise-regression-lasso-and-other-procedures-nips-2015-talk-robert-tibshirani)
+  - [Knockoffs: using ML for finite-sample controlled variable selection in nonparametric models (video)](#knockoffs-using-ml-for-finite-sample-controlled-variable-selection-in-nonparametric-models-video)
   - [Hopfield Nets](#hopfield-nets)
 
 
-## Unsupervised Deep Learning [[Neurips 2018 tutorial]](https://www.youtube.com/watch?v=rjZCjosEFpI)
+## Unsupervised Deep Learning [(Neurips 2018 tutorial)](https://www.youtube.com/watch?v=rjZCjosEFpI)
 
 
 + idea
@@ -54,7 +54,7 @@
     + contrastive predictive coding
 
 
-## deep generative modeling [[MIT 6.S191]](https://www.youtube.com/watch?v=JVb54xhEw6Y)
+## deep generative modeling [(MIT 6.S191)](https://www.youtube.com/watch?v=JVb54xhEw6Y)
 
 
 + application 
@@ -77,7 +77,7 @@
 
 
 
-## Generative Adversarial Networks [[NIPS 2016 tutorial Ian Goodfellow]](https://www.youtube.com/watch?v=HGYYEUSm-0Q)
+## Generative Adversarial Networks [(NIPS 2016 tutorial Ian Goodfellow)](https://www.youtube.com/watch?v=HGYYEUSm-0Q)
 
 + why study generative models
     + simulate possible futures by generation
@@ -209,7 +209,7 @@
 
 
 
-## From system 1 deep learning to system 2 deep learning [[Neurips 2019 Keynote Yoshia Bengio]](https://www.youtube.com/watch?v=FtUbMG3rlFs)
+## From system 1 deep learning to system 2 deep learning [(Neurips 2019 Keynote Yoshia Bengio)](https://www.youtube.com/watch?v=FtUbMG3rlFs)
 
 
 + future 
@@ -217,7 +217,7 @@
     + reinforcement learning
 
 
-## Variational Bayes and Beyond: Bayesian inference for large [[ICML 2018 tutorial Tamara Brokerick]](https://www.youtube.com/watch?v=Moo4-KR5qNg)
+## Variational Bayes and Beyond: Bayesian inference for large [(ICML 2018 tutorial Tamara Brokerick)](https://www.youtube.com/watch?v=Moo4-KR5qNg)
 
 
 
@@ -278,7 +278,7 @@
 
 
 
-## Interpretable Comparison of Distributions and Models [[Neurips 2020 tutorial, Arthur Gretton, Dougal Sutherland, Wittawat Jitkrittum]](https://slideslive.com/38921490/interpretable-comparison-of-distributions-and-models)
+## Interpretable Comparison of Distributions and Models [(Neurips 2020 tutorial, Arthur Gretton, Dougal Sutherland, Wittawat Jitkrittum)](https://slideslive.com/38921490/interpretable-comparison-of-distributions-and-models)
 
 
 + divergence measures
@@ -293,7 +293,7 @@
 
 
 
-## Causal Inference and Stable Learning[[ICML 2019 tutorial, Peng Cui, Tong Zhang]](https://slideslive.com/38917403/causal-inference-and-stable-learning)
+## Causal Inference and Stable Learning [(ICML 2019 tutorial, Peng Cui, Tong Zhang)](https://slideslive.com/38917403/causal-inference-and-stable-learning)
 
 
 + motivation 
@@ -419,7 +419,7 @@
 
 
 
-## Post-selection Inference for Forward Stepwise Regression, Lasso and other procedures [[NIPS 2015 talk, Robert Tibshirani]](https://www.youtube.com/watch?v=RKQJEvc02hc)
+## Post-selection Inference for Forward Stepwise Regression, Lasso and other procedures [(NIPS 2015 talk, Robert Tibshirani)](https://www.youtube.com/watch?v=RKQJEvc02hc)
 
 + post-selection inference
     + collect data -> select model -> test hypothesis
@@ -431,11 +431,9 @@
 
 
 
-## Knockoffs: using ML for finite-sample controlled variable selection in nonparametric models (video)[http://www.birs.ca/events/2018/5-day-workshops/18w5054/videos/watch/201801171110-Janson.html]
+## Knockoffs: using ML for finite-sample controlled variable selection in nonparametric models [(video)](http://www.birs.ca/events/2018/5-day-workshops/18w5054/videos/watch/201801171110-Janson.html)
 
 + pretty clear talk !
-
-
 
 
 
@@ -467,4 +465,3 @@
         + an item can be accessed by just knowing part of its content
         + robust against hardware damage
         + analogy: reconstruct a dinosaur from a few bones
-    + 
