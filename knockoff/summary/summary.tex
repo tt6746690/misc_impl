@@ -22,25 +22,41 @@ A natural interpretation is that the other variables $\rx_{\setminus\sS}$ do not
     \caption{$\sS =\pc{\rx_1,\rx_3,\rx_4,\rx_7}$}
 \end{figure}
 We can pose the problem of finding the Markov blanket of $\ry$ as a multiple binary hypothesis test
-\begin{align*}
+\begin{align} 
     H_0^{(j)}:
         \ry \dperp \rx_j \mid \rx_{\setminus \pc{j}} 
     \quad\quad\text{for}\quad
         j = 1,\cdots,p
-\end{align*}
-Let $\sH_0 = \pc{\rx_j \mid H_0^{(j)} \text{ holds}}$ be the set of truly irrelevant covariates. In essence we are interested in maximizing \textit{power} while controlling the number of false positives. A global threshold for p-values of each tests is overly conservative for large $p$, an alternative approach is to control \textit{false discovery rate} (FDR) \cite{benjaminiControllingFalseDiscovery1995}.
-\begin{align*}
+    \label{eq:test_markov_blanket}
+\end{align}
+Let $\sH_0 = \pc{\rx_j \mid H_0^{(j)} \text{ holds}}$ be the set of truly irrelevant covariates. In general, we are interested in maximizing true positives while controlling the number of false positives. Sometimes, a global threshold for p-values of each tests is overly conservative for large $p$, an alternative approach is to maximize \textit{power} while control \textit{false discovery rate} (FDR) \cite{benjaminiControllingFalseDiscovery1995}.
+\begin{align}
     \text{maximize}_{\hat{\sS}\subset [p]}\quad
-        &\E\pb{\frac{ \hat{\sS} \setminus \sH_0 }{ |\hat{\sS}| }} 
-            \tag{maximize power} \\
+        &\E\pb{\frac{ |\hat{\sS} \setminus \sH_0| }{ |\hat{\sS}| }} \nonumber \\
     \text{subject to}\quad
-        &\E\pb{ \frac{\hat{\sS} \cap \sH_0}{|\hat{\sS}|} } \leq q
-            \tag{control FDR}
-\end{align*}
+        &\E\pb{ \frac{ |\hat{\sS} \cap \sH_0| }{ \max\pc{|\hat{\sS}|,1} } } \leq q
+    \label{eq:opt_fdr_control}
+\end{align}
+If $p_{\ry|\rx}(\cdot|x)$ assumes a parametric generalized linear model form, 
+\[
+    \E\pb{\ry|\rx} = g^{-1}(\eta)
+    \quad\quad
+    \eta = \beta_1 x_1 + \cdots + \beta_p x_p    
+\]
+Then by \cite{candesPanningGoldModelX2017}, testing for conditional independence (\ref{eq:test_markov_blanket}) is equivalent to the following test,
+\[
+    H_0^{(j)}:
+        \beta_j = 0
+    \quad\quad\text{for}\quad
+        j = 1,\cdots,p
+    \label{test_glm}
+\]
 
 \section{Model-X Knockoff}
 
- 
+Traditionally, $p_{\ry|\rx}$ is chosen to be in some parametric family, e.g. GLM, and variable selection with FDR control is performed by computing \& plugging p-values into the BHq procedure \cite{benjaminiControllingFalseDiscovery1995}. Recently, \cite{barberControllingFalseDiscovery2015,candesPanningGoldModelX2017} designed a \textit{knockoff} framework for performing variable selection on high-dimensional nonparametric models with finite sample guarantees over the constraints in (\ref{eq:opt_fdr_control}). The framework requires significant knowledge of $p_{\rx}$ and assumes nothing about the $p_{\ry|\rx}$. This might give way to performing reproducible and robust variable selection where the $p_{\ry|\rx}$ is parameterized by highly complex mappings, e.g. neural networks. In addition, modeling $p_{\rx}$ might be a suitable task for problems where we have large amount of unsupervised data, or we know a priori some structure about $p_{\rx}$, which are often the case for large scale machine learning applications.
+
+
 
 
 
