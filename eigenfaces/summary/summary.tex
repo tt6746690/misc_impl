@@ -1,21 +1,6 @@
 \documentclass[11pt]{article}
-\input{\string~/.macros}
-\usepackage[a4paper, total={6in, 9in}]{geometry}
-\usepackage{graphicx}
-\graphicspath{{./assets}}
-\usepackage{hyperref}
-\hypersetup{colorlinks=true, linktoc=all, linkcolor=blue, citecolor=red}
-\usepackage[backend=bibtex,sorting=none]{biblatex}
+\input{../../preamble_local.tex}
 \addbibresource{references.bib}
-
-\newcommand\ry{\ensuremath{\mathsf{y}}}
-\newcommand\rx{\ensuremath{\mathsf{x}}}
-\newcommand\rb{\ensuremath{\mathsf{b}}}
-
-\renewcommand\bmu{\ensuremath{\boldsymbol{\mu}}}
-\newcommand\bSigma{\ensuremath{\boldsymbol{\Sigma}}}
-
-
 
 \begin{document}
 
@@ -24,7 +9,7 @@
 
 \subsection{Motivation} 
 
-PCA wants to identify a \textit{meaningful} basis to re-express the dataset \cite{shlensTutorialPrincipalComponent2014}. PCA assumes that a \textit{meaningful} data representation is one which
+PCA wants to identify a \textit{meaningful} basis to re-express the dataset \cite{shlensTutorialPrincipalComponent2014}. PCA assumes that a \textit{meaningful} data representation is one which 
 \begin{enumerate}
     \item the features with large variance have meaningful structure and should be preserved
     \item the features with small variance are noise and should be discarded

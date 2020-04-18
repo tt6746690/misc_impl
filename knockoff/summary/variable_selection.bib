@@ -1,0 +1,290 @@
+
+@incollection{luDeepPINKReproducibleFeature2018,
+	title = {{DeepPINK}: reproducible feature selection in deep neural networks},
+	url = {http://papers.nips.cc/paper/8085-deeppink-reproducible-feature-selection-in-deep-neural-networks.pdf},
+	shorttitle = {{DeepPINK}},
+	pages = {8676--8686},
+	booktitle = {Advances in Neural Information Processing Systems 31},
+	publisher = {Curran Associates, Inc.},
+	author = {Lu, Yang and Fan, Yingying and Lv, Jinchi and Stafford Noble, William},
+	editor = {Bengio, S. and Wallach, H. and Larochelle, H. and Grauman, K. and Cesa-Bianchi, N. and Garnett, R.},
+	urldate = {2020-02-03},
+	date = {2018},
+	file = {Lu et al_2018_DeepPINK - reproducible feature selection in deep neural networks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Lu et al_2018_DeepPINK - reproducible feature selection in deep neural networks.pdf:application/pdf}
+}
+
+@article{tanseyHoldoutRandomizationTest2019,
+	title = {The Holdout Randomization Test: Principled and Easy Black Box Feature Selection},
+	url = {http://arxiv.org/abs/1811.00645},
+	shorttitle = {The Holdout Randomization Test},
+	abstract = {We consider the problem of feature selection using black box predictive models. For example, high-throughput devices in science are routinely used to gather thousands of features for each sample in an experiment. The scientist must then sift through the many candidate features to find explanatory signals in the data, such as which genes are associated with sensitivity to a prospective therapy. Often, predictive models are used for this task: the model is fit, error on held out data is measured, and strong performing models are assumed to have discovered some fundamental properties of the system. A model-specific heuristic is then used to inspect the model parameters and rank important features, with top features reported as "discoveries." However, such heuristics provide no statistical guarantees and can produce unreliable results. We propose the holdout randomization test ({HRT}) as a principled approach to feature selection using black box predictive models. The {HRT} is model agnostic and produces a valid p-value for each feature, enabling control over the false discovery rate (or Type I error) for any predictive model. Further, the {HRT} is computationally efficient and, in simulations, has greater power than a competing knockoffs-based approach. Code is available at https://github.com/tansey/hrt.},
+	journaltitle = {{arXiv}:1811.00645 [stat]},
+	author = {Tansey, Wesley and Veitch, Victor and Zhang, Haoran and Rabadan, Raul and Blei, David M.},
+	urldate = {2020-02-03},
+	date = {2019-05-29},
+	eprinttype = {arxiv},
+	eprint = {1811.00645},
+	file = {Tansey et al_2019_The Holdout Randomization Test - Principled and Easy Black Box Feature Selection.pdf:/Users/wpq/Dropbox (MIT)/zotero/Tansey et al_2019_The Holdout Randomization Test - Principled and Easy Black Box Feature Selection.pdf:application/pdf}
+}
+
+@incollection{mrouehSobolevIndependenceCriterion2019,
+	title = {Sobolev Independence Criterion},
+	url = {http://papers.nips.cc/paper/9147-sobolev-independence-criterion.pdf},
+	pages = {9505--9515},
+	booktitle = {Advances in Neural Information Processing Systems 32},
+	publisher = {Curran Associates, Inc.},
+	author = {Mroueh, Youssef and Sercu, Tom and Rigotti, Mattia and Padhi, Inkit and Nogueira dos Santos, Cicero},
+	editor = {Wallach, H. and Larochelle, H. and Beygelzimer, A. and Alché-Buc, F. d\{{\textbackslash}textbackslash\}textquotesingle and Fox, E. and Garnett, R.},
+	urldate = {2020-02-03},
+	date = {2019},
+	file = {Mroueh et al_2019_Sobolev Independence Criterion.pdf:/Users/wpq/Dropbox (MIT)/zotero/Mroueh et al_2019_Sobolev Independence Criterion.pdf:application/pdf}
+}
+
+@article{zhuDeepgKnockNonlinearGroupfeature2019,
+	title = {Deep-{gKnock}: nonlinear group-feature selection with deep neural network},
+	url = {http://arxiv.org/abs/1905.10013},
+	shorttitle = {Deep-{gKnock}},
+	abstract = {Feature selection is central to contemporary high-dimensional data analysis. Grouping structure among features arises naturally in various scientific problems. Many methods have been proposed to incorporate the grouping structure information into feature selection. However, these methods are normally restricted to a linear regression setting. To relax the linear constraint, we combine the deep neural networks ({DNNs}) with the recent Knockoffs technique, which has been successful in an individual feature selection context. We propose Deep-{gKnock} (Deep group-feature selection using Knockoffs) as a methodology for model interpretation and dimension reduction. Deep-{gKnock} performs model-free group-feature selection by controlling group-wise False Discovery Rate ({gFDR}). Our method improves the interpretability and reproducibility of {DNNs}. Experimental results on both synthetic and real data demonstrate that our method achieves superior power and accurate {gFDR} control compared with state-of-the-art methods.},
+	journaltitle = {{arXiv}:1905.10013 [cs, stat]},
+	author = {Zhu, Guangyu and Zhao, Tingting},
+	urldate = {2020-02-03},
+	date = {2019-05-27},
+	eprinttype = {arxiv},
+	eprint = {1905.10013},
+	file = {Zhu_Zhao_2019_Deep-gKnock - nonlinear group-feature selection with deep neural network.pdf:/Users/wpq/Dropbox (MIT)/zotero/Zhu_Zhao_2019_Deep-gKnock - nonlinear group-feature selection with deep neural network.pdf:application/pdf}
+}
+
+@article{candesPanningGoldModelX2017,
+	title = {Panning for Gold: Model-X Knockoffs for High-dimensional Controlled Variable Selection},
+	url = {http://arxiv.org/abs/1610.02351},
+	shorttitle = {Panning for Gold},
+	abstract = {Many contemporary large-scale applications involve building interpretable models linking a large set of potential covariates to a response in a nonlinear fashion, such as when the response is binary. Although this modeling problem has been extensively studied, it remains unclear how to effectively control the fraction of false discoveries even in high-dimensional logistic regression, not to mention general high-dimensional nonlinear models. To address such a practical problem, we propose a new framework of \$model\$-\$X\$ knockoffs, which reads from a different perspective the knockoff procedure (Barber and Cand{\textbackslash}`es, 2015) originally designed for controlling the false discovery rate in linear models. Whereas the knockoffs procedure is constrained to homoscedastic linear models with \$n{\textbackslash}ge p\$, the key innovation here is that model-X knockoffs provide valid inference from finite samples in settings in which the conditional distribution of the response is arbitrary and completely unknown. Furthermore, this holds no matter the number of covariates. Correct inference in such a broad setting is achieved by constructing knockoff variables probabilistically instead of geometrically. To do this, our approach requires the covariates be random (independent and identically distributed rows) with a distribution that is known, although we provide preliminary experimental evidence that our procedure is robust to unknown/estimated distributions. To our knowledge, no other procedure solves the \$controlled\$ variable selection problem in such generality, but in the restricted settings where competitors exist, we demonstrate the superior power of knockoffs through simulations. Finally, we apply our procedure to data from a case-control study of Crohn's disease in the United Kingdom, making twice as many discoveries as the original analysis of the same data.},
+	journaltitle = {{arXiv}:1610.02351 [math, stat]},
+	author = {Candes, Emmanuel and Fan, Yingying and Janson, Lucas and Lv, Jinchi},
+	urldate = {2020-02-03},
+	date = {2017-12-12},
+	eprinttype = {arxiv},
+	eprint = {1610.02351},
+	file = {Candes et al_2017_Panning for Gold - Model-X Knockoffs for High-dimensional Controlled Variable Selection.pdf:/Users/wpq/Dropbox (MIT)/zotero/Candes et al_2017_Panning for Gold - Model-X Knockoffs for High-dimensional Controlled Variable Selection.pdf:application/pdf}
+}
+
+@article{tanseyBlackBoxFDR2018,
+	title = {Black Box {FDR}},
+	url = {http://arxiv.org/abs/1806.03143},
+	abstract = {Analyzing large-scale, multi-experiment studies requires scientists to test each experimental outcome for statistical signiﬁcance and then assess the results as a whole. We present Black Box {FDR} ({BB}-{FDR}), an empirical-Bayes method for analyzing multi-experiment studies when many covariates are gathered per experiment. {BB}-{FDR} learns a series of black box predictive models to boost power and control the false discovery rate ({FDR}) at two stages of study analysis. In Stage 1, it uses a deep neural network prior to report which experiments yielded signiﬁcant outcomes. In Stage 2, a separate black box model of each covariate is used to select features that have signiﬁcant predictive power across all experiments. In benchmarks, {BB}-{FDR} outperforms competing state-of-the-art methods in both stages of analysis. We apply {BB}-{FDR} to two real studies on cancer drug efﬁcacy. For both studies, {BB}-{FDR} increases the proportion of signiﬁcant outcomes discovered and selects variables that reveal key genomic drivers of drug sensitivity and resistance in cancer.},
+	journaltitle = {{arXiv}:1806.03143 [cs, stat]},
+	author = {Tansey, Wesley and Wang, Yixin and Blei, David M. and Rabadan, Raul},
+	urldate = {2020-02-17},
+	date = {2018-06-08},
+	langid = {english},
+	eprinttype = {arxiv},
+	eprint = {1806.03143},
+	file = {Tansey et al_2018_Black Box FDR.pdf:/Users/wpq/Dropbox (MIT)/zotero/Tansey et al_2018_Black Box FDR.pdf:application/pdf}
+}
+
+@article{romanoDeepKnockoffs2018,
+	title = {Deep Knockoffs},
+	url = {http://arxiv.org/abs/1811.06687},
+	abstract = {This paper introduces a machine for sampling approximate model-X knockoffs for arbitrary and unspecified data distributions using deep generative models. The main idea is to iteratively refine a knockoff sampling mechanism until a criterion measuring the validity of the produced knockoffs is optimized; this criterion is inspired by the popular maximum mean discrepancy in machine learning and can be thought of as measuring the distance to pairwise exchangeability between original and knockoff features. By building upon the existing model-X framework, we thus obtain a flexible and model-free statistical tool to perform controlled variable selection. Extensive numerical experiments and quantitative tests confirm the generality, effectiveness, and power of our deep knockoff machines. Finally, we apply this new method to a real study of mutations linked to changes in drug resistance in the human immunodeficiency virus.},
+	journaltitle = {{arXiv}:1811.06687 [math, stat]},
+	author = {Romano, Yaniv and Sesia, Matteo and Candès, Emmanuel J.},
+	urldate = {2020-02-26},
+	date = {2018-11-16},
+	eprinttype = {arxiv},
+	eprint = {1811.06687},
+	file = {Romano et al_2018_Deep Knockoffs.pdf:/Users/wpq/Dropbox (MIT)/zotero/Romano et al_2018_Deep Knockoffs.pdf:application/pdf}
+}
+
+@article{barberRobustInferenceKnockoffs2019,
+	title = {Robust inference with knockoffs},
+	url = {http://arxiv.org/abs/1801.03896},
+	abstract = {We consider the variable selection problem, which seeks to identify important variables influencing a response \$Y\$ out of many candidate features \$X\_1, {\textbackslash}ldots, X\_p\$. We wish to do so while offering finite-sample guarantees about the fraction of false positives - selected variables \$X\_j\$ that in fact have no effect on \$Y\$ after the other features are known. When the number of features \$p\$ is large (perhaps even larger than the sample size \$n\$), and we have no prior knowledge regarding the type of dependence between \$Y\$ and \$X\$, the model-X knockoffs framework nonetheless allows us to select a model with a guaranteed bound on the false discovery rate, as long as the distribution of the feature vector \$X=(X\_1,{\textbackslash}dots,X\_p)\$ is exactly known. This model selection procedure operates by constructing "knockoff copies'" of each of the \$p\$ features, which are then used as a control group to ensure that the model selection algorithm is not choosing too many irrelevant features. In this work, we study the practical setting where the distribution of \$X\$ could only be estimated, rather than known exactly, and the knockoff copies of the \$X\_j\$'s are therefore constructed somewhat incorrectly. Our results, which are free of any modeling assumption whatsoever, show that the resulting model selection procedure incurs an inflation of the false discovery rate that is proportional to our errors in estimating the distribution of each feature \$X\_j\$ conditional on the remaining features \${\textbackslash}\{X\_k:k{\textbackslash}neq j{\textbackslash}\}\$. The model-X knockoff framework is therefore robust to errors in the underlying assumptions on the distribution of \$X\$, making it an effective method for many practical applications, such as genome-wide association studies, where the underlying distribution on the features \$X\_1,{\textbackslash}dots,X\_p\$ is estimated accurately but not known exactly.},
+	journaltitle = {{arXiv}:1801.03896 [stat]},
+	author = {Barber, Rina Foygel and Candès, Emmanuel J. and Samworth, Richard J.},
+	urldate = {2020-02-27},
+	date = {2019-02-11},
+	eprinttype = {arxiv},
+	eprint = {1801.03896},
+	file = {Barber et al_2019_Robust inference with knockoffs.pdf:/Users/wpq/Dropbox (MIT)/zotero/Barber et al_2019_Robust inference with knockoffs.pdf:application/pdf}
+}
+
+@article{fanSureIndependenceScreening2007,
+	title = {Sure Independence Screening for Ultra-High Dimensional Feature Space},
+	volume = {B 70},
+	abstract = {Variable selection plays an important role in high dimensional statistical modeling which nowadays appears in many areas and is key to various scientific discoveries. For problems of large scale or dimensionality \$p\$, estimation accuracy and computational cost are two top concerns. In a recent paper, Candes and Tao (2007) propose the Dantzig selector using \$L\_1\$ regularization and show that it achieves the ideal risk up to a logarithmic factor \${\textbackslash}log p\$. Their innovative procedure and remarkable result are challenged when the dimensionality is ultra high as the factor \${\textbackslash}log p\$ can be large and their uniform uncertainty principle can fail. Motivated by these concerns, we introduce the concept of sure screening and propose a sure screening method based on a correlation learning, called the Sure Independence Screening ({SIS}), to reduce dimensionality from high to a moderate scale that is below sample size. In a fairly general asymptotic framework, the correlation learning is shown to have the sure screening property for even exponentially growing dimensionality. As a methodological extension, an iterative {SIS} ({ISIS}) is also proposed to enhance its finite sample performance. With dimension reduced accurately from high to below sample size, variable selection can be improved on both speed and accuracy, and can then be accomplished by a well-developed method such as the {SCAD}, Dantzig selector, Lasso, or adaptive Lasso. The connections of these penalized least-squares methods are also elucidated.},
+	journaltitle = {J Roy Stat Soc},
+	shortjournal = {J Roy Stat Soc},
+	author = {Fan, Jianqing and Lv, Jinchi},
+	date = {2007-01-29},
+	file = {Fan_Lv_2007_Sure Independence Screening for Ultra-High Dimensional Feature Space.pdf:/Users/wpq/Dropbox (MIT)/zotero/Fan_Lv_2007_Sure Independence Screening for Ultra-High Dimensional Feature Space.pdf:application/pdf}
+}
+
+@article{barberControllingFalseDiscovery2015,
+	title = {Controlling the false discovery rate via knockoffs},
+	volume = {43},
+	issn = {0090-5364},
+	url = {http://arxiv.org/abs/1404.5609},
+	doi = {10.1214/15-AOS1337},
+	abstract = {In many fields of science, we observe a response variable together with a large number of potential explanatory variables, and would like to be able to discover which variables are truly associated with the response. At the same time, we need to know that the false discovery rate ({FDR}) - the expected fraction of false discoveries among all discoveries - is not too high, in order to assure the scientist that most of the discoveries are indeed true and replicable. This paper introduces the knockoff filter, a new variable selection procedure controlling the {FDR} in the statistical linear model whenever there are at least as many observations as variables. This method achieves exact {FDR} control in finite sample settings no matter the design or covariates, the number of variables in the model, or the amplitudes of the unknown regression coefficients, and does not require any knowledge of the noise level. As the name suggests, the method operates by manufacturing knockoff variables that are cheap - their construction does not require any new data - and are designed to mimic the correlation structure found within the existing variables, in a way that allows for accurate {FDR} control, beyond what is possible with permutation-based methods. The method of knockoffs is very general and flexible, and can work with a broad class of test statistics. We test the method in combination with statistics from the Lasso for sparse regression, and obtain empirical results showing that the resulting method has far more power than existing selection rules when the proportion of null variables is high.},
+	pages = {2055--2085},
+	number = {5},
+	journaltitle = {The Annals of Statistics},
+	shortjournal = {Ann. Statist.},
+	author = {Barber, Rina Foygel and Candès, Emmanuel J.},
+	urldate = {2020-04-14},
+	date = {2015-10},
+	eprinttype = {arxiv},
+	eprint = {1404.5609},
+	file = {Barber_Candes_2015_Controlling the false discovery rate via knockoffs.pdf:/Users/wpq/Dropbox (MIT)/zotero/Barber_Candes_2015_Controlling the false discovery rate via knockoffs.pdf:application/pdf}
+}
+
+@article{leeExactPostselectionInference2016,
+	title = {Exact post-selection inference, with application to the lasso},
+	volume = {44},
+	issn = {0090-5364},
+	url = {http://arxiv.org/abs/1311.6238},
+	doi = {10.1214/15-AOS1371},
+	abstract = {We develop a general approach to valid inference after model selection. At the core of our framework is a result that characterizes the distribution of a post-selection estimator conditioned on the selection event. We specialize the approach to model selection by the lasso to form valid confidence intervals for the selected coefficients and test whether all relevant variables have been included in the model.},
+	pages = {907--927},
+	number = {3},
+	journaltitle = {The Annals of Statistics},
+	shortjournal = {Ann. Statist.},
+	author = {Lee, Jason D. and Sun, Dennis L. and Sun, Yuekai and Taylor, Jonathan E.},
+	urldate = {2020-04-16},
+	date = {2016-06},
+	eprinttype = {arxiv},
+	eprint = {1311.6238},
+	file = {Lee et al_2016_Exact post-selection inference, with application to the lasso.pdf:/Users/wpq/Dropbox (MIT)/zotero/Lee et al_2016_Exact post-selection inference, with application to the lasso.pdf:application/pdf}
+}
+
+@article{fithianOptimalInferenceModel2017,
+	title = {Optimal Inference After Model Selection},
+	url = {http://arxiv.org/abs/1410.2597},
+	abstract = {To perform inference after model selection, we propose controlling the selective type I error; i.e., the error rate of a test given that it was performed. By doing so, we recover long-run frequency properties among selected hypotheses analogous to those that apply in the classical (non-adaptive) context. Our proposal is closely related to data splitting and has a similar intuitive justification, but is more powerful. Exploiting the classical theory of Lehmann and Scheff{\textbackslash}'e (1955), we derive most powerful unbiased selective tests and confidence intervals for inference in exponential family models after arbitrary selection procedures. For linear regression, we derive new selective z-tests that generalize recent proposals for inference after model selection and improve on their power, and new selective t-tests that do not require knowledge of the error variance.},
+	journaltitle = {{arXiv}:1410.2597 [math, stat]},
+	author = {Fithian, William and Sun, Dennis and Taylor, Jonathan},
+	urldate = {2020-04-16},
+	date = {2017-04-18},
+	eprinttype = {arxiv},
+	eprint = {1410.2597},
+	file = {Fithian et al_2017_Optimal Inference After Model Selection.pdf:/Users/wpq/Dropbox (MIT)/zotero/Fithian et al_2017_Optimal Inference After Model Selection.pdf:application/pdf}
+}
+
+@inproceedings{slimKernelPSIPostSelectionInference2019,
+	title = {{kernelPSI}: a Post-Selection Inference Framework for Nonlinear Variable Selection},
+	url = {http://proceedings.mlr.press/v97/slim19a.html},
+	shorttitle = {{kernelPSI}},
+	abstract = {Model selection is an essential task for many applications in scientific discovery. The most common approaches rely on univariate linear measures of association between each feature and the outcome...},
+	eventtitle = {International Conference on Machine Learning},
+	pages = {5857--5865},
+	booktitle = {International Conference on Machine Learning},
+	author = {Slim, Lotfi and Chatelain, Clément and Azencott, Chloe-Agathe and Vert, Jean-Philippe},
+	urldate = {2020-04-16},
+	date = {2019-05-24},
+	langid = {english},
+	note = {{ISSN}: 1938-7228
+Section: Machine Learning},
+	file = {Slim et al_2019_kernelPSI - a Post-Selection Inference Framework for Nonlinear Variable Selection.pdf:/Users/wpq/Dropbox (MIT)/zotero/Slim et al_2019_kernelPSI - a Post-Selection Inference Framework for Nonlinear Variable Selection.pdf:application/pdf}
+}
+
+@article{benjaminiControllingFalseDiscovery1995a,
+	title = {Controlling The False Discovery Rate - A Practical And Powerful Approach To Multiple Testing},
+	volume = {57},
+	doi = {10.2307/2346101},
+	abstract = {The common approach to the multiplicity problem calls for controlling the familywise error rate ({FWER}). This approach, though, has faults, and we point out a few. A different approach to problems of multiple significance testing is presented. It calls for controlling the expected proportion of falsely rejected hypotheses – the false discovery rate. This error rate is equivalent to the {FWER} when all hypotheses are true but is smaller otherwise. Therefore, in problems where the control of the false discovery rate rather than that of the {FWER} is desired, there is potential for a gain in power. A simple sequential Bonferroni-type procedure is proved to control the false discovery rate for independent test statistics, and a simulation study shows that the gain in power is substantial. The use of the new procedure and the appropriateness of the criterion are illustrated with examples.},
+	pages = {289--300},
+	journaltitle = {J. Royal Statist. Soc., Series B},
+	shortjournal = {J. Royal Statist. Soc., Series B},
+	author = {Benjamini, Yoav and Hochberg, Yosef},
+	date = {1995-11-30},
+	file = {Benjamini_Hochberg_1995_Controlling The False Discovery Rate - A Practical And Powerful Approach To Multiple Testing.pdf:/Users/wpq/Dropbox (MIT)/zotero/Benjamini_Hochberg_1995_Controlling The False Discovery Rate - A Practical And Powerful Approach To Multiple Testing.pdf:application/pdf}
+}
+
+@article{benjaminiSimpleForwardSelection2009,
+	title = {A simple forward selection procedure based on false discovery rate control},
+	volume = {3},
+	issn = {1932-6157},
+	url = {http://arxiv.org/abs/0905.2819},
+	doi = {10.1214/08-AOAS194},
+	abstract = {We propose the use of a new false discovery rate ({FDR}) controlling procedure as a model selection penalized method, and compare its performance to that of other penalized methods over a wide range of realistic settings: nonorthogonal design matrices, moderate and large pool of explanatory variables, and both sparse and nonsparse models, in the sense that they may include a small and large fraction of the potential variables (and even all). The comparison is done by a comprehensive simulation study, using a quantitative framework for performance comparisons in the form of empirical minimaxity relative to a "random oracle": the oracle model selection performance on data dependent forward selected family of potential models. We show that {FDR} based procedures have good performance, and in particular the newly proposed method, emerges as having empirical minimax performance. Interestingly, using {FDR} level of 0.05 is a global best.},
+	pages = {179--198},
+	number = {1},
+	journaltitle = {The Annals of Applied Statistics},
+	shortjournal = {Ann. Appl. Stat.},
+	author = {Benjamini, Yoav and Gavrilov, Yulia},
+	urldate = {2020-04-16},
+	date = {2009-03},
+	eprinttype = {arxiv},
+	eprint = {0905.2819},
+	file = {Benjamini_Gavrilov_2009_A simple forward selection procedure based on false discovery rate control.pdf:/Users/wpq/Dropbox (MIT)/zotero/Benjamini_Gavrilov_2009_A simple forward selection procedure based on false discovery rate control.pdf:application/pdf}
+}
+
+@article{gimenezDiscoveringConditionallySalient2019,
+	title = {Discovering Conditionally Salient Features with Statistical Guarantees},
+	url = {http://arxiv.org/abs/1905.12177},
+	abstract = {The goal of feature selection is to identify important features that are relevant to explain an outcome variable. Most of the work in this domain has focused on identifying globally relevant features, which are features that are related to the outcome using evidence across the entire dataset. We study a more fine-grained statistical problem: conditional feature selection, where a feature may be relevant depending on the values of the other features. For example in genetic association studies, variant \$A\$ could be associated with the phenotype in the entire dataset, but conditioned on variant \$B\$ being present it might be independent of the phenotype. In this sense, variant \$A\$ is globally relevant, but conditioned on \$B\$ it is no longer locally relevant in that region of the feature space. We present a generalization of the knockoff procedure that performs conditional feature selection while controlling a generalization of the false discovery rate ({FDR}) to the conditional setting. By exploiting the feature/response model-free framework of the knockoffs, the quality of the statistical {FDR} guarantee is not degraded even when we perform conditional feature selections. We implement this method and present an algorithm that automatically partitions the feature space such that it enhances the differences between selected sets in different regions, and validate the statistical theoretical results with experiments.},
+	journaltitle = {{arXiv}:1905.12177 [cs, stat]},
+	author = {Gimenez, Jaime Roquero and Zou, James},
+	urldate = {2020-04-16},
+	date = {2019-05-28},
+	eprinttype = {arxiv},
+	eprint = {1905.12177},
+	file = {Gimenez_Zou_2019_Discovering Conditionally Salient Features with Statistical Guarantees.pdf:/Users/wpq/Dropbox (MIT)/zotero/Gimenez_Zou_2019_Discovering Conditionally Salient Features with Statistical Guarantees.pdf:application/pdf}
+}
+
+@article{gimenezKnockoffsMassNew2019,
+	title = {Knockoffs for the mass: new feature importance statistics with false discovery guarantees},
+	url = {http://arxiv.org/abs/1807.06214},
+	shorttitle = {Knockoffs for the mass},
+	abstract = {An important problem in machine learning and statistics is to identify features that causally affect the outcome. This is often impossible to do from purely observational data, and a natural relaxation is to identify features that are correlated with the outcome even conditioned on all other observed features. For example, we want to identify that smoking really is correlated with cancer conditioned on demographics. The knockoff procedure is a recent breakthrough in statistics that, in theory, can identify truly correlated features while guaranteeing that the false discovery is limited. The idea is to create synthetic data -- knockoffs -- that captures correlations amongst the features. However there are substantial computational and practical challenges to generating and using knockoffs. This paper makes several key advances that enable knockoff application to be more efficient and powerful. We develop an efficient algorithm to generate valid knockoffs from Bayesian Networks. Then we systematically evaluate knockoff test statistics and develop new statistics with improved power. The paper combines new mathematical guarantees with systematic experiments on real and synthetic data.},
+	journaltitle = {{arXiv}:1807.06214 [cs, stat]},
+	author = {Gimenez, Jaime Roquero and Ghorbani, Amirata and Zou, James},
+	urldate = {2020-04-17},
+	date = {2019-05-28},
+	eprinttype = {arxiv},
+	eprint = {1807.06214},
+	file = {Gimenez et al_2019_Knockoffs for the mass - new feature importance statistics with false discovery guarantees.pdf:/Users/wpq/Dropbox (MIT)/zotero/Gimenez et al_2019_Knockoffs for the mass - new feature importance statistics with false discovery guarantees.pdf:application/pdf}
+}
+
+@inproceedings{balinConcreteAutoencodersDifferentiable2019,
+	title = {Concrete Autoencoders: Differentiable Feature Selection and Reconstruction},
+	url = {http://proceedings.mlr.press/v97/balin19a.html},
+	shorttitle = {Concrete Autoencoders},
+	abstract = {We introduce the concrete autoencoder, an end-to-end differentiable method for global feature selection, which efficiently identifies a subset of the most informative features and simultaneously le...},
+	eventtitle = {International Conference on Machine Learning},
+	pages = {444--453},
+	booktitle = {International Conference on Machine Learning},
+	author = {Balın, Muhammed Fatih and Abid, Abubakar and Zou, James},
+	urldate = {2020-04-17},
+	date = {2019-05-24},
+	langid = {english},
+	note = {{ISSN}: 1938-7228
+Section: Machine Learning},
+	file = {Balin et al_2019_Concrete Autoencoders - Differentiable Feature Selection and Reconstruction.pdf:/Users/wpq/Dropbox (MIT)/zotero/Balin et al_2019_Concrete Autoencoders - Differentiable Feature Selection and Reconstruction.pdf:application/pdf}
+}
+
+@article{liuPowerAnalysisKnockoff2020,
+	title = {Power analysis of knockoff filters for correlated designs},
+	url = {http://arxiv.org/abs/1910.12428},
+	abstract = {The knockoff filter introduced by Barber and Cand{\textbackslash}`es 2016 is an elegant framework for controlling the false discovery rate in variable selection. While empirical results indicate that this methodology is not too conservative, there is no conclusive theoretical result on its power. When the predictors are i.i.d. Gaussian, it is known that as the signal to noise ratio tend to infinity, the knockoff filter is consistent in the sense that one can make {FDR} go to 0 and power go to 1 simultaneously. In this work we study the case where the predictors have a general covariance matrix \${\textbackslash}Sigma\$. We introduce a simple functional called effective signal deficiency ({ESD}) of the covariance matrix \${\textbackslash}Sigma\$ that predicts consistency of various variable selection methods. In particular, {ESD} reveals that the structure of the precision matrix \${\textbackslash}Sigma{\textasciicircum}\{-1\}\$ plays a central role in consistency and therefore, so does the conditional independence structure of the predictors. To leverage this connection, we introduce Conditional Independence knockoff, a simple procedure that is able to compete with the more sophisticated knockoff filters and that is defined when the predictors obey a Gaussian tree graphical models (or when the graph is sufficiently sparse). Our theoretical results are supported by numerical evidence on synthetic data.},
+	journaltitle = {{arXiv}:1910.12428 [cs, math, stat]},
+	author = {Liu, Jingbo and Rigollet, Philippe},
+	urldate = {2020-04-17},
+	date = {2020-01-09},
+	eprinttype = {arxiv},
+	eprint = {1910.12428},
+	file = {Liu_Rigollet_2020_Power analysis of knockoff filters for correlated designs.pdf:/Users/wpq/Dropbox (MIT)/zotero/Liu_Rigollet_2020_Power analysis of knockoff filters for correlated designs.pdf:application/pdf}
+}
+
+@article{gsellSequentialSelectionProcedures2015,
+	title = {Sequential Selection Procedures and False Discovery Rate Control},
+	url = {http://arxiv.org/abs/1309.5352},
+	abstract = {We consider a multiple hypothesis testing setting where the hypotheses are ordered and one is only permitted to reject an initial contiguous block, H\_1,{\textbackslash}dots,H\_k, of hypotheses. A rejection rule in this setting amounts to a procedure for choosing the stopping point k. This setting is inspired by the sequential nature of many model selection problems, where choosing a stopping point or a model is equivalent to rejecting all hypotheses up to that point and none thereafter. We propose two new testing procedures, and prove that they control the false discovery rate in the ordered testing setting. We also show how the methods can be applied to model selection using recent results on p-values in sequential model selection settings.},
+	journaltitle = {{arXiv}:1309.5352 [math, stat]},
+	author = {G'Sell, Max Grazier and Wager, Stefan and Chouldechova, Alexandra and Tibshirani, Robert},
+	urldate = {2020-04-17},
+	date = {2015-03-23},
+	eprinttype = {arxiv},
+	eprint = {1309.5352},
+	file = {G'Sell et al_2015_Sequential Selection Procedures and False Discovery Rate Control.pdf:/Users/wpq/Dropbox (MIT)/zotero/G'Sell et al_2015_Sequential Selection Procedures and False Discovery Rate Control.pdf:application/pdf}
+}
