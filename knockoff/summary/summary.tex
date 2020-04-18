@@ -1,18 +1,47 @@
 \documentclass[11pt]{article}
 \input{../../preamble_local.tex}
 
-
 \addbibresource{variable_selection.bib}
-
 
 
 \begin{document}
 
 \section{Variable Selection}
+ 
+Let $\ry$ be response variable and $\rx$ be explanatory variables or covariates. Given i.i.d. samples $(x,y)\in\R^p\times\R$ from the joint distribution $p_{\rx,\ry}$, we are interested in asking the question 
+\begin{center}
+    \textit{which of the many covariates $x_1,\cdots,x_p$ does the response $y$ depend on}?
+\end{center}
+assuming that the response does depend on a sparse set of variables. In reality, we are interested in the causal relationship. However, quantifying causal effects requires interventions and not possible from purely observational data. A natural relaxation is to find covariates dependent (in a statistical sense) on the response, conditioned on all other observed features \cite{gimenezKnockoffsMassNew2019}. Formally, we want to find smallest $\sS\subset\pb{p}$ s.t.
+\begin{align*}
+    \ry \dperp \rx_{\sS} \mid \rx_{\setminus\sS}
+\end{align*} 
+A natural interpretation is that the other variables $\rx_{\setminus\sS}$ do not provide additional information about $\ry$. If we think of $\sG$ as graph representing the joint distribution $p_{\rx,\ry}$, then $\sS$ is the markov blanket for node $\ry$. 
+\begin{figure}[h!]
+    \fig{assets/markov_blancket.png}{5cm}
+    \caption{$\sS =\pc{\rx_1,\rx_3,\rx_4,\rx_7}$}
+\end{figure}
+We can pose the problem of finding the Markov blanket of $\ry$ as a multiple binary hypothesis test
+\begin{align*}
+    H_0^{(j)}:
+        \ry \dperp \rx_j \mid \rx_{\setminus \pc{j}} 
+    \quad\quad\text{for}\quad
+        j = 1,\cdots,p
+\end{align*}
+Let $\sH_0 = \pc{\rx_j \mid H_0^{(j)} \text{ holds}}$ be the set of truly irrelevant covariates. In essence we are interested in maximizing \textit{power} while controlling the number of false positives. A global threshold for p-values of each tests is overly conservative for large $p$, an alternative approach is to control \textit{false discovery rate} (FDR) \cite{benjaminiControllingFalseDiscovery1995}.
+\begin{align*}
+    \text{maximize}_{\hat{\sS}\subset [p]}\quad
+        &\E\pb{\frac{ \hat{\sS} \setminus \sH_0 }{ |\hat{\sS}| }} 
+            \tag{maximize power} \\
+    \text{subject to}\quad
+        &\E\pb{ \frac{\hat{\sS} \cap \sH_0}{|\hat{\sS}|} } \leq q
+            \tag{control FDR}
+\end{align*}
 
-Let $\ry$ be response variable and $\rx$ be the covariates.
+\section{Model-X Knockoff}
 
-Classical variable selection methods rely on parametric family of models for the 
+ 
+
 
 
 \newpage
