@@ -2,6 +2,7 @@
 \input{../../preamble_local.tex}
 
 \addbibresource{variable_selection.bib}
+\addbibresource{generative_GAN.bib}
 
 
 \begin{document}
@@ -21,7 +22,7 @@ A natural interpretation is that the other variables $\rx_{\setminus\sS}$ do not
     \fig{assets/markov_blancket.png}{5cm}
     \caption{$\sS =\pc{\rx_1,\rx_3,\rx_4,\rx_7}$}
 \end{figure}
-We can pose the problem of finding the Markov blanket of $\ry$ as a multiple binary hypothesis test
+We can pose the problem of finding the Markov blanket of $\ry$ as a multiple (independent) binary hypothesis test
 \begin{align} 
     H_0^{(j)}:
         \ry \dperp \rx_j \mid \rx_{\setminus \pc{j}} 
@@ -29,12 +30,13 @@ We can pose the problem of finding the Markov blanket of $\ry$ as a multiple bin
         j = 1,\cdots,p
     \label{eq:test_markov_blanket}
 \end{align}
-Let $\sH_0 = \pc{\rx_j \mid H_0^{(j)} \text{ holds}}$ be the set of truly irrelevant covariates. In general, we are interested in maximizing true positives while controlling the number of false positives. Sometimes, a global threshold for p-values of each tests is overly conservative for large $p$, an alternative approach is to maximize \textit{power} while control \textit{false discovery rate} (FDR) \cite{benjaminiControllingFalseDiscovery1995}.
+Let $\sH_0 = \pc{j \mid H_0^{(j)} \text{ holds}}$ be the set of truly irrelevant covariates. In general, we are interested in maximizing true positives while controlling the number of false positives. Sometimes, a global threshold for p-values of each tests is overly conservative for large $p$, an alternative approach is to maximize \textit{power} while control \textit{false discovery rate} (\textsf{FDR}) \cite{benjaminiControllingFalseDiscovery1995}.
 \begin{align}
     \text{maximize}_{\hat{\sS}\subset [p]}\quad
-        &\E\pb{\frac{ |\hat{\sS} \setminus \sH_0| }{ |\hat{\sS}| }} \nonumber \\
+        &\E\pb{\frac{ |\hat{\sS} \setminus \sH_0| }{ |\hat{\sS}| }} \nonumber 
+            \tag{power} \\
     \text{subject to}\quad
-        &\E\pb{ \frac{ |\hat{\sS} \cap \sH_0| }{ \max\pc{|\hat{\sS}|,1} } } \leq q
+        &\textsf{FDR} := \E\pb{ \frac{ |\hat{\sS} \cap \sH_0| }{ \max\pc{|\hat{\sS}|,1} } } \leq q
     \label{eq:opt_fdr_control}
 \end{align}
 If $p_{\ry|\rx}(\cdot|x)$ assumes a parametric generalized linear model form, 
@@ -54,12 +56,106 @@ Then by \cite{candesPanningGoldModelX2017}, testing for conditional independence
 
 \section{Model-X Knockoff}
 
-Traditionally, $p_{\ry|\rx}$ is chosen to be in some parametric family, e.g. GLM, and variable selection with FDR control is performed by computing \& plugging p-values into the BHq procedure \cite{benjaminiControllingFalseDiscovery1995}. Recently, \cite{barberControllingFalseDiscovery2015,candesPanningGoldModelX2017} designed a \textit{knockoff} framework for performing variable selection on high-dimensional nonparametric models with finite sample guarantees over the constraints in (\ref{eq:opt_fdr_control}). The framework requires significant knowledge of $p_{\rx}$ and assumes nothing about the $p_{\ry|\rx}$. This might give way to performing reproducible and robust variable selection where the $p_{\ry|\rx}$ is parameterized by highly complex mappings, e.g. neural networks. In addition, modeling $p_{\rx}$ might be a suitable task for problems where we have large amount of unsupervised data, or we know a priori some structure about $p_{\rx}$, which are often the case for large scale machine learning applications.
+Traditionally, $p_{\ry|\rx}$ is chosen to be in some parametric family, e.g. GLM, and variable selection with FDR control is performed by computing \& plugging p-values into the BHq procedure \cite{benjaminiControllingFalseDiscovery1995}. Recently, \cite{barberControllingFalseDiscovery2015,candesPanningGoldModelX2017} designed a \textit{knockoff} framework for performing variable selection on high-dimensional nonparametric models with finite sample guarantees over the constraints in (\ref{eq:opt_fdr_control}). The framework requires significant knowledge of $p_{\rx}$ and assumes nothing about the $p_{\ry|\rx}$. This might give way to performing reproducible and robust variable selection where the $p_{\ry|\rx}$ is parameterized by highly complex mappings, e.g. neural networks. In addition, modeling $p_{\rx}$ might be a suitable task for problems where we have large amount of unsupervised data, or we know a priori some structure about $p_{\rx}$, which are often the case for large scale machine learning applications. 
+\begin{definition*} 
+    $\tilde{\rx}$ is a model-X knockoff for $\rx$ if 
+    \begin{align}
+        \tilde{\rx} 
+            &\dperp \ry \mid \rx 
+            \label{eq:knockoff_cond_indep_of_response} \\
+        (\rx,\tilde{\rx})_{\textsf{swap}(\sS)}
+            &\overset{d}{=} (\rx,\tilde{\rx})
+            \quad\quad\text{for any}\quad\quad
+            \sS\subset[p]
+            \label{eq:knockoff_swap_exchangeability}
+    \end{align}
+    where $(\cdot)_{\textsf{swap}(\sS)}$ swaps coordinates for all $j\in\sS $ with coordinate $j+p$ and leaves other coordinate unchanged.  (\ref{eq:knockoff_cond_indep_of_response}) is guaranteed if $\tilde{\rx}$ is constructed without knowledge of $\ry$. 
+\end{definition*}
+\begin{figure}[h!]
+    \fig{assets/joint_covariates_knockoff.jpeg}{6cm}
+    \caption{$\sG$ represents $p_{\rx,\tilde{\rx}}$. (\ref{eq:knockoff_cond_indep_of_response}) implies $\tilde{\rx}$ is not in the Markov blanket of node $\ry$ for a graph representing joint distribution $p_{\rx,\tilde{\rx}}$. (\ref{eq:knockoff_swap_exchangeability}) implies that the $\rx,\tilde{\rx}$ are pairwise exchangeable, i.e. taking any subset of (green) variables and swap them with their (red) knockoff leaves the joint distribution $p_{\rx,\tilde{\rx}}$ invariant, i.e. connectivity unchanged from the perspective of swapped variables. In practice, we want $\rx_j,\tilde{\rx}_j$ be as independent as possible, i.e. no edge connecting $\rx_j,\tilde{\rx}_j$ for all $j\in[p]$}
+\end{figure}
+\noindent Intuitively, \textit{knockoffs} mimics the dependence structure as the original covariates $\rx$, while being invariant to \textsf{swap($\cdot$)} operation, and is independent of the response $\ry$. It serves as a control for evaluating how much of dependence on the response is due to dependence structure of other variables and how much of it is due to dependence with response $\ry$.
+  
+
+\subsection{Knockoff Procedure for LASSO}
+
+Consider a linear Gaussian model $\ry = \beta^T\rx$ where $\rx\sim\sN(\bmu,\bSigma)$. Let $\bX \in\R^{n\times p}$ be any design matrix with $n>p$. The knockoff filtering procedure for computing variable selection with controlled FDR is given by
+\begin{enumerate}
+    \item (\textbf{Generate Knockoffs}) 
+    To ensure exchangeability property (\ref{eq:knockoff_swap_exchangeability}), it must be
+    \begin{align*}
+        \begin{pmatrix}
+            \rx \\
+            \tilde{\rx}
+        \end{pmatrix}            
+            \sim \sN\left(
+                \begin{pmatrix}
+                    \bmu \\ 
+                    \bmu \\
+                \end{pmatrix}, 
+                \begin{bmatrix}
+                    \bSigma & \bSigma - \diag\pc{\bs} \\
+                    \bSigma - \diag\pc{\bs} & \bSigma \\
+                \end{bmatrix}\right)
+    \end{align*}
+    One way to construct knockoff is to sample $\tilde{x}$ from the conditional distribution \cite{candesPanningGoldModelX2017,gimenezKnockoffsMassNew2019},
+    \begin{align*}
+        \tilde{\rx} \mid (\rx = x)
+            &\sim \sN\left(
+                \bmu_{\tilde{\rx}|\rx}(x), \bSigma_{\tilde{\rx}|\rx}(x)
+            \right) \\
+        &\bmu_{\tilde{\rx}|\rx}(x) 
+            = \left (I - \diag\pc{\bs}\bSigma^{-1}\right) x + \diag\pc{\bs}\bSigma^{-1} \bmu\\
+        &\bSigma_{\tilde{\rx}|\rx}(x)
+            = 2\diag\pc{\bs} - \diag\pc{\bs}\bSigma^{-1}\diag\pc{\bs}
+    \end{align*}
+    Alternatively, we can match empirical first and second moment \cite{barberControllingFalseDiscovery2015} and construct design for knockoff as 
+    \begin{align*}
+        \tilde{\bX}
+            = \bX(\bI - \bSigma^{-1}\diag\pc{\bs}) + \tilde{\bU}\bC
+    \end{align*}
+    where $\tilde{\bU}\in\R^{n\times p}$ is orthonormal matrix whose column is orthogonal to $\bX$ and $\bC^T\bC = 2\diag\pc{\bs} - \diag\pc{\bs}\bSigma^{-1}\diag\pc{\bs}$ is a Cholesky decomposition.
+    \item (\textbf{Compute Pairwise Statistics}) Compute Lasso for the coefficients
+    \begin{align*}
+        \hat{\bbeta}
+            = \argmin_{\beta\in\R^{2p}}
+                \frac{1}{2} \norm{\by - [\bX,\tilde{\bX}]\bbeta}_2^2 + \lambda \norm{\bbeta}_1
+    \end{align*}
+    Now we compute statistics $\rw$ for each pair of original and knockoff variables
+    \begin{align*}
+        w_j
+            := w_j(\bX,\tilde{\bX},\by)
+            = |\hat{\bbeta}_j| - |\hat{\bbeta}_{j+p}|
+        \quad\quad\text{for}\quad\quad
+            j = 1,\cdots,p
+    \end{align*}
+    which satisfy the coin-flip property. One important consequence is that for any $j\in\sH_0$, $\rw_j$ is a symmtric distribution about the origin \cite{barberControllingFalseDiscovery2015,candesPanningGoldModelX2017}.
+    \item (\textbf{Compute Threshold for Statistics}) Given $q>0$ be target FDR, then let 
+    \begin{align*}
+        \tau_+
+            &= \min\pc{t>0 \;\bigg|\; \frac{1 + \# \pc{ j \mid w_j \leq -t }}{\#\pc{j \mid w_j \geq t}} \leq q }
+    \end{align*}
+    \item (\textbf{Perform Test}) with threshold $\tau_+$,
+    \begin{align*}
+        \hat{\sS} = 
+            \pc{j \mid w_j \geq \tau_+}
+    \end{align*}
+    ensures that $\textsf{FDR}\leq q$
+\end{enumerate} 
+
+\subsection{Current Problems}
+
+\begin{enumerate}
+    \item Generating knockoffs is a hard problem, there has been work to sample knockoffs using MCMC \cite{batesMetropolizedKnockoffSampling2019}, with generative model \cite{romanoDeepKnockoffs2018}, in particular with GAN \cite{jordonKnockoffGANGeneratingKnockoffs2018} and with latent variable models \cite{gimenezKnockoffsMassNew2019}.
+    \item There has been a few papers that tries to analyze power of the knockoff framework assuming Gaussian data \cite{liuPowerAnalysisKnockoff2020}
+    \item There has been some preliminary work on adopting multiple hypothesis testing and FDR control when $p_{\ry|\rx}$ is parameterized by neural networks, e.g. by MLP \cite{luDeepPINKReproducibleFeature2018}. The challenge here seems that it is not easy to maintain power of tests.
+    \item It seems that currently, experimental datasets is either simulated or small in size of $n,p$. I have not found any attempts that tried this method on image datasets. Might be interesting to see how this fairs.
+\end{enumerate}
 
 
 
-
-
+ 
 \newpage
 \printbibliography 
 
