@@ -3,6 +3,7 @@
 
 \addbibresource{variable_selection.bib}
 \addbibresource{generative_GAN.bib}
+\addbibresource{criterion_independence.bib}
 
 
 \begin{document}
@@ -13,9 +14,20 @@ Let $\ry$ be response variable and $\rx$ be explanatory variables or covariates.
 \begin{center}
     \textit{which of the many covariates $x_1,\cdots,x_p$ does the response $y$ depend on}?
 \end{center}
-assuming that the response does depend on a sparse set of variables. In reality, we are interested in the causal relationship. However, quantifying causal effects requires interventions and not possible from purely observational data. A natural relaxation is to find covariates dependent (in a statistical sense) on the response, conditioned on all other observed features \cite{gimenezKnockoffsMassNew2019}. Formally, we want to find smallest $\sS\subset\pb{p}$ s.t.
+assuming that the response does depend on a sparse set of variables. In general, we want to find a subset $\sS\subset[p]$ such that $\sS$ retains the relevant information in $\rx$ for making inference about $\ry$,
+\begin{align}
+    \text{maximize}_{\hat{\sS}\subset[p]} 
+        \quad& \sQ(\hat{\sS}) \nonumber \\
+    \text{subject to}
+        \quad& |\hat{\sS}| \leq t \nonumber
+\end{align}
+where $\sQ(\cdot)$ quantifies the relevance of a feature subset to response. The choice of $\sQ(\cdot)$ should be 1) capable of detecting the desired functional dependence betweern the covariates and the response and 2) concentrated with respect to the underlying measure (generalize well to test data) \cite{songFeatureSelectionDependence2012}. Example of criteria $\sQ(\cdot)$ include leave-one-out error bound of SVM, mutual information $I(\rx;\ry)$, and Hilbert Space-based estimator like Hilbert-Schmidt Independence Criterion (HSIC) \cite{grettonMeasuringStatisticalDependence2005}.
+
+\section{Variable Selection as Finding Markov Blancket}
+
+In reality, we are interested in the causal relationship. However, quantifying causal effects requires interventions and not possible from purely observational data. A natural relaxation is to find covariates dependent (in a statistical sense) on the response, conditioned on all other observed features \cite{gimenezKnockoffsMassNew2019}. Formally, we want to find smallest $\sS\subset\pb{p}$ s.t.
 \begin{align*}
-    \ry \dperp \rx_{\sS} \mid \rx_{\setminus\sS}
+    \ry \dperp \rx_{\setminus\sS} \mid \rx_{\sS} 
 \end{align*} 
 A natural interpretation is that the other variables $\rx_{\setminus\sS}$ do not provide additional information about $\ry$. If we think of $\sG$ as graph representing the joint distribution $p_{\rx,\ry}$, then $\sS$ is the markov blanket for node $\ry$. 
 \begin{figure}[h!]
@@ -80,7 +92,7 @@ Traditionally, $p_{\ry|\rx}$ is chosen to be in some parametric family, e.g. GLM
 
 \subsection{Knockoff Procedure for LASSO}
 
-Consider a linear Gaussian model $\ry = \beta^T\rx$ where $\rx\sim\sN(\bmu,\bSigma)$. Let $\bX \in\R^{n\times p}$ be any design matrix with $n>p$. The knockoff filtering procedure for computing variable selection with controlled FDR is given by
+Consider a linear Gaussian model $\ry = \beta^T\rx + \epsilon$ where $\rx\sim\sN(\bmu,\bSigma)$ and $\epsilon\sim\sN(0,1)$. Let $\bX \in\R^{n\times p}$ be any design matrix with $n>p$. The knockoff filtering procedure for computing variable selection with controlled FDR is given by
 \begin{enumerate}
     \item (\textbf{Generate Knockoffs}) 
     To ensure exchangeability property (\ref{eq:knockoff_swap_exchangeability}), it must be
@@ -134,7 +146,9 @@ Consider a linear Gaussian model $\ry = \beta^T\rx$ where $\rx\sim\sN(\bmu,\bSig
     \item (\textbf{Compute Threshold for Statistics}) Given $q>0$ be target FDR, then let 
     \begin{align*}
         \tau_+
-            &= \min\pc{t>0 \;\bigg|\; \frac{1 + \# \pc{ j \mid w_j \leq -t }}{\#\pc{j \mid w_j \geq t}} \leq q }
+            &= \min\pc{t>0 \;\big|\; \widehat{\textsf{FDP}}(t) \leq q }
+            \quad\text{where}\quad
+            \widehat{\textsf{FDP}} = \frac{1 + \# \pc{ j \mid w_j \leq -t }}{\#\pc{j \mid w_j \geq t}} 
     \end{align*}
     \item (\textbf{Perform Test}) with threshold $\tau_+$,
     \begin{align*}
@@ -158,7 +172,6 @@ Consider a linear Gaussian model $\ry = \beta^T\rx$ where $\rx\sim\sN(\bmu,\bSig
  
 \newpage
 \printbibliography 
-
 
 
 
