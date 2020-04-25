@@ -29,7 +29,7 @@ In reality, we are interested in the causal relationship. However, quantifying c
 \begin{align*}
     \ry \dperp \rx_{\setminus\sS} \mid \rx_{\sS} 
 \end{align*} 
-A natural interpretation is that the other variables $\rx_{\setminus\sS}$ do not provide additional information about $\ry$. If we think of $\sG$ as graph representing the joint distribution $p_{\rx,\ry}$, then $\sS$ is the markov blanket for node $\ry$. 
+A natural interpretation is that the other variables $\rx_{\setminus\sS}$ do not provide additional information about $\ry$. If we think of $\sG$ as graph representing the joint distribution $p_{\rx,\ry}$, then $\sS$ is the markov blanket for node $\ry$. Alternatively, we can interpretate $\rx_{\sS}$ as minimal sufficient statistics for predicting $\ry$. This connection exists in literature related to information bottleneck method.
 \begin{figure}[h!]
     \fig{assets/markov_blancket.png}{5cm}
     \caption{$\sS =\pc{\rx_1,\rx_3,\rx_4,\rx_7}$}
@@ -51,7 +51,7 @@ Let $\sH_0 = \pc{j \mid H_0^{(j)} \text{ holds}}$ be the set of truly irrelevant
         &\textsf{FDR} := \E\pb{ \frac{ |\hat{\sS} \cap \sH_0| }{ \max\pc{|\hat{\sS}|,1} } } \leq q
     \label{eq:opt_fdr_control}
 \end{align}
-If $p_{\ry|\rx}(\cdot|x)$ assumes a parametric generalized linear model form, 
+where expectation is take w.r.t. randomness in $\rx$ and $\ry$. If $p_{\ry|\rx}(\cdot|x)$ assumes a parametric generalized linear model form, 
 \[
     \E\pb{\ry|\rx} = g^{-1}(\eta)
     \quad\quad
@@ -81,7 +81,13 @@ Traditionally, $p_{\ry|\rx}$ is chosen to be in some parametric family, e.g. GLM
             \sS\subset[p]
             \label{eq:knockoff_swap_exchangeability}
     \end{align}
-    where $(\cdot)_{\textsf{swap}(\sS)}$ swaps coordinates for all $j\in\sS $ with coordinate $j+p$ and leaves other coordinate unchanged.  (\ref{eq:knockoff_cond_indep_of_response}) is guaranteed if $\tilde{\rx}$ is constructed without knowledge of $\ry$. 
+    where $(\cdot)_{\textsf{swap}(\sS)}$ swaps coordinates for all $j\in\sS $ with coordinate $j+p$ and leaves other coordinate unchanged. Note (\ref{eq:knockoff_swap_exchangeability}) is equivalent to below
+    \begin{align}
+        (\rx_1,\cdots,\rx_j,\cdots,\rx_p, \tilde{\rx}_1,\cdots,\tilde{\rx}_j,\cdots,\tilde{\rx})
+            \overset{d}{=}
+            (\rx_1,\cdots,\tilde{\rx_j},\cdots,\rx_p, \tilde{\rx}_1,\cdots,\rx_j,\cdots,\tilde{\rx})
+    \end{align}
+    for any $j=1,\cdots,p$. (\ref{eq:knockoff_cond_indep_of_response}) is guaranteed if $\tilde{\rx}$ is constructed without knowledge of $\ry$. 
 \end{definition*}
 \begin{figure}[h!]
     \fig{assets/joint_covariates_knockoff.jpeg}{6cm}
