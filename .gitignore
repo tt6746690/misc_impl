@@ -29,3 +29,7 @@ logs/
 *.run.xml
 *.bbl
 *-blx.bib
+
+# external library 
+knockoff/knockoff-filter
+knockoff/deepknockoffs

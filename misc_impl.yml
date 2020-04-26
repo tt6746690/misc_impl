@@ -15,4 +15,8 @@ dependencies:
     - scikit-learn
     - pylint
     - seaborn
-    - pil
+    - pillow
+    - cvxpy
+    - cvxopt
+    - pandas
+    - scipy

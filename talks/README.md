@@ -13,6 +13,7 @@
   - [Post-selection Inference for Forward Stepwise Regression, Lasso and other procedures (NIPS 2015 talk, Robert Tibshirani)](#post-selection-inference-for-forward-stepwise-regression-lasso-and-other-procedures-nips-2015-talk-robert-tibshirani)
   - [Knockoffs: using ML for finite-sample controlled variable selection in nonparametric models (video)](#knockoffs-using-ml-for-finite-sample-controlled-variable-selection-in-nonparametric-models-video)
   - [Hopfield Nets](#hopfield-nets)
+  - [The Knockoffs Framework: New Statistical Tools for Replicable Selections (Emmanuel Candès: IPAM Green Family Lecture Series 2018)](#the-knockoffs-framework-new-statistical-tools-for-replicable-selections-emmanuel-candès-ipam-green-family-lecture-series-2018)
 
 
 ## Unsupervised Deep Learning [(Neurips 2018 tutorial)](https://www.youtube.com/watch?v=rjZCjosEFpI)
@@ -465,3 +466,29 @@
         + an item can be accessed by just knowing part of its content
         + robust against hardware damage
         + analogy: reconstruct a dinosaur from a few bones
+
+
+
+## The Knockoffs Framework: New Statistical Tools for Replicable Selections [(Emmanuel Candès: IPAM Green Family Lecture Series 2018)](https://www.youtube.com/watch?v=NuVBHXYBC4k)
+
+
++ motivation 
+    + cohen's disease, inform biologist where to look for variations that affect disease outcome 
+    + why control false positive
+        + to enable reproducibility
+        + to alleviate burden of not wasting biologistics time on spurious false positives
+    + assumption
+        + depends on a few variables, is this valid anymore?
++ conditional testing
+    + local markov
+        + non-nulls are markov blanket ...
++ challenges
+    + p_y|x maybe complex, p >> n, no idea how to compute p-values
++ robustness of P_X
+    + use distribution Q_X, pairwise exchangeability not satisfied
++ making knockoffs
+    + MC, HMM
++ deep knockoffs
+    + loss
+        + empirically penalize exchangeability with MMD
+        + promotes small corelation between variables and knockoffs

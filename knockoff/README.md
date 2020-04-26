@@ -4,6 +4,12 @@
 
 
 
+## resources
+
+
++ knockoffgan https://github.com/firmai/tsgan/blob/master/alg/knockoffgan/KnockoffGAN.py
++ invase https://github.com/jsyoon0823/INVASE
+
 ## Setup
 
 ```
