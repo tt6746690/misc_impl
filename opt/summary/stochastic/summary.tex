@@ -1,1 +1,137 @@
-w
+\providecommand{\main}{../}
+\documentclass[../summary.tex]{subfiles}
+
+\begin{document} 
+
+\section{Stochastic Optimization}
+We are interested in constrained minimization of $f:\R^n\to\R$ 
+\[
+    \text{minimize}_{x\in\sX}\; \pb{
+        f(x) = \E\pb{F(x,\xi)}
+    }
+\] 
+where $\sX \subset \R^n$ is closed, bounded convex set. $\xi$ is a random variable, and $F(\cdot,\xi)$ is convex for all $\xi\in\Xi$, and therefore $f(\cdot)$ is convex. For uniform $p_{\xi}$ over finite alphabets of size $n$, the problem reduces to finite sum problem
+\[
+    \text{minimize}_{x\in\sX}\; \pb{
+        f(x) = \frac{1}{n} \sum_{i=1}^n f_i(x)
+    }    
+\] 
+Assume we can
+\begin{enumerate}
+    \item Sample $\xi_1,\xi_2,\cdots \overset{i.i.d.}{\sim} p_{\xi}$
+    \item Given $(x,\xi)\in\sX\times\Xi$, a first order oracle that returns a subgradient vector $G(x,\xi) \in\partial_x F(x,\xi)$. We also assume that $G$ is unbiased, i.e. $g(x) := \E\pb{G(x,\xi)}\in\partial f(x)$
+\end{enumerate}
+
+\subsection{Stochastic Gradient Method}
+
+
+We can show that if $f\in\scrS_{L,\mu}^1$, the choice of $\alpha_k = \sO(\frac{1}{k})$ yields sublinear convergence of $\sO(\frac{1}{\epsilon})$ for last iterates. If $f\in\scrF_{L}^1$, the choice of $\alpha_k=\sO(\frac{1}{\sqrt{k}})$ yields a sublinear convergence of $\sO(\frac{1}{\epsilon^2})$ for average iterates. Stochastic gradient method (or Stochastic Approximation (SA) algorithms) has updates of the form
+\[
+    x^{k+1} = \sP_{\sX}\left( x^k - \alpha_k G(x^k, \xi_k) \right)    
+\]
+where $\alpha_k > 0$ are stepsizes, $\sP_{\sX}(y) =  \argmin_{x\in\sX} \frac{1}{2}\norm{x-y}_2^2$ is the euclidean projection onto a convex set. It is important to note that the current iterate $x^k$ are functions of random variables $x^k := x^k(\xi_{[k-1]})$ where $\xi_{[k-1]} = (\xi_1,\cdots,\xi_{k-1})$, and therefore are random variables themselves. In addition, $x^k \dperp \xi_k$. 
+
+\subsection{Convergence}
+
+Derivations copied from \cite{nemirovskiRobustStochasticApproximation2009}, \cite{bottouOptimizationMethodsLargeScale2018} and \href{http://www.princeton.edu/~yc5/ele522_optimization/lectures/stochastic_gradient.pdf}{slides}. We assume 
+\begin{enumerate}
+    \item bounded variance for stochastic subgradient, $\E_{\xi}\pb{G(x,\xi)} \leq M^2$ given $x\in\sX$.
+    \item bounded $\sX$ where radius given by $D_{\sX} = \max_{x\in\sX}\norm{x-x^*}_2$.
+\end{enumerate}
+We first derive some preliminary results. Using iterated expecatation, we have
+\begin{align}
+    \E\pb{\inner{G(x^k,\xi_k)}{x^k-x^*}}
+        &= \E_{\textcolor{red}{\xi_{[k-1]}}}\pb{
+            \E_{\textcolor{blue}{\xi_k}}\pb{
+                \inner{G(x^k(\textcolor{red}{\xi_{[k-1]}}),\textcolor{blue}{\xi_k})}{x^k(\textcolor{red}{\xi_{[k-1]}})-x^*}
+            } \bigm| \textcolor{red}{\xi_{[k-1]}}
+        } \nonumber \\
+        &= \E_{\textcolor{red}{\xi_{[k-1]}}}\pb{
+            \inner{\E_{\textcolor{blue}{\xi_k}}\pb{ G(x^k(\textcolor{red}{\xi_{[k-1]}}),\textcolor{blue}{\xi_k})  \bigm| \textcolor{red}{\xi_{[k-1]}}} }{x^k(\textcolor{red}{\xi_{[k-1]}})-x^*}
+        } \nonumber \\
+        &= \E\pb{
+            \inner{g(x^k)}{x^k-x^*}
+        }
+            \label{eq:sgd_simplify_expectation}
+\end{align}
+where the expectation is taken w.r.t $\xi_{[k-1]}$. We first derive a bound on $R_k^2 = \norm{x^k-x^*}_2^2$ and $r_k^2 = \E\pb{R_k}$,
+\begin{align*}
+    R_{k+1}^2
+        &= \norm{x^k-x^*}^2 \\
+        &= \norm{ \sP_{\sX}\left( x^k - \alpha_k G(x^k,\xi_k) \right) - \sP_{\sX}(x^*)  }^2
+            \tag{$x^*$ is fixed point of $\sP$, $\sP_{\sX}(x^*) = x^*$} \\
+        &\leq \norm{ x^k - \alpha_k G(x^k,\xi_k) - x^* }^2
+            \tag{Nonexpansive of $\sP$, $\norm{\sP_{\sX}(x')-\sP_{\sX}(x)} \leq \norm{x'-x}$} \\ 
+        &\leq R_k^2 - 2\alpha_k\inner{G(x^k,\xi_k)}{x^k-x^*} + \alpha_k^2\norm{G(x^k,\xi_k)}^2 \\
+    r_{k+1}^2
+        &\leq r_k^2 - 2\alpha_k \E\pb{ \inner{G(x^k,\xi_k)}{x^k-x^*} } + \alpha_k^2 \E\pb{ \norm{G(x^k,\xi_k)}^2 }
+            \tag{Expectation w.r.t. $\xi_{[k]}$} \\
+        &= r_k^2 - 2\alpha_k \E\pb{\inner{g(x^k)}{x^k-x^*}} + \alpha_k^2 M^2
+            \tag{By (\ref{eq:sgd_simplify_expectation}) and bounded variance}
+\end{align*}
+
+\subsubsection{Strongly Convex Case}
+
+If $f\in\scrS_{L,\mu}^1$, using (\ref{main-eq:strongly_convex_bounded_residual}), we have
+\begin{align*}
+    r_{k+1}^2
+        \leq r_k^2 - 2\alpha_k \E\pb{\norm{x^k-x^*}^2} + \alpha_k^2 M^2
+        = (1-2\mu \alpha_k ) r_k^2 + \alpha_k^2M^2
+\end{align*}
+If we choose $\alpha_k = \theta/(k+1)$, where $\theta > 1/(2\mu)$. It could be shown by induction that \cite{nemirovskiRobustStochasticApproximation2009}
+\begin{align*}
+    r_k^2
+        &\leq \frac{c_{\theta}}{k+1}
+            \quad\quad\text{where}\quad\quad
+            c_{\theta} = \max\pc{
+                \frac{2\theta^2M^2}{2\mu\theta - 1}, r_0
+            }
+\end{align*}
+By (\ref{main-eq:descent_lemma_Lsmooth}), we derive bound on the objective value
+\begin{align*}
+    \E\pb{f(x^k) - f(x^*)}
+        \leq \frac{1}{2} L \E\pb{\norm{x^k-x^*}^2}
+        \leq \frac{Lc_{\theta}}{2(k+1)}
+\end{align*}
+Therefore, the choice of $\alpha_k=\sO(\frac{1}{\epsilon})$ yields last iterate convergence rate of $\sO(\frac{1}{\epsilon})$
+
+
+\subsubsection{Convex Case}
+
+\cite{nemirovskiRobustStochasticApproximation2009} indicates that we need to increase the stepsize ($\sO(\frac{1}{k})$ to $\sO(\frac{1}{\sqrt{k}})$)) to ensure faster convergence rate for general convex problems, at the cost of \textit{more noisy} trajectory. To suppress the noise, we use average iterates $\pc{x^k}$ rather than last iterates as solution to the problem.
+\begin{align*}
+    r_{k+1}^2
+        &\leq r_k^2 - 2\alpha_k \E\pb{\inner{g(x^k)}{x^k-x^*}} + \alpha_k^2 M^2\\
+    2\alpha_k \E\pb{ f(x^k) - f(x^*) }
+        &\leq 2\alpha_k \E\pb{\inner{g(x^k)}{x^k - x^*}}
+        \leq r_k^2 - r_{k+1}^2 + \alpha_k^2 M^2
+            \tag{Rearrange, and by \ref{main-eq:definition_convex}}
+\end{align*}
+Telescape and rearrange,
+\begin{align*}
+    \sum_{i=1}^k \left( 2\alpha_i \E\pb{f(x^i) - f(x^*)} \right)
+        &\leq \sum_{i=1}^k \left( r_i - r_{i+1} + \alpha_i M^2\right)
+        = r_1 + \sum_{i=1}^k \alpha_i^2  \\
+    \sum_{i=1}^k \gamma_i \E\pb{(f(x^i) - f(x^*))}
+        &= \E\pb{\sum_{i=1}^k \gamma_i (f(x^i) - f(x^*))}
+        \leq \frac{r_1 + M^2 \sum_{i=1}^k \alpha_i^2}{2\sum_{i=1}^k \alpha_i}
+            \tag{Let $\gamma_i = \alpha_i/\sum_i\alpha_i$. Divide by $2\sum_i\alpha_i$. Use linearity of expectation}
+\end{align*}
+Let $\tilde{x}^k = \sum_{i=1}^k \gamma_i x^i$. $f(\tilde{x}^k)\leq \sum_i \gamma_i f(x^i)$ by convexity of $f$. $\sum_i\gamma_i = 1$, we have 
+\begin{align*}
+    \E\pb{f(\tilde{x}^k) - f(x^*)}
+        &\leq \frac{r_1 + M^2 \sum_{i=1}^k \alpha_i^2}{2\sum_{i=1}^k \alpha_i}
+\end{align*}
+We derive tighest bound by finding minimal value of $\alpha_k = \alpha$ of the bound.
+\[
+    \E\pb{f(\tilde{x}^k) - f(x^*)}
+        \leq \frac{D_{\sX}M}{\sqrt{k}}
+        \quad\quad
+        \alpha_k = \frac{D_{\sX}}{M\sqrt{k}}
+\]
+Therefore, the choice of $\alpha_k = \sO(\frac{1}{\sqrt{k}})$ yields average iterate convergence rate of $\sO(\frac{1}{\epsilon^2})$
+
+
+
+
+\end{document}

@@ -18,7 +18,7 @@ Gradient descent achieves sublinear convergence $\sO(\frac{1}{\epsilon})$ for $f
 \end{align*}
 for some stepsize $\alpha_k \geq 0$. Note $\alpha_k = \frac{1}{L}$ is the optimal stepsize.  
 
-\subsection{Gradient Descent with Barzilai \& Borwein Stepsize}
+\subsubsection{Gradient Descent with Barzilai \& Borwein Stepsize}
 
 Barzilai \& Borwein stepsize relaxes the constraint on monotonic descent \cite{barzilaiTwoPointStepSize1988}. The idea is to choose $\alpha_k$ such that $\alpha_k g^k$ approximates the Newton update.
 \begin{align*}
@@ -120,10 +120,10 @@ Another formulation of the algorithm comes from Nesterov's textbook \cite{nester
 However, in practice the condition number $\kappa$ is hard to compute.
 
 
-\subsection{Numerical Experiments}
+\subsection{Experiments on Large Least Squares Problem}
 
 We are given a hard least squares problem of minimizing $f(x) = \frac{1}{2}\norm{D^Tx-b}_2^2$ where $D\in\R^{n\times (n+1)}$ is the differencing matrix, with all -1 on the main diagonal and all 1 on the superdiagonal. The gradient is given by $\nabla f(x) = D(D^Tx-b)$. We compare gradient descent with either constant stepsize or using barzilai borwein stepsize, and nesterov's accelerated gradient descent.
-\fig{compare_gd_10000}{7in}
+\fig{compare_gd_10000}{6in}
 We see that the barzilai borwein stepsize is the fastest method, followed by nesterov's accelerated gradient, then the naive gradient descent method.
 
 

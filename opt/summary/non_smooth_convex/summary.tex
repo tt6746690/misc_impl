@@ -4,21 +4,61 @@
 
 \section{Nonsmooth Convex Optimization}
 
-We are interested in unconstrained minimization of convex, possibly nondifferentiable, $f:\R^n \to \R$ 
+We are interested in constrained minimization of convex, possibly nondifferentiable, $f:\R^n \to \R$ 
 \[
-    \text{minimize}_{x\in\R^n}\; f(x)
+    \text{minimize}_{x\in \sC}\; f(x)
 \]
-given first order oracle
+given first order oracle. $\sC$ is a simple closed convex set.
 
-\subsection{Subgradient Method}
+\subsection{Projected Subgradient Method}
 
-Given bounded subgradient $\norm{g^k}\leq G$ and bounded domain $\norm{x^0 - x^*} \leq R$, subgradient method is in a sense optimal as it achieves the lower bound $\sO(\frac{1}{\epsilon^2})$ for this problem class. Subgradient method iteratively updates as follows
+Subgradient method iteratively updates as follows
 \[
     x^{k+1}
-        = x^k - \alpha_k g^k    
+        = \sP_{\sC}\left( x^k - \alpha_k g^k  \right)
 \]
-where $g^k \in\partial f(x^k)$ is \textit{any} subgradient of $f$. First order optimality condition is now $0\in\partial f(x^*)$, which is impossible to test for nontrivial function $f$. Therefore, using $\norm{g^k}\leq \epsilon$ is not informative and subgradient method does not really have a stopping criterion.
+where $g^k \in\partial f(x^k)$ is \textit{any} subgradient of $f$ and that $\sP_{\sC}(x) = \argmin_{y\in\sC} \norm{x-y}^2$. First order optimality condition is $\inner{g(x)}{x-x^*} \geq 0$ for any $x\in\sC$, which is impossible to test for nontrivial function $f$. Therefore, using $\norm{g^k}\leq \epsilon$ is not informative and subgradient method does not really have a stopping criterion.
 
+\subsubsection{Connection to Mirror Descent}
+
+Each update involves solving a subproblem of the form
+\begin{align*}
+    x^{k+1}
+        &= \argmin_{x\in\sC} \norm{ x^k - \alpha_k g^k - x }_2^2 \\
+        &= \argmin_{x\in\sC} \pc{
+            \norm{x-x^k}_2^2 + 2\alpha_k \inner{x}{\nabla f(x^k)} + \left( \alpha_k \nabla f(x^k) \right)^2
+        } \\
+        &= \argmin_{x\in\sC} \pc{
+            \inner{x}{\nabla f(x^k)} + \frac{1}{\alpha_k} D^{\omega}(x,x^k)
+        }
+\end{align*} 
+where $D^{\omega}(x,y) = \frac{1}{2}\norm{x-y}_2^2$ is the Bregman divergence induced by $\omega(x)=\frac{1}{2}\norm{x}_2^2$. In effect, projected subgradient method is mirror descent on space endowed with $\ell$-2 norm.
+
+\subsubsection{Convergence}
+
+Given bounded subgradient $\norm{g^k}\leq G$ and bounded domain $\norm{x^0 - x^*} \leq R$, subgradient method is in a sense optimal as it achieves the lower bound $\sO(\frac{1}{\epsilon^2})$ for this problem class. The derivation as follows
+\begin{align*}
+    \norm{x^{k+1} - x^*}_2^2
+        &= \norm{\sP_{\sC}\left(x^k - \alpha_k g^k\right) -  \sP_{\sC}(x^*)} 
+            \tag{Try to bound a single update} \\
+        &\leq \norm{x^k - \alpha_k g^k - x^*}_2^2
+                \tag{$\sP_{\sC}$ nonexpansive} \\ 
+        &= \norm{x^k-x^*}_2^2 - 2\alpha_k \inner{g^k}{x^k-x^*} + \alpha_k^2 \norm{g^k}_2^2 \\
+        &\leq \norm{x^k-x^*}_2^2 - 2\alpha_k \left( f(x^k) - f(x^*) \right) + \alpha_k^2 \norm{g^k}_2^2 \\
+    \norm{x^{k+1} - x^*}_2^2
+        &\leq \norm{x^1 - x^*}_2^2 - 2\sum_{t=1}^{k} \alpha_t\left(f(x^t) - f(x^*)\right) + \sum_{t=1}^k \alpha_t^2 \norm{g^t}_2^2
+            \tag{Telescope} 
+\end{align*} 
+Then rearrange, and bound 
+\begin{align*} 
+    2\sum_{t=1}^k \left(f(x^t) - f(x^*)\right)
+        \leq R^2 + G^2 \sum_{t=1}^k \alpha_t^2 \quad\Rightarrow\quad
+    \min_{t\in[k]} f(x^t) - f(x^*) 
+        \leq \frac{R^2 + G^2\sum_{t=1}^k \alpha_t^2}{2\sum_{t=1}^k \alpha_t}
+\end{align*} 
+We note that $\min_{t\in[T]} f(x^t) - f(x^*) \to 0$ if stepsize is square summable but not summable, i.e. $\sum_k \alpha_k^2 < \infty$ and $\sum_k \alpha_k = \infty$. The choice of stepsize $\alpha_k = \frac{R}{\sqrt{k+1}}$ yield $\min_{t\in[k]} f(x^t) - f(x^*) = \sO(\frac{1}{\epsilon^2})$. (3.2.3 in \cite{nesterovIntroductoryLecturesConvex2004})
+ 
+ 
 \subsubsection{Solving Support Vector Machine w/ Subgradient Method}
 
 We are given data $\sD = \pc{(x_i,y_i) \mid x_i\in\R^n \; y_i \in \pc{\pm 1}}$, support vector machine is supervised learning model that tries to find $w\in\R^n$ and $b\in\R$ such that the empirical risk and regularizer on $w$ is minimized
@@ -35,7 +75,15 @@ Support vector machines can be solved using subgradient method. We first find a 
         &= -\lambda \sum_{i\in[m]: y_i(w^Tx_i + b) < 1 } y_i
 \end{align*}
 where we haved picked $0\in\partial (\max{0, 1- y_i(w^Tx_i + b)})$ when $y_i(w^Tx_i + b) = 1$, the only case where the \textit{max term} is non-differentiable. When tested on the Iris dataset, subgradient method worked!
-\fig{svm_subgradient}{4in}
+
+\fig{svm_subgradient}{3in}
+
+\subsection{Mirror Descent}
+ 
+
+
+
+
 
 
 \end{document}

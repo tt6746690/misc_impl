@@ -6,6 +6,48 @@
 
 \section{Minimax Optimization}
 
+
+\subsection{Convex-Concave Minimax}
+
+Let $\sX,\sY$ be nonempty set, $\phi:\sX\times\sY\to \R\cup\pc{\pm\infty}$. To simplify notation, let $f(\cdot) = \max_{y\in\sY} \phi(\cdot,y)$ and $g(\cdot) = \min_{x\in\sX} \phi(x,\cdot)$. In general, we are intersted in the minimax problem of the form. 
+\[
+    \min_{x\in\sX} \max_{y\in\sY} \phi(x,y)
+\]
+In particular, we want to find a saddle point, a pair $(x^\star,y^\star)$ where 
+\begin{align*}
+    x^\star
+        &\in \argmin_{x\in\sX} \max_{y\in\sY} \phi(x,y) = \argmin_{x\in\sX} f(x) \\
+    y^\star
+        &\in \argmax_{y\in\sY} \min_{x\in\sX} \phi(x,y) = \argmax_{y\in\sY} g(y) 
+\end{align*}
+
+\begin{definition*}
+    \textbf{(Weak Minimax)} For any $\phi:\sX\times\sY\to\R\cup\pc{\pm\infty}$, we have
+    \[
+        \max_{y\in\sY} \min_{x\in\sX} \phi(x,y)
+            \leq \min_{x\in\sX} \max_{y\in\sY} \phi(x,y)    
+    \]
+    A good way to remember this is to note the follower (inner optimization) has advantage since it knows what the leader's (outer optimization) strategy. So when the follower wants to maximize the objective, it often achieves this.
+\end{definition*}
+\begin{definition*}
+    \textbf{(Strong Minimax)} If $\phi(\cdot,y)$ convex for all $y\in\sY$ and $\phi(x,\cdot)$ concave for all $x\in\sX$, we have equality 
+    \[
+        \max_{y\in\sY} \min_{x\in\sX} \phi(x,y)
+            = \min_{x\in\sX} \max_{y\in\sY} \phi(x,y)    
+    \]
+\end{definition*}
+
+
+\subsection{Mirror Descent}
+
+
+
+
+
+
+
+\subsection{Non-Convex-Non-Concave Minimax}
+
 Let $\bz^k = (\bx^k, \by^k)$ be the iterates, $f^k = f(\bz^k)$ be function evaluated at current iterates, and 
 \[
     \bH^k 

@@ -19,6 +19,7 @@ logs/
 
 
 # latex 
+*.toc
 *.aux
 *.fdb_latexmk
 *.fls
