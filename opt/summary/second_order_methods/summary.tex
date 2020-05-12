@@ -18,7 +18,7 @@ where $\tilde{f}(y)$ is a cubic regularized quadratic model of the objective,
     \tilde{f}_{x}(y)
         = f(x) + \inner{\nabla f(x)}{y-x} + \frac{1}{2}\inner{\nabla^2 f(x)(y-x)}{y-x} + \frac{L}{6}\norm{y-x}^3
 \end{align} 
-This modified Newton step ensures that function values of iterates are monotonic non-increasing.
+This modified Newton step ensures that function values of iterates are monotonic non-increasing. Cubic regularized Newton's Method converges globally to second order stationary points ($\nabla f(x) = 0$ and $\nabla^2 f(x) \succeq 0$) assuming $f\in C_{L}^{2,2}$, i.e. twice continuously differentiable with lipschitz continuous hessian \cite{nesterovCubicRegularizationNewton2006, nesterovCubicRegularizationNewton2006a}.  The method has quadratic global convergence rate when initial iterate is close to the optimum of $f$ \cite{nesterovIntroductoryLecturesConvex2004}. Under weak non-degeneracy assumption of the Hessian matrix, the local convergence rate is super-linear of the order $\frac{4}{3}$ or $\frac{3}{2}$.
 
 
 

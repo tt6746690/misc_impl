@@ -4,6 +4,7 @@
 \addbibresource{variable_selection.bib}
 \addbibresource{generative_GAN.bib}
 \addbibresource{criterion_independence.bib}
+\addbibresource{interpretability.bib}
 
 
 \begin{document}
@@ -16,12 +17,40 @@ Let $\ry$ be response variable and $\rx$ be explanatory variables or covariates.
 \end{center}
 assuming that the response does depend on a sparse set of variables. In general, we want to find a subset $\sS\subset[p]$ such that $\sS$ retains the relevant information in $\rx$ for making inference about $\ry$,
 \begin{align}
-    \text{maximize}_{\hat{\sS}\subset[p]} 
-        \quad& \sQ(\hat{\sS}) \nonumber \\
+    \text{maximize}_{S\subset[p]} 
+        \quad& \sQ(S) \nonumber \\
     \text{subject to}
-        \quad& |\hat{\sS}| \leq t \nonumber
+        \quad& \norm{\sS}_0 \leq t \nonumber
 \end{align}
 where $\sQ(\cdot)$ quantifies the relevance of a feature subset to response. The choice of $\sQ(\cdot)$ should be 1) capable of detecting the desired functional dependence betweern the covariates and the response and 2) concentrated with respect to the underlying measure (generalize well to test data) \cite{songFeatureSelectionDependence2012}. Example of criteria $\sQ(\cdot)$ include leave-one-out error bound of SVM, mutual information $I(\rx;\ry)$, and Hilbert Space-based estimator like Hilbert-Schmidt Independence Criterion (HSIC) \cite{grettonMeasuringStatisticalDependence2005}.
+\begin{align}
+    \text{maximize}_{S\subset[p]} 
+        \quad& I(\rx_S;\ry) \nonumber \\
+    \text{subject to}
+        \quad& \norm{\sS}_0 \leq t \nonumber
+\end{align}
+
+\section{Instance-wise Variable Selection}
+
+The goal of instance-wise variable selection is to find a subset $\sS(x)\subset[p]$ most informative in making inference about $\ry$. Here $\sS:\sX\to\pc{0,1}^d$ is a function dependent on a particular covariates $x$, and there fore $\sS(\rx)$ is a random variable. For example, L2X maximizes the lower bound of mutual information between response and selected features \cite{kindermansLearningHowExplain2017}
+\begin{align}
+    \text{maximize}_{S} 
+        \quad& I(\rx_{S(x)};\ry) \nonumber \\
+    \text{subject to}
+        \quad& \norm{\sS(x)}_0 \leq t \nonumber
+\end{align}
+Similarly, INVASE finds $\sS$ such that $\ry \dperp \rx_{S(x)} \mid \rx_{S(x)}$ or that $p_{\ry|\rx}(\cdot|x) \overset{d}{=} p_{\ry|\rx_{S(x)}}(\cdot|x_S)$ \cite{yoonINVASEInstancewiseVariable2018},
+\begin{align}
+    \text{minimize}_{S} 
+        \quad& KL\left( p_{\ry|\rx}(\cdot|x) \Vert p_{\ry|\rx_{S(x)}}(\cdot|x_S)  \right) \nonumber \\
+    \text{subject to}
+        \quad& \norm{\sS(x)}_0 \leq t \nonumber
+\end{align}
+
+
+
+
+
 
 \section{Variable Selection as Finding Markov Blancket}
 

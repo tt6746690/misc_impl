@@ -1,0 +1,91 @@
+\documentclass[../summary.tex]{subfiles}
+
+\begin{document}
+
+\newcommand\bdelta{\ensuremath{\boldsymbol{\delta}}}
+
+\section{Minimax Optimization}
+
+Let $\bz^k = (\bx^k, \by^k)$ be the iterates, $f^k = f(\bz^k)$ be function evaluated at current iterates, and 
+\[
+    \bH^k 
+        = \bJ(\nabla f^k)
+        = 
+    \begin{bmatrix}
+        \bH_{\bx\bx} & \bH_{\bx\by} \\
+        \bH_{\by\bx} & \bH_{\by\by} \\
+    \end{bmatrix}    
+\]
+be block-wise hessian.
+
+\paragraph{Competitive Gradient Descent (CGD)} Competitive Gradient Descent \cite{schaferCompetitiveGradientDescent2019} is an generalized gradient descent algorithm for the general-sum two player game, which we will specialize to zero-sum game. Each iteration involves solving a a quadratic regularized bilinear game that approximates the general game at the current iterate. 
+\begin{align*}
+    \min_{\bdelta_{\bx}} \max_{\bdelta_{\by}} \pb{
+        F^k(\bdelta_{\bx},\bdelta_{\by})
+        := \bdelta_{\bx}^T \nabla_{\bx} f^k + \bdelta_{\by}^T \nabla_{\by} f^k + \frac{1}{2} \bdelta_{\bx}^T \bH_{\bx,\by} \bdelta_{\by} + \frac{1}{2\eta}\norm{\bdelta_{\bx}}_2^2 - \frac{1}{2\eta}\norm{\bdelta_{\by}}_2^2
+    } 
+\end{align*}
+Finding 1st order local nash equilibrium involves solving a system of equations given by
+\begin{align*}
+    0 = \nabla_{\bdelta_{\bx}} F^k
+        &= \nabla_{\bx} f^k + \bH_{\bx\by}^k \bdelta_{\by} + \frac{1}{\eta} \bdelta_{\bx} \\
+    0 = \nabla_{\bdelta_{\by}} F^k
+        &= - \nabla_{\by} f^k - \bH_{\by\bx}^k \bdelta_{\bx} + \frac{1}{\eta} \bdelta_{\by} 
+\end{align*}
+which emits closed form equations for $\bdelta_{\bx},\bdelta_{\by}$, giving rise to update of the form,
+\begin{align*}
+    \begin{bmatrix}
+        \bx^{k+1}\\
+        \by^{k+1}
+    \end{bmatrix}
+    = 
+    \begin{bmatrix}
+        \bx^{k}\\
+        \by^{k}
+    \end{bmatrix}
+    - 
+    \eta 
+    \begin{bmatrix}
+        \bI & \eta \bH^k_{\bx\by} \\
+        -\bH^k_{\by\bx} & \bI
+    \end{bmatrix}^{-1}
+    \begin{bmatrix}
+        \nabla_{\bx} f^k \\
+        -\nabla_{\by} f^k
+    \end{bmatrix}
+\end{align*}
+Note solving for local nash of a full quadratic Taylor approximation of the game at current iterates (include terms involving $\bH_{\bx\bx}, \bH_{\by\by}$) recovers damped and regularized Newton's method. In the paper, the author uses computes approximate matrix inverse to compute the updates.
+
+\paragraph{CGD with cubic regularization} We can apply per-player cubic regularization,
+\begin{align*}
+    \min_{\bdelta_{\bx}} \max_{\bdelta_{\by}} \pb{
+        F^k(\bdelta_{\bx},\bdelta_{\by})
+        := \bdelta_{\bx}^T \nabla_{\bx} f^k + \bdelta_{\by}^T \nabla_{\by} f^k + \frac{1}{2} \bdelta_{\bx}^T \bH_{\bx,\by} \bdelta_{\by} + \frac{L}{6}\norm{\bdelta_{\bx}}_2^3 - \frac{L}{6}\norm{\bdelta_{\by}}_2^3
+    } 
+\end{align*}
+It is not possible to write analytic equation for optimal solution. Instead, the subproblem can be computed using first order gradient methods with guaranteed on convergence to local saddle points, e.g. extra-gradient \cite{mokhtariUnifiedAnalysisExtragradient2019}, concensus optimization \cite{meschederNumericsGANs2017}. 
+
+
+\paragraph{Follow the Ridge (FR)}
+Gradient Descent/Ascent (GDA) fails to converge with any constant learning rate. \textit{Follow-the-Ridge} modifies gradient descent-ascent by applying an asymmetric correction term on the leader's gradient step, which encourage players to stay on the ridge of the loss surface. The approach is proved to converge and only converge to \textit{local minimax} under mild assumptions ($f$ twice differentiable, thrice differentiable at critical points, $\bH_{\by\by}$ is invertible)
+\begin{align*}
+    \begin{bmatrix}
+        \bx^{k+1} \\ \by^{k+1}
+    \end{bmatrix}
+    = 
+    \begin{bmatrix}
+        \bx^k \\ \by^k
+    \end{bmatrix}
+    - 
+    \begin{bmatrix}
+        \eta_{\bx}\bI & \mathbf{0} \\
+        - \eta_{\bx} \bH_{\by\by}^{-1} \bH_{\by\bx} & \eta_{\by} \bI
+    \end{bmatrix}
+    \begin{bmatrix}
+        \nabla_{\bx} f^k \\
+        \nabla_{\by} f^k
+    \end{bmatrix}
+\end{align*}
+
+
+\end{document}
