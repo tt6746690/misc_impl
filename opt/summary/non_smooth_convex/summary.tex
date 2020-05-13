@@ -66,16 +66,21 @@ We note that $\min_{i\in[k]} f(x^i) - f(x^*) \to 0$ if stepsize is square summab
 
 We are given data $\sD = \pc{(x_i,y_i) \mid x_i\in\R^n \; y_i \in \pc{\pm 1}}$, support vector machine is supervised learning model that tries to find $w\in\R^n$ and $b\in\R$ such that the empirical risk and regularizer on $w$ is minimized
 \begin{align*}
-    \text{minimize}_{w,b} \quad
-        \frac{1}{2} \norm{w}_2^2 + \lambda \sum_{i=1}^m \max\pb{0, 1 - y_i(w^Tx_i + b)} 
-        \quad \left( := f(w,b) \right)
+    \text{minimize}_{w,b} \;\;
+        \pb{
+            f(w,b) := 
+            \frac{1}{2} \norm{w}_2^2 + \lambda \sum_{i=1}^m \max\pb{0, 1 - y_i(w^Tx_i + b)} 
+        }
 \end{align*}
-Support vector machines can be solved using subgradient method. We first find a subgradient of $f$
+The subgradient of $f$ is given by,
 \begin{align*}
     g_w^k
-        &= w^k - \lambda \sum_{i\in[m]: y_i(w^Tx_i + b) < 1 } y_i x_i \\
+        = w^k - \lambda \sum_{i \in S} y_i x_i
+    \qquad
     g_b
-        &= -\lambda \sum_{i\in[m]: y_i(w^Tx_i + b) < 1 } y_i
+        = -\lambda \sum_{i\in S} y_i
+    \quad\text{where}\quad
+    S = \pc{i\in [m] \mid y_i(w^Tx_i + b) < 1}
 \end{align*}
 where we haved picked $0\in\partial (\max{0, 1- y_i(w^Tx_i + b)})$ when $y_i(w^Tx_i + b) = 1$, the only case where the \textit{max term} is non-differentiable. When tested on the Iris dataset, subgradient method worked!
 
@@ -83,7 +88,7 @@ where we haved picked $0\in\partial (\max{0, 1- y_i(w^Tx_i + b)})$ when $y_i(w^T
 
 \subsection{Mirror Descent}
 
-Mirror descent has updates for the form given initialization $x^1 = \argmin_{x\in\sC} \omega(x)$ 
+Let $\sD$ be a convex open set where $\sC\subset\overline{\sD}$ and $\omega:\sD\to\R$ be a mirror map satisfying 1) strictly convex and differentiable 2) $\nabla \omega(\sD) = \R$ 3) $\lim_{x\to\partial\sD} \norm{\nabla \omega(x)} = \pm\infty$. Given initialization $x^1 = \argmin_{x\in\sC} \omega(x)$, mirror descent take steps
 \begin{align}
     x^{k+1}
         &= \prox_{x^k}\left( \alpha_k g^k \right)
@@ -95,11 +100,15 @@ Mirror descent has updates for the form given initialization $x^1 = \argmin_{x\i
         \label{eq:mirror_descent_prox_update}
 \end{align}
 where $\prox_{x}(\cdot)$ is called Bregman prox mapping and can be interpreted as extension of the standard $\prox$ operator regularized by Bregman divergence instead of $\ell$-2 norm. By (\ref{eq:subgradient_connection_to_mirror_descent}), we see mirror descent as a generalization of projected subgradient methods to domain other than $\R^n$. An alternative update can be derived by considering the optimality condition of (\ref{eq:mirror_descent_prox_update}) $0 \in \alpha_k g^k + \nabla \omega(x^{k+1}) - \nabla \omega(x^k) + \sN_{\sC}(x^{k+1})$ where $\sN_C(\cdot)$ is normal cone of $\sC$, or equivalently, $x^{k+1} \in (\nabla \omega + \sN_{\sC})^{-1}(\nabla \omega(x^k) - \alpha_k g^k)$. The update can be written as 
-\begin{align}
-    x^{k+1}
-        &= \nabla \omega^* \left( \nabla \omega(x^k) - \alpha_k g^k \right)
-\end{align}
-where $w^*(y) = \sup_{z\in\sC}\pb{\inner{z}{y} - \omega(z)}$
+\begin{align*}
+    y^{k+1}
+        &= \nabla \omega^* \left( \nabla \omega(x^k) - \alpha_k g^k \right) 
+        \qquad\text{where}\quad
+        w^*(y) = \sup_{z\in\sD}\pb{\inner{z}{y} - \omega(z)}\\
+    x^{k+1} 
+        &\in \argmin_{x\in \sC} D_{\omega}(x,y^{k+1})
+\end{align*}
+Here $\nabla \omega(\cdot)$ serve as a bijection between primal space $\sD$ and dual space $\R$. The update can be seen as taking a regular gradient step in the dual space $\nabla \omega(x^k) - \alpha_k g^k$, map back the iterate to the primal space $\sD$, then finally project onto the feasible set $\sC$.
 
 
 \subsubsection{Bregman Divergence}
@@ -167,7 +176,7 @@ Then we have a bound on the average iterate $\overline{x}$
     f(\overline{x}) - f(x^*)
         \leq \frac{\frac{G^2}{2} \sum_{k=1}^T \alpha_k^2 + \Omega}{ \sum_{k=1}^T \alpha_k }
 \end{align*}
-Note the bound is really similar to bound we get for last iterate in convergence analysis for projected subgradient methods, it turns out the complexity is also the same, The choice of constant stepsize $\alpha_k = \frac{\sqrt{2\Omega}}{G\sqrt{T}}$ has $\sum \alpha_k = \frac{\sqrt{2\Omega T}}{G}$ and $\sum_k \alpha_k^2 = \frac{2\Omega}{G^2}$, then
+Note the bound is really similar to bound we get for last iterate in convergence analysis for projected subgradient methods, it turns out the complexity is also the same, The choice of constant stepsize $\alpha_k = \frac{\sqrt{2\Omega}}{G\sqrt{T}}$ has $\sum_k \alpha_k = \frac{\sqrt{2\Omega T}}{G}$ and $\sum_k \alpha_k^2 = \frac{2\Omega}{G^2}$, then
 \begin{align*}
     f(\overline{x}) - f(x^*)
         \leq \frac{ G(\Omega + \frac{G^2}{2}\frac{2\Omega}{G^2}) }{ \sqrt{2\Omega T} } 
@@ -175,6 +184,29 @@ Note the bound is really similar to bound we get for last iterate in convergence
         = G \sqrt{\frac{2\Omega}{T}}
 \end{align*}
 which implies $\sO(\frac{1}{\epsilon^2})$ complexity
+
+
+\subsubsection{Exponentiated Gradient}
+
+Exponentiated gradient is a special case of mirror descent. Consider the case when $\sC = \triangle^n \subset \R_{>0}^n = \sD$, with $w:\sD\to\R$ defined by negative entropy $\omega(x) = \sum_i x_i \log x_i$ and the corresponding bregman divergence is then $D_{\omega}(x,y) = \sum_i x_i \log (x_i/y_i)$. Note the fenchel dual is $\omega^*(y) = \sum_i e^{y_i-1}$. Therefore $(\nabla \omega(x))_i = \log x_i + 1$ and $(\nabla \omega^*(y))_i = e^{y_i-1}$. In this case, the projection is equivalent to renormalization. In particular by log-sum inequality and fact that $x\in\triangle^n$ and $y\in\R_{> 0}$, 
+\begin{align*}
+    D_{\omega}(x,y)
+        = \sum_i x_i \frac{x_i}{y_i}
+        \geq \left(\sum_i x_i\right) \log \frac{\sum_i x_i}{\sum_i y_i}  = -\log \norm{y}_1
+\end{align*}
+with equality if all $x_i/y_i$ equal. So $(\argmin_{x\in\sC} D_{\omega}(x,y))_i = \frac{y_i}{\norm{y}_1}$. The mirror descent steps
+\begin{align*}
+    \left(y^{k+1}\right)_i
+        = \exp\pc{
+            \log x^k_i + 1 - \alpha_k g^k_i - 1
+        }
+        = x^k_i e^{-\alpha_k g^k_i}
+        \qquad 
+    \left( x^{k+1} \right)_i
+        = \frac{x^k_i e^{-\alpha_k g^k_i}}{\sum_{i=1}^n x^k_i e^{-\alpha_k g^k_i}}
+\end{align*}
+For $x^1 = (1/n,\cdots,1/n)$, the bound on radius at initial iterate is then $\Omega = \log n$. We see here the rate of convergence is $\sO(\sqrt{\frac{\log n}{T}})$, in contrast to the $\sO(\sqrt{\frac{n}{T}})$ rate for subgradient method.
+
 
 
 
