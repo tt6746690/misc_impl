@@ -22,17 +22,20 @@ where $g^k \in\partial f(x^k)$ is \textit{any} subgradient of $f$ and that $\sP_
 \subsubsection{Connection to Mirror Descent}
 
 Each update involves solving a subproblem of the form
-\begin{align*}
+\begin{align}
     x^{k+1}
-        &= \argmin_{x\in\sC} \norm{ x^k - \alpha_k g^k - x }_2^2 \\
+        &= \argmin_{x\in\sC} \norm{ x^k - \alpha_k g^k - x }_2^2 
+            \nonumber \\
         &= \argmin_{x\in\sC} \pc{
             \norm{x-x^k}_2^2 + 2\alpha_k \inner{x}{\nabla f(x^k)} + \left( \alpha_k \nabla f(x^k) \right)^2
-        } \\
+        } 
+            \nonumber \\
         &= \argmin_{x\in\sC} \pc{
             \inner{x}{\nabla f(x^k)} + \frac{1}{\alpha_k} D^{\omega}(x,x^k)
         }
-\end{align*} 
-where $D^{\omega}(x,y) = \frac{1}{2}\norm{x-y}_2^2$ is the Bregman divergence induced by $\omega(x)=\frac{1}{2}\norm{x}_2^2$. In effect, projected subgradient method is mirror descent on space endowed with $\ell$-2 norm.
+            \label{eq:subgradient_connection_to_mirror_descent}
+\end{align}
+where $D^{\omega}(x,y) = \frac{1}{2}\norm{x-y}_2^2$ is the Bregman divergence induced by $\omega(x)=\frac{1}{2}\norm{x}_2^2$. In effect, projected subgradient method is mirror descent on $\sC$ endowed with $\ell$-2 norm.
 
 \subsubsection{Convergence}
 
@@ -46,17 +49,17 @@ Given bounded subgradient $\norm{g^k}\leq G$ and bounded domain $\norm{x^0 - x^*
         &= \norm{x^k-x^*}_2^2 - 2\alpha_k \inner{g^k}{x^k-x^*} + \alpha_k^2 \norm{g^k}_2^2 \\
         &\leq \norm{x^k-x^*}_2^2 - 2\alpha_k \left( f(x^k) - f(x^*) \right) + \alpha_k^2 \norm{g^k}_2^2 \\
     \norm{x^{k+1} - x^*}_2^2
-        &\leq \norm{x^1 - x^*}_2^2 - 2\sum_{t=1}^{k} \alpha_t\left(f(x^t) - f(x^*)\right) + \sum_{t=1}^k \alpha_t^2 \norm{g^t}_2^2
+        &\leq \norm{x^1 - x^*}_2^2 - 2\sum_{i=1}^{k} \alpha_i\left(f(x^i) - f(x^*)\right) + \sum_{i=1}^k \alpha_i^2 \norm{g^i}_2^2
             \tag{Telescope} 
 \end{align*} 
 Then rearrange, and bound 
 \begin{align*} 
-    2\sum_{t=1}^k \left(f(x^t) - f(x^*)\right)
-        \leq R^2 + G^2 \sum_{t=1}^k \alpha_t^2 \quad\Rightarrow\quad
-    \min_{t\in[k]} f(x^t) - f(x^*) 
-        \leq \frac{R^2 + G^2\sum_{t=1}^k \alpha_t^2}{2\sum_{t=1}^k \alpha_t}
+    2\sum_{i=1}^k \left(f(x^i) - f(x^*)\right)
+        \leq R^2 + G^2 \sum_{i=1}^k \alpha_i^2 \quad\Rightarrow\quad
+    \min_{i\in[k]} f(x^i) - f(x^*) 
+        \leq \frac{R^2 + G^2\sum_{i=1}^k \alpha_i^2}{2\sum_{i=1}^k \alpha_i}
 \end{align*} 
-We note that $\min_{t\in[T]} f(x^t) - f(x^*) \to 0$ if stepsize is square summable but not summable, i.e. $\sum_k \alpha_k^2 < \infty$ and $\sum_k \alpha_k = \infty$. The choice of stepsize $\alpha_k = \frac{R}{\sqrt{k+1}}$ yield $\min_{t\in[k]} f(x^t) - f(x^*) = \sO(\frac{1}{\epsilon^2})$. (3.2.3 in \cite{nesterovIntroductoryLecturesConvex2004})
+We note that $\min_{i\in[k]} f(x^i) - f(x^*) \to 0$ if stepsize is square summable but not summable, i.e. $\sum_i \alpha_i^2 < \infty$ and $\sum_i \alpha_i = \infty$. The choice of stepsize $\alpha_k = \frac{R}{\sqrt{k+1}}$ yield $\min_{i\in[k]} f(x^i) - f(x^*) = \sO(\frac{1}{\epsilon^2})$. (3.2.3 in \cite{nesterovIntroductoryLecturesConvex2004})
  
  
 \subsubsection{Solving Support Vector Machine w/ Subgradient Method}
@@ -79,10 +82,99 @@ where we haved picked $0\in\partial (\max{0, 1- y_i(w^Tx_i + b)})$ when $y_i(w^T
 \fig{svm_subgradient}{3in}
 
 \subsection{Mirror Descent}
+
+Mirror descent has updates for the form given initialization $x^1 = \argmin_{x\in\sC} \omega(x)$ 
+\begin{align}
+    x^{k+1}
+        &= \prox_{x^k}\left( \alpha_k g^k \right)
+    \qquad\text{where}\qquad
+    \prox_{x}\left( \xi \right)
+        := \argmin_{x\in\sC} \pc{
+            D_{\omega}(x,y) + \inner{\xi}{x}
+        }
+        \label{eq:mirror_descent_prox_update}
+\end{align}
+where $\prox_{x}(\cdot)$ is called Bregman prox mapping and can be interpreted as extension of the standard $\prox$ operator regularized by Bregman divergence instead of $\ell$-2 norm. By (\ref{eq:subgradient_connection_to_mirror_descent}), we see mirror descent as a generalization of projected subgradient methods to domain other than $\R^n$. An alternative update can be derived by considering the optimality condition of (\ref{eq:mirror_descent_prox_update}) $0 \in \alpha_k g^k + \nabla \omega(x^{k+1}) - \nabla \omega(x^k) + \sN_{\sC}(x^{k+1})$ where $\sN_C(\cdot)$ is normal cone of $\sC$, or equivalently, $x^{k+1} \in (\nabla \omega + \sN_{\sC})^{-1}(\nabla \omega(x^k) - \alpha_k g^k)$. The update can be written as 
+\begin{align}
+    x^{k+1}
+        &= \nabla \omega^* \left( \nabla \omega(x^k) - \alpha_k g^k \right)
+\end{align}
+where $w^*(y) = \sup_{z\in\sC}\pb{\inner{z}{y} - \omega(z)}$
+
+
+\subsubsection{Bregman Divergence}
+
+\begin{definition*}
+    \textbf{(Bregman Divergence)} Let $\sC$ be closed convex set. Let the distance generating function $h:\sC\to\R$ be continuously differentiable and 1-strongly convex w.r.t. norm $\norm{\cdot}$. Then the Bregman divergence is 
+    \begin{align*}
+        D_h(x,y)
+            = h(x) - h(y) - \inner{\nabla h(y)}{x-y}
+    \end{align*}
+    which has the interpretation of the error in first order Taylor expansion of $h$ around $y$ evaluated at $x$. For example, $h(x)=\frac{1}{2}\norm{x}_2^2$ is strongly convex w.r.t. $\ell$-2 norm over $\sC\subset\R^n$ with $D_h(x,y) = \frac{1}{2}\norm{x-y}_2^2$; the negative entropy function $h(x) = \sum_{i} x_i \log x_i$ is strongly convex w.r.t. $\ell$-1 norm over the probability simplex $\sC\subset \boldsymbol{\triangle}^n = \pc{x\in\R^n_{+} \mid \sum_i x_i = 1}$ with $D_h(x,y) = \pb{\sum_i x_i \log(x_i/y_i) - \sum_i x_i + \sum_i y_i := D(x\Vert y)} \geq \frac{1}{2}\norm{x-y}_1^2$ or KL divergence (inequality straight from Pinsker's inequality)
+\end{definition*}
+\noindent Some important properties of Bregman divergence include (\href{http://users.cecs.anu.edu.au/~xzhang/teaching/bregman.pdf}{reference})
+\begin{align}
+    D_h(x,y)
+        &\geq \frac{1}{2}\norm{x-y}^2 
+        \label{eq:bregman_norm_squared_lower_bound} \\
+    \inner{\nabla h(x) - \nabla h(y)}{x-z}
+        &= D_h(x,y) + D_h(z,x) - D_h(z,y)
+        \label{eq:bregman_pythagoras_identity}  \\
+    \nabla_x D_h(x,y) 
+        &= \nabla h(x) - \nabla h(y)
+        \label{eq:bregman_gradient_of_divergence}
+\end{align}
  
 
-
-
+\subsubsection{Convergence}
+ 
+Assume bounded gradient norm $\norm{g^k}_* \leq G$ and an upper bound on divergence to $z^1$, i.e. $\Omega := \max_{u\in\sC} D_{\omega}(u,z^1)$. The key to convergence of mirror descent is the MD lemma
+\begin{align}
+    \alpha_k \inner{g^k}{x^k - u}
+        \leq \frac{\alpha^2}{2} \norm{g^k}_*^2 + D_{\omega}(u,x^k) - D_{\omega}(u,x^{k+1})
+        \qquad \forall u\in\sC
+    \label{eq:mirror_descent_md_lemma}
+\end{align}
+\begin{proof}
+    Copied from \cite{allen-zhuLinearCouplingUltimate2016}
+    \begin{align*}
+        \alpha_k \inner{g^k}{x^k-u}
+            &= \inner{\alpha_k g^k}{x^k - x^{k+1}} + \inner{\alpha g^k}{x^{k+1} - u}\\
+            &\leq \inner{\alpha_k g^k}{x^k - x^{k+1}} + \inner{-\nabla D_{\omega}(x^{k+1},x^k)}{x^{k+1} - u} 
+                \tag{by 1st order optimality condition: $\inner{\nabla D_{\omega}(x^{k+1},x^k) + \alpha_k g^k  }{u - x^{k+1}} \geq 0$ for all $u\in\sC$ } \\
+            &= \inner{\alpha_k g^k}{x^k - x^{k+1}}  + D_{\omega}(u,x^k) - D_{\omega}(u,x^{k+1}) - D_{\omega}(x^{k+1},x^k)
+                \tag{By (\ref{eq:bregman_pythagoras_identity},\ref{eq:bregman_gradient_of_divergence})} \\
+        &\leq \inner{\alpha_k g^k}{x^k - x^{k+1}} - \frac{1}{2}\norm{x^k - x^{k+1}}^2 + D_{\omega}(u,x^k) - D_{\omega}(u,x^{k+1})
+            \tag{By (\ref{eq:bregman_norm_squared_lower_bound})} \\
+        &\leq \frac{\alpha_k^2}{2} \norm{g^{k}}_*^2 + D_{\omega}(u,x^k) - D_{\omega}(u,x^{k+1})
+            \tag{completed square is nonzero}
+    \end{align*}
+\end{proof}
+\noindent Using the MD lemma, we can derive an upper bound on the regret $\inner{g^k}{x^k-x^*}$ by telescope
+\begin{align*}
+    \sum_{k=1}^{T} \alpha_k \inner{g^k}{x^k-x^*}
+        \leq \sum_{k=1}^T \frac{\alpha_k^2}{2} \norm{g^k}_*^2 + D_{\omega}(x^*,x^1) - D_{\omega}(x^*,x^{k+1}) 
+        \leq \frac{G^2}{2} \sum_{k=1}^T \alpha_k^2 + \Omega
+\end{align*}
+By convexity of $f$ and Jensen's inequality and let $\overline{x} = \sum_{k=1} \gamma_k x^k$ where $\gamma_k = \alpha_k/\sum_{k}\alpha_k$, 
+\begin{align*}
+    \sum_{k=1}^T \alpha_k \inner{g^k}{x^k-x^*}
+        \geq \sum_{k=1}^T \alpha_k \left( f(x^k) - f(x^*) \right)
+        \geq \left(\sum_{k=1}^T \alpha_k\right)\left( f\left( \overline{x} \right)  - f(x^*) \right)
+\end{align*}
+Then we have a bound on the average iterate $\overline{x}$
+\begin{align*}
+    f(\overline{x}) - f(x^*)
+        \leq \frac{\frac{G^2}{2} \sum_{k=1}^T \alpha_k^2 + \Omega}{ \sum_{k=1}^T \alpha_k }
+\end{align*}
+Note the bound is really similar to bound we get for last iterate in convergence analysis for projected subgradient methods, it turns out the complexity is also the same, The choice of constant stepsize $\alpha_k = \frac{\sqrt{2\Omega}}{G\sqrt{T}}$ has $\sum \alpha_k = \frac{\sqrt{2\Omega T}}{G}$ and $\sum_k \alpha_k^2 = \frac{2\Omega}{G^2}$, then
+\begin{align*}
+    f(\overline{x}) - f(x^*)
+        \leq \frac{ G(\Omega + \frac{G^2}{2}\frac{2\Omega}{G^2}) }{ \sqrt{2\Omega T} } 
+        = \frac{2\Omega G}{\sqrt{2\Omega T}}
+        = G \sqrt{\frac{2\Omega}{T}}
+\end{align*}
+which implies $\sO(\frac{1}{\epsilon^2})$ complexity
 
 
 
