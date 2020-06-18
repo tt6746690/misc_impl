@@ -22,4 +22,7 @@ dependencies:
     - cvxopt
     - pandas
     - scipy
+    # knockoffs
     - glmnet
+    - shap
+    - xgboost

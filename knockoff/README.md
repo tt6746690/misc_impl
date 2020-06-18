@@ -10,6 +10,8 @@
 + knockoffgan https://github.com/firmai/tsgan/blob/master/alg/knockoffgan/KnockoffGAN.py
 + invase https://github.com/jsyoon0823/INVASE
 + glmnet_python https://glmnet-python.readthedocs.io/en/latest/glmnet_vignette.html#References
++ shap
+    + intro: http://localhost:8888/notebooks/external/shap/notebooks/general/Explainable%20AI%20with%20Shapley%20Values.ipynb
 
 ## Setup
 

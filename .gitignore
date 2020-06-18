@@ -32,5 +32,4 @@ logs/
 *-blx.bib
 
 # external library 
-knockoff/knockoff-filter
-knockoff/deepknockoffs
+knockoff/external
