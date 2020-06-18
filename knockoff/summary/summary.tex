@@ -73,11 +73,10 @@ We can pose the problem of finding the Markov blanket of $\ry$ as a multiple (in
 \end{align}
 Let $\sH_0 = \pc{j \mid H_0^{(j)} \text{ holds}}$ be the set of truly irrelevant covariates. In general, we are interested in maximizing true positives while controlling the number of false positives. Sometimes, a global threshold for p-values of each tests is overly conservative for large $p$, an alternative approach is to maximize \textit{power} while control \textit{false discovery rate} (\textsf{FDR}) \cite{benjaminiControllingFalseDiscovery1995}.
 \begin{align}
-    \text{maximize}_{\hat{\sS}\subset [p]}\quad
-        &\E\pb{\frac{ |\hat{\sS} \setminus \sH_0| }{ |\hat{\sS}| }} \nonumber 
-            \tag{power} \\
+    \text{maximize}_{\sS\subset [p]}\quad
+        &\E\pb{\frac{ |\sS \setminus \sH_0| }{ |\sS| }}  \\
     \text{subject to}\quad
-        &\textsf{FDR} := \E\pb{ \frac{ |\hat{\sS} \cap \sH_0| }{ \max\pc{|\hat{\sS}|,1} } } \leq q
+        &\textsf{FDR} := \E\pb{ \frac{ |\sS \cap \sH_0| }{ \max\pc{|\sS|,1} } } \leq q
     \label{eq:opt_fdr_control}
 \end{align}
 where expectation is take w.r.t. randomness in $\rx$ and $\ry$. If $p_{\ry|\rx}(\cdot|x)$ assumes a parametric generalized linear model form, 
@@ -137,10 +136,10 @@ Consider a linear Gaussian model $\ry = \beta^T\rx + \epsilon$ where $\rx\sim\sN
             \tilde{\rx}
         \end{pmatrix}            
             \sim \sN\left(
-                \begin{pmatrix}
+                \begin{bmatrix}
                     \bmu \\ 
                     \bmu \\
-                \end{pmatrix}, 
+                \end{bmatrix}, 
                 \begin{bmatrix}
                     \bSigma & \bSigma - \diag\pc{\bs} \\
                     \bSigma - \diag\pc{\bs} & \bSigma \\
@@ -162,7 +161,7 @@ Consider a linear Gaussian model $\ry = \beta^T\rx + \epsilon$ where $\rx\sim\sN
         \tilde{\bX}
             = \bX(\bI - \bSigma^{-1}\diag\pc{\bs}) + \tilde{\bU}\bC
     \end{align*}
-    where $\tilde{\bU}\in\R^{n\times p}$ is orthonormal matrix whose column is orthogonal to $\bX$ and $\bC^T\bC = 2\diag\pc{\bs} - \diag\pc{\bs}\bSigma^{-1}\diag\pc{\bs}$ is a Cholesky decomposition.
+    where $\tilde{\bU}\in\R^{n\times p}$ is orthonormal matrix whose column is orthogonal to $\bX$ and $\bC^T\bC = 2\diag\pc{\bs} - \diag\pc{\bs}\bSigma^{-1}\diag\pc{\bs}$ is a Cholesky decomposition. 
     \item (\textbf{Compute Pairwise Statistics}) Compute Lasso for the coefficients
     \begin{align*}
         \hat{\bbeta}
@@ -187,7 +186,7 @@ Consider a linear Gaussian model $\ry = \beta^T\rx + \epsilon$ where $\rx\sim\sN
     \end{align*}
     \item (\textbf{Perform Test}) with threshold $\tau_+$,
     \begin{align*}
-        \hat{\sS} = 
+        \sS = 
             \pc{j \mid w_j \geq \tau_+}
     \end{align*}
     ensures that $\textsf{FDR}\leq q$
