@@ -1,0 +1,396 @@
+
+@article{heuselGANsTrainedTwo2018,
+	title = {{GANs} Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium},
+	url = {http://arxiv.org/abs/1706.08500},
+	abstract = {Generative Adversarial Networks ({GANs}) excel at creating realistic images with complex models for which maximum likelihood is infeasible. However, the convergence of {GAN} training has still not been proved. We propose a two time-scale update rule ({TTUR}) for training {GANs} with stochastic gradient descent on arbitrary {GAN} loss functions. {TTUR} has an individual learning rate for both the discriminator and the generator. Using the theory of stochastic approximation, we prove that the {TTUR} converges under mild assumptions to a stationary local Nash equilibrium. The convergence carries over to the popular Adam optimization, for which we prove that it follows the dynamics of a heavy ball with friction and thus prefers flat minima in the objective landscape. For the evaluation of the performance of {GANs} at image generation, we introduce the "Fr{\textbackslash}'echet Inception Distance" ({FID}) which captures the similarity of generated images to real ones better than the Inception Score. In experiments, {TTUR} improves learning for {DCGANs} and Improved Wasserstein {GANs} ({WGAN}-{GP}) outperforming conventional {GAN} training on {CelebA}, {CIFAR}-10, {SVHN}, {LSUN} Bedrooms, and the One Billion Word Benchmark.},
+	journaltitle = {{arXiv}:1706.08500 [cs, stat]},
+	author = {Heusel, Martin and Ramsauer, Hubert and Unterthiner, Thomas and Nessler, Bernhard and Hochreiter, Sepp},
+	urldate = {2020-02-20},
+	date = {2018-01-12},
+	eprinttype = {arxiv},
+	eprint = {1706.08500},
+	keywords = {good, tbr},
+	file = {Heusel et al_2018_GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium.pdf:/Users/wpq/Dropbox (MIT)/zotero/Heusel et al_2018_GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium.pdf:application/pdf}
+}
+
+@article{linGradientDescentAscent2020,
+	title = {On Gradient Descent Ascent for Nonconvex-Concave Minimax Problems},
+	url = {http://arxiv.org/abs/1906.00331},
+	abstract = {We consider nonconvex-concave minimax problems, \${\textbackslash}min\_\{{\textbackslash}mathbf\{x\}\} {\textbackslash}max\_\{{\textbackslash}mathbf\{y\} {\textbackslash}in {\textbackslash}mathcal\{Y\}\} f({\textbackslash}mathbf\{x\}, {\textbackslash}mathbf\{y\})\$, where \$f\$ is nonconvex in \${\textbackslash}mathbf\{x\}\$ but concave in \${\textbackslash}mathbf\{y\}\$ and \${\textbackslash}mathcal\{Y\}\$ is a convex and bounded set. One of the most popular algorithms for solving this problem is the celebrated gradient descent ascent ({GDA}) algorithm, which has been widely used in machine learning, control theory and economics. Despite the extensive convergence results for the convex-concave setting, {GDA} with equal stepsize can converge to limit cycles or even diverge in a general setting. In this paper, we present the complexity results on two-time-scale {GDA} for solving nonconvex-concave minimax problems, showing that the algorithm can find a stationary point of the function \${\textbackslash}Phi({\textbackslash}cdot) := {\textbackslash}max\_\{{\textbackslash}mathbf\{y\} {\textbackslash}in {\textbackslash}mathcal\{Y\}\} f({\textbackslash}cdot, {\textbackslash}mathbf\{y\})\$ efficiently. To the best our knowledge, this is the first nonasymptotic analysis for two-time-scale {GDA} in this setting, shedding light on its superior practical performance in training generative adversarial networks ({GANs}) and other real applications.},
+	journaltitle = {{arXiv}:1906.00331 [cs, math, stat]},
+	author = {Lin, Tianyi and Jin, Chi and Jordan, Michael I.},
+	urldate = {2020-02-28},
+	date = {2020-02-06},
+	eprinttype = {arxiv},
+	eprint = {1906.00331},
+	keywords = {tbr},
+	file = {Lin et al_2020_On Gradient Descent Ascent for Nonconvex-Concave Minimax Problems.pdf:/Users/wpq/Dropbox (MIT)/zotero/Lin et al_2020_On Gradient Descent Ascent for Nonconvex-Concave Minimax Problems.pdf:application/pdf}
+}
+
+@article{wangSolvingMinimaxOptimization2019,
+	title = {On Solving Minimax Optimization Locally: A Follow-the-Ridge Approach},
+	url = {http://arxiv.org/abs/1910.07512},
+	shorttitle = {On Solving Minimax Optimization Locally},
+	abstract = {Many tasks in modern machine learning can be formulated as finding equilibria in {\textbackslash}emph\{sequential\} games. In particular, two-player zero-sum sequential games, also known as minimax optimization, have received growing interest. It is tempting to apply gradient descent to solve minimax optimization given its popularity and success in supervised learning. However, it has been noted that naive application of gradient descent fails to find some local minimax and can converge to non-local-minimax points. In this paper, we propose {\textbackslash}emph\{Follow-the-Ridge\} ({FR}), a novel algorithm that provably converges to and only converges to local minimax. We show theoretically that the algorithm addresses the notorious rotational behaviour of gradient dynamics, and is compatible with preconditioning and {\textbackslash}emph\{positive\} momentum. Empirically, {FR} solves toy minimax problems and improves the convergence of {GAN} training compared to the recent minimax optimization algorithms.},
+	journaltitle = {{arXiv}:1910.07512 [cs, math, stat]},
+	author = {Wang, Yuanhao and Zhang, Guodong and Ba, Jimmy},
+	urldate = {2020-02-28},
+	date = {2019-11-25},
+	eprinttype = {arxiv},
+	eprint = {1910.07512},
+	keywords = {read},
+	file = {Wang et al_2019_On Solving Minimax Optimization Locally - A Follow-the-Ridge Approach.pdf:/Users/wpq/Dropbox (MIT)/zotero/Wang et al_2019_On Solving Minimax Optimization Locally - A Follow-the-Ridge Approach.pdf:application/pdf}
+}
+
+@article{schaferCompetitiveGradientDescent2019,
+	title = {Competitive Gradient Descent},
+	url = {http://arxiv.org/abs/1905.12103},
+	abstract = {We introduce a new algorithm for the numerical computation of Nash equilibria of competitive two-player games. Our method is a natural generalization of gradient descent to the two-player setting where the update is given by the Nash equilibrium of a regularized bilinear local approximation of the underlying game. It avoids oscillatory and divergent behaviors seen in alternating gradient descent. Using numerical experiments and rigorous analysis, we provide a detailed comparison to methods based on {\textbackslash}emph\{optimism\} and {\textbackslash}emph\{consensus\} and show that our method avoids making any unnecessary changes to the gradient dynamics while achieving exponential (local) convergence for (locally) convex-concave zero sum games. Convergence and stability properties of our method are robust to strong interactions between the players, without adapting the stepsize, which is not the case with previous methods. In our numerical experiments on non-convex-concave problems, existing methods are prone to divergence and instability due to their sensitivity to interactions among the players, whereas we never observe divergence of our algorithm. The ability to choose larger stepsizes furthermore allows our algorithm to achieve faster convergence, as measured by the number of model evaluations.},
+	journaltitle = {{arXiv}:1905.12103 [cs, math]},
+	author = {Schäfer, Florian and Anandkumar, Anima},
+	urldate = {2020-02-28},
+	date = {2019-10-10},
+	eprinttype = {arxiv},
+	eprint = {1905.12103},
+	keywords = {read},
+	file = {Schafer_Anandkumar_2019_Competitive Gradient Descent.pdf:/Users/wpq/Dropbox (MIT)/zotero/Schafer_Anandkumar_2019_Competitive Gradient Descent.pdf:application/pdf}
+}
+
+@article{daskalakisLastIterateConvergenceZeroSum2018,
+	title = {Last-Iterate Convergence: Zero-Sum Games and Constrained Min-Max Optimization},
+	url = {http://arxiv.org/abs/1807.04252},
+	shorttitle = {Last-Iterate Convergence},
+	abstract = {Motivated by applications in Game Theory, Optimization, and Generative Adversarial Networks, recent work of Daskalakis et al{\textasciitilde}{\textbackslash}cite\{{DISZ}17\} and follow-up work of Liang and Stokes{\textasciitilde}{\textbackslash}cite\{{LiangS}18\} have established that a variant of the widely used Gradient Descent/Ascent procedure, called "Optimistic Gradient Descent/Ascent ({OGDA})", exhibits last-iterate convergence to saddle points in \{{\textbackslash}em unconstrained\} convex-concave min-max optimization problems. We show that the same holds true in the more general problem of \{{\textbackslash}em constrained\} min-max optimization under a variant of the no-regret Multiplicative-Weights-Update method called "Optimistic Multiplicative-Weights Update ({OMWU})". This answers an open question of Syrgkanis et al{\textasciitilde}{\textbackslash}cite\{{SALS}15\}. The proof of our result requires fundamentally different techniques from those that exist in no-regret learning literature and the aforementioned papers. We show that {OMWU} monotonically improves the Kullback-Leibler divergence of the current iterate to the (appropriately normalized) min-max solution until it enters a neighborhood of the solution. Inside that neighborhood we show that {OMWU} becomes a contracting map converging to the exact solution. We believe that our techniques will be useful in the analysis of the last iterate of other learning algorithms.},
+	journaltitle = {{arXiv}:1807.04252 [cs, math, stat]},
+	author = {Daskalakis, Constantinos and Panageas, Ioannis},
+	urldate = {2020-02-28},
+	date = {2018-09-17},
+	eprinttype = {arxiv},
+	eprint = {1807.04252},
+	keywords = {tbr},
+	file = {Daskalakis_Panageas_2018_Last-Iterate Convergence - Zero-Sum Games and Constrained Min-Max Optimization.pdf:/Users/wpq/Dropbox (MIT)/zotero/Daskalakis_Panageas_2018_Last-Iterate Convergence - Zero-Sum Games and Constrained Min-Max Optimization.pdf:application/pdf}
+}
+
+@article{schaferImplicitCompetitiveRegularization2019,
+	title = {Implicit competitive regularization in {GANs}},
+	url = {http://arxiv.org/abs/1910.05852},
+	abstract = {Generative adversarial networks ({GANs}) are capable of producing high quality samples, but they suffer from numerous issues such as instability and mode collapse during training. To combat this, we propose to model the generator and discriminator as agents acting under local information, uncertainty, and awareness of their opponent. By doing so we achieve stable convergence, even when the underlying game has no Nash equilibria. We call this mechanism implicit competitive regularization ({ICR}) and show that it is present in the recently proposed competitive gradient descent ({CGD}). When comparing {CGD} to Adam using a variety of loss functions and regularizers on {CIFAR}10, {CGD} shows a much more consistent performance, which we attribute to {ICR}. In our experiments, we achieve the highest inception score when using the {WGAN} loss (without gradient penalty or weight clipping) together with {CGD}. This can be interpreted as minimizing a form of integral probability metric based on {ICR}.},
+	journaltitle = {{arXiv}:1910.05852 [cs, stat]},
+	author = {Schäfer, Florian and Zheng, Hongkai and Anandkumar, Anima},
+	urldate = {2020-02-28},
+	date = {2019-10-13},
+	eprinttype = {arxiv},
+	eprint = {1910.05852},
+	keywords = {tbr},
+	file = {Schafer et al_2019_Implicit competitive regularization in GANs.pdf:/Users/wpq/Dropbox (MIT)/zotero/Schafer et al_2019_Implicit competitive regularization in GANs.pdf:application/pdf}
+}
+
+@article{foersterLearningOpponentLearningAwareness2018,
+	title = {Learning with Opponent-Learning Awareness},
+	url = {http://arxiv.org/abs/1709.04326},
+	abstract = {Multi-agent settings are quickly gathering importance in machine learning. This includes a plethora of recent work on deep multi-agent reinforcement learning, but also can be extended to hierarchical {RL}, generative adversarial networks and decentralised optimisation. In all these settings the presence of multiple learning agents renders the training problem non-stationary and often leads to unstable training or undesired final results. We present Learning with Opponent-Learning Awareness ({LOLA}), a method in which each agent shapes the anticipated learning of the other agents in the environment. The {LOLA} learning rule includes a term that accounts for the impact of one agent's policy on the anticipated parameter update of the other agents. Results show that the encounter of two {LOLA} agents leads to the emergence of tit-for-tat and therefore cooperation in the iterated prisoners' dilemma, while independent learning does not. In this domain, {LOLA} also receives higher payouts compared to a naive learner, and is robust against exploitation by higher order gradient-based methods. Applied to repeated matching pennies, {LOLA} agents converge to the Nash equilibrium. In a round robin tournament we show that {LOLA} agents successfully shape the learning of a range of multi-agent learning algorithms from literature, resulting in the highest average returns on the {IPD}. We also show that the {LOLA} update rule can be efficiently calculated using an extension of the policy gradient estimator, making the method suitable for model-free {RL}. The method thus scales to large parameter and input spaces and nonlinear function approximators. We apply {LOLA} to a grid world task with an embedded social dilemma using recurrent policies and opponent modelling. By explicitly considering the learning of the other agent, {LOLA} agents learn to cooperate out of self-interest. The code is at github.com/alshedivat/lola.},
+	journaltitle = {{arXiv}:1709.04326 [cs]},
+	author = {Foerster, Jakob N. and Chen, Richard Y. and Al-Shedivat, Maruan and Whiteson, Shimon and Abbeel, Pieter and Mordatch, Igor},
+	urldate = {2020-02-28},
+	date = {2018-09-19},
+	eprinttype = {arxiv},
+	eprint = {1709.04326},
+	keywords = {tbr},
+	file = {Foerster et al_2018_Learning with Opponent-Learning Awareness.pdf:/Users/wpq/Dropbox (MIT)/zotero/Foerster et al_2018_Learning with Opponent-Learning Awareness.pdf:application/pdf}
+}
+
+@article{meschederWhichTrainingMethods2018,
+	title = {Which Training Methods for {GANs} do actually Converge?},
+	url = {http://arxiv.org/abs/1801.04406},
+	abstract = {Recent work has shown local convergence of {GAN} training for absolutely continuous data and generator distributions. In this paper, we show that the requirement of absolute continuity is necessary: we describe a simple yet prototypical counterexample showing that in the more realistic case of distributions that are not absolutely continuous, unregularized {GAN} training is not always convergent. Furthermore, we discuss regularization strategies that were recently proposed to stabilize {GAN} training. Our analysis shows that {GAN} training with instance noise or zero-centered gradient penalties converges. On the other hand, we show that Wasserstein-{GANs} and {WGAN}-{GP} with a finite number of discriminator updates per generator update do not always converge to the equilibrium point. We discuss these results, leading us to a new explanation for the stability problems of {GAN} training. Based on our analysis, we extend our convergence results to more general {GANs} and prove local convergence for simplified gradient penalties even if the generator and data distribution lie on lower dimensional manifolds. We find these penalties to work well in practice and use them to learn high-resolution generative image models for a variety of datasets with little hyperparameter tuning.},
+	journaltitle = {{arXiv}:1801.04406 [cs]},
+	author = {Mescheder, Lars and Geiger, Andreas and Nowozin, Sebastian},
+	urldate = {2020-03-07},
+	date = {2018-07-31},
+	eprinttype = {arxiv},
+	eprint = {1801.04406},
+	keywords = {read},
+	file = {Mescheder et al_2018_Which Training Methods for GANs do actually Converge.pdf:/Users/wpq/Dropbox (MIT)/zotero/Mescheder et al_2018_Which Training Methods for GANs do actually Converge.pdf:application/pdf}
+}
+
+@incollection{meschederNumericsGANs2017,
+	title = {The Numerics of {GANs}},
+	url = {http://papers.nips.cc/paper/6779-the-numerics-of-gans.pdf},
+	pages = {1825--1835},
+	booktitle = {Advances in Neural Information Processing Systems 30},
+	publisher = {Curran Associates, Inc.},
+	author = {Mescheder, Lars and Nowozin, Sebastian and Geiger, Andreas},
+	editor = {Guyon, I. and Luxburg, U. V. and Bengio, S. and Wallach, H. and Fergus, R. and Vishwanathan, S. and Garnett, R.},
+	urldate = {2020-03-17},
+	date = {2017},
+	keywords = {read},
+	file = {Mescheder et al_2017_The Numerics of GANs.pdf:/Users/wpq/Dropbox (MIT)/zotero/Mescheder et al_2017_The Numerics of GANs.pdf:application/pdf}
+}
+
+@article{nagarajanGradientDescentGAN2018,
+	title = {Gradient descent {GAN} optimization is locally stable},
+	url = {http://arxiv.org/abs/1706.04156},
+	abstract = {Despite the growing prominence of generative adversarial networks ({GANs}), optimization in {GANs} is still a poorly understood topic. In this paper, we analyze the "gradient descent" form of {GAN} optimization i.e., the natural setting where we simultaneously take small gradient steps in both generator and discriminator parameters. We show that even though {GAN} optimization does not correspond to a convex-concave game (even for simple parameterizations), under proper conditions, equilibrium points of this optimization procedure are still {\textbackslash}emph\{locally asymptotically stable\} for the traditional {GAN} formulation. On the other hand, we show that the recently proposed Wasserstein {GAN} can have non-convergent limit cycles near equilibrium. Motivated by this stability analysis, we propose an additional regularization term for gradient descent {GAN} updates, which {\textbackslash}emph\{is\} able to guarantee local stability for both the {WGAN} and the traditional {GAN}, and also shows practical promise in speeding up convergence and addressing mode collapse.},
+	journaltitle = {{arXiv}:1706.04156 [cs, math, stat]},
+	author = {Nagarajan, Vaishnavh and Kolter, J. Zico},
+	urldate = {2020-03-17},
+	date = {2018-01-13},
+	eprinttype = {arxiv},
+	eprint = {1706.04156},
+	keywords = {tbr},
+	file = {Nagarajan_Kolter_2018_Gradient descent GAN optimization is locally stable.pdf:/Users/wpq/Dropbox (MIT)/zotero/Nagarajan_Kolter_2018_Gradient descent GAN optimization is locally stable.pdf:application/pdf}
+}
+
+@article{thekumparampilEfficientAlgorithmsSmooth2019,
+	title = {Efficient Algorithms for Smooth Minimax Optimization},
+	url = {http://arxiv.org/abs/1907.01543},
+	abstract = {This paper studies first order methods for solving smooth minimax optimization problems \${\textbackslash}min\_x {\textbackslash}max\_y g(x,y)\$ where \$g({\textbackslash}cdot,{\textbackslash}cdot)\$ is smooth and \$g(x,{\textbackslash}cdot)\$ is concave for each \$x\$. In terms of \$g({\textbackslash}cdot,y)\$, we consider two settings -- strongly convex and nonconvex -- and improve upon the best known rates in both. For strongly-convex \$g({\textbackslash}cdot, y),{\textbackslash} {\textbackslash}forall y\$, we propose a new algorithm combining Mirror-Prox and Nesterov's {AGD}, and show that it can find global optimum in \${\textbackslash}tilde\{O\}(1/k{\textasciicircum}2)\$ iterations, improving over current state-of-the-art rate of \$O(1/k)\$. We use this result along with an inexact proximal point method to provide \${\textbackslash}tilde\{O\}(1/k{\textasciicircum}\{1/3\})\$ rate for finding stationary points in the nonconvex setting where \$g({\textbackslash}cdot, y)\$ can be nonconvex. This improves over current best-known rate of \$O(1/k{\textasciicircum}\{1/5\})\$. Finally, we instantiate our result for finite nonconvex minimax problems, i.e., \${\textbackslash}min\_x {\textbackslash}max\_\{1{\textbackslash}leq i{\textbackslash}leq m\} f\_i(x)\$, with nonconvex \$f\_i({\textbackslash}cdot)\$, to obtain convergence rate of \$O(m({\textbackslash}log m){\textasciicircum}\{3/2\}/k{\textasciicircum}\{1/3\})\$ total gradient evaluations for finding a stationary point.},
+	journaltitle = {{arXiv}:1907.01543 [cs, math, stat]},
+	author = {Thekumparampil, Kiran Koshy and Jain, Prateek and Netrapalli, Praneeth and Oh, Sewoong},
+	urldate = {2020-04-09},
+	date = {2019-07-02},
+	eprinttype = {arxiv},
+	eprint = {1907.01543},
+	keywords = {tbr},
+	file = {Thekumparampil et al_2019_Efficient Algorithms for Smooth Minimax Optimization.pdf:/Users/wpq/Dropbox (MIT)/zotero/Thekumparampil et al_2019_Efficient Algorithms for Smooth Minimax Optimization.pdf:application/pdf}
+}
+
+@article{jinWhatLocalOptimality2019,
+	title = {What is Local Optimality in Nonconvex-Nonconcave Minimax Optimization?},
+	url = {http://arxiv.org/abs/1902.00618},
+	abstract = {Minimax optimization has found extensive applications in modern machine learning, in settings such as generative adversarial networks ({GANs}), adversarial training and multi-agent reinforcement learning. As most of these applications involve continuous nonconvex-nonconcave formulations, a very basic question arises---``what is a proper definition of local optima?'' Most previous work answers this question using classical notions of equilibria from simultaneous games, where the min-player and the max-player act simultaneously. In contrast, most applications in machine learning, including {GANs} and adversarial training, correspond to sequential games, where the order of which player acts first is crucial (since minimax is in general not equal to maximin due to the nonconvex-nonconcave nature of the problems). The main contribution of this paper is to propose a proper mathematical definition of local optimality for this sequential setting---local minimax, as well as to present its properties and existence results. Finally, we establish a strong connection to a basic local search algorithm---gradient descent ascent ({GDA}): under mild conditions, all stable limit points of {GDA} are exactly local minimax points up to some degenerate points.},
+	journaltitle = {{arXiv}:1902.00618 [cs, math, stat]},
+	author = {Jin, Chi and Netrapalli, Praneeth and Jordan, Michael I.},
+	urldate = {2020-04-09},
+	date = {2019-06-03},
+	eprinttype = {arxiv},
+	eprint = {1902.00618},
+	keywords = {tbr},
+	file = {Jin et al_2019_What is Local Optimality in Nonconvex-Nonconcave Minimax Optimization.pdf:/Users/wpq/Dropbox (MIT)/zotero/Jin et al_2019_What is Local Optimality in Nonconvex-Nonconcave Minimax Optimization.pdf:application/pdf}
+}
+
+@inproceedings{liCubicRegularizationDifferentiable2019,
+	title = {Cubic Regularization for Differentiable Games},
+	abstract = {Due to the non-symmetric nature of the game Jacobian, many first-order methods used to find Nash equilibria for differentiable games, such as vanilla gradient descent and its variants, often perform poorly and exhibit relatively-slow convergence, oscillation around equilibria, or even divergence. Inspired by the close connection between differentiable games and classical nonlinear optimization, the latter of which has an array of well-established principles and methods in algorithmic design, this paper develops a new algorithm for smooth games based on the cubic-regularization method. The algorithm approximates each player’s cost function as a quadratic function regularized by a cubic term, an idea originally proposed by Nesterov and Polyak as a theoretically guaranteed extension of Newton’s method. The fixed points of the proposed algorithm are shown to coincide with second-order Nash equilibria of the given game. For two-player zero-sum games, these fixed points are also stable under the gradient flow dynamic. The theoretical findings are supported by numerical experiments.},
+	author = {Li, Shun-Chu and Li, Qiuwei and Tang, Gongguo},
+	date = {2019},
+	keywords = {read},
+	file = {Li et al_2019_Cubic Regularization for Differentiable Games.pdf:/Users/wpq/Dropbox (MIT)/zotero/Li et al_2019_Cubic Regularization for Differentiable Games.pdf:application/pdf}
+}
+
+@article{nemirovskiProxMethodRateConvergence2004,
+	title = {Prox-Method with Rate of Convergence O (1/ t ) for Variational Inequalities with Lipschitz Continuous Monotone Operators and Smooth Convex-Concave Saddle Point Problems},
+	volume = {15},
+	doi = {10.1137/S1052623403425629},
+	abstract = {We propose a prox-type method with e-ciency estimate O(†¡1) for approximating saddle points of convex-concave C1;1 functions and solutions of variational inequalities with monotone Lipschitz continuous operators. Application examples include matrix games, eigenvalue minimization and computing Lovasz capacity number of a graph and are illustrated by numerical experiments with large-scale matrix games and Lovasz capacity problems.},
+	pages = {229--251},
+	journaltitle = {{SIAM} Journal on Optimization},
+	shortjournal = {{SIAM} Journal on Optimization},
+	author = {Nemirovski, Arkadi},
+	date = {2004-01-01},
+	keywords = {tbr},
+	file = {Nemirovski_2004_Prox-Method with Rate of Convergence O (1- t ) for Variational Inequalities with Lipschitz Continuous Monotone Operators and Smooth Convex-Concave Saddle Point Problems.pdf:/Users/wpq/Dropbox (MIT)/zotero/Nemirovski_2004_Prox-Method with Rate of Convergence O (1- t ) for Variational Inequalities with Lipschitz Continuous Monotone Operators and Smooth Convex-Concave Saddle Point Problems.pdf:application/pdf}
+}
+
+@article{balduzziMechanicsNPlayerDifferentiable2018,
+	title = {The Mechanics of n-Player Differentiable Games},
+	url = {http://arxiv.org/abs/1802.05642},
+	abstract = {The cornerstone underpinning deep learning is the guarantee that gradient descent on an objective converges to local minima. Unfortunately, this guarantee fails in settings, such as generative adversarial nets, where there are multiple interacting losses. The behavior of gradient-based methods in games is not well understood -- and is becoming increasingly important as adversarial and multi-objective architectures proliferate. In this paper, we develop new techniques to understand and control the dynamics in general games. The key result is to decompose the second-order dynamics into two components. The first is related to potential games, which reduce to gradient descent on an implicit function; the second relates to Hamiltonian games, a new class of games that obey a conservation law, akin to conservation laws in classical mechanical systems. The decomposition motivates Symplectic Gradient Adjustment ({SGA}), a new algorithm for finding stable fixed points in general games. Basic experiments show {SGA} is competitive with recently proposed algorithms for finding stable fixed points in {GANs} -- whilst at the same time being applicable to -- and having guarantees in -- much more general games.},
+	journaltitle = {{arXiv}:1802.05642 [cs]},
+	author = {Balduzzi, David and Racaniere, Sebastien and Martens, James and Foerster, Jakob and Tuyls, Karl and Graepel, Thore},
+	urldate = {2020-04-10},
+	date = {2018-06-06},
+	eprinttype = {arxiv},
+	eprint = {1802.05642},
+	note = {tex.ids: {balduzziMechanicsNPlayerDifferentiable}},
+	keywords = {read},
+	file = {Balduzzi et al_2018_The Mechanics of n-Player Differentiable Games.pdf:/Users/wpq/Dropbox (MIT)/zotero/Balduzzi et al_2018_The Mechanics of n-Player Differentiable Games.pdf:application/pdf}
+}
+
+@article{letcherDifferentiableGameMechanics2019,
+	title = {Differentiable Game Mechanics},
+	url = {http://arxiv.org/abs/1905.04926},
+	abstract = {Deep learning is built on the foundational guarantee that gradient descent on an objective function converges to local minima. Unfortunately, this guarantee fails in settings, such as generative adversarial nets, that exhibit multiple interacting losses. The behavior of gradient-based methods in games is not well understood -- and is becoming increasingly important as adversarial and multi-objective architectures proliferate. In this paper, we develop new tools to understand and control the dynamics in n-player differentiable games. The key result is to decompose the game Jacobian into two components. The first, symmetric component, is related to potential games, which reduce to gradient descent on an implicit function. The second, antisymmetric component, relates to Hamiltonian games, a new class of games that obey a conservation law akin to conservation laws in classical mechanical systems. The decomposition motivates Symplectic Gradient Adjustment ({SGA}), a new algorithm for finding stable fixed points in differentiable games. Basic experiments show {SGA} is competitive with recently proposed algorithms for finding stable fixed points in {GANs} -- while at the same time being applicable to, and having guarantees in, much more general cases.},
+	journaltitle = {{arXiv}:1905.04926 [cs, stat]},
+	author = {Letcher, Alistair and Balduzzi, David and Racaniere, Sebastien and Martens, James and Foerster, Jakob and Tuyls, Karl and Graepel, Thore},
+	urldate = {2020-04-10},
+	date = {2019-05-13},
+	eprinttype = {arxiv},
+	eprint = {1905.04926},
+	keywords = {tbr},
+	file = {Letcher et al_2019_Differentiable Game Mechanics.pdf:/Users/wpq/Dropbox (MIT)/zotero/Letcher et al_2019_Differentiable Game Mechanics.pdf:application/pdf}
+}
+
+@article{daskalakisTrainingGANsOptimism2018,
+	title = {Training {GANs} with Optimism},
+	url = {http://arxiv.org/abs/1711.00141},
+	abstract = {We address the issue of limit cycling behavior in training Generative Adversarial Networks and propose the use of Optimistic Mirror Decent ({OMD}) for training Wasserstein {GANs}. Recent theoretical results have shown that optimistic mirror decent ({OMD}) can enjoy faster regret rates in the context of zero-sum games. {WGANs} is exactly a context of solving a zero-sum game with simultaneous no-regret dynamics. Moreover, we show that optimistic mirror decent addresses the limit cycling problem in training {WGANs}. We formally show that in the case of bi-linear zero-sum games the last iterate of {OMD} dynamics converges to an equilibrium, in contrast to {GD} dynamics which are bound to cycle. We also portray the huge qualitative difference between {GD} and {OMD} dynamics with toy examples, even when {GD} is modified with many adaptations proposed in the recent literature, such as gradient penalty or momentum. We apply {OMD} {WGAN} training to a bioinformatics problem of generating {DNA} sequences. We observe that models trained with {OMD} achieve consistently smaller {KL} divergence with respect to the true underlying distribution, than models trained with {GD} variants. Finally, we introduce a new algorithm, Optimistic Adam, which is an optimistic variant of Adam. We apply it to {WGAN} training on {CIFAR}10 and observe improved performance in terms of inception score as compared to Adam.},
+	journaltitle = {{arXiv}:1711.00141 [cs, stat]},
+	author = {Daskalakis, Constantinos and Ilyas, Andrew and Syrgkanis, Vasilis and Zeng, Haoyang},
+	urldate = {2020-04-11},
+	date = {2018-02-13},
+	eprinttype = {arxiv},
+	eprint = {1711.00141},
+	keywords = {read},
+	file = {Daskalakis et al_2018_Training GANs with Optimism.pdf:/Users/wpq/Dropbox (MIT)/zotero/Daskalakis et al_2018_Training GANs with Optimism.pdf:application/pdf}
+}
+
+@article{zhangOptimalityStabilityNonConvexNonConcave2020,
+	title = {Optimality and Stability in Non-Convex-Non-Concave Min-Max Optimization},
+	url = {http://arxiv.org/abs/2002.11875},
+	abstract = {Convergence to a saddle point for convex-concave functions has been studied for decades, while the last few years have seen a surge of interest in non-convex-non-concave min-max optimization due to the rise of deep learning. However, it remains an intriguing research challenge how local optimal points are defined and which algorithm can converge to such points. We study definitions of "local min-max (max-min)" points and provide an elegant unification, with the corresponding first- and second-order necessary and sufficient conditions. Specifically, we show that quadratic games, as often used as illustrative examples and approximations of smooth functions, are too special, both locally and globally. Lastly, we analyze the exact conditions for local convergence of several popular gradient algorithms near the "local min-max" points defined in the previous section, identify "valid" hyper-parameters and compare the respective stable sets. Our results offer insights into the necessity of two-time-scale algorithms and the limitation of the commonly used approach based on ordinary differential equations.},
+	journaltitle = {{arXiv}:2002.11875 [cs, math, stat]},
+	author = {Zhang, Guojun and Poupart, Pascal and Yu, Yaoliang},
+	urldate = {2020-04-30},
+	date = {2020-02-26},
+	eprinttype = {arxiv},
+	eprint = {2002.11875},
+	keywords = {tbr},
+	file = {Zhang et al_2020_Optimality and Stability in Non-Convex-Non-Concave Min-Max Optimization.pdf:/Users/wpq/Dropbox (MIT)/zotero/Zhang et al_2020_Optimality and Stability in Non-Convex-Non-Concave Min-Max Optimization.pdf:application/pdf}
+}
+
+@article{mertikopoulosCyclesAdversarialRegularized2017,
+	title = {Cycles in adversarial regularized learning},
+	url = {http://arxiv.org/abs/1709.02738},
+	abstract = {Regularized learning is a fundamental technique in online optimization, machine learning and many other fields of computer science. A natural question that arises in these settings is how regularized learning algorithms behave when faced against each other. We study a natural formulation of this problem by coupling regularized learning dynamics in zero-sum games. We show that the system's behavior is Poincar{\textbackslash}'e recurrent, implying that almost every trajectory revisits any (arbitrarily small) neighborhood of its starting point infinitely often. This cycling behavior is robust to the agents' choice of regularization mechanism (each agent could be using a different regularizer), to positive-affine transformations of the agents' utilities, and it also persists in the case of networked competition, i.e., for zero-sum polymatrix games.},
+	journaltitle = {{arXiv}:1709.02738 [cs]},
+	author = {Mertikopoulos, Panayotis and Papadimitriou, Christos and Piliouras, Georgios},
+	urldate = {2020-05-09},
+	date = {2017-09-08},
+	eprinttype = {arxiv},
+	eprint = {1709.02738},
+	keywords = {tbr},
+	file = {Mertikopoulos et al_2017_Cycles in adversarial regularized learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Mertikopoulos et al_2017_Cycles in adversarial regularized learning.pdf:application/pdf}
+}
+
+@article{mertikopoulosOptimisticMirrorDescent2018,
+	title = {Optimistic mirror descent in saddle-point problems: Going the extra (gradient) mile},
+	url = {http://arxiv.org/abs/1807.02629},
+	shorttitle = {Optimistic mirror descent in saddle-point problems},
+	abstract = {Owing to their connection with generative adversarial networks ({GANs}), saddle-point problems have recently attracted considerable interest in machine learning and beyond. By necessity, most theoretical guarantees revolve around convex-concave (or even linear) problems; however, making theoretical inroads towards efficient {GAN} training depends crucially on moving beyond this classic framework. To make piecemeal progress along these lines, we analyze the behavior of mirror descent ({MD}) in a class of non-monotone problems whose solutions coincide with those of a naturally associated variational inequality - a property which we call coherence. We first show that ordinary, "vanilla" {MD} converges under a strict version of this condition, but not otherwise; in particular, it may fail to converge even in bilinear models with a unique solution. We then show that this deficiency is mitigated by optimism: by taking an "extra-gradient" step, optimistic mirror descent ({OMD}) converges in all coherent problems. Our analysis generalizes and extends the results of Daskalakis et al. (2018) for optimistic gradient descent ({OGD}) in bilinear problems, and makes concrete headway for establishing convergence beyond convex-concave games. We also provide stochastic analogues of these results, and we validate our analysis by numerical experiments in a wide array of {GAN} models (including Gaussian mixture models, as well as the {CelebA} and {CIFAR}-10 datasets).},
+	journaltitle = {{arXiv}:1807.02629 [cs, math, stat]},
+	author = {Mertikopoulos, Panayotis and Lecouat, Bruno and Zenati, Houssam and Foo, Chuan-Sheng and Chandrasekhar, Vijay and Piliouras, Georgios},
+	urldate = {2020-05-09},
+	date = {2018-10-01},
+	eprinttype = {arxiv},
+	eprint = {1807.02629},
+	keywords = {read},
+	file = {Mertikopoulos et al_2018_Optimistic mirror descent in saddle-point problems - Going the extra (gradient) mile.pdf:/Users/wpq/Dropbox (MIT)/zotero/Mertikopoulos et al_2018_Optimistic mirror descent in saddle-point problems - Going the extra (gradient) mile.pdf:application/pdf}
+}
+
+@article{rakhlinOptimizationLearningGames2013,
+	title = {Optimization, Learning, and Games with Predictable Sequences},
+	url = {http://arxiv.org/abs/1311.1869},
+	abstract = {We provide several applications of Optimistic Mirror Descent, an online learning algorithm based on the idea of predictable sequences. First, we recover the Mirror Prox algorithm for offline optimization, prove an extension to Holder-smooth functions, and apply the results to saddle-point type problems. Next, we prove that a version of Optimistic Mirror Descent (which has a close relation to the Exponential Weights algorithm) can be used by two strongly-uncoupled players in a finite zero-sum matrix game to converge to the minimax equilibrium at the rate of O((log T)/T). This addresses a question of Daskalakis et al 2011. Further, we consider a partial information version of the problem. We then apply the results to convex programming and exhibit a simple algorithm for the approximate Max Flow problem.},
+	journaltitle = {{arXiv}:1311.1869 [cs]},
+	author = {Rakhlin, Alexander and Sridharan, Karthik},
+	urldate = {2020-05-09},
+	date = {2013-11-07},
+	eprinttype = {arxiv},
+	eprint = {1311.1869},
+	keywords = {tbr},
+	file = {Rakhlin_Sridharan_2013_Optimization, Learning, and Games with Predictable Sequences.pdf:/Users/wpq/Dropbox (MIT)/zotero/Rakhlin_Sridharan_2013_Optimization, Learning, and Games with Predictable Sequences.pdf:application/pdf}
+}
+
+@article{abernethyLastiterateConvergenceRates2019,
+	title = {Last-iterate convergence rates for min-max optimization},
+	url = {http://arxiv.org/abs/1906.02027},
+	abstract = {While classic work in convex-concave min-max optimization relies on average-iterate convergence results, the emergence of nonconvex applications such as training Generative Adversarial Networks has led to renewed interest in last-iterate convergence guarantees. Proving last-iterate convergence is challenging because many natural algorithms, such as Simultaneous Gradient Descent/Ascent, provably diverge or cycle even in simple convex-concave min-max settings, and previous work on global last-iterate convergence rates has been limited to the bilinear and convex-strongly concave settings. In this work, we show that the Hamiltonian Gradient Descent ({HGD}) algorithm achieves linear convergence in a variety of more general settings, including convex-concave problems that satisfy a "sufficiently bilinear" condition. We also prove similar convergence rates for the Consensus Optimization ({CO}) algorithm of [{MNG}17] for some parameter settings of {CO}.},
+	journaltitle = {{arXiv}:1906.02027 [cs, math, stat]},
+	author = {Abernethy, Jacob and Lai, Kevin A. and Wibisono, Andre},
+	urldate = {2020-05-09},
+	date = {2019-10-25},
+	eprinttype = {arxiv},
+	eprint = {1906.02027},
+	keywords = {tbr},
+	file = {Abernethy et al_2019_Last-iterate convergence rates for min-max optimization.pdf:/Users/wpq/Dropbox (MIT)/zotero/Abernethy et al_2019_Last-iterate convergence rates for min-max optimization.pdf:application/pdf}
+}
+
+@article{mazumdarFindingLocalNash2019,
+	title = {On Finding Local Nash Equilibria (and Only Local Nash Equilibria) in Zero-Sum Games},
+	url = {http://arxiv.org/abs/1901.00838},
+	abstract = {We propose local symplectic surgery, a two-timescale procedure for finding local Nash equilibria in two-player zero-sum games. We first show that previous gradient-based algorithms cannot guarantee convergence to local Nash equilibria due to the existence of non-Nash stationary points. By taking advantage of the differential structure of the game, we construct an algorithm for which the local Nash equilibria are the only attracting fixed points. We also show that the algorithm exhibits no oscillatory behaviors in neighborhoods of equilibria and show that it has the same per-iteration complexity as other recently proposed algorithms. We conclude by validating the algorithm on two numerical examples: a toy example with multiple Nash equilibria and a non-Nash equilibrium, and the training of a small generative adversarial network ({GAN}).},
+	journaltitle = {{arXiv}:1901.00838 [cs, math, stat]},
+	author = {Mazumdar, Eric V. and Jordan, Michael I. and Sastry, S. Shankar},
+	urldate = {2020-05-09},
+	date = {2019-01-24},
+	eprinttype = {arxiv},
+	eprint = {1901.00838},
+	keywords = {tbr},
+	file = {Mazumdar et al_2019_On Finding Local Nash Equilibria (and Only Local Nash Equilibria) in Zero-Sum Games.pdf:/Users/wpq/Dropbox (MIT)/zotero/Mazumdar et al_2019_On Finding Local Nash Equilibria (and Only Local Nash Equilibria) in Zero-Sum Games.pdf:application/pdf}
+}
+
+@article{adolphsLocalSaddlePoint2019,
+	title = {Local Saddle Point Optimization: A Curvature Exploitation Approach},
+	url = {http://arxiv.org/abs/1805.05751},
+	shorttitle = {Local Saddle Point Optimization},
+	abstract = {Gradient-based optimization methods are the most popular choice for finding local optima for classical minimization and saddle point problems. Here, we highlight a systemic issue of gradient dynamics that arise for saddle point problems, namely the presence of undesired stable stationary points that are no local optima. We propose a novel optimization approach that exploits curvature information in order to escape from these undesired stationary points. We prove that different optimization methods, including gradient method and Adagrad, equipped with curvature exploitation can escape non-optimal stationary points. We also provide empirical results on common saddle point problems which confirm the advantage of using curvature exploitation.},
+	journaltitle = {{arXiv}:1805.05751 [cs, math, stat]},
+	author = {Adolphs, Leonard and Daneshmand, Hadi and Lucchi, Aurelien and Hofmann, Thomas},
+	urldate = {2020-05-09},
+	date = {2019-02-14},
+	eprinttype = {arxiv},
+	eprint = {1805.05751},
+	keywords = {tbr},
+	file = {Adolphs et al_2019_Local Saddle Point Optimization - A Curvature Exploitation Approach.pdf:/Users/wpq/Dropbox (MIT)/zotero/Adolphs et al_2019_Local Saddle Point Optimization - A Curvature Exploitation Approach.pdf:application/pdf}
+}
+
+@article{zhangConvergenceGradientMethods2020,
+	title = {Convergence of Gradient Methods on Bilinear Zero-Sum Games},
+	url = {http://arxiv.org/abs/1908.05699},
+	abstract = {Min-max formulations have attracted great attention in the {ML} community due to the rise of deep generative models and adversarial methods, while understanding the dynamics of gradient algorithms for solving such formulations has remained a grand challenge. As a first step, we restrict to bilinear zero-sum games and give a systematic analysis of popular gradient updates, for both simultaneous and alternating versions. We provide exact conditions for their convergence and find the optimal parameter setup and convergence rates. In particular, our results offer formal evidence that alternating updates converge "better" than simultaneous ones.},
+	journaltitle = {{arXiv}:1908.05699 [cs, math, stat]},
+	author = {Zhang, Guojun and Yu, Yaoliang},
+	urldate = {2020-05-09},
+	date = {2020-03-03},
+	eprinttype = {arxiv},
+	eprint = {1908.05699},
+	keywords = {tbr},
+	file = {Zhang_Yu_2020_Convergence of Gradient Methods on Bilinear Zero-Sum Games.pdf:/Users/wpq/Dropbox (MIT)/zotero/Zhang_Yu_2020_Convergence of Gradient Methods on Bilinear Zero-Sum Games.pdf:application/pdf}
+}
+
+@article{essidImplicitGradientdescentProcedure2019,
+	title = {An implicit gradient-descent procedure for minimax problems},
+	url = {http://arxiv.org/abs/1906.00233},
+	abstract = {A game theory inspired methodology is proposed for finding a function's saddle points. While explicit descent methods are known to have severe convergence issues, implicit methods are natural in an adversarial setting, as they take the other player's optimal strategy into account. The implicit scheme proposed has an adaptive learning rate that makes it transition to Newton's method in the neighborhood of saddle points. Convergence is shown through local analysis and, in non convex-concave settings, thorough numerical examples in optimal transport and linear programming. An ad-hoc quasi Newton method is developed for high dimensional problems, for which the inversion of the Hessian of the objective function may entail a high computational cost.},
+	journaltitle = {{arXiv}:1906.00233 [math]},
+	author = {Essid, Montacer and Tabak, Esteban and Trigila, Giulio},
+	urldate = {2020-05-10},
+	date = {2019-06-01},
+	eprinttype = {arxiv},
+	eprint = {1906.00233},
+	keywords = {read},
+	file = {Essid et al_2019_An implicit gradient-descent procedure for minimax problems.pdf:/Users/wpq/Dropbox (MIT)/zotero/Essid et al_2019_An implicit gradient-descent procedure for minimax problems.pdf:application/pdf}
+}
+
+@article{mokhtariUnifiedAnalysisExtragradient2019,
+	title = {A Unified Analysis of Extra-gradient and Optimistic Gradient Methods for Saddle Point Problems: Proximal Point Approach},
+	url = {http://arxiv.org/abs/1901.08511},
+	shorttitle = {A Unified Analysis of Extra-gradient and Optimistic Gradient Methods for Saddle Point Problems},
+	abstract = {In this paper we consider solving saddle point problems using two variants of Gradient Descent-Ascent algorithms, Extra-gradient ({EG}) and Optimistic Gradient Descent Ascent ({OGDA}) methods. We show that both of these algorithms admit a unified analysis as approximations of the classical proximal point method for solving saddle point problems. This viewpoint enables us to develop a new framework for analyzing {EG} and {OGDA} for bilinear and strongly convex-strongly concave settings. Moreover, we use the proximal point approximation interpretation to generalize the results for {OGDA} for a wide range of parameters.},
+	journaltitle = {{arXiv}:1901.08511 [cs, math, stat]},
+	author = {Mokhtari, Aryan and Ozdaglar, Asuman and Pattathil, Sarath},
+	urldate = {2020-05-10},
+	date = {2019-09-05},
+	eprinttype = {arxiv},
+	eprint = {1901.08511},
+	keywords = {tbr},
+	file = {Mokhtari et al_2019_A Unified Analysis of Extra-gradient and Optimistic Gradient Methods for Saddle Point Problems - Proximal Point Approach.pdf:/Users/wpq/Dropbox (MIT)/zotero/Mokhtari et al_2019_A Unified Analysis of Extra-gradient and Optimistic Gradient Methods for Saddle Point Problems - Proximal Point Approach.pdf:application/pdf}
+}
+
+@inproceedings{gidelNegativeMomentumImproved2019,
+	title = {Negative Momentum for Improved Game Dynamics},
+	url = {http://proceedings.mlr.press/v89/gidel19a.html},
+	abstract = {Games generalize the single-objective optimization paradigm by introducing different objective functions for different players. Differentiable games often proceed by simultaneous or alternating gra...},
+	eventtitle = {The 22nd International Conference on Artificial Intelligence and Statistics},
+	pages = {1802--1811},
+	booktitle = {The 22nd International Conference on Artificial Intelligence and Statistics},
+	author = {Gidel, Gauthier and Hemmat, Reyhane Askari and Pezeshki, Mohammad and Priol, Rémi Le and Huang, Gabriel and Lacoste-Julien, Simon and Mitliagkas, Ioannis},
+	urldate = {2020-05-11},
+	date = {2019-04-11},
+	langid = {english},
+	note = {{ISSN}: 1938-7228
+Section: Machine Learning},
+	keywords = {tbr},
+	file = {Gidel et al_2019_Negative Momentum for Improved Game Dynamics.pdf:/Users/wpq/Dropbox (MIT)/zotero/Gidel et al_2019_Negative Momentum for Improved Game Dynamics.pdf:application/pdf}
+}

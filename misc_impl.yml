@@ -9,8 +9,10 @@ dependencies:
     - nb_conda
     - pytorch
     - torchvision
-    - tqdm
+    - tensorflow
     - tensorboard
+    - autograd
+    - tqdm
     - opencv
     - scikit-learn
     - pylint
@@ -20,4 +22,7 @@ dependencies:
     - cvxopt
     - pandas
     - scipy
+    # knockoffs
     - glmnet
+    - shap
+    - xgboost

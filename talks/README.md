@@ -14,6 +14,7 @@
   - [Knockoffs: using ML for finite-sample controlled variable selection in nonparametric models (video)](#knockoffs-using-ml-for-finite-sample-controlled-variable-selection-in-nonparametric-models-video)
   - [Hopfield Nets](#hopfield-nets)
   - [The Knockoffs Framework: New Statistical Tools for Replicable Selections (Emmanuel Candès: IPAM Green Family Lecture Series 2018)](#the-knockoffs-framework-new-statistical-tools-for-replicable-selections-emmanuel-candès-ipam-green-family-lecture-series-2018)
+  - [Improving GANs using Game Theory and Statistics MIFODS 2019 (Costis Daskalakis)](#improving-gans-using-game-theory-and-statistics-mifods-2019-costis-daskalakis)
 
 
 ## Unsupervised Deep Learning [(Neurips 2018 tutorial)](https://www.youtube.com/watch?v=rjZCjosEFpI)
@@ -492,3 +493,27 @@
     + loss
         + empirically penalize exchangeability with MMD
         + promotes small corelation between variables and knockoffs
+
+
+
+
+## Improving GANs using Game Theory and Statistics [MIFODS 2019 (Costis Daskalakis)](https://www.youtube.com/watch?v=0fpUZT0Pvd4)
+
++ training gan with optimism
+    + training oscillations for simple architecture!
+    + last iterate convergence for bilinear game, see [Liang-Stokes' 18]
+        + **for** constrained bilinear game [Daskalakis-Panageas' 18]
+  + GD with neagative momentum
+      + undo today, some of yesterday's gradient push
+      + Optimistic FTRL w/ l2-regularization (opponent play close to what its doing now)
++ theory
+    + online learning, no-regret update, FTRL, etc.
+    + average iterate converges
++ optimism in the wild [Daskalakis-Panageas' 18]
+    + optimism in non convex-concave problem
+    + stable points of optimistic GDA are not only local minimax point
+    + local minimax \subset stable point of GD \subset stable point of OGD
++ GAN statistical challenge
+    + certify a trained generator by estimating wasserstein distance between data distribution and model distribution 
+    + curse of dimensionality: need exponentially many samples to estimate wasserstein distance
+    + however can distinguish bayes networks (lower dimensional structure)

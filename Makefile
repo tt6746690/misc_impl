@@ -12,4 +12,6 @@ notebook:
 	cd notebook
 	jupyter notebook --no-browser --port=8888
 
-
+create_ipykernel:
+	# set kernels in jupyter for an env
+	python -m ipykernel install --user --name misc_impl --display-name "Python (misc_impl)"

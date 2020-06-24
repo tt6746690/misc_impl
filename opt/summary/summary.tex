@@ -1,21 +1,32 @@
 \documentclass[11pt]{article}
 \input{../../preamble_local.tex}
 
+\providecommand{\main}{.}
+\usepackage{xr-hyper} % cross-referencing with \ref
+    \externaldocument[main-]{\main/summary}
+
 \graphicspath{{./assets/}{../assets/}}
 \addbibresource{opt_convex.bib}
 \addbibresource{opt_stochastic.bib}
 \addbibresource{opt_secondorder.bib}
- 
+\addbibresource{opt_minimax.bib}
+\addbibresource{0_textbooks.bib}
+  
+  
 \usepackage{subfiles} 
 
 \begin{document} 
 
+\tableofcontents 
+\newpage
+ 
 \subfile{smooth_convex/summary}
 \subfile{non_smooth_convex/summary}
 \subfile{stochastic/summary}
 \subfile{second_order_methods/summary}
+\subfile{minimax/summary}
 \subfile{cheatsheet/summary}
- 
+  
 \printbibliography 
-
-\end{document}  
+ 
+\end{document}

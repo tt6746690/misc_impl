@@ -5,7 +5,7 @@
 \section{Cheat Sheet} 
 
 \subsection{Lipschitz Continuous}
-
+ 
 \begin{definition}
     $f\in C_{L}^{k,p}(Q)$ is $k$ times continuously differentiable on $Q$ if for all $x,y\in Q$,
     \begin{align}
@@ -141,7 +141,8 @@ Note (\ref{eq:smooth_convex_1}) implies a tighter (linear) lower bound to $f(\cd
         \nabla f(x^*) = 0
             \label{eq:strongly_convex_1} \\
     \inner{\nabla f(x) - \nabla f(y)}{x-y}
-        &\geq \mu \norm{x-y}^2 \\
+        &\geq \mu \norm{x-y}^2 
+            \label{eq:strongly_convex_bounded_residual}\\
     \lambda f(x) + (1-\lambda) f(y)
         &\geq f(\lambda x + (1-\lambda )y) + \lambda (1-\lambda )\frac{\mu}{2}\norm{x-y}^2
 \end{align}

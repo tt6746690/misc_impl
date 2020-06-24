@@ -4,38 +4,210 @@
 
 \section{Nonsmooth Convex Optimization}
 
-We are interested in unconstrained minimization of convex, possibly nondifferentiable, $f:\R^n \to \R$ 
+We are interested in constrained minimization of convex, possibly nondifferentiable, $f:\R^n \to \R$ 
 \[
-    \text{minimize}_{x\in\R^n}\; f(x)
+    \text{minimize}_{x\in \sC}\; f(x)
 \]
-given first order oracle
+given first order oracle. $\sC$ is a simple closed convex set.
 
-\subsection{Subgradient Method}
+\subsection{Projected Subgradient Method}
 
-Given bounded subgradient $\norm{g^k}\leq G$ and bounded domain $\norm{x^0 - x^*} \leq R$, subgradient method is in a sense optimal as it achieves the lower bound $\sO(\frac{1}{\epsilon^2})$ for this problem class. Subgradient method iteratively updates as follows
+Subgradient method iteratively updates as follows
 \[
     x^{k+1}
-        = x^k - \alpha_k g^k    
+        = \sP_{\sC}\left( x^k - \alpha_k g^k  \right)
 \]
-where $g^k \in\partial f(x^k)$ is \textit{any} subgradient of $f$. First order optimality condition is now $0\in\partial f(x^*)$, which is impossible to test for nontrivial function $f$. Therefore, using $\norm{g^k}\leq \epsilon$ is not informative and subgradient method does not really have a stopping criterion.
+where $g^k \in\partial f(x^k)$ is \textit{any} subgradient of $f$ and that $\sP_{\sC}(x) = \argmin_{y\in\sC} \norm{x-y}^2$. First order optimality condition is $\inner{g(x)}{x-x^*} \geq 0$ for any $x\in\sC$, which is impossible to test for nontrivial function $f$. Therefore, using $\norm{g^k}\leq \epsilon$ is not informative and subgradient method does not really have a stopping criterion.
 
+\subsubsection{Connection to Mirror Descent}
+
+Each update involves solving a subproblem of the form
+\begin{align}
+    x^{k+1}
+        &= \argmin_{x\in\sC} \norm{ x^k - \alpha_k g^k - x }_2^2 
+            \nonumber \\
+        &= \argmin_{x\in\sC} \pc{
+            \norm{x-x^k}_2^2 + 2\alpha_k \inner{x}{\nabla f(x^k)} + \left( \alpha_k \nabla f(x^k) \right)^2
+        } 
+            \nonumber \\
+        &= \argmin_{x\in\sC} \pc{
+            \inner{x}{\nabla f(x^k)} + \frac{1}{\alpha_k} D^{\omega}(x,x^k)
+        }
+            \label{eq:subgradient_connection_to_mirror_descent}
+\end{align}
+where $D^{\omega}(x,y) = \frac{1}{2}\norm{x-y}_2^2$ is the Bregman divergence induced by $\omega(x)=\frac{1}{2}\norm{x}_2^2$. In effect, projected subgradient method is mirror descent on $\sC$ endowed with $\ell$-2 norm.
+
+\subsubsection{Convergence}
+
+Given bounded subgradient $\norm{g^k}\leq G$ and bounded domain $\norm{x^0 - x^*} \leq R$, subgradient method is in a sense optimal as it achieves the lower bound $\sO(\frac{1}{\epsilon^2})$ for this problem class. The derivation as follows
+\begin{align*}
+    \norm{x^{k+1} - x^*}_2^2
+        &= \norm{\sP_{\sC}\left(x^k - \alpha_k g^k\right) -  \sP_{\sC}(x^*)} 
+            \tag{Try to bound a single update} \\
+        &\leq \norm{x^k - \alpha_k g^k - x^*}_2^2
+                \tag{$\sP_{\sC}$ nonexpansive} \\ 
+        &= \norm{x^k-x^*}_2^2 - 2\alpha_k \inner{g^k}{x^k-x^*} + \alpha_k^2 \norm{g^k}_2^2 \\
+        &\leq \norm{x^k-x^*}_2^2 - 2\alpha_k \left( f(x^k) - f(x^*) \right) + \alpha_k^2 \norm{g^k}_2^2 \\
+    \norm{x^{k+1} - x^*}_2^2
+        &\leq \norm{x^1 - x^*}_2^2 - 2\sum_{i=1}^{k} \alpha_i\left(f(x^i) - f(x^*)\right) + \sum_{i=1}^k \alpha_i^2 \norm{g^i}_2^2
+            \tag{Telescope} 
+\end{align*} 
+Then rearrange, and bound 
+\begin{align*} 
+    2\sum_{i=1}^k \left(f(x^i) - f(x^*)\right)
+        \leq R^2 + G^2 \sum_{i=1}^k \alpha_i^2 \quad\Rightarrow\quad
+    \min_{i\in[k]} f(x^i) - f(x^*) 
+        \leq \frac{R^2 + G^2\sum_{i=1}^k \alpha_i^2}{2\sum_{i=1}^k \alpha_i}
+\end{align*} 
+We note that $\min_{i\in[k]} f(x^i) - f(x^*) \to 0$ if stepsize is square summable but not summable, i.e. $\sum_i \alpha_i^2 < \infty$ and $\sum_i \alpha_i = \infty$. The choice of stepsize $\alpha_k = \frac{R}{\sqrt{k+1}}$ yield $\min_{i\in[k]} f(x^i) - f(x^*) = \sO(\frac{1}{\epsilon^2})$. (3.2.3 in \cite{nesterovIntroductoryLecturesConvex2004})
+ 
+ 
 \subsubsection{Solving Support Vector Machine w/ Subgradient Method}
 
 We are given data $\sD = \pc{(x_i,y_i) \mid x_i\in\R^n \; y_i \in \pc{\pm 1}}$, support vector machine is supervised learning model that tries to find $w\in\R^n$ and $b\in\R$ such that the empirical risk and regularizer on $w$ is minimized
 \begin{align*}
-    \text{minimize}_{w,b} \quad
-        \frac{1}{2} \norm{w}_2^2 + \lambda \sum_{i=1}^m \max\pb{0, 1 - y_i(w^Tx_i + b)} 
-        \quad \left( := f(w,b) \right)
+    \text{minimize}_{w,b} \;\;
+        \pb{
+            f(w,b) := 
+            \frac{1}{2} \norm{w}_2^2 + \lambda \sum_{i=1}^m \max\pb{0, 1 - y_i(w^Tx_i + b)} 
+        }
 \end{align*}
-Support vector machines can be solved using subgradient method. We first find a subgradient of $f$
+The subgradient of $f$ is given by,
 \begin{align*}
     g_w^k
-        &= w^k - \lambda \sum_{i\in[m]: y_i(w^Tx_i + b) < 1 } y_i x_i \\
+        = w^k - \lambda \sum_{i \in S} y_i x_i
+    \qquad
     g_b
-        &= -\lambda \sum_{i\in[m]: y_i(w^Tx_i + b) < 1 } y_i
+        = -\lambda \sum_{i\in S} y_i
+    \quad\text{where}\quad
+    S = \pc{i\in [m] \mid y_i(w^Tx_i + b) < 1}
 \end{align*}
 where we haved picked $0\in\partial (\max{0, 1- y_i(w^Tx_i + b)})$ when $y_i(w^Tx_i + b) = 1$, the only case where the \textit{max term} is non-differentiable. When tested on the Iris dataset, subgradient method worked!
-\fig{svm_subgradient}{4in}
+
+\fig{svm_subgradient}{3in}
+
+\subsection{Mirror Descent}
+
+Let $\sD$ be a convex open set where $\sC\subset\overline{\sD}$ and $\omega:\sD\to\R$ be a mirror map satisfying 1) strictly convex and differentiable 2) $\nabla \omega(\sD) = \R$ 3) $\lim_{x\to\partial\sD} \norm{\nabla \omega(x)} = \pm\infty$. Given initialization $x^1 = \argmin_{x\in\sC} \omega(x)$, mirror descent take steps
+\begin{align}
+    x^{k+1}
+        &= \prox_{x^k}\left( \alpha_k g^k \right)
+    \qquad\text{where}\qquad
+    \prox_{x}\left( \xi \right)
+        := \argmin_{x\in\sC} \pc{
+            D_{\omega}(x,y) + \inner{\xi}{x}
+        }
+        \label{eq:mirror_descent_prox_update}
+\end{align}
+where $\prox_{x}(\cdot)$ is called Bregman prox mapping and can be interpreted as extension of the standard $\prox$ operator regularized by Bregman divergence instead of $\ell$-2 norm. By (\ref{eq:subgradient_connection_to_mirror_descent}), we see mirror descent as a generalization of projected subgradient methods to domain other than $\R^n$. An alternative update can be derived by considering the optimality condition of (\ref{eq:mirror_descent_prox_update}) $0 \in \alpha_k g^k + \nabla \omega(x^{k+1}) - \nabla \omega(x^k) + \sN_{\sC}(x^{k+1})$ where $\sN_C(\cdot)$ is normal cone of $\sC$, or equivalently, $x^{k+1} \in (\nabla \omega + \sN_{\sC})^{-1}(\nabla \omega(x^k) - \alpha_k g^k)$. The update can be written as 
+\begin{align*}
+    y^{k+1}
+        &= \nabla \omega^* \left( \nabla \omega(x^k) - \alpha_k g^k \right) 
+        \qquad\text{where}\quad
+        w^*(y) = \sup_{z\in\sD}\pb{\inner{z}{y} - \omega(z)}\\
+    x^{k+1} 
+        &\in \argmin_{x\in \sC} D_{\omega}(x,y^{k+1})
+\end{align*}
+Here $\nabla \omega(\cdot)$ serve as a bijection between primal space $\sD$ and dual space $\R$. The update can be seen as taking a regular gradient step in the dual space $\nabla \omega(x^k) - \alpha_k g^k$, map back the iterate to the primal space $\sD$, then finally project onto the feasible set $\sC$.
+
+
+\subsubsection{Bregman Divergence}
+
+\begin{definition*}
+    \textbf{(Bregman Divergence)} Let $\sC$ be closed convex set. Let the distance generating function $h:\sC\to\R$ be continuously differentiable and 1-strongly convex w.r.t. norm $\norm{\cdot}$. Then the Bregman divergence is 
+    \begin{align*}
+        D_h(x,y)
+            = h(x) - h(y) - \inner{\nabla h(y)}{x-y}
+    \end{align*}
+    which has the interpretation of the error in first order Taylor expansion of $h$ around $y$ evaluated at $x$. For example, $h(x)=\frac{1}{2}\norm{x}_2^2$ is strongly convex w.r.t. $\ell$-2 norm over $\sC\subset\R^n$ with $D_h(x,y) = \frac{1}{2}\norm{x-y}_2^2$; the negative entropy function $h(x) = \sum_{i} x_i \log x_i$ is strongly convex w.r.t. $\ell$-1 norm over the probability simplex $\sC\subset \boldsymbol{\triangle}^n = \pc{x\in\R^n_{+} \mid \sum_i x_i = 1}$ with $D_h(x,y) = \pb{\sum_i x_i \log(x_i/y_i) - \sum_i x_i + \sum_i y_i := D(x\Vert y)} \geq \frac{1}{2}\norm{x-y}_1^2$ or KL divergence (inequality straight from Pinsker's inequality)
+\end{definition*}
+\noindent Some important properties of Bregman divergence include (\href{http://users.cecs.anu.edu.au/~xzhang/teaching/bregman.pdf}{reference})
+\begin{align}
+    D_h(x,y)
+        &\geq \frac{1}{2}\norm{x-y}^2 
+        \label{eq:bregman_norm_squared_lower_bound} \\
+    \inner{\nabla h(x) - \nabla h(y)}{x-z}
+        &= D_h(x,y) + D_h(z,x) - D_h(z,y)
+        \label{eq:bregman_pythagoras_identity}  \\
+    \nabla_x D_h(x,y) 
+        &= \nabla h(x) - \nabla h(y)
+        \label{eq:bregman_gradient_of_divergence}
+\end{align}
+ 
+
+\subsubsection{Convergence}
+ 
+Assume bounded gradient norm $\norm{g^k}_* \leq G$ and an upper bound on divergence to $z^1$, i.e. $\Omega := \max_{u\in\sC} D_{\omega}(u,z^1)$. The key to convergence of mirror descent is the MD lemma
+\begin{align}
+    \alpha_k \inner{g^k}{x^k - u}
+        \leq \frac{\alpha^2}{2} \norm{g^k}_*^2 + D_{\omega}(u,x^k) - D_{\omega}(u,x^{k+1})
+        \qquad \forall u\in\sC
+    \label{eq:mirror_descent_md_lemma}
+\end{align}
+\begin{proof}
+    Copied from \cite{allen-zhuLinearCouplingUltimate2016}
+    \begin{align*}
+        \alpha_k \inner{g^k}{x^k-u}
+            &= \inner{\alpha_k g^k}{x^k - x^{k+1}} + \inner{\alpha g^k}{x^{k+1} - u}\\
+            &\leq \inner{\alpha_k g^k}{x^k - x^{k+1}} + \inner{-\nabla D_{\omega}(x^{k+1},x^k)}{x^{k+1} - u} 
+                \tag{by 1st order optimality condition: $\inner{\nabla D_{\omega}(x^{k+1},x^k) + \alpha_k g^k  }{u - x^{k+1}} \geq 0$ for all $u\in\sC$ } \\
+            &= \inner{\alpha_k g^k}{x^k - x^{k+1}}  + D_{\omega}(u,x^k) - D_{\omega}(u,x^{k+1}) - D_{\omega}(x^{k+1},x^k)
+                \tag{By (\ref{eq:bregman_pythagoras_identity},\ref{eq:bregman_gradient_of_divergence})} \\
+        &\leq \inner{\alpha_k g^k}{x^k - x^{k+1}} - \frac{1}{2}\norm{x^k - x^{k+1}}^2 + D_{\omega}(u,x^k) - D_{\omega}(u,x^{k+1})
+            \tag{By (\ref{eq:bregman_norm_squared_lower_bound})} \\
+        &\leq \frac{\alpha_k^2}{2} \norm{g^{k}}_*^2 + D_{\omega}(u,x^k) - D_{\omega}(u,x^{k+1})
+            \tag{completed square is nonzero}
+    \end{align*}
+\end{proof}
+\noindent Using the MD lemma, we can derive an upper bound on the regret $\inner{g^k}{x^k-x^*}$ by telescope
+\begin{align*}
+    \sum_{k=1}^{T} \alpha_k \inner{g^k}{x^k-x^*}
+        \leq \sum_{k=1}^T \frac{\alpha_k^2}{2} \norm{g^k}_*^2 + D_{\omega}(x^*,x^1) - D_{\omega}(x^*,x^{k+1}) 
+        \leq \frac{G^2}{2} \sum_{k=1}^T \alpha_k^2 + \Omega
+\end{align*}
+By convexity of $f$ and Jensen's inequality and let $\overline{x} = \sum_{k=1} \gamma_k x^k$ where $\gamma_k = \alpha_k/\sum_{k}\alpha_k$, 
+\begin{align*}
+    \sum_{k=1}^T \alpha_k \inner{g^k}{x^k-x^*}
+        \geq \sum_{k=1}^T \alpha_k \left( f(x^k) - f(x^*) \right)
+        \geq \left(\sum_{k=1}^T \alpha_k\right)\left( f\left( \overline{x} \right)  - f(x^*) \right)
+\end{align*}
+Then we have a bound on the average iterate $\overline{x}$
+\begin{align*}
+    f(\overline{x}) - f(x^*)
+        \leq \frac{\frac{G^2}{2} \sum_{k=1}^T \alpha_k^2 + \Omega}{ \sum_{k=1}^T \alpha_k }
+\end{align*}
+Note the bound is really similar to bound we get for last iterate in convergence analysis for projected subgradient methods, it turns out the complexity is also the same, The choice of constant stepsize $\alpha_k = \frac{\sqrt{2\Omega}}{G\sqrt{T}}$ has $\sum_k \alpha_k = \frac{\sqrt{2\Omega T}}{G}$ and $\sum_k \alpha_k^2 = \frac{2\Omega}{G^2}$, then
+\begin{align*}
+    f(\overline{x}) - f(x^*)
+        \leq \frac{ G(\Omega + \frac{G^2}{2}\frac{2\Omega}{G^2}) }{ \sqrt{2\Omega T} } 
+        = \frac{2\Omega G}{\sqrt{2\Omega T}}
+        = G \sqrt{\frac{2\Omega}{T}}
+\end{align*}
+which implies $\sO(\frac{1}{\epsilon^2})$ complexity
+
+
+\subsubsection{Exponentiated Gradient}
+
+Exponentiated gradient is a special case of mirror descent. Consider the case when $\sC = \triangle^n \subset \R_{>0}^n = \sD$, with $w:\sD\to\R$ defined by negative entropy $\omega(x) = \sum_i x_i \log x_i$ and the corresponding bregman divergence is then $D_{\omega}(x,y) = \sum_i x_i \log (x_i/y_i)$. Note the fenchel dual is $\omega^*(y) = \sum_i e^{y_i-1}$. Therefore $(\nabla \omega(x))_i = \log x_i + 1$ and $(\nabla \omega^*(y))_i = e^{y_i-1}$. In this case, the projection is equivalent to renormalization. In particular by log-sum inequality and fact that $x\in\triangle^n$ and $y\in\R_{> 0}$, 
+\begin{align*}
+    D_{\omega}(x,y)
+        = \sum_i x_i \frac{x_i}{y_i}
+        \geq \left(\sum_i x_i\right) \log \frac{\sum_i x_i}{\sum_i y_i}  = -\log \norm{y}_1
+\end{align*}
+with equality if all $x_i/y_i$ equal. So $(\argmin_{x\in\sC} D_{\omega}(x,y))_i = \frac{y_i}{\norm{y}_1}$. The mirror descent steps
+\begin{align*}
+    \left(y^{k+1}\right)_i
+        = \exp\pc{
+            \log x^k_i + 1 - \alpha_k g^k_i - 1
+        }
+        = x^k_i e^{-\alpha_k g^k_i}
+        \qquad 
+    \left( x^{k+1} \right)_i
+        = \frac{x^k_i e^{-\alpha_k g^k_i}}{\sum_{i=1}^n x^k_i e^{-\alpha_k g^k_i}}
+\end{align*}
+For $x^1 = (1/n,\cdots,1/n)$, the bound on diameter at initial iterate is then $\Omega = \log n$. We see here the rate of convergence is $\sO(\sqrt{\frac{\log n}{T}})$, in contrast to the $\sO(\sqrt{\frac{n}{T}})$ rate for subgradient method.
+
+
 
 
 \end{document}
