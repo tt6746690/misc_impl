@@ -7,8 +7,11 @@ dependencies:
     - matplotlib
     - jupyter
     - nb_conda
-    - pytorch
-    - torchvision
+    # compatible with CUDA 10.0
+    # https://pytorch.org/get-started/previous-versions/
+    - pytorch=1.2.0
+    - torchvision==0.4.0
+    - cudatoolkit=10.0
     - tensorflow
     - tensorboard
     - autograd
