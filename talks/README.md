@@ -15,6 +15,7 @@
   - [Hopfield Nets](#hopfield-nets)
   - [The Knockoffs Framework: New Statistical Tools for Replicable Selections (Emmanuel Candès: IPAM Green Family Lecture Series 2018)](#the-knockoffs-framework-new-statistical-tools-for-replicable-selections-emmanuel-candès-ipam-green-family-lecture-series-2018)
   - [Improving GANs using Game Theory and Statistics MIFODS 2019 (Costis Daskalakis)](#improving-gans-using-game-theory-and-statistics-mifods-2019-costis-daskalakis)
+  - [The Mathematics of Causal Inference: with Reflections on Machine Learning Microsoft Research 2016 (Judea Pearl)](#the-mathematics-of-causal-inference-with-reflections-on-machine-learning-microsoft-research-2016-judea-pearl)
 
 
 ## Unsupervised Deep Learning [(Neurips 2018 tutorial)](https://www.youtube.com/watch?v=rjZCjosEFpI)
@@ -517,3 +518,14 @@
     + certify a trained generator by estimating wasserstein distance between data distribution and model distribution 
     + curse of dimensionality: need exponentially many samples to estimate wasserstein distance
     + however can distinguish bayes networks (lower dimensional structure)
+
+## The Mathematics of Causal Inference: with Reflections on Machine Learning [Microsoft Research 2016 (Judea Pearl)](https://www.youtube.com/watch?v=bcRl7sXR1hE)
+
+
++ data generating model
+    + mechanism/recipe/law by nature ... generates different joint distributions
++ SCM
+    + the exogeneous variables are not noise but factors that are deliberately exluded in the model (by human)
++ 2 fundamental laws of causal inference
+    + law of counterfactual: M generates and evaluates all counterfactuals
+    + law of conditional independence (d-separation)
