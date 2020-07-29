@@ -42,9 +42,3 @@ clean:
 	rm -r logs ||:
 	rm -r models ||:
 	rm -r figures ||:
-
-gif:
-	mkdir gifs ||:
-	
-	convert -delay 10 -loop 0 `ls -v figures/infogan_seed=3_2020.02.14-02:07:54/*.png` gifs/visualize_training.gif
-	convert gifs/visualize_training.gif -coalesce -resize 224x224 -layers OptimizeFrame gifs/visualize_training.gif

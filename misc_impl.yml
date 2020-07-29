@@ -3,15 +3,14 @@ channels:
     - pytorch
 dependencies:
     - python=3.7
+    - cudatoolkit=10.1
+    - pytorch=1.6.0
     - numpy
     - matplotlib
     - jupyter
     - nb_conda
-    # compatible with CUDA 10.0
-    # https://pytorch.org/get-started/previous-versions/
-    - pytorch=1.2.0
-    - torchvision==0.4.0
-    - cudatoolkit=10.0
+    - torchvision
+    - pyro=1.4.0
     - tensorflow
     - tensorboard
     - autograd
