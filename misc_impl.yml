@@ -30,3 +30,5 @@ dependencies:
     - glmnet
     - shap
     - xgboost
+    # latex 
+    - graphviz

@@ -1,0 +1,64 @@
+\documentclass[11pt]{article}
+\input{../../preamble_local.tex}
+
+
+\usepackage{tikz}
+\usetikzlibrary{bayesnet}
+\usetikzlibrary{arrows}
+
+\begin{document}
+
+
+\begin{figure}[ht]
+\begin{center}
+\resizebox{3cm}{!}{
+        \tikz {
+        % nodes
+        \node[latent,scale=1.5]                           (x) {$x$};
+        \node[latent,above=of x,scale=1.5]                (y) {$y$};
+        \node[latent,above=of x,xshift=2cm,scale=1.5]     (z) {$z$};
+        \node[latent,right=of x,scale=1.5]                (yhat) {$\hat{y}$};
+        % edges
+        \edge {y,z} {x}  
+        \edge {z} {y}
+        \edge {x} {yhat}
+        }
+}
+\end{center}
+\end{figure}
+
+\section{Causal Explanation}
+
+
+We assume some simplified structured causal model $S = \pc{X_j := f_j(PA_{j}, U_j)}$ and noise distribution $U_j\sim P_{\ru_j}$ that induces a joint distribution $P_{X}$ over graph $\sG$. Assume mechanisms lie in some parameterized family of functions $f_j^{\theta} \in \sF := \pc{f^{\theta}\mid \theta\in\Theta}$ and that we have access to i.i.d. samples from the graph, in particular we have $\textstyle \pc{(x_j^{(i)},pa_{j}^{(i)})}_{i=1}^n$. we can estimate parameters of the mechanism $f_j$ using maximum likelihood,
+\begin{align}
+    \hat{\theta}_j
+        = \argmax_{\theta\in\Theta} 
+            \prod_{i=1}^n p_{\rx_j|\rpa_j}(x_j^{(i)} \mid pa_{j}^{(i)})
+        = \argmax_{\theta\in\Theta}
+            \prod_{i=1}^n \int p_{\ru_j}(u_j) \delta \left( x_j^{(i)} - f_j^{\theta}(pa_j^{(i)}, u_j) \right) du_j 
+\end{align}
+The form of $p_{\rx_j\mid \rpa_j}$ depends on the family of mechanisms $\sF$. We can write out explicit forms for the conditional density if $\sF$ is simple, for example in the case of Gaussian additive noise model, the conditional density is a translated Gaussian distribution. If $\sF$ is parameterized by arbitrary function, i.e. a neural network, and that $X_j$ is high dimensional, we can model the conditional density using a latent variable model, such as a conditional VAE.
+\begin{align}
+    p_{\rx_j|\rpa_j}(x_j|pa_j)
+        = \int p_{\rx_j|\rpa_j,\rz}(x_j|pa_j,z) p_{\rz}(z) dz
+        \qquad
+        \rz \sim \sN(0,I)
+\end{align}
+For arbitrary function family $\sF$, the parameters of the mechanisms can not be identified from observational data alone. However, we might still be interested in using the model as a tool for evaluating if the the classifier uses unstable features. Here we have assumed that the graph structure reflects domain specific knowledge and that by learning parameters of the mechanisms, we captured the causal relationship between potential confounders $z$ and $x$ as input image to the classifier $h$. Given a particular instance $x$, we are interested in the presence of un-modeled confounders. We can visualize the effect of these confounders by holding values for the endogeneous noise fixed while search for soft interventions $u$ such that the counterfactual outcome on classifier output $\hat{y}(u)$ flips sign with high probability.
+\begin{align}
+    \text{min}_{p_{\ru}\in \sP_{\ru}} D\left(p_{\ru|\rx}(\cdot|x),p_{\ru}(\cdot)\right)
+    \qquad
+    \text{s.t.}\;
+    \E\pb{ \mathbbm{1}\pb{\hat{y}_{x}(u) \neq \hat{y}_x} }  > 0.5
+\end{align}
+
+
+
+ 
+\newpage
+\printbibliography 
+
+
+
+\end{document}
