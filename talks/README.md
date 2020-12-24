@@ -16,6 +16,7 @@
   - [The Knockoffs Framework: New Statistical Tools for Replicable Selections (Emmanuel Candès: IPAM Green Family Lecture Series 2018)](#the-knockoffs-framework-new-statistical-tools-for-replicable-selections-emmanuel-candès-ipam-green-family-lecture-series-2018)
   - [Improving GANs using Game Theory and Statistics MIFODS 2019 (Costis Daskalakis)](#improving-gans-using-game-theory-and-statistics-mifods-2019-costis-daskalakis)
   - [The Mathematics of Causal Inference: with Reflections on Machine Learning Microsoft Research 2016 (Judea Pearl)](#the-mathematics-of-causal-inference-with-reflections-on-machine-learning-microsoft-research-2016-judea-pearl)
+  - [Directions for Building Safe and Reliable AI that Users Trust [MICCAI 2020 (Suchi Saria)]](#directions-for-building-safe-and-reliable-ai-that-users-trust-miccai-2020-suchi-saria)
 
 
 ## Unsupervised Deep Learning [(Neurips 2018 tutorial)](https://www.youtube.com/watch?v=rjZCjosEFpI)
@@ -511,7 +512,7 @@
     + online learning, no-regret update, FTRL, etc.
     + average iterate converges
 + optimism in the wild [Daskalakis-Panageas' 18]
-    + optimism in non convex-concave problem
+    + optimism **in** non convex-concave problem
     + stable points of optimistic GDA are not only local minimax point
     + local minimax \subset stable point of GD \subset stable point of OGD
 + GAN statistical challenge
@@ -529,3 +530,35 @@
 + 2 fundamental laws of causal inference
     + law of counterfactual: M generates and evaluates all counterfactuals
     + law of conditional independence (d-separation)
+
+
+
+## Directions for Building Safe and Reliable AI that Users Trust [MICCAI 2020 (Suchi Saria)]
+
++ reliable decision support with counterfactual models
+    + motivated by fact change in policy, ordered more of some test, model performance drop dramatically,
+    + so might be good to think about how time changes the data generating process 
++ sources of error
+    + bad shift in environment
++ reliability 
+    + failure prevention (make learnig)
+        + learning method
+    + failure identification 
++ i-spec learning predictive models that transport
+    + choose shifts to protect against
+        + age, (population mix between datasets)
+        + bicarbonate, heart rate (difference in admission population)
+        + lab time (clinician practice pattern variation across sites)
+    + **sound** invariant to anticipated shifts (S={admit_type, lab_time})
+    + **complete** if it fails then estimable invariant distribution exist
++ benefit of using graphs
+    + clear display of domain specific knowledge
+    + as a formalism to expressing shift in data & visualize different types of shifts
++ stability/accuracy tradeoff
++ on image data?
+    + concepts in images... identify concept to protect against
+    + style concept and augment dataset to be invariant to them ... refer to summer school https://www.youtube.com/watch?v=0EP_wR0YT4A&ab_channel=SMILES-SummerSchoolofMachineLearningatSK
+
+
+![](2020-10-05-13-32-37.png)
+
