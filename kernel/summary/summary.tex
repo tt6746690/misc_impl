@@ -73,6 +73,16 @@ for any support vector $i$, i.e. $0 < \alpha_i < C$.
 \section{Reproducing Kernel Hilbert Space}
 
 \cite{grettonWhatRKHS2012} provides a rigorous introduction to RKHS while \cite{grettonIntroductionRKHSSimple2019} provides pretty good intuitions. 
+Intuitively, RKHS can be considered as (1) a space of well-behaved functions whose smoothness is determined by its kernel. This view is useful when trying to think about regularization in terms of $\norm{f}_{\sH}^2$ (2) an inner product space for features. This view is useful when trying to apply kernel trick. (3) a space of functions spanned by features. 
+
+
+\begin{figure}[h!]
+\begin{center}
+    \includegraphics[height=3cm]{assets/rkhs_equivalence_schematics} 
+    \caption{Equivalent views of RKHS}
+\end{center}
+\end{figure}
+
 
 \begin{definition}
     (Hilbert space) A Hilbert space is a complete inner product space, i.e. $(\sH, \inner{\cdot}{\cdot}_{\sH})$
