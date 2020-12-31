@@ -15,10 +15,10 @@ Support vector machine is a kernelized optimal margin linear classifier (origina
         \;& y_i(w^Tx_i + b) \geq 1 \quad i=1,2,\cdots,n
 \end{align*}
 To derive the dual problem, we write the Lagrangian, 
-\begin{align*}
+\begin{align}
     \sL(w,b,\alpha)
         &= \frac{1}{2} \norm{w}^2 + \sum_{i=1}^n \alpha_i \pb{ 1 - y_i(w^Tx_i+b) }
-\end{align*}
+\end{align}
 where $\alpha = \pc{\alpha_i}_{i=1}^n$ are the dual variables. Solve for $\inf_{w,b} \sL(w,b,\alpha)$ to arrive at the dual objective. In particular, first order optimality condition gives $w = \sum_{i=1}^n \alpha_i y_i x_i$ and it must be that $0=\sum_{i=1}^n \alpha_i y_i$. Therefore, 
 \begin{align*}
     \max_{\alpha}
@@ -30,19 +30,19 @@ where $\alpha = \pc{\alpha_i}_{i=1}^n$ are the dual variables. Solve for $\inf_{
             \tag{from $\nabla_b \sL = 0$}
 \end{align*}
 The dual can be solved more efficiently than the primal problem using coordinate descent. The decision rule is linear w.r.t support vectors (those $x_i$ right on margin with $\alpha_i > 0$)
-\begin{align*}
+\begin{align}
     \hat{y}(x) = \text{sgn}\left(
         \sum_{i=1}^n \alpha_i y_i x_i^T x + b
     \right)
     \quad\text{for}\quad
     b 
         = y_i - \sum_{j=1}^n \alpha_j y_j x_j^T x_i
-\end{align*}
+\end{align}
 for any support vector $x_i$. We observe that optimization as well as prediction uses input vectors via dot products only. We are motivated to use feature mapping $\phi:\sX\to\sH$ to map input vectors to a higher dimensional possibly infinite feature space in hope that the lifted space is linearly separable. The kernel function $k: \R^d\times\R^d \to \R$ allows us to compute dot products $k(x_i,x_j)=\inner{\phi(x_i)}{\phi(x_j)}_{\sH}$ efficiently and represents a notion of similarity over two instance of aribtrary objects, e.g. vectors in $\R^n$, graphs, texts. We can substitute $k$ whenever inner product is used and arrive at a optimal margin classifier over implicitly defined nonlinear feature mapping $\phi$. In case when training dataset is not linearly separable, we can introduce slack variable $\pc{\xi_i}_{i=1}^n$ where $x_i\geq 0$ to relax the inequality constraints and penalize misclassified or within margin points with $C\sum_{i=1}^n \xi_i$ for some $C\in\R$. In this case, we have the following Lagrangian,
-\begin{align*}
+\begin{align}
     \sL(w,\xi,\alpha,\beta)
         = \frac{1}{2}\norm{w}^2 + C\sum_{i=1}^n \xi_i + \sum_{i=1}^n \alpha \left( 1-y_i ( \inner{w}{\phi(x_i)}_{\sH} + b )-\xi_i \right) + \sum_{i=1}^n \beta_i \xi_i
-\end{align*}
+\end{align}
 First order condition $0 = \frac{\partial}{\partial \xi_i}\sL = C - \alpha_i + \beta_i$ together with dual feasibility $\beta_i\geq 0$ yield $\alpha_i \leq C$ for all $i=1,2,\cdots,n$. Therefore, we optimize for the following dual problem,
 \begin{align*}
     \min_{\alpha}
@@ -53,13 +53,13 @@ First order condition $0 = \frac{\partial}{\partial \xi_i}\sL = C - \alpha_i + \
 \end{align*}
 where $Q \in \R^{n\times n}$ with $Q_{ij} = \alpha_i \alpha_j k(x_i,x_j)$,
 with optimal decision rule as
-\begin{align*}
+\begin{align}
     \hat{y}(x) = \text{sgn}\left(
         \sum_{i=1}^n \alpha_i y_i k(x_i,x) + b
     \right)
     \quad\text{for}\quad
     b = y_i - \sum_{j=1}^n \alpha_j y_j k(x_j,x_i)
-\end{align*}
+\end{align}
 for any support vector $i$, i.e. $0 < \alpha_i < C$.
 
 \begin{center}
@@ -73,7 +73,7 @@ for any support vector $i$, i.e. $0 < \alpha_i < C$.
 \section{Reproducing Kernel Hilbert Space}
 
 \cite{grettonWhatRKHS2012} provides a rigorous introduction to RKHS while \cite{grettonIntroductionRKHSSimple2019} provides pretty good intuitions. 
-Intuitively, RKHS can be considered as (1) a space of well-behaved functions whose smoothness is determined by its kernel. This view is useful when trying to think about regularization in terms of $\norm{f}_{\sH}^2$ (2) an inner product space for features. This view is useful when trying to apply kernel trick. (3) a space of functions spanned by features. 
+Intuitively, RKHS can be considered as (1) a space of well-behaved functions whose smoothness is determined by its kernel. This view is useful when trying to think about regularization in terms of $\norm{f}_{\sH}^2$ (2) an inner product space for features. This view is useful when trying to apply kernel trick. (3) a space of functions spanned by representors $\pc{k(x,\cdot)}_{x\in\sX}$. We think of functions in RKHS as a simple function class, i.e. linear with respect to $\phi(x)$, but also flexible, via the choice of kernels, and potentially powerful since $\phi(x)\in\R^{\sX}$.
 
 
 \begin{figure}[h!]
@@ -92,18 +92,18 @@ Intuitively, RKHS can be considered as (1) a space of well-behaved functions who
     (Reproducing kernel Hilbert space) A Hilbert space $\sH$ of functions $f:\sX\to\R$ is a RKHS if its evaluation functional, $\delta_x:\sH\to\R$ where $\delta_x(f) = f(x)$ is continuous $\forall x\in\sX$.
 \end{definition}
 
-Intuitively, RKHS is a space of well-behaved functions. In particular, norm convergence in $\sH$ yield pointwise convergence, i.e. $\lim_{n\to\infty}\norm{f_n-f} = 0$ implies $f_n \to f$. Note evaluation functional is linear. The condition that $\delta_x$ is continuous is equivalent to $\delta_x$ be bounded \cite{grettonWhatRKHS2012}.
+Intuitively, RKHS is a space of well-behaved functions. In particular, norm convergence in $\sH$ yield pointwise convergence, i.e. $\lim_{n\to\infty}\norm{f_n-f} = 0$ implies $f_n \to f$. Note evaluation functional is linear. The condition that $\delta_x$ is continuous is equivalent to $\delta_x$ be bounded \cite{grettonWhatRKHS2012}. Regularization of the form $\norm{f}_{\sH}$ leads to regularization on function values.
 
 \begin{definition}
     (Reproducing kernel) Let $\sH$ be Hilbert space defined on non-empty $\sX$, then a function $k:\sX\times\sX\to\R$ is called a reproducing kernel of $\sH$ if
     \begin{enumerate}
-        \item $\forall x\in\sX$, $k(\cdot,x)\in\sH$ 
-        \item $\forall x\in\sX$, $\forall f\in\sH$, $f(x) = \inner{f}{k(\cdot, x)}_{\sH}$ (reproducing property)
+        \item $\forall x\in\sX$, $k(x,\cdot)\in\sH$ 
+        \item $\forall x\in\sX$, $\forall f\in\sH$, $f(x) = \inner{f}{k(x,\cdot)}_{\sH}$ (reproducing property)
     \end{enumerate}
-    In particular, for any $x,y\in\sX$, $k(x,y) = \inner{k(\cdot,x)}{k(\cdot,y)}_{\sH}$.
+    In particular, for any $x,y\in\sX$, $k(x,y) = \inner{k(y,\cdot)}{k(y,\cdot)}_{\sH}$.
 \end{definition}
 
-Note the reproducing kernel $k$ can be represented as an inner product of image over $\phi:x\to k(\cdot,x)$, i.e. $k(x,y) = \inner{\phi(x)}{\phi(y)}_{\sH}$ . It turns out that RKHS has $\sH$ is a RKHS if and only if $\sH$ has a reproducing kernel. Definition of RKHS based on continuous evaluation functional is equivalent to existence of a (unique) reproducing kernel. 
+Intuitively, the definition of reproducing kernel implies that $k(x,\cdot)$ is (1) a high dimensional representer of $x$, and (2) as a representer of evaluation for any function in $\sH$ on data point $x$. We also note that we can always find a feature map associated with a reproducing kernel, namely the canonical feature map $\phi:x\to k(x,\cdot)$, and represent $k$ as an inner product in feature space $k(x,y) = \inner{\phi(x)}{\phi(y)}_{\sH}$. It turns out that RKHS has $\sH$ is a RKHS if and only if $\sH$ has a reproducing kernel. Definition of RKHS based on continuous evaluation functional is equivalent to existence of a (unique) reproducing kernel. 
 
 \begin{definition}
     (Positive definite functions) A symmetric function $h:\sX\times\sX\to\R$ is positive definite if for all $n\geq 1$ and for all $(a_1,\cdots,a_n)\in\R^n$ for all $(x_1,\cdots,x_n)\in\sX^n$, 
@@ -120,16 +120,72 @@ If you consider a function $k:\sX\times\sX\to\R$, $k$ is positive definite if an
 Note there maybe more than one feature map yield for any one kernel. Intuitively, a kernel is a function that can be represented as inner product. It turns out that RKHS with reproducing kernel $k$ is positive definite,
 \begin{align}
     \sum_{i=1}^n \sum_{j=1}^n a_i a_j k(x_i,x_j)
-        = \sum_{i=1}^n \sum_{j=1}^n a_i a_j \inner{k(\cdot,x_i)}{k(\cdot,x_j)}
+        = \sum_{i=1}^n \sum_{j=1}^n a_i a_j \inner{k(x_i,\cdot)}{k(x_j,\cdot)}
         = \inner{\sum_{i=1}^n a_i \phi(x_i)}{\sum_{i=1}^n a_i \phi(x_i)}_{\sH}
         \geq 0
 \end{align}
-and, conversely, we can show that for every positive definite function $k$ there corresponds to an unqiue RKHS whose reproducing kernel is $k$ (Moore-Aronsajn). Intuitively, we construct a RKHS $\sH = \overline{\sH_0}$, the completion of a pre-RKHS space $\sH_0 = \text{span}(\pc{k(\cdot,x)}_{x\in\sX})$. In particular, the choice of inner product 
+and, conversely, we can show that for every positive definite function $k$ there is an unqiue RKHS whose reproducing kernel is $k$ (Moore-Aronsajn). Intuitively, we construct a RKHS $\sH = \overline{\sH_0}$, the completion of a pre-RKHS space $\sH_0 = \text{span}(\pc{k(x,\cdot)}_{x\in\sX})$. In particular, the choice of inner product 
 \begin{align}
     \inner{f}{g}_{\sH_0}
         = \sum_{i=1}^n\sum_{j=1}^m \alpha_i \beta_j k(x_i,y_j)
 \end{align}
-for $f = \sum_i \alpha_i k(\cdot,x_i), g = \sum_j \beta_j k(\cdot, y_j)$ makes $\sH_0$ a valid pre-RKHS. Intuitively, this construction implies that RKHS is a space spanned by $\pc{k(\cdot,x)}_{x\in\sX}$ or by feature maps $\pc{\phi(x)}_{x\in\sX}$.
+for $f = \sum_i \alpha_i k(x_i,\cdot), g = \sum_j \beta_j k(y_j,\cdot)$ makes $\sH_0$ a valid pre-RKHS. Intuitively, this construction implies that RKHS is a space spanned by representers $\pc{k(x,\cdot)}_{x\in\sX}$.
+
+
+\section{Kernel Mean Embedding of Distributions}
+
+\cite{muandetKernelMeanEmbedding2017} chapter 3 provides a really clear generalization from feature map over points $x\in\sX$ to measures over the measurable space $(\sX,\sF)$ where $\sF$ is sigma algebra of $\sX$. Let $\sH$ be a reproducing kernel Hilbert space with reproducing kernel $k$. Consider the mean map $\mu:\sP\to\sH$
+\begin{align}
+    \mu(\bbP)
+        = \int k(x,\cdot) \bbP(x)
+\end{align}
+and write $\mu_{\bbP} := \mu(\bbP)$. Intuitively, the mean map $\mu_{\bbP}$ is a representation of probability measure $\bbP$ in $\sH$. Not rigorously, we noticed that we can compute $\E_{\bbP}\pb{f(X)}$ as inner products in $\sH$,
+\[
+    \int f \bbP
+        = \int \inner{f}{k(x,\cdot)}_{\sH} d\bbP(x)
+        = \inner{f}{\int k(x,\cdot)d\bbP(x)}_{\sH}
+        = \inner{f}{\mu_{\bbP}}
+\]
+Formally,
+\begin{lemma}
+    If $\E\pb{\sqrt{k(X,X)}} < \infty$, then $\mu_{\bbP} \in \sH$ and $\E_{\bbP}\pb{f(X)} = \inner{f}{\mu_{\bbP}}_{\sH}$ for all $f\in\sH$.
+\end{lemma}
+\begin{proof}
+    For any $\bbP\in\sP$, define a linear functional $T_{\bbP}:\sH\to\R$ where $T_{\bbP}(f) = \E_{\bbP}\pb{f(X)}$ as the operation of taking expectation with respect to function $f\in\sH$ over $\bbP$. We show $T_{\bbP}$ is bounded (to use Rietz)
+    \begin{align*}
+        |T_{\bbP}f|
+            = |\E\pb{f(X)}|
+            \leq \E\pb{|f(X)|}
+            = \E\pb{ \left|  \inner{f}{k(X,\cdot)} \right| }
+            \leq \E\pb{ \sqrt{k(X,X)} \norm{f}_{\sH} }
+            < \infty
+    \end{align*}
+    By Rietz representation theorem, exists $g\in\sH$ such that $T_{\bbP} f = \inner{f}{g}_{\sH}$. The choice of $f = k(x,\cdot)$ implies.
+    \[
+        g(x)
+            = \inner{k(x,\cdot)}{g}_{\sH} 
+            = T_{\bbP}\pb{k(x,\cdot)}
+            = \int k(x,x') d\bbP(x')
+            = \mu_{\bbP}
+    \]
+    Therefore, $\mu_{\bbP}\in\sH$ is guaranteed by Rietz and we can re-write the Rietz's result and considered it as a reproducing property for $T_{\bbP}$, i.e. $\E\pb{f(X)} = \inner{f}{\mu_{\bbP}}_{\sH}$.
+\end{proof}
+In effect, what this lemma states is under some mild assumptions, the mean map $\mu_{\bbP}$ ends up in RKHS $\sH$ and that we can compute the expectation of any function in RKHS with respect to distribution $\bbP$ by computing inner product between the function $f$ and the mean embedding $\mu_{\bbP}$ in $\sH$. This is analogous to previous definition of a reproducing kernel, that the cannical feature map ends up in RKHS $k(x,\cdot) \in \sH$ and we can evaluate the evaluation functional as an inner product in RKHS, i.e. $\delta_x(f) = \inner{f}{k(x,\cdot)}_{\sH}$. 
+
+Furthermore, we note that inner products of mean maps is expectation of kernel, i.e. for $X\sim\bbP,Y\sim\bbQ$,
+\begin{align}
+    \inner{\mu_{\bbP}}{\mu_{\bbQ}}_{\sH}
+        = \E\pb{\mu_{\bbQ}(X)}
+        = \E\pb{ k(X,Y) }
+\end{align}
+where we have used fact that evaluating the mean map at $x\in\sX$ computes the expectation of a kernel,
+\begin{align}
+    \mu_{\bbP}(x')
+        = \inner{\mu_{\bbP}}{k(x',\cdot)}_{\sH}
+        = \E\pb{k(X,x')}
+\end{align}
+We can derive empirical estimate of the mean map $\hat{\mu}_{\bbP} = \frac{1}{m}\sum_{i=1}^m k(x,x_i)$ for $x_i \overset{iid}{\sim} \bbP$. For appropriately chosen kernel, the mean map $\mu_{\bbP}$ completely characterizes a distribution. For example, the choice of $k(x,x') = e^{\inner{x}{x'}}$ implies that the mean embedding is the moment generating function $\mu_{\bbP} = \E\pb{e^{\inner{X}{\cdot}}}$.
+ 
 
 
 
