@@ -62,18 +62,18 @@ with optimal decision rule as
 \end{align}
 for any support vector $i$, i.e. $0 < \alpha_i < C$.
 
-\begin{center}
+\begin{center} 
 \begin{figure}[h!]
     \includegraphics[width=\textwidth]{assets/svm_on_2d_gaussian_vary_kernel.png} 
     \caption{SVM on simulated 2D Gaussian with degree two polynomial kernel and radial basis function kernel with varying bandwidth. Larger bandwidth corresponds to smoother decision boundary and in the limit approaches the decision boundary of a linear kernel}
 \end{figure}
-\end{center}
-
+\end{center} 
+ 
 
 \section{Reproducing Kernel Hilbert Space}
 
 \cite{grettonWhatRKHS2012} provides a rigorous introduction to RKHS while \cite{grettonIntroductionRKHSSimple2019} provides pretty good intuitions. 
-Intuitively, RKHS can be considered as (1) a space of well-behaved functions whose smoothness is determined by its kernel. This view is useful when trying to think about regularization in terms of $\norm{f}_{\sH}^2$ (2) an inner product space for features. This view is useful when trying to apply kernel trick. (3) a space of functions spanned by representors $\pc{k(x,\cdot)}_{x\in\sX}$. We think of functions in RKHS as a simple function class, i.e. linear with respect to $\phi(x)$, but also flexible, via the choice of kernels, and potentially powerful since $\phi(x)\in\R^{\sX}$.
+Intuitively, RKHS can be considered as (1) a space of well-behaved functions whose smoothness is determined by its kernel. This view is useful when trying to think about regularization in terms of $\norm{f}_{\sH}^2$ (2) an inner product space for features. This view is useful when trying to apply kernel trick. (3) a space of functions spanned by representors $\pc{k(x,\cdot)}_{x\in\sX}$. We think of functions in RKHS as a simple function class, i.e. linear with respect to $\phi(x)$, and also flexible due to various choice of kernels.
 
 
 \begin{figure}[h!]
@@ -148,6 +148,7 @@ and write $\mu_{\bbP} := \mu(\bbP)$. Intuitively, the mean map $\mu_{\bbP}$ is a
 \]
 Formally,
 \begin{lemma}
+    \label{lemma:mean_embedding_reproducing_property}
     If $\E\pb{\sqrt{k(X,X)}} < \infty$, then $\mu_{\bbP} \in \sH$ and $\E_{\bbP}\pb{f(X)} = \inner{f}{\mu_{\bbP}}_{\sH}$ for all $f\in\sH$.
 \end{lemma}
 \begin{proof}
@@ -166,11 +167,11 @@ Formally,
             = \inner{k(x,\cdot)}{g}_{\sH} 
             = T_{\bbP}\pb{k(x,\cdot)}
             = \int k(x,x') d\bbP(x')
-            = \mu_{\bbP}
+            = \mu_{\bbP}(x)
     \]
     Therefore, $\mu_{\bbP}\in\sH$ is guaranteed by Rietz and we can re-write the Rietz's result and considered it as a reproducing property for $T_{\bbP}$, i.e. $\E\pb{f(X)} = \inner{f}{\mu_{\bbP}}_{\sH}$.
 \end{proof}
-In effect, what this lemma states is under some mild assumptions, the mean map $\mu_{\bbP}$ ends up in RKHS $\sH$ and that we can compute the expectation of any function in RKHS with respect to distribution $\bbP$ by computing inner product between the function $f$ and the mean embedding $\mu_{\bbP}$ in $\sH$. This is analogous to previous definition of a reproducing kernel, that the cannical feature map ends up in RKHS $k(x,\cdot) \in \sH$ and we can evaluate the evaluation functional as an inner product in RKHS, i.e. $\delta_x(f) = \inner{f}{k(x,\cdot)}_{\sH}$. 
+In effect, what this lemma states is under some mild assumptions, the mean map $\mu_{\bbP}$ ends up in RKHS $\sH$ and that we can compute the expectation of any function in RKHS with respect to distribution $\bbP$ by computing inner product between the function $f$ and the mean map $\mu_{\bbP}$ in $\sH$. This is analogous to previous definition of a reproducing kernel, that the cannical feature map ends up in RKHS $k(x,\cdot) \in \sH$ and we can evaluate the evaluation functional as an inner product in RKHS, i.e. $\delta_x(f) = \inner{f}{k(x,\cdot)}_{\sH}$. 
 
 Furthermore, we note that inner products of mean maps is expectation of kernel, i.e. for $X\sim\bbP,Y\sim\bbQ$,
 \begin{align}
@@ -180,12 +181,63 @@ Furthermore, we note that inner products of mean maps is expectation of kernel, 
 \end{align}
 where we have used fact that evaluating the mean map at $x\in\sX$ computes the expectation of a kernel,
 \begin{align}
-    \mu_{\bbP}(x')
-        = \inner{\mu_{\bbP}}{k(x',\cdot)}_{\sH}
-        = \E\pb{k(X,x')}
+    \mu_{\bbQ}(x)
+        = \inner{\mu_{\bbQ}}{k(x,\cdot)}_{\sH}
+        = \E\pb{k(x,Y)}
 \end{align}
-We can derive empirical estimate of the mean map $\hat{\mu}_{\bbP} = \frac{1}{m}\sum_{i=1}^m k(x,x_i)$ for $x_i \overset{iid}{\sim} \bbP$. For appropriately chosen kernel, the mean map $\mu_{\bbP}$ completely characterizes a distribution. For example, the choice of $k(x,x') = e^{\inner{x}{x'}}$ implies that the mean embedding is the moment generating function $\mu_{\bbP} = \E\pb{e^{\inner{X}{\cdot}}}$.
- 
+For appropriately chosen kernel, specifically a characteristic kernel, the mean map $\mu_{\bbP}$ completely characterizes a distribution. For example, the choice of $k(x,x') = e^{\inner{x}{x'}}$ implies that the mean embedding is the moment generating function $\mu_{\bbP} = \E\pb{e^{\inner{X}{\cdot}}}$.
+
+\begin{definition}
+    (Characteristic kernel) A kernel is characteristic if the map $\mu:\bbP\mapsto \mu_{\bbP}$ is injective
+\end{definition}
+
+A characteristic kernel ensures that the induced RKHS is rich enough to represent higher order momemts of $\bbP$. In particular, it ensures that $\norm{\mu_{\bbP}-\mu_{\bbQ}}_{\sH} = 0$ if and only if $\bbP=\bbQ$. As an example, Gaussian and Laplacian kernels are characteristic. Characteristic kernels are important when trying to distinguish distributions, might be less useful when trying to do predictive tasks with distributional data.
+
+\begin{definition}
+    (Universal kernsl) A continuous positive definite kernel on compact metric space $\sX$ is universal if the corresponding RKHS $\sH$ is dense in $C(\sX)$, space of bounded continous functions over $\sX$.
+\end{definition}
+
+Universal kernel are characteristic kernels. See \cite{muandetKernelMeanEmbedding2017} for a classification of kernels.
+
+We can derive empirical estimate of the mean map $\hat{\mu}_{\bbP} = \frac{1}{m}\sum_{i=1}^m k(\cdot,x_i)$ for $x_i \overset{iid}{\sim} \bbP$. 
+
+
+\section{Maximm Mean Discrepancy}
+
+The kernel mean embedding defines a natural metric for probability distributions, so called maximum mean discrepancy, as $\text{MMD}(\bbP,\bbQ)
+= \norm{\mu_{\bbP}-\mu_{\bbQ}}_{\sH}$. In particular, evaluation can be deligated to kernels, 
+\begin{align}
+    \text{MMD}^2(\bbP,\bbQ)
+        &= \inner{\mu_{\bbP}}{\mu_{\bbP}}_{\sH} + \inner{\mu_{\bbQ}}{\mu_{\bbQ}}_{\sH} - 2\inner{\mu_{\bbP}}{\mu_{\bbQ}}_{\sH} \\
+        &= \E\pb{k(X,X')} + \E\pb{k(Y,Y')} - 2\E\pb{k(X,Y)}
+\end{align}
+where $X,X'\overset{iid}{\sim} \bbP$ and $Y,Y'\overset{iid}{\sim} \bbQ$. The unbiased estimate is given by
+\begin{align}
+    \widehat{\text{MMD}}_u^2(X,Y)
+        = \frac{1}{m(m-1)} \sum_{i\neq j} k(x_i,x_j) + \frac{1}{n(n-1)} \sum_{i\neq j} k(y_i,y_j) - \frac{2}{mn} \sum_{i,j} k(x_i,y_j)
+\end{align}
+where $\bX = (X_1,\cdots,X_m) \overset{iid}{\sim}\bbP$ and $\bY = (Y_1,\cdots,Y_m) \overset{iid}{\sim} \bbQ$. Alternatively, we can consider maximum mean discrepancy as a class of integral probability metric over functions in the unit ball in RKHS $\sH$,
+\begin{align}
+    \text{MMD}(\bbP,\bbQ)
+        = \sup_{f\in\sH:\; \norm{f}_{\sH}\leq 1} \pc{
+            \int f d\bbP - \int f d\bbQ
+        }
+\end{align}
+which is equivalent to the view of MMD as distance between kernel mean embeddings
+\begin{align}
+    \sup_{f\in\sH:\; \norm{f}_{\sH}\leq 1} \pc{
+            \int f d\bbP - \int f d\bbQ
+        }
+        = \sup_{f\in\sH:\; \norm{f}_{\sH}\leq 1} \inner{f}{\mu_{\bbP}-\mu_{\bbQ}}_{\sH}
+        = \norm{\mu_{\bbP} - \mu_{\bbQ}}_{\sH}
+\end{align}
+where optimal witness function is normalized feature mean $f^* = \mu_{\bbP}-\mu_{\bbQ}/\norm{ \mu_{\bbP}-\mu_{\bbQ} }_{\sH}$. 
+
+
+
+
+
+
 
 
 
