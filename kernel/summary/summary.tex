@@ -89,6 +89,10 @@ Intuitively, RKHS can be considered as (1) a space of well-behaved functions who
 \end{definition}
 
 \begin{definition}
+    (Separable Hilbert space) A Hilbert space is separable if it has a countable basis
+\end{definition}
+
+\begin{definition}
     (Reproducing kernel Hilbert space) A Hilbert space $\sH$ of functions $f:\sX\to\R$ is a RKHS if its evaluation functional, $\delta_x:\sH\to\R$ where $\delta_x(f) = f(x)$ is continuous $\forall x\in\sX$.
 \end{definition}
 
@@ -132,21 +136,67 @@ and, conversely, we can show that for every positive definite function $k$ there
 for $f = \sum_i \alpha_i k(x_i,\cdot), g = \sum_j \beta_j k(y_j,\cdot)$ makes $\sH_0$ a valid pre-RKHS. Intuitively, this construction implies that RKHS is a space spanned by representers $\pc{k(x,\cdot)}_{x\in\sX}$.
 
 
+
+\begin{definition}
+    (Integral Operator \cite{grettonWhatRKHS2012,muandetKernelMeanEmbedding2017}) Let $X$ be compact Hausdorff space and $\mu$ be finite Borel measure over $\sX$. Let $k$ be a continuous kernel. The integral operator of kernel $k$ is $T_k: L_2(\sX,\mu) \to L_2(\sX,\mu)$ defined 
+    \begin{align}
+        T_kf
+            = \int_{\sX} k(x,\cdot) f(x) d\mu(x)
+    \end{align}
+\end{definition}
+
+If $k$ is a positive definite function, then $T_k$ is self-adjoint ($\inner{f}{T_kg} = \inner{T_kf}{g}$ $\forall f,g\in L_2(\sX,\mu)$) positive ($\inner{f}{T_kf} \geq 0$ $\forall f\in L_2(\sX,\mu)$) and compact.
+
+\begin{theorem}
+    (Mercer's theorem) Assume $\sX,k,T_k$ defined as previous. Suppose for all $f\in L_2(\sX,\mu)$, we have $\int_{\sX} k(x,y) f(x)f(y) dxdy \geq 0$. Then there exists a countable orthonormal basis $\pc{e_i}$ of $L_2(\sX,\mu)$ consisting of eigenfunctions of $T_k$ whose corresponding eigenvalues $\pc{\lambda_i}$ are non-negative. Then,
+    \begin{align}
+        k(x,y)
+            = \sum_{i=1}^{\infty} \lambda_i e_i(x) e_j(y)
+    \end{align}
+    for all $x,y\in\sX$. The convergence is absolute and uniform.
+\end{theorem}
+
+Mercer's theorem provides a construction of rkhs using eigenfunctions of integral operator. In particular $\sH = \pc{\sum_i a_i e_i}$ satisfying some integrability constraints with $\inner{\sum_i a_ie_i}{\sum_j b_j e_j}_{\sH} = \sum_i \frac{ a_ib_i}{\lambda_i}$ is the RKHS with $k$ as reproducing kernel.
+
+Mercer's representation gives another feature map (not canonical) for kernel $k$,
+\begin{align}
+    k(x,y) 
+        = \inner{\sqrt{\lambda_i}e_i(x)}{\sqrt{\lambda_i}e_i(y)}_{\ell^2}
+\end{align}
+where $\varphi(x) = \pb{ \sqrt{\lambda_1} e_1(x), \sqrt{\lambda_2} e_2(x), \cdots }$.
+
+\section{Kernel Approximation}
+
+Computing the kernel matrix is $\sO(n^2)$ while inversion requires $\sO(n^3)$, infeasible for large $n$. 
+\begin{theorem}
+    (Bochner's theorem) A bounded continous shift-invariant kernel $k(x,x') = k(x-x')$ on $\R^d$ is positive definite if and only if there exists a finite non-negative Borel measure $\Lambda$ on $\R^d$ such that 
+    \begin{align}
+        k(x-x')
+            = \int_{\R^d} e^{i\inner{\omega}{x-x'}} d\Lambda(\omega)
+        \label{eq:bochner}
+    \end{align}
+\end{theorem}
+
+We can think of $\Lambda$ as the fourier transform of $k$. If kernel is normalized such that $k(0)=1$, then $\Lambda$ will be a probability measure and $k = \E\pb{ e^{i\inner{\omega}{\cdot}} }$ corresponds to its characteristic function. If $k$ is Gaussian rbf kernel $k(x,x') = \exp(-\frac{1}{2\sigma^2}\norm{x-x'}^2)$, then $\Lambda \sim \sN(0,\frac{1}{\sigma^2}I)$. 
+
+Bochner theorem can be applied to approximate kernel matrix. \cite{rahimiRandomFeaturesLargeScale2007} approximates the integral (\ref{eq:bochner}) with Monte Carlo estimates. The idea is to map data to a low-dimensional Euclidean space using a randomized feature map $z:\R^d \to \R^D$ where $D\ll N$ so that $k(x,y) = \inner{\varphi(x)}{\varphi(y)}_{\sH} \approx z(x)^Tz(y)$. 
+
+
 \section{Kernel Mean Embedding of Distributions}
 
 \cite{muandetKernelMeanEmbedding2017} chapter 3 provides a really clear generalization from feature map over points $x\in\sX$ to measures over the measurable space $(\sX,\sF)$ where $\sF$ is sigma algebra of $\sX$. Let $\sH$ be a reproducing kernel Hilbert space with reproducing kernel $k$. Consider the mean map $\mu:\sP\to\sH$
 \begin{align}
     \mu(\bbP)
-        = \int k(x,\cdot) \bbP(x)
+        = \int k(x,\cdot) d\bbP(x)
 \end{align}
 and write $\mu_{\bbP} := \mu(\bbP)$. Intuitively, the mean map $\mu_{\bbP}$ is a representation of probability measure $\bbP$ in $\sH$. Not rigorously, we noticed that we can compute $\E_{\bbP}\pb{f(X)}$ as inner products in $\sH$,
 \[
-    \int f \bbP
+    \int f d\bbP
         = \int \inner{f}{k(x,\cdot)}_{\sH} d\bbP(x)
         = \inner{f}{\int k(x,\cdot)d\bbP(x)}_{\sH}
         = \inner{f}{\mu_{\bbP}}
 \]
-Formally,
+In effect, we are interchanging expectation and inner products, $\E\pb{\inner{f}{k(X,\cdot)}_{\sH}} = \inner{f}{\E\pb{k(X,\cdot)}}_{\sH}$.
 \begin{lemma}
     \label{lemma:mean_embedding_reproducing_property}
     If $\E\pb{\sqrt{k(X,X)}} < \infty$, then $\mu_{\bbP} \in \sH$ and $\E_{\bbP}\pb{f(X)} = \inner{f}{\mu_{\bbP}}_{\sH}$ for all $f\in\sH$.
@@ -194,7 +244,7 @@ For appropriately chosen kernel, specifically a characteristic kernel, the mean 
 A characteristic kernel ensures that the induced RKHS is rich enough to represent higher order momemts of $\bbP$. In particular, it ensures that $\norm{\mu_{\bbP}-\mu_{\bbQ}}_{\sH} = 0$ if and only if $\bbP=\bbQ$. As an example, Gaussian and Laplacian kernels are characteristic. Characteristic kernels are important when trying to distinguish distributions, might be less useful when trying to do predictive tasks with distributional data.
 
 \begin{definition}
-    (Universal kernsl) A continuous positive definite kernel on compact metric space $\sX$ is universal if the corresponding RKHS $\sH$ is dense in $C(\sX)$, space of bounded continous functions over $\sX$.
+    (Universal kernels) A continuous positive definite kernel on compact metric space $\sX$ is universal if the corresponding RKHS $\sH$ is dense in $C(\sX)$, space of bounded continous functions over $\sX$.
 \end{definition}
 
 Universal kernel are characteristic kernels. See \cite{muandetKernelMeanEmbedding2017} for a classification of kernels.
@@ -202,7 +252,7 @@ Universal kernel are characteristic kernels. See \cite{muandetKernelMeanEmbeddin
 We can derive empirical estimate of the mean map $\hat{\mu}_{\bbP} = \frac{1}{m}\sum_{i=1}^m k(\cdot,x_i)$ for $x_i \overset{iid}{\sim} \bbP$. 
 
 
-\section{Maximm Mean Discrepancy}
+\section{Maximum Mean Discrepancy}
 
 The kernel mean embedding defines a natural metric for probability distributions, so called maximum mean discrepancy, as $\text{MMD}(\bbP,\bbQ)
 = \norm{\mu_{\bbP}-\mu_{\bbQ}}_{\sH}$. In particular, evaluation can be deligated to kernels, 
@@ -211,7 +261,7 @@ The kernel mean embedding defines a natural metric for probability distributions
         &= \inner{\mu_{\bbP}}{\mu_{\bbP}}_{\sH} + \inner{\mu_{\bbQ}}{\mu_{\bbQ}}_{\sH} - 2\inner{\mu_{\bbP}}{\mu_{\bbQ}}_{\sH} \\
         &= \E\pb{k(X,X')} + \E\pb{k(Y,Y')} - 2\E\pb{k(X,Y)}
 \end{align}
-where $X,X'\overset{iid}{\sim} \bbP$ and $Y,Y'\overset{iid}{\sim} \bbQ$. The unbiased estimate is given by
+where $X,X'\overset{iid}{\sim} \bbP$ and $Y,Y'\overset{iid}{\sim} \bbQ$. The unbiased quadratic $\sO(mn)$ estimate is given by
 \begin{align}
     \widehat{\text{MMD}}_u^2(X,Y)
         = \frac{1}{m(m-1)} \sum_{i\neq j} k(x_i,x_j) + \frac{1}{n(n-1)} \sum_{i\neq j} k(y_i,y_j) - \frac{2}{mn} \sum_{i,j} k(x_i,y_j)
@@ -231,7 +281,19 @@ which is equivalent to the view of MMD as distance between kernel mean embedding
         = \sup_{f\in\sH:\; \norm{f}_{\sH}\leq 1} \inner{f}{\mu_{\bbP}-\mu_{\bbQ}}_{\sH}
         = \norm{\mu_{\bbP} - \mu_{\bbQ}}_{\sH}
 \end{align}
-where optimal witness function is normalized feature mean $f^* = \mu_{\bbP}-\mu_{\bbQ}/\norm{ \mu_{\bbP}-\mu_{\bbQ} }_{\sH}$. 
+where optimal witness function is normalized difference of feature means $f^* = \mu_{\bbP}-\mu_{\bbQ}/\norm{ \mu_{\bbP}-\mu_{\bbQ} }_{\sH}$. 
+
+\begin{example}
+    Consider $X_1\sim \sN(\mu_1,\Sigma_1), X_2\sim \sN(\mu_2,\Sigma_2)$. Let $\sH$ be RKHS with $k(x,y)=x^Ty$ as its reproducing kernel. We note that $\text{MMD}^2$ with linear witness is equivalent to difference in means,
+    \begin{align}
+        \text{MMD}^2(\bbP_{X_1},\bbP_{X_2})
+            = \norm{\mu_{\bbP_{X_1}} - \mu_{\bbP_{X_2}}}_{\sH}^2
+            = \norm{ k(\mu_1, \cdot) - k(\mu_2,\cdot) }_{\sH}^2
+            = \norm{ k(\mu_1-\mu_2,\cdot) }_{\sH}^2
+            = \norm{\mu_1 - \mu_2}_2^2
+    \end{align}
+    where $\mu_{\bbP_{X_1}}(x) = \E\pb{ k(x, X_1) } = x^T\E\pb{X_1}$ implies $\mu_{\bbP_{X_1}} = k(\mu_1, \cdot)$.
+\end{example}
 
 
 
