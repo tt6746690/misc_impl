@@ -73,7 +73,7 @@ for any support vector $i$, i.e. $0 < \alpha_i < C$.
 \section{Reproducing Kernel Hilbert Space}
 
 \cite{grettonWhatRKHS2012} provides a rigorous introduction to RKHS while \cite{grettonIntroductionRKHSSimple2019} provides pretty good intuitions. 
-Intuitively, RKHS can be considered as (1) a space of well-behaved functions whose smoothness is determined by its kernel. This view is useful when trying to think about regularization in terms of $\norm{f}_{\sH}^2$ (2) an inner product space for features. This view is useful when trying to apply kernel trick. (3) a space of functions spanned by representors $\pc{k(x,\cdot)}_{x\in\sX}$. We think of functions in RKHS as a simple function class, i.e. linear with respect to $\phi(x)$, and also flexible due to various choice of kernels.
+Intuitively, RKHS can be considered as (1) a space of well-behaved functions whose smoothness is determined by its kernel. This view is useful when trying to think about regularization in terms of $\norm{f}_{\sH}^2$ (2) an inner product space for features. This view is useful when trying to apply kernel trick. (3) a space of functions spanned by representors $\pc{k(x,\cdot)}_{x\in\sX}$. We think of functions in RKHS as a simple function class, i.e. linear with respect to $\phi(x)$, and also flexible due to various choice of kernels. (4) a space of functions spanned by countably many eigenfunctions of the integral operator of kernel.
 
 
 \begin{figure}[h!]
@@ -167,9 +167,9 @@ where $\varphi(x) = \pb{ \sqrt{\lambda_1} e_1(x), \sqrt{\lambda_2} e_2(x), \cdot
 
 \section{Kernel Approximation}
 
-Computing the kernel matrix is $\sO(n^2)$ while inversion requires $\sO(n^3)$, infeasible for large $n$. 
+
 \begin{theorem}
-    (Bochner's theorem) A bounded continous shift-invariant kernel $k(x,x') = k(x-x')$ on $\R^d$ is positive definite if and only if there exists a finite non-negative Borel measure $\Lambda$ on $\R^d$ such that 
+    (Bochner's theorem) A bounded continous shift-invariant kernel $k(x,x') = k(x-x')=k(\delta)$ on $\R^d$ is positive definite if and only if there exists a finite non-negative Borel measure $\Lambda$ on $\R^d$ such that 
     \begin{align}
         k(x-x')
             = \int_{\R^d} e^{i\inner{\omega}{x-x'}} d\Lambda(\omega)
@@ -177,9 +177,36 @@ Computing the kernel matrix is $\sO(n^2)$ while inversion requires $\sO(n^3)$, i
     \end{align}
 \end{theorem}
 
-We can think of $\Lambda$ as the fourier transform of $k$. If kernel is normalized such that $k(0)=1$, then $\Lambda$ will be a probability measure and $k = \E\pb{ e^{i\inner{\omega}{\cdot}} }$ corresponds to its characteristic function. If $k$ is Gaussian rbf kernel $k(x,x') = \exp(-\frac{1}{2\sigma^2}\norm{x-x'}^2)$, then $\Lambda \sim \sN(0,\frac{1}{\sigma^2}I)$. 
+We can think of $\Lambda$ as the fourier transform of $k(\delta)$, i.e. $k(\delta) = \sF\pb{\Lambda(\delta)}$ for all $\delta\in\R^d$. If kernel is normalized such that $k(0)=1$, then $\Lambda$ will be a probability measure and $k$ corresponds to its characteristic function $k = \E\pb{ e^{i\inner{\omega}{\cdot}} }$. If $k$ is Gaussian rbf kernel $k(x,x') = \exp(-\frac{1}{2\sigma^2}\norm{x-x'}^2)$, then $\Lambda \sim \sN(0,\frac{1}{\sigma^2}I)$. 
 
-Bochner theorem can be applied to approximate kernel matrix. \cite{rahimiRandomFeaturesLargeScale2007} approximates the integral (\ref{eq:bochner}) with Monte Carlo estimates. The idea is to map data to a low-dimensional Euclidean space using a randomized feature map $z:\R^d \to \R^D$ where $D\ll N$ so that $k(x,y) = \inner{\varphi(x)}{\varphi(y)}_{\sH} \approx z(x)^Tz(y)$. 
+
+Computing the kernel matrix is $\sO(n^2)$ while inversion requires $\sO(n^3)$, infeasible for large $n$. \cite{rahimiRandomFeaturesLargeScale2007} proposes to map data into a relatively low-dimensional randomized feature space via $z:\R^d\to\R^L$ such that inner products between transformed pair of points approximates their kernel evaluation, i.e. $k(x,y) = \inner{\varphi(x)}{\varphi(y)}_{\sH} \approx z(x)^Tz(y)$. Let $p(\omega)$ be Fourier transform of a continuous shift-invariant kernel $k(\delta)$, whose existence is guaranteed by Bochner's theorem (\ref{eq:bochner}). Let $z_{\omega}:d\to \R$ be $z_{\omega}(x) = \sqrt{2}\cos(\omega^Tx+b)$ be the randomized feature map where $\omega\sim p(\omega)$, $b\sim \text{Unif}[0,2\pi]$. Then for any $x,y\in\R^d$,
+\begin{align*}
+    \E\pb{z_{\omega}(x)z_{\omega}(y)}
+        &= \E\pb{ \sqrt{2} \cos(\omega^T x + b) \sqrt{2}\cos(\omega^Ty+b) } \\
+        &= \E\pb{ \cos(\omega^T(x+y)+2b) } + \E\pb{ \cos(\omega^T(x-y)) } \\
+        &= \E\pb{ \cos(\omega^T(x-y)) } \\
+        &= \E\pb{ e^{i\omega^T(x-y)} } = k(x-y)
+\end{align*}
+where we have used fact $2\cos(a)\cos(b)=\cos(a+b)+\cos(a-b)$ and that $e^{i\omega^Tx} = \cos(\omega^Tx) - i\sin(\omega^Tx)=\cos(\omega^Tx)$ when $p(\omega)$ is real-valued. We can estimate $k(\delta)$ via Monte Carlo estimates. Now define random Fourier feature map $z:\R^d\to\R^L$ as
+\begin{align}
+    z(x) 
+        = \frac{1}{\sqrt{L}} (z_{\omega_1}(x), \cdots, z_{\omega_L}(x)) 
+        = \sqrt{\frac{2}{L}}(\cos(\omega_1^Tx+b_1), \cdots, \cos(\omega_L^Tx+b_L))
+\end{align}
+where $(\omega_1,\cdots,\omega_L) \overset{iid}{\sim} p(\omega)$ and $(b_1,\cdots,b_L)\overset{iid}{\sim} \text{Unif}[0,2\pi]$. Then,
+\begin{align}
+    z(x)^Tz(y)
+        = \frac{1}{L} \sum_{l=1}^L z_{\omega_l}(x) z_{\omega_l}(y)
+        \quad\overset{p}{\longrightarrow}\quad 
+        \E\pb{z_{\omega}(x)z_{\omega}(y)}
+        = k(x-y)
+\end{align}
+where convergence is exponential via Hoeffding's Inequality using the fact that $z_{\omega}(x)z_{\omega}(y) \in [-2,2]$,
+\begin{align}
+    \bbP\pb{ z(x)^Tz(y) - k(x-y) > \epsilon }
+        \leq e^{-\frac{L\epsilon^2}{8}}
+\end{align}
 
 
 \section{Kernel Mean Embedding of Distributions}
@@ -244,7 +271,7 @@ For appropriately chosen kernel, specifically a characteristic kernel, the mean 
 A characteristic kernel ensures that the induced RKHS is rich enough to represent higher order momemts of $\bbP$. In particular, it ensures that $\norm{\mu_{\bbP}-\mu_{\bbQ}}_{\sH} = 0$ if and only if $\bbP=\bbQ$. As an example, Gaussian and Laplacian kernels are characteristic. Characteristic kernels are important when trying to distinguish distributions, might be less useful when trying to do predictive tasks with distributional data.
 
 \begin{definition}
-    (Universal kernels) A continuous positive definite kernel on compact metric space $\sX$ is universal if the corresponding RKHS $\sH$ is dense in $C(\sX)$, space of bounded continous functions over $\sX$.
+    (Universal kernel) A continuous positive definite kernel on compact metric space $\sX$ is universal if the corresponding RKHS $\sH$ is dense in $C(\sX)$, space of bounded continous functions over $\sX$.
 \end{definition}
 
 Universal kernel are characteristic kernels. See \cite{muandetKernelMeanEmbedding2017} for a classification of kernels.
