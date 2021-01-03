@@ -180,7 +180,7 @@ where $\varphi(x) = \pb{ \sqrt{\lambda_1} e_1(x), \sqrt{\lambda_2} e_2(x), \cdot
 We can think of $\Lambda$ as the fourier transform of $k(\delta)$, i.e. $k(\delta) = \sF\pb{\Lambda(\delta)}$ for all $\delta\in\R^d$. If kernel is normalized such that $k(0)=1$, then $\Lambda$ will be a probability measure and $k$ corresponds to its characteristic function $k = \E\pb{ e^{i\inner{\omega}{\cdot}} }$. If $k$ is Gaussian rbf kernel $k(x,x') = \exp(-\frac{1}{2\sigma^2}\norm{x-x'}^2)$, then $\Lambda \sim \sN(0,\frac{1}{\sigma^2}I)$. 
 
 
-Computing the kernel matrix is $\sO(n^2)$ while inversion requires $\sO(n^3)$, infeasible for large $n$. \cite{rahimiRandomFeaturesLargeScale2007} proposes to map data into a relatively low-dimensional randomized feature space via $z:\R^d\to\R^L$ such that inner products between transformed pair of points approximates their kernel evaluation, i.e. $k(x,y) = \inner{\varphi(x)}{\varphi(y)}_{\sH} \approx z(x)^Tz(y)$. Let $p(\omega)$ be Fourier transform of a continuous shift-invariant kernel $k(\delta)$, whose existence is guaranteed by Bochner's theorem (\ref{eq:bochner}). Let $z_{\omega}:d\to \R$ be $z_{\omega}(x) = \sqrt{2}\cos(\omega^Tx+b)$ be the randomized feature map where $\omega\sim p(\omega)$, $b\sim \text{Unif}[0,2\pi]$. Then for any $x,y\in\R^d$,
+Computing the kernel matrix is $\sO(n^2)$ while inversion requires $\sO(n^3)$, infeasible for large $n$. \cite{rahimiRandomFeaturesLargeScale2007} proposes to map data into a relatively low-dimensional randomized feature space via $z:\R^d\to\R^L$ such that inner products between transformed pair of points approximates their kernel evaluation, i.e. $k(x,y) = \inner{\varphi(x)}{\varphi(y)}_{\sH} \approx z(x)^Tz(y)$. Let $p(\omega)$ be Fourier transform of a continuous shift-invariant kernel $k(\delta)$, whose existence is guaranteed by Bochner's theorem (\ref{eq:bochner}). Let $z_{\omega}:\R^d\to \R$ $z_{\omega}(x) = \sqrt{2}\cos(\omega^Tx+b)$ be the randomized feature map where $\omega\sim p(\omega)$, $b\sim \text{Unif}[0,2\pi]$. Then for any $x,y\in\R^d$,
 \begin{align*}
     \E\pb{z_{\omega}(x)z_{\omega}(y)}
         &= \E\pb{ \sqrt{2} \cos(\omega^T x + b) \sqrt{2}\cos(\omega^Ty+b) } \\
@@ -188,9 +188,9 @@ Computing the kernel matrix is $\sO(n^2)$ while inversion requires $\sO(n^3)$, i
         &= \E\pb{ \cos(\omega^T(x-y)) } \\
         &= \E\pb{ e^{i\omega^T(x-y)} } = k(x-y)
 \end{align*}
-where we have used fact $2\cos(a)\cos(b)=\cos(a+b)+\cos(a-b)$ and that $e^{i\omega^Tx} = \cos(\omega^Tx) - i\sin(\omega^Tx)=\cos(\omega^Tx)$ when $p(\omega)$ is real-valued. We can estimate $k(\delta)$ via Monte Carlo estimates. Now define random Fourier feature map $z:\R^d\to\R^L$ as
+where we have used fact $2\cos(a)\cos(b)=\cos(a+b)+\cos(a-b)$ and that $\int e^{i\omega^Tx} p(\omega)d\omega = \int \cos(\omega^Tx) p(\omega)d\omega$ when $p(\omega)$ is real-valued. We can estimate $k(\delta)$ via Monte Carlo estimates. Now define random Fourier feature map $z:\R^d\to\R^L$ where $L$ is the number of particles,
 \begin{align}
-    z(x) 
+    z(x)
         = \frac{1}{\sqrt{L}} (z_{\omega_1}(x), \cdots, z_{\omega_L}(x)) 
         = \sqrt{\frac{2}{L}}(\cos(\omega_1^Tx+b_1), \cdots, \cos(\omega_L^Tx+b_L))
 \end{align}
@@ -202,11 +202,7 @@ where $(\omega_1,\cdots,\omega_L) \overset{iid}{\sim} p(\omega)$ and $(b_1,\cdot
         \E\pb{z_{\omega}(x)z_{\omega}(y)}
         = k(x-y)
 \end{align}
-where convergence is exponential via Hoeffding's Inequality using the fact that $z_{\omega}(x)z_{\omega}(y) \in [-2,2]$,
-\begin{align}
-    \bbP\pb{ z(x)^Tz(y) - k(x-y) > \epsilon }
-        \leq e^{-\frac{L\epsilon^2}{8}}
-\end{align}
+where convergence is exponential via Hoeffding's Inequality using the fact that $z_{\omega}(x)z_{\omega}(y) \in [-2,2]$, i.e. $\bbP\pb{ z(x)^Tz(y) - k(x-y) > \epsilon } \leq \exp(-\frac{L\epsilon^2}{8})$. Given data $\pc{x_i}_{i=1}^n$, and let $Z\in\R^{n\times L}$ where $i$-th row is $z(x_i)$. We can then approximate the kernel matrix $K\in\R^{n\times n}$ via low-rank decomposition $ZZ^T$ since $(ZZ^T)_{ij} = z(x_i)^T z(x_j)$. Intuitively, random Fourier feature map projects a pair of data points $x,y$ to a set of random lines in $\R^d$ parameterized by $\pc{\omega_l,b_l}_{l=1}^L$, and then pass the resulting projection element-wise through a sinusoidal function. If $\omega_l$ are drawn from a particular probability distribution, then the inner products of resulting vectors in $\R^d$ approximates $k(x,y)$ well.
 
 
 \section{Kernel Mean Embedding of Distributions}
