@@ -5,8 +5,7 @@
 \begin{document}
  
 \section{Support Vector Machines}
-
-
+ 
 Support vector machine is a kernelized optimal margin linear classifier (original paper \cite{boserTrainingAlgorithmOptimal1992} and a nice summary \cite{vertPrimerKernelMethods2004}). It distinguishes itself from classifiers minimizing empirical risk as it favors classifier which makes confident predictions. For binary classification problem $\sY=\pc{-1,+1}$, we are interested in finding a linear decision bondary, parameterized by $w\in\R^d,b\in\R$, that separates the training data points by maximizing the worst case distance (margin) of each data point to the decision boundary. We first assume that training set can be linearly separated. Given dataset $\pc{(x_i,y_i)}_{i=1}^n$, we are interested in solving the following quadratic programming problem,
 \begin{align*}
     \min_{w,b}
@@ -169,18 +168,18 @@ where $\varphi(x) = \pb{ \sqrt{\lambda_1} e_1(x), \sqrt{\lambda_2} e_2(x), \cdot
 
 
 \begin{theorem}
+    \label{bochner}
     (Bochner's theorem) A bounded continous shift-invariant kernel $k(x,x') = k(x-x')=k(\delta)$ on $\R^d$ is positive definite if and only if there exists a finite non-negative Borel measure $\Lambda$ on $\R^d$ such that 
     \begin{align}
         k(x-x')
             = \int_{\R^d} e^{i\inner{\omega}{x-x'}} d\Lambda(\omega)
-        \label{eq:bochner}
     \end{align}
 \end{theorem}
 
 We can think of $\Lambda$ as the fourier transform of $k(\delta)$, i.e. $k(\delta) = \sF\pb{\Lambda(\delta)}$ for all $\delta\in\R^d$. If kernel is normalized such that $k(0)=1$, then $\Lambda$ will be a probability measure and $k$ corresponds to its characteristic function $k = \E\pb{ e^{i\inner{\omega}{\cdot}} }$. If $k$ is Gaussian rbf kernel $k(x,x') = \exp(-\frac{1}{2\sigma^2}\norm{x-x'}^2)$, then $\Lambda \sim \sN(0,\frac{1}{\sigma^2}I)$. 
 
 
-Computing the kernel matrix is $\sO(n^2)$ while inversion requires $\sO(n^3)$, infeasible for large $n$. \cite{rahimiRandomFeaturesLargeScale2007} proposes to map data into a relatively low-dimensional randomized feature space via $z:\R^d\to\R^L$ such that inner products between transformed pair of points approximates their kernel evaluation, i.e. $k(x,y) = \inner{\varphi(x)}{\varphi(y)}_{\sH} \approx z(x)^Tz(y)$. Let $p(\omega)$ be Fourier transform of a continuous shift-invariant kernel $k(\delta)$, whose existence is guaranteed by Bochner's theorem (\ref{eq:bochner}). Let $z_{\omega}:\R^d\to \R$ $z_{\omega}(x) = \sqrt{2}\cos(\omega^Tx+b)$ be the randomized feature map where $\omega\sim p(\omega)$, $b\sim \text{Unif}[0,2\pi]$. Then for any $x,y\in\R^d$,
+Computing the kernel matrix is $\sO(n^2)$ while inversion requires $\sO(n^3)$, infeasible for large $n$. \cite{rahimiRandomFeaturesLargeScale2007} proposes to map data into a relatively low-dimensional randomized feature space via $z:\R^d\to\R^L$ such that inner products between transformed pair of points approximates their kernel evaluation, i.e. $k(x,y) = \inner{\varphi(x)}{\varphi(y)}_{\sH} \approx z(x)^Tz(y)$. Let $p(\omega)$ be Fourier transform of a continuous shift-invariant kernel $k(\delta)$, whose existence is guaranteed by Bochner's theorem. Let $z_{\omega}:\R^d\to \R$ $z_{\omega}(x) = \sqrt{2}\cos(\omega^Tx+b)$ be the randomized feature map where $\omega\sim p(\omega)$, $b\sim \text{Unif}[0,2\pi]$. Then for any $x,y\in\R^d$,
 \begin{align*}
     \E\pb{z_{\omega}(x)z_{\omega}(y)}
         &= \E\pb{ \sqrt{2} \cos(\omega^T x + b) \sqrt{2}\cos(\omega^Ty+b) } \\
@@ -202,8 +201,16 @@ where $(\omega_1,\cdots,\omega_L) \overset{iid}{\sim} p(\omega)$ and $(b_1,\cdot
         \E\pb{z_{\omega}(x)z_{\omega}(y)}
         = k(x-y)
 \end{align}
-where convergence is superlinear via Hoeffding's Inequality using the fact that $z_{\omega}(x)z_{\omega}(y) \in [-2,2]$, i.e. $\bbP\pb{ z(x)^Tz(y) - k(x-y) > \epsilon } \leq \exp(-\frac{L\epsilon^2}{8})$. Given data $\pc{x_i}_{i=1}^n$, and let $Z\in\R^{n\times L}$ where $i$-th row is $z(x_i)$. We can then approximate the kernel matrix $K\in\R^{n\times n}$ via low-rank decomposition $ZZ^T$ since $(ZZ^T)_{ij} = z(x_i)^T z(x_j)$. Intuitively, random Fourier feature map projects a pair of data points $x,y$ to a set of random lines in $\R^d$ parameterized by $\pc{\omega_l,b_l}_{l=1}^L$, and then pass the resulting projection element-wise through a sinusoidal function. If $\omega_l$ are drawn from a particular probability distribution, then the inner products of resulting vectors in $\R^d$ approximates $k(x,y)$ well.
+where convergence is superlinear via Hoeffding's Inequality using the fact that $z_{\omega}(x)z_{\omega}(y) \in [-2,2]$, i.e. $\bbP\pb{ z(x)^Tz(y) - k(x-y) > \epsilon } \leq \exp(-\frac{L\epsilon^2}{8})$. Given data $\pc{x_i}_{i=1}^n$, and let $Z\in\R^{n\times L}$ where $i$-th row is $z(x_i)$. We can then approximate the kernel matrix $K\in\R^{n\times n}$ via low-rank decomposition $ZZ^T$ since $(ZZ^T)_{ij} = z(x_i)^T z(x_j)$. Intuitively, random Fourier feature map projects a pair of data points $x,y$ to a set of random lines in $\R^d$ parameterized by $\pc{\omega_l,b_l}_{l=1}^L$, and then pass the resulting projection element-wise through a sinusoidal function. If $\omega_l$ are drawn from a particular probability distribution, then the inner products of resulting vectors in $\R^d$ approximates $k(x,y)$ well. Figure (\ref{fig:rbf_rff}) illustrates the effect of varying number of particles $L$ when trying to approximate the kernel matrix and its effect on classification.
 
+
+\begin{center} 
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{assets/rbf_rff_svm.png} 
+    \caption{Radial basis kernel matrix and its random Fourier approximation (varying $L$) over moon dataset. Higher number of particles $L$ makes kernel matrix approximation better.}
+    \label{fig:rbf_rff}
+\end{figure}
+\end{center} 
 
 \section{Kernel Mean Embedding of Distributions}
 
@@ -319,11 +326,24 @@ where optimal witness function is normalized difference of feature means $f^* = 
 \end{example}
 
 
+\section{Hilbert-Schmidt Independence Criterion}
 
+Intuitively, we can compare the dependence between two random variables by computing the distance in a RKHS. Given separable RKHS $\sH,\sG$ with reproducing kernels $k,l$ over $\sX \times \sY$. Define the joint kernel $v:\sX\times\sY\to\R$ as a product kernel $v((x,y),(x',y') = k(x,x')l(y,y')$. HSIC is simply MMD distance between kernel embedding of joint $\bbP_{XY}$ with that of product of marginals $\bbP_X\bbP_Y$ over RKHS $\sH\times\sG$ \cite{grettonKernelMethodsMeasuring2005},
+\begin{align}
+    \text{HSIC}(X,Y)
+        &= \norm{\mu_{\bbP_{XY}} - \mu_{\bbP_X \bbP_Y}}_{\sH\times\sG} \\ 
+        &= \underset{(X,Y),(X',Y')\overset{iid}{\sim}\bbP_{XY}}{\E} \pb{ k(X,X')l(Y,Y') }
+         + \E\pb{k(X,X')}\E\pb{k(Y,Y')} \\ 
+        &\quad\quad\quad\quad -2 \underset{(X,Y)\sim \bbP_{XY}}{\E} \pb{ \E\pb{k(X,X')} \E\pb{l(Y,Y')} }
+\end{align} 
+with emprical estimates as 
+\begin{align}
+    \widehat{\text{HSIC}}(X,Y)
+        = \frac{1}{m^2} \tr(HKHL)
+\end{align}
+where $H = I-\frac{1}{m} 11^T$ is the centering matrix.
 
-
-
-
+ 
 
 
 \newpage
