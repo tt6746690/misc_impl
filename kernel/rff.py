@@ -35,7 +35,7 @@ def get_rbf_rff_kernel(L):
     return rbf_rff_kernel
 
 kernels = {
-    f'RBF Exact (n={N})':  rbf_exact_kernel,
+    f'RBF ($\sigma^2$={sigma2} N={N})':  rbf_exact_kernel,
     f'RBF rff (L={1})':    get_rbf_rff_kernel(1),
     f'RBF rff (L={10})':   get_rbf_rff_kernel(10),
     f'RBF rff (L={50})':   get_rbf_rff_kernel(50),
@@ -55,7 +55,7 @@ for i, (kernel_name, kernel) in enumerate(kernels.items()):
     ax = axs[0,i]
     mask0 = np.ma.masked_where(y==0, [30 for _ in range(N)])
     mask1 = np.ma.masked_where(y==1, [30 for _ in range(N)])
-    ax.scatter(X[:,0], X[:,1], s=mask0, c=[cmap(0.8)], marker='x')
+    ax.scatter(X[:,0], X[:,1], s=mask0, c=[cmap(0.9)], marker='x')
     ax.scatter(X[:,0], X[:,1], s=mask1, c=[cmap(0.6)], marker='o')
     ax.set_xticks([])
     ax.set_yticks([])
