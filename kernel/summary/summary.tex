@@ -171,12 +171,12 @@ where $\varphi(x) = \pb{ \sqrt{\lambda_1} e_1(x), \sqrt{\lambda_2} e_2(x), \cdot
     \label{bochner}
     (Bochner's theorem) A bounded continous shift-invariant kernel $k(x,x') = k(x-x')=k(\delta)$ on $\R^d$ is positive definite if and only if there exists a finite non-negative Borel measure $\Lambda$ on $\R^d$ such that 
     \begin{align}
-        k(x-x')
-            = \int_{\R^d} e^{i\inner{\omega}{x-x'}} d\Lambda(\omega)
+        k(\delta)
+            = \int_{\R^d} e^{i\inner{\omega}{\delta}} d\Lambda(\omega)
     \end{align}
 \end{theorem}
 
-We can think of $\Lambda$ as the fourier transform of $k(\delta)$, i.e. $k(\delta) = \sF\pb{\Lambda(\delta)}$ for all $\delta\in\R^d$. If kernel is normalized such that $k(0)=1$, then $\Lambda$ will be a probability measure and $k$ corresponds to its characteristic function $k = \E\pb{ e^{i\inner{\omega}{\cdot}} }$. If $k$ is Gaussian rbf kernel $k(x,x') = \exp(-\frac{1}{2\sigma^2}\norm{x-x'}^2)$, then $\Lambda \sim \sN(0,\frac{1}{\sigma^2}I)$. 
+We can think of $\Lambda$ as the fourier transform of $k(\delta)$, i.e. $k = \sF\pb{\Lambda}$. If kernel is normalized such that $k(0)=1$, then $\Lambda$ will be a probability measure and $k$ corresponds to its characteristic function $k = \E\pb{ e^{i\inner{\omega}{\cdot}} }$. If $k$ is Gaussian rbf kernel $k(x,x') = \exp(-\frac{1}{2\sigma^2}\norm{x-x'}^2)$, then $\Lambda \sim \sN(0,\frac{1}{\sigma^2}I)$. 
 
 
 Computing the kernel matrix is $\sO(n^2)$ while inversion requires $\sO(n^3)$, infeasible for large $n$. \cite{rahimiRandomFeaturesLargeScale2007} proposes to map data into a relatively low-dimensional randomized feature space via $z:\R^d\to\R^L$ such that inner products between transformed pair of points approximates their kernel evaluation, i.e. $k(x,y) = \inner{\varphi(x)}{\varphi(y)}_{\sH} \approx z(x)^Tz(y)$. Let $p(\omega)$ be Fourier transform of a continuous shift-invariant kernel $k(\delta)$, whose existence is guaranteed by Bochner's theorem. Let $z_{\omega}:\R^d\to \R$ $z_{\omega}(x) = \sqrt{2}\cos(\omega^Tx+b)$ be the randomized feature map where $\omega\sim p(\omega)$, $b\sim \text{Unif}[0,2\pi]$. Then for any $x,y\in\R^d$,
