@@ -318,7 +318,7 @@ where optimal witness function is normalized difference of feature means $f^* = 
 \begin{figure}[h!]
 \begin{center} 
     \includegraphics[width=3in]{assets/mmd_gauss_laplace_witness} 
-    \caption{The unnormalized witness function $\hat{f^*} = \widehat{\mu_{\bbP}} - \widehat{\mu_{\bbQ}}$ where $\text{N}(0,1)$ is compared with $\text{Lap}(0,\sqrt{.5})$. Both distribution has same mean and variance. The witness is computed from $4\times 10^4$ samples, using a Gaussian kernel with $\sigma^2=0.5$. This plot reproduces one figure in \cite{grettonKernelTwoSampleTest2012}}
+    \caption{The unnormalized witness function $\hat{f^*} = \widehat{\mu_{\bbP}} - \widehat{\mu_{\bbQ}}$ where $\bbP \equiv \text{N}(0,1)$ is compared with $\bbQ \equiv \text{Lap}(0,\sqrt{.5})$. Both distribution has same mean and variance. The witness is computed from $4\times 10^4$ samples, using a Gaussian kernel with $\sigma^2=0.5$. The witness function is large whenever $\bbP-\bbQ$ is positive and small when $\bbP-\bbQ$ is large. This plot reproduces one figure in \cite{grettonKernelTwoSampleTest2012}.}
     \label{fig:mmd_gauss_laplace_witness}
 \end{center}
 \end{figure}

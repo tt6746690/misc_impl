@@ -26,17 +26,6 @@ def gauss_kernel(X, Y=None, sigma=.5):
 def linear_kernel(X, Y):
     return np.dot(X, Y.T)
 
-def mmd_unbiased(X, Y, kernel):
-    assert X.ndim == Y.ndim == 2
-    K_XX = kernel(X,X)
-    K_XY = kernel(X,Y)
-    K_YY = kernel(Y,Y)
-    n, m = len(K_XX), len(K_YY)
-    np.fill_diagonal(K_XX, 0)
-    np.fill_diagonal(K_YY, 0)
-    mmd = np.sum(K_XX) / (n*(n-1))  + np.sum(K_YY) / (m*(m-1))  - 2*np.sum(K_XY)/(n*m)
-    return mmd
-
 
 N=40000
 mu=0.0
