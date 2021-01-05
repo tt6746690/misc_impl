@@ -1,4 +1,19 @@
 
+@article{grettonKernelTwoSampleTest2012,
+	title = {A Kernel Two-Sample Test},
+	volume = {13},
+	url = {http://jmlr.org/papers/v13/gretton12a.html},
+	abstract = {We propose a framework for analyzing and comparing distributions, which we use to construct statistical tests to determine if two samples are drawn from different distributions.  Our test statistic is the largest difference in expectations over functions in the unit ball of a reproducing kernel Hilbert space ({RKHS}), and is called the maximum mean discrepancy ({MMD}).  We present two distribution-free tests based on large deviation bounds for the {MMD}, and a third test based on the asymptotic distribution of this statistic.  The {MMD} can be computed in quadratic time, although efficient linear time approximations are available.  Our statistic is an instance of an integral probability metric, and various classical metrics on distributions are obtained when alternative function classes are used in place of an {RKHS}.  We apply our two-sample tests  to a variety of problems, including attribute matching for databases using the Hungarian marriage method, where they perform strongly.  Excellent performance is also obtained when comparing distributions over graphs, for which these are the first such tests.},
+	pages = {723--773},
+	number = {25},
+	journaltitle = {Journal of Machine Learning Research},
+	author = {Gretton, Arthur and Borgwardt, Karsten M. and Rasch, Malte J. and Schölkopf, Bernhard and Smola, Alexander},
+	urldate = {2020-06-21},
+	date = {2012},
+	keywords = {good, tbr},
+	file = {Gretton et al_2012_A Kernel Two-Sample Test.pdf:/Users/wpq/Dropbox (MIT)/zotero/Gretton et al_2012_A Kernel Two-Sample Test.pdf:application/pdf}
+}
+
 @article{sutherlandGenerativeModelsModel2019,
 	title = {Generative Models and Model Criticism via Optimized Maximum Mean Discrepancy},
 	url = {http://arxiv.org/abs/1611.04488},
@@ -465,4 +480,40 @@ dataset containing 6 million training points, {CIFAR}, and {ImageNet}.},
 	langid = {english},
 	keywords = {tbr},
 	file = {Liang_2016_CS229T-STAT231 - Statistical Learning Theory (Winter 2016).pdf:/Users/wpq/Dropbox (MIT)/zotero/Liang_2016_CS229T-STAT231 - Statistical Learning Theory (Winter 2016).pdf:application/pdf}
+}
+
+@article{liImplicitKernelLearning2019,
+	title = {Implicit Kernel Learning},
+	url = {http://arxiv.org/abs/1902.10214},
+	abstract = {Kernels are powerful and versatile tools in machine learning and statistics. Although the notion of universal kernels and characteristic kernels has been studied, kernel selection still greatly influences the empirical performance. While learning the kernel in a data driven way has been investigated, in this paper we explore learning the spectral distribution of kernel via implicit generative models parametrized by deep neural networks. We called our method Implicit Kernel Learning ({IKL}). The proposed framework is simple to train and inference is performed via sampling random Fourier features. We investigate two applications of the proposed {IKL} as examples, including generative adversarial networks with {MMD} ({MMD} {GAN}) and standard supervised learning. Empirically, {MMD} {GAN} with {IKL} outperforms vanilla predefined kernels on both image and text generation benchmarks; using {IKL} with Random Kitchen Sinks also leads to substantial improvement over existing state-of-the-art kernel learning algorithms on popular supervised learning benchmarks. Theory and conditions for using {IKL} in both applications are also studied as well as connections to previous state-of-the-art methods.},
+	journaltitle = {{arXiv}:1902.10214 [cs, stat]},
+	author = {Li, Chun-Liang and Chang, Wei-Cheng and Mroueh, Youssef and Yang, Yiming and Póczos, Barnabás},
+	urldate = {2021-01-04},
+	date = {2019-02-26},
+	eprinttype = {arxiv},
+	eprint = {1902.10214},
+	keywords = {tbr},
+	file = {Li et al_2019_Implicit Kernel Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Li et al_2019_Implicit Kernel Learning.pdf:application/pdf}
+}
+
+@article{wilsonGaussianProcessKernels2013,
+	title = {Gaussian Process Kernels for Pattern Discovery and Extrapolation},
+	abstract = {Gaussian processes are rich distributions over functions, which provide a Bayesian nonparametric approach to smoothing and interpolation. We introduce simple closed form kernels that can be used with Gaussian processes to discover patterns and enable extrapolation. These kernels are derived by modelling a spectral density – the Fourier transform of a kernel – with a Gaussian mixture. The proposed kernels support a broad class of stationary covariances, but Gaussian process inference remains simple and analytic. We demonstrate the proposed kernels by discovering patterns and performing long range extrapolation on synthetic examples, as well as atmospheric {CO}2 trends and airline passenger data. We also show that it is possible to reconstruct several popular standard covariances within our framework.},
+	pages = {9},
+	author = {Wilson, Andrew Gordon and Adams, Ryan Prescott},
+	date = {2013},
+	langid = {english},
+	keywords = {tbr},
+	file = {Wilson and Adams - Gaussian Process Kernels for Pattern Discovery and.pdf:/Users/wpq/Zotero/storage/KF7ABATZ/Wilson and Adams - Gaussian Process Kernels for Pattern Discovery and.pdf:application/pdf}
+}
+
+@inproceedings{grettonOptimalKernelChoice2012,
+	title = {Optimal kernel choice for large-scale two-sample tests},
+	volume = {25},
+	abstract = {Given samples from distributions p and q, a two-sample test determines whether to reject the null hypothesis that p = q, based on the value of a test statistic measuring the distance between the samples. One choice of test statistic is the maximum mean discrepancy ({MMD}), which is a distance between embeddings of the probability distributions in a reproducing kernel Hilbert space. The kernel used in obtaining these embeddings is critical in ensuring the test has high power, and correctly distinguishes unlike distributions with high probability. A means of parameter selection for the two-sample test based on the {MMD} is proposed. For a given test level (an upper bound on the probability of making a Type I error), the kernel is chosen so as to maximize the test power, and minimize the probability of making a Type {II} error. The test statistic, test threshold, and optimization over the kernel parameters are obtained with cost linear in the sample size. These properties make the kernel selection and test procedures suited to data streams, where the observations cannot all be stored in memory. In experiments, the new kernel selection approach yields a more powerful test than earlier kernel selection heuristics.},
+	eventtitle = {Advances in Neural Information Processing Systems},
+	author = {Gretton, Arthur and Sriperumbudur, Bharath and Sejdinovic, Dino and Strathmann, Heiko and Balakrishnan, Sivaraman and Pontil, Massimiliano and Kenji, Fukumizu},
+	date = {2012-01-01},
+	keywords = {tbr},
+	file = {Gretton et al_2012_Optimal kernel choice for large-scale two-sample tests.pdf:/Users/wpq/Dropbox (MIT)/zotero/Gretton et al_2012_Optimal kernel choice for large-scale two-sample tests.pdf:application/pdf}
 }

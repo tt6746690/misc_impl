@@ -296,7 +296,7 @@ where $X,X'\overset{iid}{\sim} \bbP$ and $Y,Y'\overset{iid}{\sim} \bbQ$. The unb
     \widehat{\text{MMD}}_u^2(X,Y)
         = \frac{1}{m(m-1)} \sum_{i\neq j} k(x_i,x_j) + \frac{1}{n(n-1)} \sum_{i\neq j} k(y_i,y_j) - \frac{2}{mn} \sum_{i,j} k(x_i,y_j)
 \end{align}
-where $\bX = (X_1,\cdots,X_m) \overset{iid}{\sim}\bbP$ and $\bY = (Y_1,\cdots,Y_m) \overset{iid}{\sim} \bbQ$. Alternatively, we can consider maximum mean discrepancy as a class of integral probability metric over functions in the unit ball in RKHS $\sH$,
+where $\bX = (X_1,\cdots,X_m) \overset{iid}{\sim}\bbP$ and $\bY = (Y_1,\cdots,Y_n) \overset{iid}{\sim} \bbQ$. Alternatively, we can consider maximum mean discrepancy as a class of integral probability metric over functions in the unit ball in RKHS $\sH$,
 \begin{align}
     \text{MMD}(\bbP,\bbQ)
         = \sup_{f\in\sH:\; \norm{f}_{\sH}\leq 1} \pc{
@@ -311,7 +311,19 @@ which is equivalent to the view of MMD as distance between kernel mean embedding
         = \sup_{f\in\sH:\; \norm{f}_{\sH}\leq 1} \inner{f}{\mu_{\bbP}-\mu_{\bbQ}}_{\sH}
         = \norm{\mu_{\bbP} - \mu_{\bbQ}}_{\sH}
 \end{align}
-where optimal witness function is normalized difference of feature means $f^* = \mu_{\bbP}-\mu_{\bbQ}/\norm{ \mu_{\bbP}-\mu_{\bbQ} }_{\sH}$. 
+where optimal witness function is normalized difference of feature means $f^* = \mu_{\bbP}-\mu_{\bbQ}/\norm{ \mu_{\bbP}-\mu_{\bbQ} }_{\sH}$. Figure (\ref{fig:mmd_gauss_laplace_witness}) illustrates an empirical estimate of witness function, using kernels.
+
+
+
+\begin{figure}[h!]
+\begin{center} 
+    \includegraphics[width=3in]{assets/mmd_gauss_laplace_witness} 
+    \caption{The unnormalized witness function $\hat{f^*} = \widehat{\mu_{\bbP}} - \widehat{\mu_{\bbQ}}$ where $\text{N}(0,1)$ is compared with $\text{Lap}(0,\sqrt{.5})$. Both distribution has same mean and variance. The witness is computed from $4\times 10^4$ samples, using a Gaussian kernel with $\sigma^2=0.5$. This plot reproduces one figure in \cite{grettonKernelTwoSampleTest2012}}
+    \label{fig:mmd_gauss_laplace_witness}
+\end{center}
+\end{figure}
+
+    
 
 \begin{example}
     Consider $X_1\sim \sN(\mu_1,\Sigma_1), X_2\sim \sN(\mu_2,\Sigma_2)$. Let $\sH$ be RKHS with $k(x,y)=x^Ty$ as its reproducing kernel. We note that $\text{MMD}^2$ with linear witness is equivalent to difference in means,
@@ -324,6 +336,9 @@ where optimal witness function is normalized difference of feature means $f^* = 
     \end{align}
     where $\mu_{\bbP_{X_1}}(x) = \E\pb{ k(x, X_1) } = x^T\E\pb{X_1}$ implies $\mu_{\bbP_{X_1}} = k(\mu_1, \cdot)$.
 \end{example}
+
+
+
 
 
 \section{Hilbert-Schmidt Independence Criterion}
