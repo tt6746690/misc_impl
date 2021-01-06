@@ -9,7 +9,7 @@ def mmd(X, Y, kernel):
     if X.ndim != 2 or Y.ndim != 2:
         raise ValueError('data X,Y should be 2-dim matrix')
 
-    K_XX = kernel(X, Y)
+    K_XX = kernel(X, X)
     K_XY = kernel(X, Y)
     K_YY = kernel(Y, Y)
 
