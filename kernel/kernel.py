@@ -1,4 +1,4 @@
-import numpy as np
+import jax.numpy as np
 from scipy.spatial.distance import squareform, pdist, cdist
 
 def sq_distances(X,Y=None):

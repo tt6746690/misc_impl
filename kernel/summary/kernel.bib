@@ -517,3 +517,146 @@ dataset containing 6 million training points, {CIFAR}, and {ImageNet}.},
 	keywords = {tbr},
 	file = {Gretton et al_2012_Optimal kernel choice for large-scale two-sample tests.pdf:/Users/wpq/Dropbox (MIT)/zotero/Gretton et al_2012_Optimal kernel choice for large-scale two-sample tests.pdf:application/pdf}
 }
+
+@article{sutherlandGenerativeModelsModel2017,
+	title = {Generative Models and Model Criticism via Optimized Maximum Mean Discrepancy},
+	abstract = {We propose a method to optimize the representation and distinguishability of samples from two probability distributions, by maximizing the estimated power of a statistical test based on the maximum mean discrepancy ({MMD}). This optimized {MMD} is applied to the setting of unsupervised learning by generative adversarial networks ({GAN}), in which a model attempts to generate realistic samples, and a discriminator attempts to tell these apart from data samples. In this context, the {MMD} may be used in two roles: first, as a discriminator, either directly on the samples, or on features of the samples. Second, the {MMD} can be used to evaluate the performance of a generative model, by testing the model's samples against a reference data set. In the latter role, the optimized {MMD} is particularly helpful, as it gives an interpretable indication of how the model and data distributions differ, even in cases where individual model samples are not easily distinguished either by eye or by classifier.},
+	journaltitle = {{ICLR}},
+	author = {Sutherland, D. and Tung, H. F. and Strathmann, Heiko and De, Soumyajit and Ramdas, Aaditya and Smola, Alex and Gretton, A.},
+	date = {2017},
+	keywords = {tbr},
+	file = {Sutherland et al_2017_Generative Models and Model Criticism via Optimized Maximum Mean Discrepancy.pdf:/Users/wpq/Dropbox (MIT)/zotero/Sutherland et al_2017_Generative Models and Model Criticism via Optimized Maximum Mean Discrepancy.pdf:application/pdf}
+}
+
+@article{chwialkowskiFastTwoSampleTesting2015a,
+	title = {Fast Two-Sample Testing with Analytic Representations of Probability Measures},
+	url = {http://arxiv.org/abs/1506.04725},
+	abstract = {We propose a class of nonparametric two-sample tests with a cost linear in the sample size. Two tests are given, both based on an ensemble of distances between analytic functions representing each of the distributions. The first test uses smoothed empirical characteristic functions to represent the distributions, the second uses distribution embeddings in a reproducing kernel Hilbert space. Analyticity implies that differences in the distributions may be detected almost surely at a finite number of randomly chosen locations/frequencies. The new tests are consistent against a larger class of alternatives than the previous linear-time tests based on the (non-smoothed) empirical characteristic functions, while being much faster than the current state-of-the-art quadratic-time kernel-based or energy distance-based tests. Experiments on artificial benchmarks and on challenging real-world testing problems demonstrate that our tests give a better power/time tradeoff than competing approaches, and in some cases, better outright power than even the most expensive quadratic-time tests. This performance advantage is retained even in high dimensions, and in cases where the difference in distributions is not observable with low order statistics.},
+	journaltitle = {{arXiv}:1506.04725 [stat]},
+	author = {Chwialkowski, Kacper and Ramdas, Aaditya and Sejdinovic, Dino and Gretton, Arthur},
+	urldate = {2021-01-05},
+	date = {2015-06-15},
+	eprinttype = {arxiv},
+	eprint = {1506.04725},
+	keywords = {read},
+	file = {Chwialkowski et al_2015_Fast Two-Sample Testing with Analytic Representations of Probability Measures.pdf:/Users/wpq/Dropbox (MIT)/zotero/Chwialkowski et al_2015_Fast Two-Sample Testing with Analytic Representations of Probability Measures2.pdf:application/pdf}
+}
+
+@article{jitkrittumInterpretableDistributionFeatures2016a,
+	title = {Interpretable Distribution Features with Maximum Testing Power},
+	url = {http://arxiv.org/abs/1605.06796},
+	abstract = {Two semimetrics on probability distributions are proposed, given as the sum of differences of expectations of analytic functions evaluated at spatial or frequency locations (i.e, features). The features are chosen so as to maximize the distinguishability of the distributions, by optimizing a lower bound on test power for a statistical test using these features. The result is a parsimonious and interpretable indication of how and where two distributions differ locally. An empirical estimate of the test power criterion converges with increasing sample size, ensuring the quality of the returned features. In real-world benchmarks on high-dimensional text and image data, linear-time tests using the proposed semimetrics achieve comparable performance to the state-of-the-art quadratic-time maximum mean discrepancy test, while returning human-interpretable features that explain the test results.},
+	journaltitle = {{arXiv}:1605.06796 [cs, stat]},
+	author = {Jitkrittum, Wittawat and Szabo, Zoltan and Chwialkowski, Kacper and Gretton, Arthur},
+	urldate = {2021-01-05},
+	date = {2016-10-28},
+	eprinttype = {arxiv},
+	eprint = {1605.06796},
+	keywords = {tbr},
+	file = {Jitkrittum et al_2016_Interpretable Distribution Features with Maximum Testing Power.pdf:/Users/wpq/Dropbox (MIT)/zotero/Jitkrittum et al_2016_Interpretable Distribution Features with Maximum Testing Power2.pdf:application/pdf}
+}
+
+@article{bentonFunctionSpaceDistributionsKernels2019,
+	title = {Function-Space Distributions over Kernels},
+	url = {http://arxiv.org/abs/1910.13565},
+	abstract = {Gaussian processes are flexible function approximators, with inductive biases controlled by a covariance kernel. Learning the kernel is the key to representation learning and strong predictive performance. In this paper, we develop functional kernel learning ({FKL}) to directly infer functional posteriors over kernels. In particular, we place a transformed Gaussian process over a spectral density, to induce a non-parametric distribution over kernel functions. The resulting approach enables learning of rich representations, with support for any stationary kernel, uncertainty over the values of the kernel, and an interpretable specification of a prior directly over kernels, without requiring sophisticated initialization or manual intervention. We perform inference through elliptical slice sampling, which is especially well suited to marginalizing posteriors with the strongly correlated priors typical to function space modelling. We develop our approach for non-uniform, large-scale, multi-task, and multidimensional data, and show promising performance in a wide range of settings, including interpolation, extrapolation, and kernel recovery experiments.},
+	journaltitle = {{arXiv}:1910.13565 [cs, stat]},
+	author = {Benton, Gregory W. and Maddox, Wesley J. and Salkey, Jayson P. and Albinati, Julio and Wilson, Andrew Gordon},
+	urldate = {2021-01-05},
+	date = {2019-10-29},
+	eprinttype = {arxiv},
+	eprint = {1910.13565},
+	keywords = {good, tbr},
+	file = {Benton et al_2019_Function-Space Distributions over Kernels.pdf:/Users/wpq/Dropbox (MIT)/zotero/Benton et al_2019_Function-Space Distributions over Kernels.pdf:application/pdf}
+}
+
+@article{jitkrittumAdaptiveTestIndependence2017,
+	title = {An Adaptive Test of Independence with Analytic Kernel Embeddings},
+	abstract = {A new computationally efﬁcient dependence measure, and an adaptive statistical test of independence, are proposed. The dependence measure is the difference between analytic embeddings of the joint distribution and the product of the marginals, evaluated at a ﬁnite set of locations (features). These features are chosen so as to maximize a lower bound on the test power, resulting in a test that is data-efﬁcient, and that runs in linear time (with respect to the sample size n). The optimized features can be interpreted as evidence to reject the null hypothesis, indicating regions in the joint domain where the joint distribution and the product of the marginals differ most. Consistency of the independence test is established, for an appropriate choice of features. In real-world benchmarks, independence tests using the optimized features perform comparably to the state-of-the-art quadratic-time {HSIC} test, and outperform competing O(n) and O(n log n) tests.},
+	pages = {10},
+	author = {Jitkrittum, Wittawat and Szabó, Zoltán and Gretton, Arthur},
+	date = {2017},
+	langid = {english},
+	keywords = {tbr},
+	file = {Jitkrittum et al. - An Adaptive Test of Independence with Analytic Ker.pdf:/Users/wpq/Zotero/storage/EQRL7HG6/Jitkrittum et al. - An Adaptive Test of Independence with Analytic Ker.pdf:application/pdf}
+}
+
+@article{chwialkowskiKernelTestGoodness2016,
+	title = {A Kernel Test of Goodness of Fit},
+	url = {http://arxiv.org/abs/1602.02964},
+	abstract = {We propose a nonparametric statistical test for goodness-of-fit: given a set of samples, the test determines how likely it is that these were generated from a target density function. The measure of goodness-of-fit is a divergence constructed via Stein's method using functions from a Reproducing Kernel Hilbert Space. Our test statistic is based on an empirical estimate of this divergence, taking the form of a V-statistic in terms of the log gradients of the target density and the kernel. We derive a statistical test, both for i.i.d. and non-i.i.d. samples, where we estimate the null distribution quantiles using a wild bootstrap procedure. We apply our test to quantifying convergence of approximate Markov Chain Monte Carlo methods, statistical model criticism, and evaluating quality of fit vs model complexity in nonparametric density estimation.},
+	journaltitle = {{arXiv}:1602.02964 [stat]},
+	author = {Chwialkowski, Kacper and Strathmann, Heiko and Gretton, Arthur},
+	urldate = {2021-01-05},
+	date = {2016-09-27},
+	eprinttype = {arxiv},
+	eprint = {1602.02964},
+	keywords = {tbr},
+	file = {Chwialkowski et al_2016_A Kernel Test of Goodness of Fit.pdf:/Users/wpq/Dropbox (MIT)/zotero/Chwialkowski et al_2016_A Kernel Test of Goodness of Fit.pdf:application/pdf}
+}
+
+@article{jitkrittumLinearTimeKernelGoodnessofFit2017,
+	title = {A Linear-Time Kernel Goodness-of-Fit Test},
+	url = {http://arxiv.org/abs/1705.07673},
+	abstract = {We propose a novel adaptive test of goodness-of-fit, with computational cost linear in the number of samples. We learn the test features that best indicate the differences between observed samples and a reference model, by minimizing the false negative rate. These features are constructed via Stein's method, meaning that it is not necessary to compute the normalising constant of the model. We analyse the asymptotic Bahadur efficiency of the new test, and prove that under a mean-shift alternative, our test always has greater relative efficiency than a previous linear-time kernel test, regardless of the choice of parameters for that test. In experiments, the performance of our method exceeds that of the earlier linear-time test, and matches or exceeds the power of a quadratic-time kernel test. In high dimensions and where model structure may be exploited, our goodness of fit test performs far better than a quadratic-time two-sample test based on the Maximum Mean Discrepancy, with samples drawn from the model.},
+	journaltitle = {{arXiv}:1705.07673 [cs, stat]},
+	author = {Jitkrittum, Wittawat and Xu, Wenkai and Szabo, Zoltan and Fukumizu, Kenji and Gretton, Arthur},
+	urldate = {2021-01-05},
+	date = {2017-10-24},
+	eprinttype = {arxiv},
+	eprint = {1705.07673},
+	keywords = {tbr},
+	file = {Jitkrittum et al_2017_A Linear-Time Kernel Goodness-of-Fit Test.pdf:/Users/wpq/Dropbox (MIT)/zotero/Jitkrittum et al_2017_A Linear-Time Kernel Goodness-of-Fit Test.pdf:application/pdf}
+}
+
+@article{grettonKernelStatisticalTest2007,
+	title = {A Kernel Statistical Test of Independence},
+	abstract = {Although kernel measures of independence have been widely applied in machine learning (notably in kernel {ICA}), there is as yet no method to determine whether they have detected statistically signiﬁcant dependence. We provide a novel test of the independence hypothesis for one particular kernel independence measure, the Hilbert-Schmidt independence criterion ({HSIC}). The resulting test costs O(m2), where m is the sample size. We demonstrate that this test outperforms established contingency table and functional correlation-based tests, and that this advantage is greater for multivariate data. Finally, we show the {HSIC} test also applies to text (and to structured data more generally), for which no other independence test presently exists.},
+	pages = {8},
+	author = {Gretton, Arthur and Fukumizu, Kenji and Teo, Choon Hui},
+	date = {2007},
+	langid = {english},
+	keywords = {tbr},
+	file = {Gretton et al. - A Kernel Statistical Test of Independence.pdf:/Users/wpq/Zotero/storage/U9PPZ592/Gretton et al. - A Kernel Statistical Test of Independence.pdf:application/pdf}
+}
+
+@article{yangNystromMethodVs2012,
+	title = {Nystrom Method vs Random Fourier Features: A Theoretical and Empirical Comparison},
+	abstract = {Both random Fourier features and the Nystro¨m method have been successfully applied to efﬁcient kernel learning. In this work, we investigate the fundamental difference between these two approaches, and how the difference could affect their generalization performances. Unlike approaches based on random Fourier features where the basis functions (i.e., cosine and sine functions) are sampled from a distribution independent from the training data, basis functions used by the Nystro¨m method are randomly sampled from the training examples and are therefore data dependent. By exploring this difference, we show that when there is a large gap in the eigen-spectrum of the kernel matrix, approaches based on the Nystro¨m method can yield impressively better generalization error bound than random Fourier features based approach. We empirically verify our theoretical ﬁndings on a wide range of large data sets.},
+	pages = {9},
+	author = {Yang, Tianbao and Li, Yu-Feng and Mahdavi, Mehrdad and Jin, Rong and Zhou, Zhi-Hua},
+	date = {2012},
+	langid = {english},
+	keywords = {tbr},
+	file = {Yang et al_2012_Nystrom Method vs Random Fourier Features - A Theoretical and Empirical Comparison.pdf:/Users/wpq/Dropbox (MIT)/zotero/Yang et al_2012_Nystrom Method vs Random Fourier Features - A Theoretical and Empirical Comparison.pdf:application/pdf}
+}
+
+@article{greenfeldRobustLearningHilbertSchmidt2020,
+	title = {Robust Learning with the Hilbert-Schmidt Independence Criterion},
+	url = {http://arxiv.org/abs/1910.00270},
+	abstract = {We investigate the use of a non-parametric independence measure, the Hilbert-Schmidt Independence Criterion ({HSIC}), as a loss-function for learning robust regression and classification models. This loss-function encourages learning models where the distribution of the residuals between the label and the model prediction is statistically independent of the distribution of the instances themselves. This loss-function was first proposed by Mooij et al. (2009) in the context of learning causal graphs. We adapt it to the task of learning for unsupervised covariate shift: learning on a source domain without access to any instances or labels from the unknown target domain, but with the assumption that \$p(y{\textbar}x)\$ (the conditional probability of labels given instances) remains the same in the target domain. We show that the proposed loss is expected to give rise to models that generalize well on a class of target domains characterised by the complexity of their description within a reproducing kernel Hilbert space. Experiments on unsupervised covariate shift tasks demonstrate that models learned with the proposed loss-function outperform models learned with standard loss functions, achieving state-of-the-art results on a challenging cell-microscopy unsupervised covariate shift task.},
+	journaltitle = {{arXiv}:1910.00270 [cs, stat]},
+	author = {Greenfeld, Daniel and Shalit, Uri},
+	urldate = {2021-01-06},
+	date = {2020-07-11},
+	eprinttype = {arxiv},
+	eprint = {1910.00270},
+	keywords = {tbr},
+	file = {Greenfeld_Shalit_2020_Robust Learning with the Hilbert-Schmidt Independence Criterion.pdf:/Users/wpq/Dropbox (MIT)/zotero/Greenfeld_Shalit_2020_Robust Learning with the Hilbert-Schmidt Independence Criterion.pdf:application/pdf}
+}
+
+@article{scholkopfNonlinearComponentAnalysis1998,
+	title = {Nonlinear Component Analysis as a Kernel Eigenvalue Problem},
+	volume = {10},
+	issn = {0899-7667},
+	doi = {10.1162/089976698300017467},
+	abstract = {A new method for performing a nonlinear form of principal component analysis is proposed. By the use of integral operator kernel functions, one can efficiently compute principal components in high-dimensional feature spaces, related to input space by some nonlinear map—for instance, the space of all possible five-pixel products in 16 × 16 images. We give the derivation of the method and present experimental results on polynomial feature extraction for pattern recognition.},
+	pages = {1299--1319},
+	number = {5},
+	journaltitle = {Neural Computation},
+	author = {Schölkopf, B. and Smola, A. and Müller, K.},
+	date = {1998-07},
+	note = {Conference Name: Neural Computation},
+	keywords = {tbr},
+	file = {Scholkopf et al_1998_Nonlinear Component Analysis as a Kernel Eigenvalue Problem.pdf:/Users/wpq/Dropbox (MIT)/zotero/Scholkopf et al_1998_Nonlinear Component Analysis as a Kernel Eigenvalue Problem.pdf:application/pdf}
+}

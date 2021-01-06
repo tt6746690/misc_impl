@@ -343,23 +343,51 @@ where optimal witness function is normalized difference of feature means $f^* = 
 
 \section{Hilbert-Schmidt Independence Criterion}
 
-Intuitively, we can compare the dependence between two random variables by computing the distance in a RKHS. Given separable RKHS $\sH,\sG$ with reproducing kernels $k,l$ over $\sX \times \sY$. Define the joint kernel $v:\sX\times\sY\to\R$ as a product kernel $v((x,y),(x',y') = k(x,x')l(y,y')$. HSIC is simply MMD distance between kernel embedding of joint $\bbP_{XY}$ with that of product of marginals $\bbP_X\bbP_Y$ over RKHS $\sH\times\sG$ \cite{grettonKernelMethodsMeasuring2005},
+Intuitively, we can compare dependence between two random variables by computing the distance in a RKHS. \cite{grettonMeasuringStatisticalDependence2005} first proposes HSIC as Hilbert-Schmidt norm of covariance operator, \cite{muandetKernelMeanEmbedding2017} provides a good summary on the topic. \cite{grettonKernelMethodsMeasuring2005} provides good summary of several related kernel dependency measures like COCO and KMI. Given separable RKHS $\sH,\sG$ with reproducing kernels $k,l$ over $\sX \times \sY$. Define the joint kernel $v:\sX\times\sY\to\R$ as a product kernel $v((x,y),(x',y') = k(x,x')l(y,y')$. HSIC is simply MMD between kernel embedding of joint $\bbP_{XY}$ with that of product of marginals $\bbP_X\bbP_Y$ over RKHS $\sH\times\sG$ \cite{grettonKernelMethodsMeasuring2005},
 \begin{align}
     \text{HSIC}(X,Y)
-        &= \norm{\mu_{\bbP_{XY}} - \mu_{\bbP_X \bbP_Y}}_{\sH\times\sG} \\ 
-        &= \underset{(X,Y),(X',Y')\overset{iid}{\sim}\bbP_{XY}}{\E} \pb{ k(X,X')l(Y,Y') }
-         + \E\pb{k(X,X')}\E\pb{k(Y,Y')} \\ 
-        &\quad\quad\quad\quad -2 \underset{(X,Y)\sim \bbP_{XY}}{\E} \pb{ \E\pb{k(X,X')} \E\pb{l(Y,Y')} }
+        &= \norm{\mu_{\bbP_{XY}} - \mu_{\bbP_X \bbP_Y}}_{\sH\times\sG}
 \end{align} 
-with emprical estimates as 
+whose computation can be delegated to kernels again,
+\begin{align}
+    \text{HSIC}(X,Y)
+        &= \E_{X,Y} \E_{X',Y'} k(X,X')l(Y,Y')
+            + \E\pb{k(X,X')}\E\pb{k(Y,Y')} \\ 
+        &\quad -2 \E_{X,Y} \pb{ \E\pb{k(X,X')} \E\pb{l(Y,Y')} }
+\end{align}
+where we have a simple biased estimate,
 \begin{align}
     \widehat{\text{HSIC}}(X,Y)
-        = \frac{1}{m^2} \tr(HKHL)
+        = \frac{1}{m^2} \tr(\widetilde{\bK}\widetilde{\bL})
 \end{align}
-where $H = I-\frac{1}{m} 11^T$ is the centering matrix.
+where $\widetilde{\bK},\widetilde{\bL}$ are centered kernel matrices computed from kernels $k,l$ and $\bH = \bI-\frac{1}{m} \mathbf{1}\mathbf{1}^T$ is the centering matrix (Refer to example (\ref{exampe_centering_matrix}) for centering in feature space). Since $\bH\bH = \bH$, we have,
+\begin{align}
+    \tr(\widetilde{\bK}\widetilde{\bL})
+        = \tr(\bH\bK\bH\bH\bL\bH)
+        = \tr(\bK\bH\bH\bL\bH\bH)
+        = \tr(\bK\bH\bL\bH)
+\end{align}
+
+\begin{example}
+    \label{exampe_centering_matrix}
+    (Centering Matrix \cite{scholkopfNonlinearComponentAnalysis1998} A.1) Given $\varphi$ and a set of observations $x_1,\cdots,x_n$, we might want to centered features $\widetilde{\varphi}(x_i) = \varphi(x_i) - \overline{\varphi}$ where $\overline{\varphi} = \frac{1}{n}\sum_{i=1}^n \varphi(x_i)$ is the centroid. We want to find centered kernel matrix $\widetilde{\bK}$ such that $\widetilde{\bK}_{ij} = \inner{\widetilde{\varphi}(x_i)}{\widetilde{\varphi}(x_j)}_{\sH}$. Note,
+    \begin{align}
+        \widetilde{\bK}_{ij}
+            &= \inner{\widetilde{\varphi}(x_i)}{\widetilde{\varphi}(x_j)}_{\sH} \\
+            &= \inner{ \varphi(x_i) - \frac{1}{n}\sum_{s=1}^n \varphi(x_s) }{ \varphi(x_j) - \frac{1}{n}\sum_{t=1}^n \varphi(x_t) }_{\sH} \\ 
+            &= k(x_i,x_j) - \frac{1}{n} \sum_{s=1}^n k(x_s, x_j) - \frac{1}{n} \sum_{t=1}^n k(x_t, x_i) + \frac{1}{n^2} \sum_{s=1}^n \sum_{t=1}^n k(x_s, x_t) \\ 
+            &= \bK_{ij} - \mathbf{1}_n \bK - \bK\mathbf{1}_n + \mathbf{1}_n \bK \mathbf{1}_n
+    \end{align}
+    where $\mathbf{1}_n \in \R^{n\times n}$ defined as $(\mathbf{1}_n)_{ij}=\frac{1}{n}$. Therefore, $\widetilde{\bK} = \bH \bK \bH$ where $\bH = \bI - \mathbf{1}_n$ since
+    \begin{align}
+        \bH\bK\bH
+            = ( \bI - \mathbf{1}_n ) \bK ( \bI - \mathbf{1}_n )
+            = \bK - \bK \mathbf{1}_n - \mathbf{1}_n \bK + \mathbf{1}_n \bK \mathbf{1}_n
+    \end{align}
+\end{example}
 
  
-
+ 
 
 \newpage
 \printbibliography 
