@@ -376,14 +376,11 @@ where $\widetilde{\bK},\widetilde{\bL}$ are centered kernel matrices computed fr
             &= \inner{\widetilde{\varphi}(x_i)}{\widetilde{\varphi}(x_j)}_{\sH} \\
             &= \inner{ \varphi(x_i) - \frac{1}{n}\sum_{s=1}^n \varphi(x_s) }{ \varphi(x_j) - \frac{1}{n}\sum_{t=1}^n \varphi(x_t) }_{\sH} \\ 
             &= k(x_i,x_j) - \frac{1}{n} \sum_{s=1}^n k(x_s, x_j) - \frac{1}{n} \sum_{t=1}^n k(x_t, x_i) + \frac{1}{n^2} \sum_{s=1}^n \sum_{t=1}^n k(x_s, x_t) \\ 
-            &= \bK_{ij} - \mathbf{1}_n \bK - \bK\mathbf{1}_n + \mathbf{1}_n \bK \mathbf{1}_n
+            &= \bK_{ij} - (\mathbf{1}_n \bK)_{ij} - (\bK\mathbf{1}_n)_{ij} + (\mathbf{1}_n \bK \mathbf{1}_n)_{ij} \\ 
+            &= (( \bI - \mathbf{1}_n ) \bK ( \bI - \mathbf{1}_n ))_{ij} \\
+            &= (\bH\bK\bH)_{ij}
     \end{align}
-    where $\mathbf{1}_n \in \R^{n\times n}$ defined as $(\mathbf{1}_n)_{ij}=\frac{1}{n}$. Therefore, $\widetilde{\bK} = \bH \bK \bH$ where $\bH = \bI - \mathbf{1}_n$ since
-    \begin{align}
-        \bH\bK\bH
-            = ( \bI - \mathbf{1}_n ) \bK ( \bI - \mathbf{1}_n )
-            = \bK - \bK \mathbf{1}_n - \mathbf{1}_n \bK + \mathbf{1}_n \bK \mathbf{1}_n
-    \end{align}
+    where $\mathbf{1}_n \in \R^{n\times n}$ defined as $(\mathbf{1}_n)_{ij}=\frac{1}{n}$. Therefore, $\widetilde{\bK} = \bH \bK \bH$ where $\bH = \bI - \mathbf{1}_n$.
 \end{example}
 
  

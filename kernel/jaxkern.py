@@ -1,6 +1,9 @@
 import jax
 import jax.numpy as np
 
+def squared_l2_norm(x):
+    return np.sum(x**2)
+
 # Taken from https://github.com/IPL-UV/jaxkern
 
 def sqeuclidean_distance(x, y):
@@ -36,7 +39,7 @@ def linear_kernel(X, Y):
     return np.dot(X, Y.T)
 
 def estimate_sigma_median(X):
-    """Estimate sigma using the median heuristic
+    """Estimate sigma using the median trick
             bandwidth = median(l2dist.([X,Y]))
                 with \sigma = \sqrt(bandwidth/2)
         
@@ -52,11 +55,21 @@ def hsic(X, Y, k, l):
     """ Computes empirical HSIC = tr(KHLH)
             where H is the centering matrix
     """
-    K = k(X, Y)
-    L = l(X, Y)
-    m = len(K)
-    H = np.eye(m) - 1/m
-    statistic = np.trace(K@H@L@H) / (m**2)
+    K = k(X, X)
+    L = l(Y, Y)
+    n = len(K)
+    H = np.eye(n) - 1/n
+    statistic = np.trace(K@H@L@H) / (n**2)
+    return statistic
+
+def cka(X, Y, k, l):
+    """ Centered Kernel Alignment 
+            https://github.com/yuanli2333/CKA-Centered-Kernel-Alignment/blob/master/CKA.py
+    """ 
+    statistic = hsic(X, Y, k, l)
+    var1 = np.sqrt(hsic(X, X, k, k))
+    var2 = np.sqrt(hsic(Y, Y, l, l))
+    statistic = statistic / (var1 * var2)
     return statistic
 
 def jax_fill_diagonal(A, v):
