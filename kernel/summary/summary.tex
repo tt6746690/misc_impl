@@ -357,7 +357,7 @@ whose computation can be delegated to kernels again,
 \end{align}
 where we have a simple biased estimate,
 \begin{align}
-    \widehat{\text{HSIC}}(X,Y)
+    \widehat{\text{HSIC}}_k(X,Y)
         = \frac{1}{m^2} \tr(\widetilde{\bK}\widetilde{\bL})
 \end{align}
 where $\widetilde{\bK},\widetilde{\bL}$ are centered kernel matrices computed from kernels $k,l$ and $\bH = \bI-\frac{1}{m} \mathbf{1}\mathbf{1}^T$ is the centering matrix (Refer to example (\ref{exampe_centering_matrix}) for centering in feature space). Since $\bH\bH = \bH$, we have,
@@ -383,7 +383,28 @@ where $\widetilde{\bK},\widetilde{\bL}$ are centered kernel matrices computed fr
     where $\mathbf{1}_n \in \R^{n\times n}$ defined as $(\mathbf{1}_n)_{ij}=\frac{1}{n}$. Therefore, $\widetilde{\bK} = \bH \bK \bH$ where $\bH = \bI - \mathbf{1}_n$.
 \end{example}
 
- 
+
+
+\begin{figure}[h!]
+\begin{center} 
+    \includegraphics[width=\textwidth]{assets/hsic_2d_gaussian} 
+    \caption{Use stochastic gradient descent to optimize for (\ref{eq:hsic_2d_gaussian_optimization}) where we have used RBF kernel with bandwidth chosen using median heuristic. We plotted transformed point by the linear mappings and its estimated density using Gaussian KDE. We also plotted contours of density of $Y$. Note as optimization progresses, the transformed points look more and only like an isotropic Gaussian as desired.}
+    \label{fig:hsic_2d_gaussian}
+\end{center}
+\end{figure}
+
+    
+\begin{example}
+    (2D Gaussian) Let $X\sim \sN(\mu, \Sigma)$ over $\R^2$ where $\mu=\mathbf{1}$, $\Sigma=\bI_2$. Consider $A \in \R^{2\times 2}$ where $a_1,a_2$ are rows of $A$. Let $(y_1,y_2) := Y = AX$ where $Y\sim \sN(A\mu, A\Sigma A^T)$. We want to find coefficients of linear map that makes the transformed variables independent subject to constraint that the $\sum_{j} a_ij = 1$ for $i=1,2$ to avoid degenerate zero mapping solution,
+    \begin{align}
+        \label{eq:hsic_2d_gaussian_optimization}
+        \min_{a_1,a_2} \text{HSIC}_k(a_1x, a_2x) - \lambda \norm{ A\mathbf{1}-\mathbf{1} }^2
+    \end{align}
+    Note $y_1\dperp y_2$ if and only if $A\Sigma A^T = I$, which is what we observe in simulation. See Figure (\ref{fig:hsic_2d_gaussian})
+\end{example} 
+
+
+        
  
 
 \newpage

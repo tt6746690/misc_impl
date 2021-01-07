@@ -24,6 +24,10 @@ def gauss_kernel(X, Y=None, sigma=.5):
     return K
 
 def linear_kernel(X, Y):
+    if X.ndim == 1:
+        X = X.reshape(-1, 1)
+    if Y.ndim == 1:
+        Y = Y.reshape(-1, 1)
     return np.dot(X, Y.T)
 
 

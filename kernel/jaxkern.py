@@ -36,6 +36,10 @@ def rbf_kernel(X, Y, gamma=1.):
     return np.exp(-gamma*cdist_sqeuclidean(X, Y))
 
 def linear_kernel(X, Y):
+    if X.ndim == 1:
+        X = X.reshape(-1, 1)
+    if Y.ndim == 1:
+        Y = Y.reshape(-1, 1)
     return np.dot(X, Y.T)
 
 def estimate_sigma_median(X):
