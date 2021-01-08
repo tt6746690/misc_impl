@@ -426,9 +426,16 @@ Again, we can consider (\ref{eq:crosscovariance_operator_riesz}) as exchanging e
         = \E\inner{\phi(X)\otimes\psi(Y)}{f\otimes g}_{\text{HS}} 
         = \E\pb{ \inner{f}{\phi(X)}_{\sF} \inner{g}{\psi(Y)}_{\sG} } \\
         &= \E\pb{ f(X)g(Y) }
+        = \cov(f(X),g(Y))
 \end{align}
 
-This is used to show HSIC as IPM with two witness functions $f\in\sF,g\in\sG$. 
+This is used to show HSIC as IPM with two witness functions $f\in\sF,g\in\sG$. From this result, we can compute the application of the covariance operator to $g\in\sG$ with an expectation over kernels 
+\begin{align}
+    (C_{XY} g)(y')
+        = \inner{l(\cdot, y')}{C_{XY}g}_{\sG}
+        = \int f(X) l(Y,y') d\bbP_{XY}
+\end{align}
+We can visualize $C_{XY}g \in \sF$ to get an intuition about $C_{XY}$.
 
 
 \subsection{Hilbert-Schmidt Independence Criterion}
@@ -442,7 +449,8 @@ This is used to show HSIC as IPM with two witness functions $f\in\sF,g\in\sG$.
 Equivalently, we can consider $\text{HSIC}$ as MMD between kernel embedding of joint $\bbP_{XY}$ with that of product of marginals $\bbP_X\bbP_Y$ over the tensor product feature space $\sG\otimes\sF$,
 \begin{align}
     \text{HSIC}(\sF,\sG,\bbP_{XY})
-        &= \norm{ \mu_{XY} - \mu_{X} \otimes \mu_{Y} }_{\sG\otimes\sF}
+        = \text{MMD}(\bbP_{XY},\bbP_X\bbP_Y)
+        = \norm{ \mu_{\bbP_{XY}} - \mu_{\bbP_X\bbP_Y} }_{\sG\otimes\sF}
 \end{align} 
 
 \begin{proposition}
