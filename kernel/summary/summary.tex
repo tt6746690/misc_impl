@@ -341,32 +341,136 @@ where optimal witness function is normalized difference of feature means $f^* = 
 
 
 
-\section{Hilbert-Schmidt Independence Criterion}
+\section{Kernel Dependence Measures}
 
-Intuitively, we can compare dependence between two random variables by computing the distance in a RKHS. \cite{grettonMeasuringStatisticalDependence2005} first proposes HSIC as Hilbert-Schmidt norm of covariance operator, \cite{muandetKernelMeanEmbedding2017} provides a good summary on the topic. \cite{grettonKernelMethodsMeasuring2005} provides good summary of several related kernel dependency measures like COCO and KMI. Given separable RKHS $\sH,\sG$ with reproducing kernels $k,l$ over $\sX \times \sY$. Define the joint kernel $v:\sX\times\sY\to\R$ as a product kernel $v((x,y),(x',y') = k(x,x')l(y,y')$. HSIC is simply MMD between kernel embedding of joint $\bbP_{XY}$ with that of product of marginals $\bbP_X\bbP_Y$ over RKHS $\sH\times\sG$ \cite{grettonKernelMethodsMeasuring2005},
+Intuitively, we can compare dependence between two random variables by computing the distance in a RKHS. \cite{grettonMeasuringStatisticalDependence2005} first proposes HSIC as Hilbert-Schmidt norm of covariance operator to measure dependence between two probability measures. \cite{muandetKernelMeanEmbedding2017} provides a good summary on the topic. \cite{grettonKernelMethodsMeasuring2005} provides good summary of several related kernel dependency measures like COCO and KMI. 
+
+\subsection{Covariance Operators}
+
+\cite{grettonNotesMeanEmbeddings2019} gives a pretty good introduction on covariance operators.
+
+\begin{definition}
+    (Hilbert-Schmidt operator) Let $\sG,\sF$ be separable Hilbert space and $\pc{f_j}_{j\in J}$, $\pc{e_i}_{i\in I}$ be orthonormal basis for $\sG$ and $\sF$, respectively. A Hilbert-Schmidt operator is a bounded operator $A:\sG\to\sF$ whose Hilbert-Schmidt norm $\norm{A}_{\text{HS}}$ is finite, 
+    \begin{align}
+        \norm{A}_{\text{HS}}^2 
+            = \sum_{j\in J} \norm{A f_j}_{\sF}^2 
+            = \sum_{i\in I}\sum_{j\in J} |\inner{A f_j}{e_i}_{\sF}|^2
+    \end{align}
+\end{definition}
+
+Hilbert-Schmidt norm reduces to Frobenius norm when $\sG,\sF$ is $\R^n$ since $\norm{A}_{\text{HS}}^2 = \sum_{j=1}^n \norm{a_i}_2^2 = \sum_{i=1}^n \sum_{j=1}^n a_{ij}^2 = \norm{A}_{F}^2$. 
+\begin{definition}
+    (Space of Hilbert-Schmidt operators) The Hilbert-Schmidt operators from $\sG$ to $\sF$ with inner product defined below is a Hilbert space denoted as $\text{HS}(\sG,\sF)$.
+    \begin{align}
+        \inner{L}{M}_{\text{HS}} 
+            = \sum_{j\in J} \inner{Lf_j}{Mf_j}_{\sF}
+            = \sum_{i\in I}\sum_{j\in J} \inner{Lf_j}{e_i}_{\sF} \inner{Mf_j}{e_i}_{\sF}
+    \end{align}
+\end{definition}
+
+Although the inner product is defined based on $(f_j)_{j\in J}$, it is in fact independent of the orthonormal basis chosen, as shown in \cite{grettonNotesMeanEmbeddings2019}. Additionally, we see that this inner product recovers the Hilbert-Schmidt norm, $\inner{L}{L}_{\text{HS}} = \sum_{j\in J} \inner{Lf_j}{Lf_j}_{\sF} = \sum_{j\in J} \norm{L f_j}_{\sF}^2 = \norm{L}_{\text{HS}}^2$. Another thing to note is that $\text{HS}(\sG,\sF) \simeq \sG\otimes \sF$.
+
+\begin{definition}
+    \label{def:tensor_product_hilbert}
+    (Tensor product on Hilbert space) For $b\in\sG,a\in \sF$, the tensor product $a\otimes b$ is a rank-one operator from $\sG$ to $\sF$ defined as $(a\otimes b)(g) = \inner{g}{b}_{\sG} a$ for $g\in\sG$.
+\end{definition}
+
+Tensor product of spaces can be defined via a bilinear map fo the form $\sF\times\sG\to\R$ that satisfies the property of being linear in each input coordinate. We can define $(a\otimes b): \sG\times\sF\to\R$ with $(a\otimes b)(g,f) =\inner{g}{b}_{\sG}\inner{f}{a}_{\sF}$ and define the resulting tensor product space as $\sG\otimes \sF = \overline{\pc{a\otimes b}_{a\in\sF,b\in\sG}}$. Alternatively, we can define a map from $\sG$ to $\sF$ as previously and arrive at the same result. Intuitively, tensor product on function space generalizes outer product in Euclidean vector spaces. For example for $a,b\in\R^n$, we have $(ab^T)g = a(b^Tg)$, similar to definition (\ref{def:tensor_product_hilbert})
+
+\begin{proposition}
+    (Properties of tensor product \cite{grettonNotesMeanEmbeddings2019}) 
+    \begin{enumerate}
+        \item $\norm{a\otimes b}_{\text{HS}}^2 = \norm{a}_{\sF}^2 \norm{b}_{\sG}^2$ (and therefore $a\otimes b \in \text{HS}(\sG,\sF)$)
+        \item $\inner{L}{a\otimes b}_{\text{HS}} = \inner{a}{Lb}_{\sF}$ for For $L\in\text{HS}(\sG,\sF)$ ($L=u\otimes v$ implies $\inner{u\otimes v}{a\otimes b}_{\text{HS}} = \inner{u}{a}_{\sF} \inner{v}{b}_{\sG}$)
+    \end{enumerate}
+\end{proposition}
+
+The take-away is that tensor products are Hilbert-Schmidt operators and we can evaluate HS inner product of two tensor products as multiple of two inner products in $\sG,\sF$.
+
+\begin{definition}
+    (Cross-covariance operator) Let $(X,Y)$ be random variables over $\sX\times\sY$ and $(\sF,k,\phi)$ and $(\sG,l,\psi)$ be RKHS, its reproducing kernel and feature map, respectively. $\widetilde{C}_{XY}:\sG\to\sF$ is called the (uncentered) cross-covariance operator
+    \begin{align}
+        \widetilde{C}_{XY}
+            = \E\pb{ \phi(X) \otimes \psi(Y) }
+    \end{align}
+    The corresponding centered covariance operator is 
+    \begin{align}
+        C_{XY} 
+            = \E\pb{ (\phi(X)-\mu_X)\otimes (\psi(Y)-\mu_Y) }
+            = \widetilde{C}_{XY} - \mu_{X} \otimes \mu_{Y}
+    \end{align}
+    where $\mu_X = \E\pb{\phi(X)}, \mu_Y = \E\pb{\psi(Y)}$ are mean embeddings of $\bbP_X,\bbP_Y$.
+\end{definition}
+
+
+Intuitively, we can think of $\phi(X)\otimes \psi(Y)$ as a random variable in space of operators $\text{HS}(\sG,\sF)$ or in the tensor product feature space $\sG\otimes \sF$. The definition generalizes finite dimensional (uncentered) covariance matrix $\E\pb{XY^T}$ to be the corresponding covariance matrix in the tensor product feature space. Equivalently, we can consider cross-covariance operator as mean embedding of $\bbP_{XY}$ in $\sG\otimes\sF$ induced by product kernel $v((x,y),(x',y') = k(x,x')l(y,y')$, i.e. $\widetilde{C}_{XY} = \mu_{\bbP_{XY}}$. 
+
+\begin{lemma}
+    If $\E\pb{\norm{\phi(X)\otimes \psi(Y)}_{\text{HS}}} < \infty$, then $\widetilde{C}_{XY}\in\text{HS}(\sG,\sF)$ and $\widetilde{C}_{XY}$ uniquely satisfies
+    \begin{align}
+        \label{eq:crosscovariance_operator_riesz}
+        \inner{\widetilde{C}_{XY}}{A}_{\text{HS}} 
+            = \E\inner{\phi(X)\otimes \psi(Y)}{A}_{\text{HS}}
+    \end{align}
+\end{lemma}
+
+\begin{proof}
+    Detail in \cite{grettonNotesMeanEmbeddings2019}. Define linear operator $T_{XY}: \text{HS}(\sG,\sF) \to\R$ as $T_{XY}(A) \mapsto \E\inner{\phi(X)\otimes \psi(Y)}{A}_{\text{HS}}$ and show it is bounded. Use Riesz representation theorem to guarantee existence of $\widetilde{C}_{XY}$ satisfying the equation and show that it has the form defined previously.
+\end{proof}
+
+Again, we can consider (\ref{eq:crosscovariance_operator_riesz}) as exchanging expectation and inner products over $\text{HS}(\sG,\sF)$. In particular, if we let $A=f\otimes g$, then we can use properties of tensor product and the previous lemma and get
 \begin{align}
-    \text{HSIC}(X,Y)
-        &= \norm{\mu_{\bbP_{XY}} - \mu_{\bbP_X \bbP_Y}}_{\sH\times\sG}
+    \inner{f}{\widetilde{C}_{XY}g}_{\sF}
+        &= \inner{\widetilde{C}_{XY}}{f\otimes g}_{\text{HS}} 
+        = \E\inner{\phi(X)\otimes\psi(Y)}{f\otimes g}_{\text{HS}} 
+        = \E\pb{ \inner{f}{\phi(X)}_{\sF} \inner{g}{\psi(Y)}_{\sG} } \\
+        &= \E\pb{ f(X)g(Y) }
+\end{align}
+
+This is used to show HSIC as IPM with two witness functions $f\in\sF,g\in\sG$.
+
+
+\subsection{Hilbert-Schmidt Independence Criterion}
+
+\cite{grettonMeasuringStatisticalDependence2005} uses Hilbert-Schmidt norm of (centered) covariance operator to measure dependence,
+\begin{align}
+    \text{HSIC}(\sF,\sG,\bbP_{XY})
+        = \norm{\widetilde{C}_{XY}}_{\text{HS}}
+        = \norm{ C_{XY} - \mu_X \otimes \mu_{Y} }_{\text{HS}}
+\end{align}
+Equivalently, we can consider $\text{HSIC}$ as MMD between kernel embedding of joint $\bbP_{XY}$ with that of product of marginals $\bbP_X\bbP_Y$ over the tensor product feature space $\sG\otimes\sF$,
+\begin{align}
+    \text{HSIC}(\sF,\sG,\bbP_{XY})
+        &= \norm{ \mu_{XY} - \mu_{X} \otimes \mu_{Y} }_{\sG\otimes\sF}
 \end{align} 
-whose computation can be delegated to kernels again,
+
+\begin{proposition}
+    (HSIC and Independence) $\text{HSIC}(\sF,\sG,\bbP_{XY})=0$ if and only if $X\dperp Y$.
+\end{proposition}
+
+Computation of HSIC can be delegated to kernels again (see \cite{grettonNotesMeanEmbeddings2019} for detailed derivation), implying that we can compute a measure of dependence between $X$ and $Y$ via expectation over kernels without needing to perform density estimation. 
 \begin{align}
-    \text{HSIC}(X,Y)
+    \text{HSIC}(\sF,\sG,\bbP_{XY})
         &= \E_{X,Y} \E_{X',Y'} k(X,X')l(Y,Y')
             + \E\pb{k(X,X')}\E\pb{k(Y,Y')} \\ 
         &\quad -2 \E_{X,Y} \pb{ \E\pb{k(X,X')} \E\pb{l(Y,Y')} }
 \end{align}
-where we have a simple biased estimate,
+Given samples $Z = \pc{(x_i,y_i)}_{i=1}^n \overset{iid}{\sim} \bbP_{XY}$, we have a simple biased estimate,
 \begin{align}
-    \widehat{\text{HSIC}}_k(X,Y)
-        = \frac{1}{m^2} \tr(\widetilde{\bK}\widetilde{\bL})
+    \widehat{\text{HSIC}}_b^2(\sF,\sG,Z)
+        = \frac{1}{n^2} \tr(\widetilde{\bK}\widetilde{\bL})
+        = \frac{1}{n^2} \tr(\bK\bH\bL\bH)
 \end{align}
-where $\widetilde{\bK},\widetilde{\bL}$ are centered kernel matrices computed from kernels $k,l$ and $\bH = \bI-\frac{1}{m} \mathbf{1}\mathbf{1}^T$ is the centering matrix (Refer to example (\ref{exampe_centering_matrix}) for centering in feature space). Since $\bH\bH = \bH$, we have,
+where $\widetilde{\bK},\widetilde{\bL}$ are centered kernel matrices computed from kernels $k,l$ and $\bH$ is the centering matrix (Refer to example (\ref{exampe_centering_matrix}) for centering in feature space). The last equality given by fact that $\bH$ is indempotent and cyclic property of trace. \cite{songFeatureSelectionDependence2012a} derived an unbiased $\sO(n^2)$ estimator,
 \begin{align}
-    \tr(\widetilde{\bK}\widetilde{\bL})
-        = \tr(\bH\bK\bH\bH\bL\bH)
-        = \tr(\bK\bH\bH\bL\bH\bH)
-        = \tr(\bK\bH\bL\bH)
+    \text{HSIC}^2(\sF,\sG,Z)
+        &= \frac{1}{n(n-3)} \pb{
+            \tr(\widetilde{\bK}\widetilde{\bL}) + 
+            \frac{ \mathbf{1}^T \widetilde{\bK} \mathbf{1} \mathbf{1}^T \widetilde{\bL} \mathbf{1} }{ (n-1)(n-2) } -
+            \frac{2}{n-2} \mathbf{1}^T \widetilde{K}\widetilde{L}\mathbf{1} 
+        }
 \end{align}
+
 
 \begin{example}
     \label{exampe_centering_matrix}
@@ -380,18 +484,10 @@ where $\widetilde{\bK},\widetilde{\bL}$ are centered kernel matrices computed fr
             &= (( \bI - \mathbf{1}_n ) \bK ( \bI - \mathbf{1}_n ))_{ij} \\
             &= (\bH\bK\bH)_{ij}
     \end{align}
-    where $\mathbf{1}_n \in \R^{n\times n}$ defined as $(\mathbf{1}_n)_{ij}=\frac{1}{n}$. Therefore, $\widetilde{\bK} = \bH \bK \bH$ where $\bH = \bI - \mathbf{1}_n$.
+    where $\mathbf{1}_n \in \R^{n\times n}$ defined as $\mathbf{1}_n = \frac{1}{n}\mathbf{1}\mathbf{1}^T$. Therefore, $\widetilde{\bK} = \bH \bK \bH$ where $\bH = \bI - \mathbf{1}_n$.
 \end{example}
 
 
-
-\begin{figure}[h!]
-\begin{center} 
-    \includegraphics[width=\textwidth]{assets/hsic_2d_gaussian} 
-    \caption{Use stochastic gradient descent to optimize for (\ref{eq:hsic_2d_gaussian_optimization}) where we have used RBF kernel with bandwidth chosen using median heuristic. We plotted transformed point by the linear mappings and its estimated density using Gaussian KDE. We also plotted contours of density of $Y$. Note as optimization progresses, the transformed points look more and only like an isotropic Gaussian as desired.}
-    \label{fig:hsic_2d_gaussian}
-\end{center}
-\end{figure}
 
     
 \begin{example}
@@ -404,7 +500,17 @@ where $\widetilde{\bK},\widetilde{\bL}$ are centered kernel matrices computed fr
 \end{example} 
 
 
-        
+
+\begin{figure}[h!]
+    \begin{center} 
+        \includegraphics[width=\textwidth]{assets/hsic_2d_gaussian} 
+        \caption{Use stochastic gradient descent to optimize for (\ref{eq:hsic_2d_gaussian_optimization}) where we have used RBF kernel with bandwidth chosen using median heuristic. We plotted transformed point by the linear mappings and its estimated density using Gaussian KDE. We also plotted contours of density of $Y$. Note as optimization progresses, the transformed points look as if they are sampled from an isotropic Gaussian.}
+        \label{fig:hsic_2d_gaussian}
+    \end{center}
+    \end{figure}
+    
+
+
  
 
 \newpage
