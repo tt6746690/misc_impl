@@ -380,7 +380,7 @@ Tensor product of spaces can be defined via a bilinear map fo the form $\sF\time
 \begin{proposition}
     (Properties of tensor product \cite{grettonNotesMeanEmbeddings2019}) 
     \begin{enumerate}
-        \item $\norm{a\otimes b}_{\text{HS}}^2 = \norm{a}_{\sF}^2 \norm{b}_{\sG}^2$ (and therefore $a\otimes b \in \text{HS}(\sG,\sF)$)
+        \item $\norm{a\otimes b}_{\text{HS}}^2 = \norm{a}_{\sF}^2 \norm{b}_{\sG}^2$ (so bounded and therefore $a\otimes b \in \text{HS}(\sG,\sF)$)
         \item $\inner{L}{a\otimes b}_{\text{HS}} = \inner{a}{Lb}_{\sF}$ for For $L\in\text{HS}(\sG,\sF)$ ($L=u\otimes v$ implies $\inner{u\otimes v}{a\otimes b}_{\text{HS}} = \inner{u}{a}_{\sF} \inner{v}{b}_{\sG}$)
     \end{enumerate}
 \end{proposition}
@@ -403,7 +403,7 @@ The take-away is that tensor products are Hilbert-Schmidt operators and we can e
 \end{definition}
 
 
-Intuitively, we can think of $\phi(X)\otimes \psi(Y)$ as a random variable in space of operators $\text{HS}(\sG,\sF)$ or in the tensor product feature space $\sG\otimes \sF$. The definition generalizes finite dimensional (uncentered) covariance matrix $\E\pb{XY^T}$ to be the corresponding covariance matrix in the tensor product feature space. Equivalently, we can consider cross-covariance operator as mean embedding of $\bbP_{XY}$ in $\sG\otimes\sF$ induced by product kernel $v((x,y),(x',y') = k(x,x')l(y,y')$, i.e. $\widetilde{C}_{XY} = \mu_{\bbP_{XY}}$. 
+Intuitively, we can think of $\phi(X)\otimes \psi(Y)$ as a random variable in space of operators $\text{HS}(\sG,\sF)$ or in the tensor product feature space $\sG\otimes \sF$. The definition generalizes finite dimensional (uncentered) covariance matrix $\E\pb{XY^T}$ to Hilbert spaces. Equivalently, we can consider cross-covariance operator as mean embedding of $\bbP_{XY}$ in $\sG\otimes\sF$ induced by product kernel $v((x,y),(x',y') = k(x,x')l(y,y')$, i.e. $\widetilde{C}_{XY} = \mu_{\bbP_{XY}}$. 
 
 \begin{lemma}
     If $\E\pb{\norm{\phi(X)\otimes \psi(Y)}_{\text{HS}}} < \infty$, then $\widetilde{C}_{XY}\in\text{HS}(\sG,\sF)$ and $\widetilde{C}_{XY}$ uniquely satisfies
@@ -433,7 +433,7 @@ This is used to show HSIC as IPM with two witness functions $f\in\sF,g\in\sG$. F
 \begin{align}
     (C_{XY} g)(y')
         = \inner{l(\cdot, y')}{C_{XY}g}_{\sG}
-        = \int f(X) l(Y,y') d\bbP_{XY}
+        = \int f(x) l(y,y') \,d\bbP_{XY}(x,y)
 \end{align}
 We can visualize $C_{XY}g \in \sF$ to get an intuition about $C_{XY}$.
 
@@ -443,8 +443,8 @@ We can visualize $C_{XY}g \in \sF$ to get an intuition about $C_{XY}$.
 \cite{grettonMeasuringStatisticalDependence2005} uses Hilbert-Schmidt norm of (centered) covariance operator to measure dependence,
 \begin{align}
     \text{HSIC}(\sF,\sG,\bbP_{XY})
-        = \norm{\widetilde{C}_{XY}}_{\text{HS}}
-        = \norm{ C_{XY} - \mu_X \otimes \mu_{Y} }_{\text{HS}}
+        = \norm{C_{XY}}_{\text{HS}}
+        = \norm{ \widetilde{C}_{XY} - \mu_X \otimes \mu_{Y} }_{\text{HS}}
 \end{align}
 Equivalently, we can consider $\text{HSIC}$ as MMD between kernel embedding of joint $\bbP_{XY}$ with that of product of marginals $\bbP_X\bbP_Y$ over the tensor product feature space $\sG\otimes\sF$,
 \begin{align}
@@ -454,14 +454,14 @@ Equivalently, we can consider $\text{HSIC}$ as MMD between kernel embedding of j
 \end{align} 
 
 \begin{proposition}
-    (HSIC and Independence) $\text{HSIC}(\sF,\sG,\bbP_{XY})=0$ if and only if $X\dperp Y$.
+    If $k,l$ are characteristic kernels, $\text{HSIC}(\sF,\sG,\bbP_{XY})=0$ if and only if $X\dperp Y$.
 \end{proposition}
 
 Computation of HSIC can be delegated to kernels again (see \cite{grettonNotesMeanEmbeddings2019} for detailed derivation), implying that we can compute a measure of dependence between $X$ and $Y$ via expectation over kernels without needing to perform density estimation. 
 \begin{align}
     \text{HSIC}(\sF,\sG,\bbP_{XY})
-        &= \E_{X,Y} \E_{X',Y'} k(X,X')l(Y,Y')
-            + \E\pb{k(X,X')}\E\pb{k(Y,Y')} \\ 
+        &= \E_{X,Y} \E_{X',Y'} \pb{k(X,X')l(Y,Y')}
+            + \E\pb{k(X,X')}\E\pb{l(Y,Y')} \\ 
         &\quad -2 \E_{X,Y} \pb{ \E\pb{k(X,X')} \E\pb{l(Y,Y')} }
 \end{align}
 Given samples $Z = \pc{(x_i,y_i)}_{i=1}^n \overset{iid}{\sim} \bbP_{XY}$, we have a simple biased estimate,
@@ -472,11 +472,11 @@ Given samples $Z = \pc{(x_i,y_i)}_{i=1}^n \overset{iid}{\sim} \bbP_{XY}$, we hav
 \end{align}
 where $\widetilde{\bK},\widetilde{\bL}$ are centered kernel matrices computed from kernels $k,l$ and $\bH$ is the centering matrix (Refer to example (\ref{exampe_centering_matrix}) for centering in feature space). The last equality given by fact that $\bH$ is indempotent and cyclic property of trace. \cite{songFeatureSelectionDependence2012a} derived an unbiased $\sO(n^2)$ estimator,
 \begin{align}
-    \text{HSIC}^2(\sF,\sG,Z)
+    \widehat{\text{HSIC}}_u^2(\sF,\sG,Z)
         &= \frac{1}{n(n-3)} \pb{
             \tr(\widetilde{\bK}\widetilde{\bL}) + 
             \frac{ \mathbf{1}^T \widetilde{\bK} \mathbf{1} \mathbf{1}^T \widetilde{\bL} \mathbf{1} }{ (n-1)(n-2) } -
-            \frac{2}{n-2} \mathbf{1}^T \widetilde{K}\widetilde{L}\mathbf{1} 
+            \frac{2}{n-2} \mathbf{1}^T \widetilde{\bK}\widetilde{\bL}\mathbf{1} 
         }
 \end{align}
 
