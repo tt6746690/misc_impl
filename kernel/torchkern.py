@@ -5,6 +5,7 @@ import torch
 def sqdist(X, Y=None):
     """ Returns D where D_ij = ||X_i - Y_j||^2 if Y is not `None`
             https://www.robots.ox.ac.uk/~albanie/notes/Euclidean_distance_trick.pdf
+
         X   (n, d)
     """
     if X.ndim == 1:
@@ -37,10 +38,11 @@ def linear_kernel(X, Y=None):
 def target_kernel(X, Y=None):
     if not isinstance(X, torch.Tensor):
         X = torch.Tensor(X)
+    if X.ndim == 1:
+        X = X.reshape(-1, 1)
     X = X.reshape(-1, 1)
     K = (X == X.T).to(torch.float32)
     return K
-
 
 def median_l2dist(X):
     """ median unsquared l2 pairwise distance of X """
@@ -57,8 +59,10 @@ def median_heuristic(X):
     """Estimate sigma using the median trick
             ν = median(l2.(X))
                 with σ = sqrt(ν/2)
+
             https://arxiv.org/pdf/1707.07269.pdf
                 - Simply choose ν = sqrt(median(l2.(X)))
+
         X    (n, d)
     """
     bandwidth = median_l2dist(X)
@@ -110,6 +114,7 @@ def hsic_unbiased_nograd(X, Y, k, l):
 def cka(X, Y, k, l):
     """ Centered Kernel Alignment 
             https://github.com/yuanli2333/CKA-Centered-Kernel-Alignment/blob/master/CKA.py
+
             cka = <Kx,Ky>_F / ( ||Kx||_F*||Ky||_F )
                 where Kx,Ky are centered
     """
@@ -126,6 +131,7 @@ def cka(X, Y, k, l):
 def ka(X, Y, k, l):
     """ Kernel Alignment 
             http://papers.neurips.cc/paper/1946-on-kernel-target-alignment.pdf
+
             cka = <Kx,Ky>_F / ( ||Kx||_F*||Ky||_F )
     """
     Kx = k(X)
@@ -168,3 +174,17 @@ def centering2(K):
     K = K - K.mean(1, keepdim=True)
     K = K - K.mean(0, keepdim=True)
     return K
+
+
+def cc(X, Y, k, l, ϵ=.01):
+    """ Conditional Covariance Operator `Σ_YY|X`
+        https://github.com/Jianbo-Lab/CCM/blob/master/core/ccm.py
+    """
+    n = len(X)
+    Kx = k(X)
+    Ky = l(Y)
+    Kxc = centering2(Kx)
+    Kyc = centering2(Ky)
+    In = torch.eye(n, device=Kx.device)
+    Kxcinv = torch.inverse(Kxc+n*ϵ*In)
+    return torch.sum(Kxcinv.T*Kyc)
