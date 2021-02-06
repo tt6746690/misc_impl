@@ -1,0 +1,152 @@
+
+@article{snelsonVariableNoiseDimensionality2012,
+	title = {Variable noise and dimensionality reduction for sparse Gaussian processes},
+	abstract = {The sparse pseudo-input Gaussian process ({SPGP}) is a new approximation method for speeding up {GP} regression in the case of a large number of data points N . The approximation is controlled by the gradient optimization of a small set of M ‘pseudoinputs’, thereby reducing complexity from O(N 3) to O(M 2N ). One limitation of the {SPGP} is that this optimization space becomes impractically big for high dimensional data sets. This paper addresses this limitation by performing automatic dimensionality reduction. A projection of the input space to a low dimensional space is learned in a supervised manner, alongside the pseudoinputs, which now live in this reduced space. The paper also investigates the suitability of the {SPGP} for modeling data with inputdependent noise. A further extension of the model is made to make it even more powerful in this regard – we learn an uncertainty parameter for each pseudo-input. The combination of sparsity, reduced dimension, and input-dependent noise makes it possible to apply {GPs} to much larger and more complex data sets than was previously practical. We demonstrate the beneﬁts of these methods on several synthetic and real world problems.},
+	pages = {8},
+	author = {Snelson, Edward and Ghahramani, Zoubin},
+	date = {2012},
+	langid = {english},
+	keywords = {tbr},
+	file = {Snelson_Ghahramani_2012_Variable noise and dimensionality reduction for sparse Gaussian processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Snelson_Ghahramani_2012_Variable noise and dimensionality reduction for sparse Gaussian processes.pdf:application/pdf}
+}
+
+@article{wilsonCopulaProcesses2010,
+	title = {Copula Processes},
+	abstract = {We deﬁne a copula process which describes the dependencies between arbitrarily many random variables independently of their marginal distributions. As an example, we develop a stochastic volatility model, Gaussian Copula Process Volatility ({GCPV}), to predict the latent standard deviations of a sequence of random variables. To make predictions we use Bayesian inference, with the Laplace approximation, and with Markov chain Monte Carlo as an alternative. We ﬁnd our model can outperform {GARCH} on simulated and ﬁnancial data. And unlike {GARCH}, {GCPV} can easily handle missing data, incorporate covariates other than time, and model a rich class of covariance structures.},
+	pages = {9},
+	author = {Wilson, Andrew and Ghahramani, Zoubin},
+	date = {2010},
+	langid = {english},
+	keywords = {tbr},
+	file = {Wilson and Ghahramani - Copula Processes.pdf:/Users/wpq/Zotero/storage/XNKS4LDR/Wilson and Ghahramani - Copula Processes.pdf:application/pdf}
+}
+
+@article{wilsonGaussianProcessRegression2012,
+	title = {Gaussian Process Regression Networks},
+	abstract = {We introduce a new regression framework, Gaussian process regression networks ({GPRN}), which combines the structural properties of Bayesian neural networks with the nonparametric ﬂexibility of Gaussian processes. {GPRN} accommodates input (predictor) dependent signal and noise correlations between multiple output (response) variables, input dependent length-scales and amplitudes, and heavy-tailed predictive distributions. We derive both elliptical slice sampling and variational Bayes inference procedures for {GPRN}. We apply {GPRN} as a multiple output regression and multivariate volatility model, demonstrating substantially improved performance over eight popular multiple output (multi-task) Gaussian process models and three multivariate volatility models on real datasets, including a 1000 dimensional gene expression dataset.},
+	pages = {8},
+	author = {Wilson, Andrew Gordon and Knowles, David A and Ghahramani, Zoubin},
+	date = {2012},
+	langid = {english},
+	keywords = {tbr},
+	file = {Wilson et al. - Gaussian Process Regression Networks.pdf:/Users/wpq/Zotero/storage/BR8RW2F6/Wilson et al. - Gaussian Process Regression Networks.pdf:application/pdf}
+}
+
+@article{wilsonGeneralisedWishartProcesses2011,
+	title = {Generalised Wishart Processes},
+	abstract = {We introduce a new stochastic process called the generalised Wishart process ({GWP}). It is a collection of positive semi-deﬁnite random matrices indexed by any arbitrary input variable. We use this process as a prior over dynamic (e.g. time varying) covariance matrices Σ(t). The {GWP} captures a diverse class of covariance dynamics, naturally handles missing data, scales nicely with dimension, has easily interpretable parameters, and can use input variables that include covariates other than time. We describe how to construct the {GWP}, introduce general procedures for inference and prediction, and show that it outperforms its main competitor, multivariate {GARCH}, even on ﬁnancial data that especially suits {GARCH}.},
+	pages = {9},
+	author = {Wilson, Andrew Gordon and Ghahramani, Zoubin},
+	date = {2011},
+	langid = {english},
+	keywords = {tbr},
+	file = {Wilson and Ghahramani - Generalised Wishart Processes.pdf:/Users/wpq/Zotero/storage/RYSG5673/Wilson and Ghahramani - Generalised Wishart Processes.pdf:application/pdf}
+}
+
+@article{wilsonGaussianProcessKernels2013a,
+	title = {Gaussian Process Kernels for Pattern Discovery and Extrapolation},
+	url = {http://arxiv.org/abs/1302.4245},
+	abstract = {Gaussian processes are rich distributions over functions, which provide a Bayesian nonparametric approach to smoothing and interpolation. We introduce simple closed form kernels that can be used with Gaussian processes to discover patterns and enable extrapolation. These kernels are derived by modelling a spectral density -- the Fourier transform of a kernel -- with a Gaussian mixture. The proposed kernels support a broad class of stationary covariances, but Gaussian process inference remains simple and analytic. We demonstrate the proposed kernels by discovering patterns and performing long range extrapolation on synthetic examples, as well as atmospheric {CO}2 trends and airline passenger data. We also show that we can reconstruct standard covariances within our framework.},
+	journaltitle = {{arXiv}:1302.4245 [cs, stat]},
+	author = {Wilson, Andrew Gordon and Adams, Ryan Prescott},
+	urldate = {2021-01-05},
+	date = {2013-12-31},
+	eprinttype = {arxiv},
+	eprint = {1302.4245},
+	note = {tex.ids: {wilsonGaussianProcessKernels}2013},
+	keywords = {tbr},
+	file = {Wilson_Adams_2013_Gaussian Process Kernels for Pattern Discovery and Extrapolation.pdf:/Users/wpq/Dropbox (MIT)/zotero/Wilson_Adams_2013_Gaussian Process Kernels for Pattern Discovery and Extrapolation.pdf:application/pdf}
+}
+
+@article{vanderwilkConvolutionalGaussianProcesses2017,
+	title = {Convolutional Gaussian Processes},
+	url = {http://arxiv.org/abs/1709.01894},
+	abstract = {We present a practical way of introducing convolutional structure into Gaussian processes, making them more suited to high-dimensional inputs like images. The main contribution of our work is the construction of an inter-domain inducing point approximation that is well-tailored to the convolutional kernel. This allows us to gain the generalisation benefit of a convolutional kernel, together with fast but accurate posterior inference. We investigate several variations of the convolutional kernel, and apply it to {MNIST} and {CIFAR}-10, which have both been known to be challenging for Gaussian processes. We also show how the marginal likelihood can be used to find an optimal weighting between convolutional and {RBF} kernels to further improve performance. We hope that this illustration of the usefulness of a marginal likelihood will help automate discovering architectures in larger models.},
+	journaltitle = {{arXiv}:1709.01894 [cs, stat]},
+	author = {van der Wilk, Mark and Rasmussen, Carl Edward and Hensman, James},
+	urldate = {2021-01-15},
+	date = {2017-09-06},
+	eprinttype = {arxiv},
+	eprint = {1709.01894},
+	keywords = {tbr},
+	file = {van der Wilk et al_2017_Convolutional Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/van der Wilk et al_2017_Convolutional Gaussian Processes.pdf:application/pdf}
+}
+
+@article{futomaLearningDetectSepsis2017,
+	title = {Learning to Detect Sepsis with a Multitask Gaussian Process {RNN} Classifier},
+	abstract = {We present a scalable end-to-end classiﬁer that uses streaming physiological and medication data to accurately predict the onset of sepsis, a life-threatening complication from infections that has high mortality and morbidity. Our proposed framework models the multivariate trajectories of continuous-valued physiological time series using multitask Gaussian processes, seamlessly accounting for the high uncertainty, frequent missingness, and irregular sampling rates typically associated with real clinical data. The Gaussian process is directly connected to a black-box classiﬁer that predicts whether a patient will become septic, chosen in our case to be a recurrent neural network to account for the extreme variability in the length of patient encounters. We show how to scale the computations associated with the Gaussian process in a manner so that the entire system can be discriminatively trained end-to-end using backpropagation. In a large cohort of heterogeneous inpatient encounters at our university health system we ﬁnd that it outperforms several baselines at predicting sepsis, and yields 19.4\% and 55.5\% improved areas under the Receiver Operating Characteristic and Precision Recall curves as compared to the {NEWS} score currently used by our hospital.},
+	pages = {9},
+	author = {Futoma, Joseph and Hariharan, Sanjay and Heller, Katherine},
+	date = {2017},
+	langid = {english},
+	keywords = {tbr},
+	file = {Futoma et al. - Learning to Detect Sepsis with a Multitask Gaussia.pdf:/Users/wpq/Zotero/storage/AYENSMZR/Futoma et al. - Learning to Detect Sepsis with a Multitask Gaussia.pdf:application/pdf}
+}
+
+@article{snelsonSparseGaussianProcesses2005,
+	title = {Sparse Gaussian Processes using Pseudo-inputs},
+	volume = {18},
+	url = {https://proceedings.neurips.cc/paper/2005/hash/4491777b1aa8b5b32c2e8666dbe1a495-Abstract.html},
+	pages = {1257--1264},
+	journaltitle = {Advances in Neural Information Processing Systems},
+	author = {Snelson, Edward and Ghahramani, Zoubin},
+	urldate = {2021-02-05},
+	date = {2005},
+	langid = {english},
+	keywords = {tbr},
+	file = {Snelson_Ghahramani_2005_Sparse Gaussian Processes using Pseudo-inputs.pdf:/Users/wpq/Dropbox (MIT)/zotero/Snelson_Ghahramani_2005_Sparse Gaussian Processes using Pseudo-inputs.pdf:application/pdf}
+}
+
+@article{quinonero-candelaUnifyingViewSparse2005,
+	title = {A Unifying View of Sparse Approximate Gaussian Process Regression},
+	volume = {6},
+	issn = {1532-4435},
+	abstract = {We provide a new unifying view, including all existing proper probabilistic sparse approximations for Gaussian process regression. Our approach relies on expressing the effective prior which the methods are using. This allows new insights to be gained, and highlights the relationship between existing methods. It also allows for a clear theoretically justified ranking of the closeness of the known approximations to the corresponding full {GPs}. Finally we point directly to designs of new better sparse approximations, combining the best of the existing strategies, within attractive computational constraints.},
+	pages = {1939--1959},
+	journaltitle = {The Journal of Machine Learning Research},
+	shortjournal = {J. Mach. Learn. Res.},
+	author = {Quiñonero-Candela, Joaquin and Rasmussen, Carl Edward},
+	date = {2005-12-01},
+	keywords = {tbr},
+	file = {Quinonero-Candela_Rasmussen_2005_A Unifying View of Sparse Approximate Gaussian Process Regression.pdf:/Users/wpq/Dropbox (MIT)/zotero/Quinonero-Candela_Rasmussen_2005_A Unifying View of Sparse Approximate Gaussian Process Regression.pdf:application/pdf}
+}
+
+@inproceedings{damianouDeepGaussianProcesses2013,
+	title = {Deep Gaussian Processes},
+	url = {http://proceedings.mlr.press/v31/damianou13a.html},
+	abstract = {In this paper we introduce deep Gaussian process ({GP}) models. Deep {GPs} are a deep belief network based on Gaussian process mappings. The data is modeled as the output of a multivariate {GP}. The inpu...},
+	eventtitle = {Artificial Intelligence and Statistics},
+	pages = {207--215},
+	booktitle = {Artificial Intelligence and Statistics},
+	publisher = {{PMLR}},
+	author = {Damianou, Andreas and Lawrence, Neil D.},
+	urldate = {2021-02-05},
+	date = {2013-04-29},
+	langid = {english},
+	note = {{ISSN}: 1938-7228},
+	keywords = {tbr},
+	file = {Damianou_Lawrence_2013_Deep Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Damianou_Lawrence_2013_Deep Gaussian Processes.pdf:application/pdf}
+}
+
+@book{carledwardrasmussenGaussianProcessMachine2006,
+	title = {Gaussian Process for Machine Learning},
+	publisher = {{MIT} Press},
+	author = {{Carl Edward Rasmussen} and Christopher, Williams},
+	date = {2006},
+	keywords = {good, read},
+	file = {Carl Edward Rasmussen_Christopher_2006_Gaussian Process for Machine Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Carl Edward Rasmussen_Christopher_2006_Gaussian Process for Machine Learning.pdf:application/pdf}
+}
+
+@article{hintonUsingDeepBelief2007,
+	title = {Using Deep Belief Nets to Learn Covariance Kernels for Gaussian Processes},
+	volume = {20},
+	url = {https://papers.nips.cc/paper/2007/hash/4b6538a44a1dfdc2b83477cd76dee98e-Abstract.html},
+	pages = {1249--1256},
+	journaltitle = {Advances in Neural Information Processing Systems},
+	author = {Hinton, Geoffrey E. and Salakhutdinov, Russ R.},
+	urldate = {2021-02-05},
+	date = {2007},
+	langid = {english},
+	keywords = {tbr},
+	file = {Hinton_Salakhutdinov_2007_Using Deep Belief Nets to Learn Covariance Kernels for Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Hinton_Salakhutdinov_2007_Using Deep Belief Nets to Learn Covariance Kernels for Gaussian Processes.pdf:application/pdf}
+}

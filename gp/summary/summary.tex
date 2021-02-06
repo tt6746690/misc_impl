@@ -1,0 +1,38 @@
+\documentclass[11pt]{article}
+\input{../../preamble_local.tex}
+\addbibresource{GP.bib}
+
+\begin{document}
+ 
+\section{Gaussian Process}
+ 
+\cite{carledwardrasmussenGaussianProcessMachine2006} introduces Gaussian Process regression as generalization of Bayesian regression. In linear regression setup, we assume output value $y\in\R$ is a linear function of inputs $x\in\R^d$, corrupted by iid normal noise.
+\begin{align}
+    y = f(x) + \epsilon
+    \quad\text{where}\quad
+    f(x) = w^Tx
+    \quad\text{and}\quad
+    \epsilon \sim \sN(0, \sigma_n^2)
+\end{align}
+The Bayesian setup considers $w\in\R^d$ as a random variable, endowed with prior $w\sim \sN(0,\Sigma_p)$. Using Bayes rule, we can find the posterior of weights given data, which is again a normal random variable $p(w \mid X, y) = \sN\left(w \; ; A^{-1}b, A^{-1} \right)$ where $A=\frac{1}{\sigma_n^2} X^TX + \Sigma_p^{-1}$ and $b = \frac{1}{\sigma_n^2}X^Ty$ and $X\in\R^{n\times d}, y\in\R^{n\times 1}$ are design matrices. For test point $x_*$, the predictive distribution of $f_*=f(x_*)$ is the average likelihood of $f_*$ under model $f(x;w)$ with respect to posterior of $w$.
+\begin{align}
+    p(f_*\mid x_*, y)
+        = \int p(f_*\mid x_*,w) p(w\mid y) \, dw
+\end{align}
+We can think of the predictive distribution as a linear function $f_* = x_*^Tw$ of weights, a normal random variable, and therefore is normal. Therefore, $f_*\mid x_*,X,y \sim \sN( x_*^T A^{-1}b, x_*^T A^{-1}x_* )$. The natural extension to Bayesian linear regression is to kernelize it, for example assume a linear model in some feature space $f(x) = \phi(x)^Tw$. Instead of considering $w$ as a random variable, we can 
+
+An alternative view point of considering $w$ as random variable is to consider the function class that $w$ parameterizes as a random variable.
+
+
+
+
+ 
+ 
+
+\newpage
+\printbibliography 
+
+
+
+
+\end{document}
