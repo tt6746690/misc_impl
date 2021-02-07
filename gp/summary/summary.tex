@@ -49,12 +49,12 @@ A Gaussian process $f\sim \sG\sP(m,k)$ over $\R^{\sX}$ is fully specified by the
 The covariance function determines function's behavior, for example its stationarity, smoothness, and periodicity etc. For example, the squared exponential covariance function $k_{\text{SE}}(x,x') = \exp( -\frac{1}{2\ell^2} \norm{x-x'}_2^2 )$ enforces the prior knowledge that functions are smooth, i.e. inputs are close in the Euclidean sense will have similar outputs.
 
 \begin{example}
-    (Intuition about covariance matrix for $\sG\sP$) First consider $(y_1,y_2) \sim \sN(\mathbf{0}, \Sigma)$ where $\Sigma_{11}=\Sigma_{22} = 1$ and $\Sigma_{12}=\Sigma_{21}=\rho_{12}$. We know $y_1\mid y_2 = a \sim \sN(\rho_{12} a, 1 -  \rho_{12}^2)$. When $\cov(y_1,y_2) = \rho_{12} \uparrow 1$, $y_1$'s samples conditioned on $y_2=a$ fall close to $a$ with high probability. When $\rho_{12} \downarrow 0$, $y_1 \mid y_2=a$ will distribute like a unit normal, regardless of values that $y_2$ take. Extend this intuition to gaussian process: whenever $k(x_i,x_j)$ is large, $y_i,y_j$ are correlated and so observing $y_i=a$ provides a strong prior on how $y_j$ will behave.
+    (Intuition about covariance matrix for $\sG\sP$) First consider $(y_1,y_2) \sim \sN(\mathbf{0}, \Sigma)$ where $\Sigma_{11}=\Sigma_{22} = 1$ and $\Sigma_{12}=\Sigma_{21}=\rho_{12}$. We know $y_1\mid y_2 = a \sim \sN(\rho_{12} a, 1 -  \rho_{12}^2)$. When $\cov(y_1,y_2) = \rho_{12} \uparrow 1$, $y_1$'s samples conditioned on $y_2=a$ fall close to $a$ with high probability. When $\rho_{12} \downarrow 0$, $y_1 \mid y_2=a$ will distribute like a unit normal, regardless of values that $y_2$ take. Extend this intuition to gaussian process: whenever $k(x_i,x_j)$ is large, $y_i,y_j$ are correlated and so observing $y_i=a$ provides a strong prior on how $y_j$ will behave, or in other words, reduce the uncertainty of values that $y_j$ can take dramatically.
 \end{example}
 
 \subsection{Gaussian Process Regression}
 
-Instead of placing a prior over weights $p(w)$ to quantify randomness in function $f(x)=\phi(x)^Tw$, we model function directly as a Gaussian process, $f\sim \sG\sP(m,k)$. The latter approach is more general. For example, $f(x)=\phi(x)^Tw$ with prior $w\sim \sN(0,\Sigma_p)$ used in kernel Bayesian regression has
+Instead of placing a prior over weights $p(w)$ to quantify randomness in function $f(x)=\phi(x)^Tw$, we model function directly as a Gaussian process, $f\sim \sG\sP(0,k)$. There is a one-to-one correspondence between the two views. For example, $f(x)=\phi(x)^Tw$ with prior $w\sim \sN(0,\Sigma_p)$ used in kernel Bayesian regression has
 \begin{align}
     \E\pb{f(x)}
         = \phi(x)^T \E\pb{w} = 0
@@ -62,7 +62,7 @@ Instead of placing a prior over weights $p(w)$ to quantify randomness in functio
     \E\pb{ f(x)f(x') }
         = \phi(x)^T\Sigma_p \phi(x')
 \end{align}
-Therefore, $f\sim \sG\sP(0, k)$ where $k(x,x') = \phi(x)^T \Sigma_p \phi(x')$. Note $k$ is in fact a valid kernel. (Since $\Sigma_p$ is psd, $\Sigma_p = UDU^T$ by SVD. We can write $k(x,x') = \inner{\psi(x)}{\psi(x')}$ where $\psi(x) = \Sigma_p^{1/2} \phi(x)$ and $\Sigma_p^{1/2} = UD^{1/2}U^T$). Since $y=f(x)+\epsilon$, the noisy output is a sum of two normal random variables and therefore, $y\sim \sN(\mu(x),k(x,x)+\sigma_n^2)$. We can write the joint distribution of observed values and function values at some test locations as
+Therefore, $f\sim \sG\sP(0, k)$ where $k(x,x') = \phi(x)^T \Sigma_p \phi(x')$. Note $k$ is in fact a valid kernel. (Since $\Sigma_p$ is psd, $\Sigma_p = UDU^T$ by SVD. We can write $k(x,x') = \inner{\psi(x)}{\psi(x')}$ where $\psi(x) = \Sigma_p^{1/2} \phi(x)$ and $\Sigma_p^{1/2} = UD^{1/2}U^T$). Since $y=f(x)+\epsilon$, we have $\by = \mathbf{f} + \sigma_n^2 I \sim \sN(0, k(X,X)+\sigma_n^2I)$. We can write the joint distribution of observed values and function values at some test locations as
 \begin{align}
     \begin{bmatrix}
         \by \\ \mathbf{f}_*
@@ -75,6 +75,7 @@ Therefore, $f\sim \sG\sP(0, k)$ where $k(x,x') = \phi(x)^T \Sigma_p \phi(x')$. N
             k(X_*,X) & k(X_*,X_*) \\ 
         \end{bmatrix}
     \right)
+    \label{eq:gaussian_process_regression_noisy_model}
 \end{align}
 We can derive the predictive distribution for $\mathbf{f}_*\mid \by$ by simply apply conditional distribution formula
 \begin{align}
@@ -83,9 +84,23 @@ We can derive the predictive distribution for $\mathbf{f}_*\mid \by$ by simply a
         & k(X_*,X_*) - k(X_*,X) (k(X,X)+\sigma_n^2 I)^{-1} k(X,X_*) )
     \label{eq:gp_regression_predictive_distribution}
 \end{align}
-which has exact form compared to (\ref{eq:kernel_bayesian_regression_predictive_distribution}) as derived by first deriving the posterior over weights $p(w\mid X,y)$ and integrate with respect to $w$ as shown in (\ref{eq:kernel_bayesian_regression_predictive_distribution_integral}). 
-
-
+which has exact form compared to (\ref{eq:kernel_bayesian_regression_predictive_distribution}) as derived by first deriving the posterior over weights $p(w\mid X,y)$ and integrate with respect to $w$ as shown in (\ref{eq:kernel_bayesian_regression_predictive_distribution_integral}). More compactly, for a single test point $x_*$, 
+\begin{align}
+    \mathbf{f}_* \mid X,\by, x_* \sim \sN(
+        & k_*^T (K+\sigma_n^2 I)^{-1} \by  \\
+        & k(x_*,x_*) - k_*^T (K+\sigma_n^2 I)^{-1} k_* )
+    \label{eq:gp_regression_predictive_distribution_one_test_point}
+\end{align}
+where $k_* = k(x_*,X)\in \R^{1\times n}$. Given data $(X,\by)$, marginal likelihood $p(\by\mid X)$ quantifies how likely data is observed under our additive noise model $\by\mid \mathbf{f} \sim \sN(\mathbf{f},\sigma_n^2 I)$ on average with respect to a Gaussian process prior over the function values $\mathbf{f}\mid X \sim \sN(0,K)$,
+\begin{align}
+    p(\by\mid X)
+        = \int p(\by\mid \mathbf{f},X) p(\mathbf{f}\mid X) \, d\mathbf{f}
+\end{align}
+Analogously in Bayesian linear regression, the marginal likelihood marginalize over weights $p(\by\mid X) = \int p(\by\mid X,w)p(w) \, dw$. We can obtain a closed form expression by reading off (\ref{eq:gaussian_process_regression_noisy_model}), i.e. $\by \sim \sN(\mathbf{0}, K+\sigma_n^2 I)$. In empirical Bayes setup, kernel hyperparameters can be found by maximizing log marginal likelihood,
+\begin{align}
+    \log p(\by\mid X)
+        = -\frac{1}{2} \by^T  (K+\sigma_n^2 I)^{-1}\by - \frac{1}{2} \log |K+\sigma_n^2I| - \frac{n}{2} \log 2\pi 
+\end{align}
 
  
 
