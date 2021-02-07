@@ -5,8 +5,12 @@
 \begin{document}
  
 \section{Gaussian Process}
+
+\cite{carledwardrasmussenGaussianProcessMachine2006} introduces Gaussian Process regression as generalization of Bayesian regression. 
+
+\subsection{Bayesian Regression}
  
-\cite{carledwardrasmussenGaussianProcessMachine2006} introduces Gaussian Process regression as generalization of Bayesian regression. In linear regression setup, we assume output value $y\in\R$ is a linear function of inputs $x\in\R^d$, corrupted by iid normal noise.
+In linear regression setup, we assume output $y\in\R$ is a linear function of inputs $x\in\R^d$, corrupted with additive iid normal noise,
 \begin{align}
     y = f(x) + \epsilon
     \quad\text{where}\quad
@@ -16,17 +20,73 @@
 \end{align}
 The Bayesian setup considers $w\in\R^d$ as a random variable, endowed with prior $w\sim \sN(0,\Sigma_p)$. Using Bayes rule, we can find the posterior of weights given data, which is again a normal random variable $p(w \mid X, y) = \sN\left(w \; ; A^{-1}b, A^{-1} \right)$ where $A=\frac{1}{\sigma_n^2} X^TX + \Sigma_p^{-1}$ and $b = \frac{1}{\sigma_n^2}X^Ty$ and $X\in\R^{n\times d}, y\in\R^{n\times 1}$ are design matrices. For test point $x_*$, the predictive distribution of $f_*=f(x_*)$ is the average likelihood of $f_*$ under model $f(x;w)$ with respect to posterior of $w$.
 \begin{align}
-    p(f_*\mid x_*, y)
-        = \int p(f_*\mid x_*,w) p(w\mid y) \, dw
+    p(f_*\mid x_*, X, y)
+        = \int p(f_*\mid x_*,w) p(w\mid X, y) \, dw
+    \label{eq:kernel_bayesian_regression_predictive_distribution_integral}
 \end{align}
-We can think of the predictive distribution as a linear function $f_* = x_*^Tw$ of weights, a normal random variable, and therefore is normal. Therefore, $f_*\mid x_*,X,y \sim \sN( x_*^T A^{-1}b, x_*^T A^{-1}x_* )$. The natural extension to Bayesian linear regression is to kernelize it, for example assume a linear model in some feature space $f(x) = \phi(x)^Tw$. Instead of considering $w$ as a random variable, we can 
+We can think of the predictive distribution as a linear function $f_* = x_*^Tw$ of weights, a normal random variable, and therefore is normal. Therefore, $f_*\mid x_*,X,y \sim \sN( x_*^T A^{-1}b, x_*^T A^{-1}x_* )$. The natural extension to Bayesian linear regression is to kernelize it, for example assume a linear model in some feature space $f(x) = \phi(x)^Tw$ for some feature map $\phi:\R^d\to\R^D$. We can write predictive distribution as 
+\begin{align}
+    f_* \mid x_*,X,y \sim \sN(
+        & k(x_*,X) (k(X,X)+\sigma_n^2 I)^{-1}y, \\
+        & k(x_*,x_*) - k(x_*,X)(k(X,X) + \sigma_n^2 I)^{-1} k(X,x_*))
+    \label{eq:kernel_bayesian_regression_predictive_distribution}
+\end{align}
+where $k(X,X') = \Phi \Sigma_p \Phi'^T \in \R^{n\times n'}$ and $\Phi\in\R^{n\times D}$ are the feature vectors.
 
-An alternative view point of considering $w$ as random variable is to consider the function class that $w$ parameterizes as a random variable.
+\subsection{Gaussian Process}
+
+
+\begin{definition}
+    (Gaussian Process) A Gaussian process is a stochastic process $\pc{X_t}_{t\in T}$ such that, for every finite subset of indices $t_1,\cdots,t_k \in T$, $(X_{t_1},\cdots,X_{t_k})$ is multivariate normal.
+\end{definition}
+
+A Gaussian process $f\sim \sG\sP(m,k)$ over $\R^{\sX}$ is fully specified by the mean function $m:\sX\to\R$ and covariance function $k:\sX\times\sX\to\R$ where
+\begin{align}
+    m(x)=\E\pb{f(x)}
+    \quad\quad\quad
+    k(x,x') = \E\pb{ (f(x)-m(x))(f(x')-m(x')) }
+\end{align}
+The covariance function determines function's behavior, for example its stationarity, smoothness, and periodicity etc. For example, the squared exponential covariance function $k_{\text{SE}}(x,x') = \exp( -\frac{1}{2\ell^2} \norm{x-x'}_2^2 )$ enforces the prior knowledge that functions are smooth, i.e. inputs are close in the Euclidean sense will have similar outputs.
+
+\begin{example}
+    (Intuition about covariance matrix for $\sG\sP$) First consider $(y_1,y_2) \sim \sN(\mathbf{0}, \Sigma)$ where $\Sigma_{11}=\Sigma_{22} = 1$ and $\Sigma_{12}=\Sigma_{21}=\rho_{12}$. We know $y_1\mid y_2 = a \sim \sN(\rho_{12} a, 1 -  \rho_{12}^2)$. When $\cov(y_1,y_2) = \rho_{12} \uparrow 1$, $y_1$'s samples conditioned on $y_2=a$ fall close to $a$ with high probability. When $\rho_{12} \downarrow 0$, $y_1 \mid y_2=a$ will distribute like a unit normal, regardless of values that $y_2$ take. Extend this intuition to gaussian process: whenever $k(x_i,x_j)$ is large, $y_i,y_j$ are correlated and so observing $y_i=a$ provides a strong prior on how $y_j$ will behave.
+\end{example}
+
+\subsection{Gaussian Process Regression}
+
+Instead of placing a prior over weights $p(w)$ to quantify randomness in function $f(x)=\phi(x)^Tw$, we model function directly as a Gaussian process, $f\sim \sG\sP(m,k)$. The latter approach is more general. For example, $f(x)=\phi(x)^Tw$ with prior $w\sim \sN(0,\Sigma_p)$ used in kernel Bayesian regression has
+\begin{align}
+    \E\pb{f(x)}
+        = \phi(x)^T \E\pb{w} = 0
+    \quad\quad\quad
+    \E\pb{ f(x)f(x') }
+        = \phi(x)^T\Sigma_p \phi(x')
+\end{align}
+Therefore, $f\sim \sG\sP(0, k)$ where $k(x,x') = \phi(x)^T \Sigma_p \phi(x')$. Note $k$ is in fact a valid kernel. (Since $\Sigma_p$ is psd, $\Sigma_p = UDU^T$ by SVD. We can write $k(x,x') = \inner{\psi(x)}{\psi(x')}$ where $\psi(x) = \Sigma_p^{1/2} \phi(x)$ and $\Sigma_p^{1/2} = UD^{1/2}U^T$). Since $y=f(x)+\epsilon$, the noisy output is a sum of two normal random variables and therefore, $y\sim \sN(\mu(x),k(x,x)+\sigma_n^2)$. We can write the joint distribution of observed values and function values at some test locations as
+\begin{align}
+    \begin{bmatrix}
+        \by \\ \mathbf{f}_*
+    \end{bmatrix}
+    \sim
+    \sN\left(
+        \mathbf{0},
+        \begin{bmatrix}
+            k(X,X) + \sigma_n^2I & k(X,X_*) \\
+            k(X_*,X) & k(X_*,X_*) \\ 
+        \end{bmatrix}
+    \right)
+\end{align}
+We can derive the predictive distribution for $\mathbf{f}_*\mid \by$ by simply apply conditional distribution formula
+\begin{align}
+    \mathbf{f}_* \mid X,\by, X_* \sim \sN(
+        & k(X_*,X) (k(X,X)+\sigma_n^2 I)^{-1} \by  \\
+        & k(X_*,X_*) - k(X_*,X) (k(X,X)+\sigma_n^2 I)^{-1} k(X,X_*) )
+    \label{eq:gp_regression_predictive_distribution}
+\end{align}
+which has exact form compared to (\ref{eq:kernel_bayesian_regression_predictive_distribution}) as derived by first deriving the posterior over weights $p(w\mid X,y)$ and integrate with respect to $w$ as shown in (\ref{eq:kernel_bayesian_regression_predictive_distribution_integral}). 
 
 
 
-
- 
  
 
 \newpage
