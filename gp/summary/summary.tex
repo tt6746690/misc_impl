@@ -6,7 +6,7 @@
  
 \section{Gaussian Process}
 
-\cite{carledwardrasmussenGaussianProcessMachine2006} introduces Gaussian Process regression as generalization of Bayesian regression. 
+\cite{carledwardrasmussenGaussianProcessMachine2006} introduces Gaussian Process regression as an alternative view to Bayesian regression. 
 
 \subsection{Bayesian Regression}
  
@@ -46,11 +46,21 @@ A Gaussian process $f\sim \sG\sP(m,k)$ over $\R^{\sX}$ is fully specified by the
     \quad\quad\quad
     k(x,x') = \E\pb{ (f(x)-m(x))(f(x')-m(x')) }
 \end{align}
-The covariance function determines function's behavior, for example its stationarity, smoothness, and periodicity etc. For example, the squared exponential covariance function $k_{\text{SE}}(x,x') = \exp( -\frac{1}{2\ell^2} \norm{x-x'}_2^2 )$ enforces the prior knowledge that functions are smooth, i.e. inputs are close in the Euclidean sense will have similar outputs.
+The covariance function determines function's behavior, for example its stationarity, smoothness, and periodicity etc. For example, the squared exponential covariance function $k_{\text{SE}}(x,x') = \exp( -\frac{1}{2\ell^2} \norm{x-x'}_2^2 )$ enforces the prior knowledge that functions are smooth, i.e. inputs are close in the Euclidean sense will have similar outputs. See Figure (\ref{fig:plt_sample_from_gp}) for some examples of samples from Gaussian process.
 
 \begin{example}
     (Intuition about covariance matrix for $\sG\sP$) First consider $(y_1,y_2) \sim \sN(\mathbf{0}, \Sigma)$ where $\Sigma_{11}=\Sigma_{22} = 1$ and $\Sigma_{12}=\Sigma_{21}=\rho_{12}$. We know $y_1\mid y_2 = a \sim \sN(\rho_{12} a, 1 -  \rho_{12}^2)$. When $\cov(y_1,y_2) = \rho_{12} \uparrow 1$, $y_1$'s samples conditioned on $y_2=a$ fall close to $a$ with high probability. When $\rho_{12} \downarrow 0$, $y_1 \mid y_2=a$ will distribute like a unit normal, regardless of values that $y_2$ take. Extend this intuition to gaussian process: whenever $k(x_i,x_j)$ is large, $y_i,y_j$ are correlated and so observing $y_i=a$ provides a strong prior on how $y_j$ will behave, or in other words, reduce the uncertainty of values that $y_j$ can take dramatically.
 \end{example}
+
+
+\begin{center} 
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{assets/plt_sample_from_gp.png} 
+    \caption{(Left) Samples from Gaussian process prior and (Right) covariance matrix at test locations.}
+    \label{fig:plt_sample_from_gp}
+\end{figure}
+\end{center} 
+    
 
 \subsection{Gaussian Process Regression}
 
@@ -62,7 +72,9 @@ Instead of placing a prior over weights $p(w)$ to quantify randomness in functio
     \E\pb{ f(x)f(x') }
         = \phi(x)^T\Sigma_p \phi(x')
 \end{align}
-Therefore, $f\sim \sG\sP(0, k)$ where $k(x,x') = \phi(x)^T \Sigma_p \phi(x')$. Note $k$ is in fact a valid kernel. (Since $\Sigma_p$ is psd, $\Sigma_p = UDU^T$ by SVD. We can write $k(x,x') = \inner{\psi(x)}{\psi(x')}$ where $\psi(x) = \Sigma_p^{1/2} \phi(x)$ and $\Sigma_p^{1/2} = UD^{1/2}U^T$). Since $y=f(x)+\epsilon$, we have $\by = \mathbf{f} + \sigma_n^2 I \sim \sN(0, k(X,X)+\sigma_n^2I)$. We can write the joint distribution of observed values and function values at some test locations as
+Therefore, $f\sim \sG\sP(0, k)$ where $k(x,x') = \phi(x)^T \Sigma_p \phi(x')$. Note $k$ is in fact a valid kernel. (Since $\Sigma_p$ is psd, $\Sigma_p = UDU^T$ by SVD. We can write $k(x,x') = \inner{\psi(x)}{\psi(x')}$ where $\psi(x) = \Sigma_p^{1/2} \phi(x)$ and $\Sigma_p^{1/2} = UD^{1/2}U^T$). Conversely, any valid kernel used in kernel Bayesian regression can be used to parameterize the covariance function of the Gaussian process model over $f$.
+
+Since $y=f(x)+\epsilon$, we have $\by = \mathbf{f} + \sigma_n^2 I \sim \sN(0, k(X,X)+\sigma_n^2I)$ where $\by,\mathbf{f}\in\R^{n\times 1}$. We can write the joint distribution of observed values and function values at some test locations as
 \begin{align}
     \begin{bmatrix}
         \by \\ \mathbf{f}_*
@@ -84,14 +96,7 @@ We can derive the predictive distribution for $\mathbf{f}_*\mid \by$ by simply a
         & k(X_*,X_*) - k(X_*,X) (k(X,X)+\sigma_n^2 I)^{-1} k(X,X_*) )
     \label{eq:gp_regression_predictive_distribution}
 \end{align}
-which has exact form compared to (\ref{eq:kernel_bayesian_regression_predictive_distribution}) as derived by first deriving the posterior over weights $p(w\mid X,y)$ and integrate with respect to $w$ as shown in (\ref{eq:kernel_bayesian_regression_predictive_distribution_integral}). More compactly, for a single test point $x_*$, 
-\begin{align}
-    \mathbf{f}_* \mid X,\by, x_* \sim \sN(
-        & k_*^T (K+\sigma_n^2 I)^{-1} \by  \\
-        & k(x_*,x_*) - k_*^T (K+\sigma_n^2 I)^{-1} k_* )
-    \label{eq:gp_regression_predictive_distribution_one_test_point}
-\end{align}
-where $k_* = k(x_*,X)\in \R^{1\times n}$. Given data $(X,\by)$, marginal likelihood $p(\by\mid X)$ quantifies how likely data is observed under our additive noise model $\by\mid \mathbf{f} \sim \sN(\mathbf{f},\sigma_n^2 I)$ on average with respect to a Gaussian process prior over the function values $\mathbf{f}\mid X \sim \sN(0,K)$,
+which has exact form compared to (\ref{eq:kernel_bayesian_regression_predictive_distribution}) as derived by first deriving the posterior over weights $p(w\mid X,y)$ and integrate with respect to $w$ as shown in (\ref{eq:kernel_bayesian_regression_predictive_distribution_integral}). More compactly, for a single test point $x_*$, $\mu_{\mathbf{f}_*} =  k_*^T (K+\sigma_n^2 I)^{-1}$ and $\var(\mathbf{f}_*) = k(x_*,x_*) - k_*^T (K+\sigma_n^2 I)^{-1} k_* $ where $k_* = k(X,x_*)\in \R^{n\times 1}$. Given data $(X,\by)$, marginal likelihood $p(\by\mid X)$ quantifies how likely data is observed under our additive noise model $\by\mid \mathbf{f} \sim \sN(\mathbf{f},\sigma_n^2 I)$ on average with respect to a Gaussian process prior over the function $\mathbf{f}\mid X \sim \sN(0,K)$,
 \begin{align}
     p(\by\mid X)
         = \int p(\by\mid \mathbf{f},X) p(\mathbf{f}\mid X) \, d\mathbf{f}
@@ -102,7 +107,6 @@ Analogously in Bayesian linear regression, the marginal likelihood marginalize o
         = -\frac{1}{2} \by^T  (K+\sigma_n^2 I)^{-1}\by - \frac{1}{2} \log |K+\sigma_n^2I| - \frac{n}{2} \log 2\pi 
 \end{align}
 
- 
 
 \newpage
 \printbibliography 

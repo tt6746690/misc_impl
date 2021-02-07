@@ -6,6 +6,9 @@ def squared_l2_norm(x):
 
 # Taken from https://github.com/IPL-UV/jaxkern
 
+def l1_distance(x, y):
+    return np.sum(np.abs(x-y))
+
 def sqeuclidean_distance(x, y):
     return np.sum((x - y) ** 2)
 
@@ -20,8 +23,12 @@ def cdist_sqeuclidean(x, y):
     return distmat(sqeuclidean_distance, x, y)
 
 def cdist_euclidean(x, y):
-    """ Squared euclidean distance matrix """
+    """ euclidean distance matrix """
     return distmat(euclidean_distance, x, y)
+
+def cdist_l1(x, y):
+    """ l1 distance matrix """
+    return distmat(l1_distance, x, y)
 
 def rbf_kernel(X, Y, gamma=1.):
     """Radial Basis Function Kernel
@@ -34,6 +41,27 @@ def rbf_kernel(X, Y, gamma=1.):
         Returns kernel matrix of size (n, n)
     """
     return np.exp(-gamma*cdist_sqeuclidean(X, Y))
+
+
+def cov_se(X, σ=1, ℓ=1):
+    # Squared Exponential kernel
+    #     σ - vertical lengthscale
+    #     ℓ - lengthscale 
+    #
+    return (σ**2)*np.exp(-cdist_sqeuclidean(X,X)/2/(ℓ**2))
+
+def cov_rq(X, σ=1, α=1, ℓ=1):
+    # Rational Quadratic kernel 
+    #     α - scale mixture
+    #     ℓ - lengthscale
+    # 
+    return (σ**2)*(cdist_euclidean(X, X)/2/α/(ℓ**2) + 1)**(-α)
+
+def cov_pe(X, σ=1, p=1, ℓ=1):
+    # Periodic kernel (https://www.cs.toronto.edu/~duvenaud/cookbook/)
+    #     p - period
+    #     ℓ - lengthscale 
+    return (σ**2)*np.exp( - 2*np.sin(np.pi*cdist_l1(X, X)/p)**2/(ℓ**2) )
 
 def linear_kernel(X, Y):
     if X.ndim == 1:
