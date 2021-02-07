@@ -74,7 +74,7 @@ Instead of placing a prior over weights $p(w)$ to quantify randomness in functio
 \end{align}
 Therefore, $f\sim \sG\sP(0, k)$ where $k(x,x') = \phi(x)^T \Sigma_p \phi(x')$. Note $k$ is in fact a valid kernel. (Since $\Sigma_p$ is psd, $\Sigma_p = UDU^T$ by SVD. We can write $k(x,x') = \inner{\psi(x)}{\psi(x')}$ where $\psi(x) = \Sigma_p^{1/2} \phi(x)$ and $\Sigma_p^{1/2} = UD^{1/2}U^T$). Conversely, any valid kernel used in kernel Bayesian regression can be used to parameterize the covariance function of the Gaussian process model over $f$.
 
-Since $y=f(x)+\epsilon$, we have $\by = \mathbf{f} + \sigma_n^2 I \sim \sN(0, k(X,X)+\sigma_n^2I)$ where $\by,\mathbf{f}\in\R^{n\times 1}$. We can write the joint distribution of observed values and function values at some test locations as
+Since $y=f(x)+\epsilon$, we have $\by = \mathbf{f} + \sigma_n^2 I \sim \sN(0, k(X,X)+\sigma_n^2I)$ where $\by,\mathbf{f}\in\R^{n\times 1}$. We can write the joint distribution of observed values and function values at some test locations $X_*$ as
 \begin{align}
     \begin{bmatrix}
         \by \\ \mathbf{f}_*
@@ -96,7 +96,7 @@ We can derive the predictive distribution for $\mathbf{f}_*\mid \by$ by simply a
         & k(X_*,X_*) - k(X_*,X) (k(X,X)+\sigma_n^2 I)^{-1} k(X,X_*) )
     \label{eq:gp_regression_predictive_distribution}
 \end{align}
-which has exact form compared to (\ref{eq:kernel_bayesian_regression_predictive_distribution}) as derived by first deriving the posterior over weights $p(w\mid X,y)$ and integrate with respect to $w$ as shown in (\ref{eq:kernel_bayesian_regression_predictive_distribution_integral}). More compactly, for a single test point $x_*$, $\mu_{\mathbf{f}_*} =  k_*^T (K+\sigma_n^2 I)^{-1}$ and $\var(\mathbf{f}_*) = k(x_*,x_*) - k_*^T (K+\sigma_n^2 I)^{-1} k_* $ where $k_* = k(X,x_*)\in \R^{n\times 1}$. Given data $(X,\by)$, marginal likelihood $p(\by\mid X)$ quantifies how likely data is observed under our additive noise model $\by\mid \mathbf{f} \sim \sN(\mathbf{f},\sigma_n^2 I)$ on average with respect to a Gaussian process prior over the function $\mathbf{f}\mid X \sim \sN(0,K)$,
+which has exact form compared to (\ref{eq:kernel_bayesian_regression_predictive_distribution}). More compactly, for a single test point $x_*$, $\mu_{\mathbf{f}_*} =  k_*^T (K+\sigma_n^2 I)^{-1}$ and $\var(\mathbf{f}_*) = k(x_*,x_*) - k_*^T (K+\sigma_n^2 I)^{-1} k_* $ where $k_* = k(X,x_*)\in \R^{n\times 1}$. Given data $(X,\by)$, marginal likelihood $p(\by\mid X)$ quantifies how likely data is observed under our additive noise model $\by\mid \mathbf{f} \sim \sN(\mathbf{f},\sigma_n^2 I)$ on average with respect to a Gaussian process prior over the function $\mathbf{f}\mid X \sim \sN(0,K)$,
 \begin{align}
     p(\by\mid X)
         = \int p(\by\mid \mathbf{f},X) p(\mathbf{f}\mid X) \, d\mathbf{f}

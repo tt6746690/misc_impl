@@ -5,32 +5,18 @@ channels:
 dependencies:
     - python=3.7
     - pytorch::pytorch=1.7.0
-    - pytorch::torchvision=0.7.0
+    - pytorch::torchvision
     # - cudatoolkit=11
     - gpytorch
     - numpy
+    - pandas
     - matplotlib
     - jupyter
     - nb_conda
-    - torchvision
-    - tensorflow
-    - tensorboard
     - autograd
     - tqdm
     - opencv
-    # https://github.com/freqtrade/freqtrade/issues/2140#:~:text=joblib%20is%20deprecated%20in%200.21%20and%20will%20be%20removed%20in%200.23.,-%232140
-    # compatibility with glmnet
     - scikit-learn
-    - pylint
-    - seaborn
-    - pillow
-    - cvxpy
-    - cvxopt
-    - pandas
     - scipy
-    # knockoffs
-    - glmnet
-    - shap
-    - xgboost
-    # latex 
+    - pillow
     - graphviz
