@@ -99,10 +99,10 @@ We can derive the predictive distribution for $\mathbf{f}_*\mid \by$ by simply a
 which has exact form compared to (\ref{eq:kernel_bayesian_regression_predictive_distribution}). More compactly, for a single test point $x_*$, $\mu_{\mathbf{f}_*} =  k_*^T (K+\sigma_n^2 I)^{-1}$ and $\var(\mathbf{f}_*) = k(x_*,x_*) - k_*^T (K+\sigma_n^2 I)^{-1} k_* $ where $k_* = k(X,x_*)\in \R^{n\times 1}$. See Figure (\ref{fig:plt_gp_regression_inference}) for examples of Gaussian process regression with varying data size and hyperparameters. 
 
 
-\begin{center}
+\begin{center} 
 \begin{figure}[h!]
     \includegraphics[width=\textwidth]{assets/plt_gp_regression_inference.png} 
-    \caption{This plot shows mean (black) and 95\% confidence interval (light blue) for predictive distribution $p(\mathbf{f}_*\mid X,\by, X_*)$ fit using Gaussian process regression assuming a SE prior over $f\sim\sG\sP(0,k_{SE})$ of varying lengthscale $\ell$ and observed sample sizes $n$. The middle row's kernel hyperparameter is taken to be the empirical Bayes estimate $\ell = \argmax p(\by\mid X, \ell)$ where $p(\by\mid X,\ell)$ given by Equation (\ref{eq:gp_regression_marginal_likelihood}), optimized via gradient descent.}
+    \caption{This plot shows mean (black) and 95\% confidence interval (light blue) for predictive distribution $p(\mathbf{f}_*\mid X,\by, X_*)$ fit using Gaussian process regression assuming a SE prior over $f\sim\sG\sP(0,k_{SE})$ of varying lengthscale $\ell$ and observed sample sizes $n$. The middle row's kernel hyperparameter is taken to be $\ell = \argmax p(\by\mid X, \ell)$, optimized via gradient descent}
     \label{fig:plt_gp_regression_inference}
 \end{figure}
 \end{center}
@@ -120,7 +120,6 @@ This formulation is analogous to that in Bayesian linear regression where the ma
 \begin{align}
     \log p(\by\mid X)
         = -\frac{1}{2} \by^T  (K+\sigma_n^2 I)^{-1}\by - \frac{1}{2} \log |K+\sigma_n^2I| - \frac{n}{2} \log 2\pi 
-    \label{eq:gp_regression_marginal_likelihood}
 \end{align}
 
 
