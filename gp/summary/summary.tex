@@ -96,7 +96,18 @@ We can derive the predictive distribution for $\mathbf{f}_*\mid \by$ by simply a
         & k(X_*,X_*) - k(X_*,X) (k(X,X)+\sigma_n^2 I)^{-1} k(X,X_*) )
     \label{eq:gp_regression_predictive_distribution}
 \end{align}
-which has exact form compared to (\ref{eq:kernel_bayesian_regression_predictive_distribution}). More compactly, for a single test point $x_*$, $\mu_{\mathbf{f}_*} =  k_*^T (K+\sigma_n^2 I)^{-1}$ and $\var(\mathbf{f}_*) = k(x_*,x_*) - k_*^T (K+\sigma_n^2 I)^{-1} k_* $ where $k_* = k(X,x_*)\in \R^{n\times 1}$. Given data $(X,\by)$, marginal likelihood $p(\by\mid X)$ quantifies how likely data is observed under our additive noise model $\by\mid \mathbf{f} \sim \sN(\mathbf{f},\sigma_n^2 I)$ on average with respect to a Gaussian process prior over the function $\mathbf{f}\mid X \sim \sN(0,K)$,
+which has exact form compared to (\ref{eq:kernel_bayesian_regression_predictive_distribution}). More compactly, for a single test point $x_*$, $\mu_{\mathbf{f}_*} =  k_*^T (K+\sigma_n^2 I)^{-1}$ and $\var(\mathbf{f}_*) = k(x_*,x_*) - k_*^T (K+\sigma_n^2 I)^{-1} k_* $ where $k_* = k(X,x_*)\in \R^{n\times 1}$. See Figure (\ref{fig:plt_gp_regression_vary_trainsize}) for examples of Gaussian process regression with varying data size and hyperparameters. 
+
+
+\begin{center} 
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{assets/plt_gp_regression_vary_trainsize.png} 
+    \caption{This plot shows predictive mean (black) and 95\% confidence interval fit using Gaussian process regression assuming a SE prior over $f\sim\sG\sP(0,k_{SE})$ of varying lengthscale $\ell$ and observed sample sizes $n$. Fitting using Cholesky factorization is more stable than applying matix inverse directly.}
+    \label{fig:plt_gp_regression_vary_trainsize}
+\end{figure}
+\end{center}
+
+Given data $(X,\by)$, marginal likelihood $p(\by\mid X)$ quantifies how likely data is observed under our additive noise model $\by\mid \mathbf{f} \sim \sN(\mathbf{f},\sigma_n^2 I)$ on average with respect to a Gaussian process prior over the function $\mathbf{f}\mid X \sim \sN(0,K)$,
 \begin{align}
     p(\by\mid X)
         = \int p(\by\mid \mathbf{f},X) p(\mathbf{f}\mid X) \, d\mathbf{f}
@@ -106,6 +117,9 @@ Analogously in Bayesian linear regression, the marginal likelihood marginalize o
     \log p(\by\mid X)
         = -\frac{1}{2} \by^T  (K+\sigma_n^2 I)^{-1}\by - \frac{1}{2} \log |K+\sigma_n^2I| - \frac{n}{2} \log 2\pi 
 \end{align}
+
+
+ 
 
 
 \newpage

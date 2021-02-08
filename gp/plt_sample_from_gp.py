@@ -1,6 +1,7 @@
 # Reference:
 #    https://peterroelants.github.io/posts/gaussian-process-kernels/
-#    https://peterroelants.github.io/posts/gaussian-process-kernels/
+#    https://distill.pub/2019/visual-exploration-gaussian-processes/
+#    http://gregorygundersen.com/blog/2019/06/27/gp-regression/
 # 
 import numpy as np
 import jax.numpy as jnp

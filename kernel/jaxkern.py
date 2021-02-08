@@ -43,25 +43,28 @@ def rbf_kernel(X, Y, gamma=1.):
     return np.exp(-gamma*cdist_sqeuclidean(X, Y))
 
 
-def cov_se(X, σ=1, ℓ=1):
+def cov_se(X, Y=None, σ=1, ℓ=1):
     # Squared Exponential kernel
     #     σ - vertical lengthscale
     #     ℓ - lengthscale 
     #
-    return (σ**2)*np.exp(-cdist_sqeuclidean(X,X)/2/(ℓ**2))
+    if Y is None: Y = X
+    return (σ**2)*np.exp(-cdist_sqeuclidean(X, Y)/2/(ℓ**2))
 
-def cov_rq(X, σ=1, α=1, ℓ=1):
+def cov_rq(X, Y=None, σ=1, α=1, ℓ=1):
     # Rational Quadratic kernel 
     #     α - scale mixture
     #     ℓ - lengthscale
     # 
-    return (σ**2)*(cdist_euclidean(X, X)/2/α/(ℓ**2) + 1)**(-α)
+    if Y is None: Y = X
+    return (σ**2)*(cdist_euclidean(X, Y)/2/α/(ℓ**2) + 1)**(-α)
 
-def cov_pe(X, σ=1, p=1, ℓ=1):
+def cov_pe(X, Y=None, σ=1, p=1, ℓ=1):
     # Periodic kernel (https://www.cs.toronto.edu/~duvenaud/cookbook/)
     #     p - period
     #     ℓ - lengthscale 
-    return (σ**2)*np.exp( - 2*np.sin(np.pi*cdist_l1(X, X)/p)**2/(ℓ**2) )
+    if Y is None: Y = X
+    return (σ**2)*np.exp( - 2*np.sin(np.pi*cdist_l1(X, Y)/p)**2/(ℓ**2) )
 
 def linear_kernel(X, Y):
     if X.ndim == 1:
