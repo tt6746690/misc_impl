@@ -38,11 +38,16 @@ def linear_kernel(X, Y=None):
 def target_kernel(X, Y=None):
     if not isinstance(X, torch.Tensor):
         X = torch.Tensor(X)
-    if X.ndim == 1:
+    if X.ndim == 1 or X.shape[1] == 1:
         X = X.reshape(-1, 1)
-    X = X.reshape(-1, 1)
-    K = (X == X.T).to(torch.float32)
+        K = (X == X.T).to(torch.float32)
+    else:
+        n = len(X)
+        K = torch.zeros(n, n, device=X.device)
+        for i in range(X.shape[1]):
+            K += target_kernel(X[:, i])
     return K
+
 
 def median_l2dist(X):
     """ median unsquared l2 pairwise distance of X """
@@ -71,7 +76,9 @@ def median_heuristic(X):
 
 
 def hsic(X, Y, k, l, estimate='biased'):
-    """ Computes empirical HSIC
+    """ empirical HSIC
+            https://papers.nips.cc/paper/2007/file/d5cfead94f5350c12c322b5b664544c1-Paper.pdf
+            https://jmlr.csail.mit.edu/papers/volume13/song12a/song12a.pdf
     """
     if estimate not in ['biased', 'unbiased']:
         raise ValueError('estimate not \in [biased, unbiased]')
@@ -113,10 +120,8 @@ def hsic_unbiased_nograd(X, Y, k, l):
 
 def cka(X, Y, k, l):
     """ Centered Kernel Alignment 
+            https://jmlr.org/papers/volume13/cortes12a/cortes12a.pdf
             https://github.com/yuanli2333/CKA-Centered-Kernel-Alignment/blob/master/CKA.py
-
-            cka = <Kx,Ky>_F / ( ||Kx||_F*||Ky||_F )
-                where Kx,Ky are centered
     """
     Kx = k(X)
     Ky = l(Y)
@@ -131,8 +136,6 @@ def cka(X, Y, k, l):
 def ka(X, Y, k, l):
     """ Kernel Alignment 
             http://papers.neurips.cc/paper/1946-on-kernel-target-alignment.pdf
-
-            cka = <Kx,Ky>_F / ( ||Kx||_F*||Ky||_F )
     """
     Kx = k(X)
     Ky = l(Y)
@@ -143,7 +146,9 @@ def ka(X, Y, k, l):
 
 
 def mmd(X, Y, k):
-    """ Computes unbiased estimate of MMD^2 in O(n^2)"""
+    """ unbiased O(n^2) estimate of MMD^2
+            https://jmlr.csail.mit.edu/papers/v13/gretton12a.html
+    """
     Kxx = k(X)
     Kxy = k(X, Y)
     Kyy = k(Y)
@@ -153,6 +158,48 @@ def mmd(X, Y, k):
     mmd = torch.sum(Kxx)/(n*(n-1)) + torch.sum(Kyy) / \
         (m*(m-1)) - 2*torch.sum(Kxy)/(n*m)
     return mmd
+
+
+def cc(X, Y, k, l, ϵ=.01):
+    """ `tr(Σ_YY|X)`: trace of conditional covariance operator
+            https://www.jmlr.org/papers/volume5/fukumizu04a/fukumizu04a.pdf
+            https://arxiv.org/abs/1707.01164
+            https://github.com/Jianbo-Lab/CCM/blob/master/core/ccm.py
+    """
+    n = len(X)
+    Kx = k(X)
+    Ky = l(Y)
+    Kxc = centering2(Kx)
+    Kyc = centering2(Ky)
+    In = torch.eye(n, device=Kx.device)
+    Kxcpd = Kxc+n*ϵ*In
+    if not is_invertible(Kxcpd.detach()):
+        print('Kxcpd not invertlbe in `cc`')
+        Kxcpd = Kxc+n*In
+    # Speed
+    # - Slower L = torch.cholesky(Kxcpd); Kxinv = torch.cholesky_inverse(L)
+    #     11.8 ms ± 764 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+    # - Faster Kxinv = torch.inverse(Kxcpd)
+    #     8.51 ms ± 200 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
+    Kxcinv = torch.inverse(Kxcpd)
+    return torch.sum(Kxcinv.T*Kyc)
+
+
+def nocco(X, Y, k, l, ϵ=.01):
+    """ Normalized Cross Covariance Operator
+        https://proceedings.neurips.cc/paper/2007/file/3a0772443a0739141292a5429b952fe6-Paper.pdf
+        https://arxiv.org/pdf/1012.1416.pdf
+    """
+    n = len(X)
+    K = k(X)
+    L = l(Y)
+    Kc = centering2(K)
+    Lc = centering2(L)
+    Kcpd = compute_Kcpd(Kc, ϵ=ϵ)
+    Lcpd = compute_Kcpd(Lc, ϵ=ϵ)
+    Kt = Kc@torch.inverse(Kcpd)
+    Lt = Lc@torch.inverse(Lcpd)
+    return torch.sum(Kt.T*Lt)
 
 
 def zero_diagonal(K):
@@ -176,15 +223,15 @@ def centering2(K):
     return K
 
 
-def cc(X, Y, k, l, ϵ=.01):
-    """ Conditional Covariance Operator `Σ_YY|X`
-        https://github.com/Jianbo-Lab/CCM/blob/master/core/ccm.py
-    """
-    n = len(X)
-    Kx = k(X)
-    Ky = l(Y)
-    Kxc = centering2(Kx)
-    Kyc = centering2(Ky)
-    In = torch.eye(n, device=Kx.device)
-    Kxcinv = torch.inverse(Kxc+n*ϵ*In)
-    return torch.sum(Kxcinv.T*Kyc)
+def is_invertible(A):
+    return torch.all(torch.eig(A).eigenvalues[:, 0] > 0)
+
+
+def compute_Kcpd(Kc, ϵ=.01):
+    # Computes (Kc + n*ϵ*In)
+    n = len(Kc)
+    In = torch.eye(n, device=Kc.device)
+    Kcpd = Kc+n*ϵ*In
+    if not is_invertible(Kcpd.detach()):
+        Kcpd = Kc+n*In
+    return Kcpd
