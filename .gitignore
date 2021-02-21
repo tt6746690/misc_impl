@@ -30,6 +30,7 @@ logs/
 *.run.xml
 *.bbl
 *-blx.bib
+__latexindent_temp.tex
 
 # external library 
 knockoff/external

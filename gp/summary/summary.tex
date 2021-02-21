@@ -1,6 +1,8 @@
 \documentclass[11pt]{article}
 \input{../../preamble_local.tex}
 \addbibresource{GP.bib}
+\addbibresource{multitask.bib}
+
 
 \begin{document}
  
@@ -102,7 +104,7 @@ which has exact form compared to (\ref{eq:kernel_bayesian_regression_predictive_
 \begin{center} 
 \begin{figure}[h!]
     \includegraphics[width=\textwidth]{assets/plt_gp_regression_inference.png} 
-    \caption{This plot shows mean (black) and 95\% confidence interval (light blue) for predictive distribution $p(\mathbf{f}_*\mid X,\by, X_*)$ fit using Gaussian process regression assuming a SE prior over $f\sim\sG\sP(0,k_{SE})$ of varying lengthscale $\ell$ and observed sample sizes $n$. The middle row's kernel hyperparameter is taken to be the empirical Bayes estimate $\ell = \argmax p(\by\mid X, \ell)$ where $p(\by\mid X,\ell)$ given by Equation (\ref{eq:gp_regression_marginal_likelihood}), optimized via gradient descent.}
+    \caption{This plot shows mean (black) and 95\% confidence interval (light blue) for predictive distribution $p(\mathbf{f}_*\mid X,\by, X_*)$ fit using Gaussian process regression assuming a SE prior over $f\sim\sG\sP(0,k_{SE})$ of varying lengthscale $\ell$ and observed sample sizes $n$. The middle row's kernel hyperparameter is taken to be the empirical Bayes estimate $\ell = \argmax p(\by\mid X, \ell)$ where $p(\by\mid X,\ell)$ given by Equation (\ref{eq:gp_regression_marginal_likelihood}), optimized via gradient descent. Here the we cheat by providing the groundtruth noise $\sigma_n=.1$. Optimizing for $\pc{\ell,\sigma_n}$ is hard and prone to local minima.}
     \label{fig:plt_gp_regression_inference}
 \end{figure}
 \end{center}
@@ -122,6 +124,39 @@ This formulation is analogous to that in Bayesian linear regression where the ma
 \end{align}
 In Bayesian model selection, model hyperparameters for Gaussian process regression $\theta = \pc{\sigma_n, \ell}$ can be found by maximizing the marginal likelihood or the type II likelihood $\theta^* = \argmax_{\theta}\, \log p(\by\mid X, \theta)$.
 
+
+
+\section{Multitask Learning}
+
+\subsection{MTGP}
+
+Multitask Gaussian Process (MTGP) regression \cite{bonillaMultitaskGaussianProcess2008} is a method to do multitask learning using Gaussian process. Given design $X\in\R^{N\times D}, Y\in\R^{N\times M}$, we want to learn a vector valued regressor $f:\R^D\to\R^M$ that fits data well. We can put a GP prior over $f \sim \sG\sP(0,k)$ where the covariance function models both the relationship between inputs via $k_x$ and similarity between tasks / output coordinate via $k_t$, specifically define $k$ as tensor product $k_x\otimes k_t$ over $\sX\times\sT$ where $\sT = \pc{1,2,\cdots,M}$ is space of tasks,
+\begin{align}
+    k((x,t),(x',t')) = k_x(x,x')\; k_t(t,t')
+\end{align}
+Consider a likelihood model with task specific noise variance $y_t \sim \sN( f_t(x), \sigma_t^2 )$. Denote $Y_t$ as $t$-th column in $Y$, then $Y_t \sim \sN( 0,  k_t(t,t) K + \sigma_t^2 I )$ where $\pb{K}_{ij} = k_x(x_i,x_j)$. Furthermore, if we let $\by = \text{vec}(Y) = (Y_1,\cdots,Y_M)$, then $\by \sim \sN(0,\Sigma)$ where
+\begin{align}
+    \Sigma = 
+    K^t \otimes K + D \otimes I
+    = 
+    \begin{bmatrix}
+        K^t_{11} K + \sigma_1^2 I & K^t_{12} K & \cdots & K^t_{1M} K \\ 
+        K^t_{21} K & K^t_{22}K + \sigma_2^2 I & \cdots & K^t_{2M} K \\ 
+        \vdots & \vdots & \ddots & \vdots \\
+        K^t_{M1} K & K^t_{M2}K  & \cdots & K^t_{MM} K + \sigma_M^2 I \\
+    \end{bmatrix}
+\end{align}
+The task similarity matrix $K_t$ ($\pb{K_t}_{ij} = k_t(i,j)$) induce correlation between tasks. Intuitively, if two tasks $t,t'$ are related in the sense an optimal regressor for $y_t,y_{t'}$ vary together in some systematic manner, then observation at some location $(x,y_t)$ constrains what the value $y_{t'}$ can take. The degree to which we can reduce the uncertainty that $y_{t'}$ can takes depends on $k_t(t,t')$. Therefore, a learner which utilizes information obtained from related tasks can be learnt more efficiently than if learnt without knowledge of other tasks, in which case $K_t = I$. \cite{bonillaMultitaskGaussianProcess2008} proposes to use EM to first impute missing latent variables $\mathbf{f}$ from noisy observations $\by$, then find hyperparameters $\theta = \pc{ \theta_{k_x}, K^t }$ by maximizing the full data likelihoods $p(\by,\mathbf{f} \mid \theta_{k})$. Alternatively, we can simply can learn the hyperparameters by applying gradient descent to maximize type-II likelihood $\theta^* = \argmax_{\theta} \log p(\by\mid X, \theta)$.
+
+\subsection{Asymmetric MTGP}
+
+When the goal is to improve performance of a target/main task given the other tasks, optimizing for maximum marginal likelihood of all tasks is suboptimal. 
+
+There are extension of MTGP to the asymmetric case by assuming that auxiliary task functions are addition of a shared main task function and task specific function \cite{leenFocusedMultitaskLearning2012}, however it still uses the full marginal likelihood for all tasks to find task similarity and kernel hyperparameters. Ideally, we want
+\begin{enumerate}
+    \item An objective which depends on likelihood of main task only
+    \item Automatically learn the task similarity such that auxiliary task or side information can improve learning of main task. If a side task is totally unrelated to the main task, it should have minimal influence on learning of the main task.
+\end{enumerate}
 
 
  

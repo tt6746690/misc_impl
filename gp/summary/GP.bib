@@ -1,4 +1,29 @@
 
+@article{wilsonStochasticVariationalDeep2016,
+	title = {Stochastic Variational Deep Kernel Learning},
+	url = {https://arxiv.org/abs/1611.00336v2},
+	abstract = {Deep kernel learning combines the non-parametric flexibility of kernel
+methods with the inductive biases of deep learning architectures. We propose a
+novel deep kernel learning model and stochastic variational inference procedure
+which generalizes deep kernel learning approaches to enable classification,
+multi-task learning, additive covariance structures, and stochastic gradient
+training. Specifically, we apply additive base kernels to subsets of output
+features from deep neural architectures, and jointly learn the parameters of
+the base kernels and deep network through a Gaussian process marginal
+likelihood objective. Within this framework, we derive an efficient form of
+stochastic variational inference which leverages local kernel interpolation,
+inducing points, and structure exploiting algebra. We show improved performance
+over stand alone deep networks, {SVMs}, and state of the art scalable Gaussian
+processes on several classification benchmarks, including an airline delay
+dataset containing 6 million training points, {CIFAR}, and {ImageNet}.},
+	author = {Wilson, Andrew Gordon and Hu, Zhiting and Salakhutdinov, Ruslan and Xing, Eric P.},
+	urldate = {2020-12-28},
+	date = {2016-11-01},
+	langid = {english},
+	keywords = {good, tbr},
+	file = {Wilson et al_2016_Stochastic Variational Deep Kernel Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Wilson et al_2016_Stochastic Variational Deep Kernel Learning.pdf:application/pdf}
+}
+
 @article{snelsonVariableNoiseDimensionality2012,
 	title = {Variable noise and dimensionality reduction for sparse Gaussian processes},
 	abstract = {The sparse pseudo-input Gaussian process ({SPGP}) is a new approximation method for speeding up {GP} regression in the case of a large number of data points N . The approximation is controlled by the gradient optimization of a small set of M ‘pseudoinputs’, thereby reducing complexity from O(N 3) to O(M 2N ). One limitation of the {SPGP} is that this optimization space becomes impractically big for high dimensional data sets. This paper addresses this limitation by performing automatic dimensionality reduction. A projection of the input space to a low dimensional space is learned in a supervised manner, alongside the pseudoinputs, which now live in this reduced space. The paper also investigates the suitability of the {SPGP} for modeling data with inputdependent noise. A further extension of the model is made to make it even more powerful in this regard – we learn an uncertainty parameter for each pseudo-input. The combination of sparsity, reduced dimension, and input-dependent noise makes it possible to apply {GPs} to much larger and more complex data sets than was previously practical. We demonstrate the beneﬁts of these methods on several synthetic and real world problems.},
@@ -79,7 +104,7 @@
 	author = {Futoma, Joseph and Hariharan, Sanjay and Heller, Katherine},
 	date = {2017},
 	langid = {english},
-	keywords = {tbr},
+	keywords = {read},
 	file = {Futoma et al. - Learning to Detect Sepsis with a Multitask Gaussia.pdf:/Users/wpq/Zotero/storage/AYENSMZR/Futoma et al. - Learning to Detect Sepsis with a Multitask Gaussia.pdf:application/pdf}
 }
 
@@ -149,4 +174,175 @@
 	langid = {english},
 	keywords = {tbr},
 	file = {Hinton_Salakhutdinov_2007_Using Deep Belief Nets to Learn Covariance Kernels for Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Hinton_Salakhutdinov_2007_Using Deep Belief Nets to Learn Covariance Kernels for Gaussian Processes.pdf:application/pdf}
+}
+
+@article{wilsonEfficientlySamplingFunctions2020,
+	title = {Efficiently Sampling Functions from Gaussian Process Posteriors},
+	url = {http://arxiv.org/abs/2002.09309},
+	abstract = {Gaussian processes are the gold standard for many real-world modeling problems, especially in cases where a model's success hinges upon its ability to faithfully represent predictive uncertainty. These problems typically exist as parts of larger frameworks, wherein quantities of interest are ultimately defined by integrating over posterior distributions. These quantities are frequently intractable, motivating the use of Monte Carlo methods. Despite substantial progress in scaling up Gaussian processes to large training sets, methods for accurately generating draws from their posterior distributions still scale cubically in the number of test locations. We identify a decomposition of Gaussian processes that naturally lends itself to scalable sampling by separating out the prior from the data. Building off of this factorization, we propose an easy-to-use and general-purpose approach for fast posterior sampling, which seamlessly pairs with sparse approximations to afford scalability both during training and at test time. In a series of experiments designed to test competing sampling schemes' statistical properties and practical ramifications, we demonstrate how decoupled sample paths accurately represent Gaussian process posteriors at a fraction of the usual cost.},
+	journaltitle = {{arXiv}:2002.09309 [cs, stat]},
+	author = {Wilson, James T. and Borovitskiy, Viacheslav and Terenin, Alexander and Mostowsky, Peter and Deisenroth, Marc Peter},
+	urldate = {2021-02-12},
+	date = {2020-08-16},
+	eprinttype = {arxiv},
+	eprint = {2002.09309},
+	keywords = {tbr},
+	file = {Wilson et al_2020_Efficiently Sampling Functions from Gaussian Process Posteriors.pdf:/Users/wpq/Dropbox (MIT)/zotero/Wilson et al_2020_Efficiently Sampling Functions from Gaussian Process Posteriors.pdf:application/pdf}
+}
+
+@article{alaaBayesianInferenceIndividualized2017,
+	title = {Bayesian Inference of Individualized Treatment Effects using Multi-task Gaussian Processes},
+	url = {https://arxiv.org/abs/1704.02801v2},
+	abstract = {Predicated on the increasing abundance of electronic health records, we
+investi- gate the problem of inferring individualized treatment effects using
+observational data. Stemming from the potential outcomes model, we propose a
+novel multi- task learning framework in which factual and counterfactual
+outcomes are mod- eled as the outputs of a function in a vector-valued
+reproducing kernel Hilbert space ({vvRKHS}). We develop a nonparametric Bayesian
+method for learning the treatment effects using a multi-task Gaussian process
+({GP}) with a linear coregion- alization kernel as a prior over the {vvRKHS}. The
+Bayesian approach allows us to compute individualized measures of confidence in
+our estimates via pointwise credible intervals, which are crucial for realizing
+the full potential of precision medicine. The impact of selection bias is
+alleviated via a risk-based empirical Bayes method for adapting the multi-task
+{GP} prior, which jointly minimizes the empirical error in factual outcomes and
+the uncertainty in (unobserved) counter- factual outcomes. We conduct
+experiments on observational datasets for an inter- ventional social program
+applied to premature infants, and a left ventricular assist device applied to
+cardiac patients wait-listed for a heart transplant. In both experi- ments, we
+show that our method significantly outperforms the state-of-the-art.},
+	author = {Alaa, Ahmed M. and van der Schaar, Mihaela},
+	urldate = {2021-02-16},
+	date = {2017-04-10},
+	langid = {english},
+	keywords = {tbr},
+	file = {Alaa_van der Schaar_2017_Bayesian Inference of Individualized Treatment Effects using Multi-task Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Alaa_van der Schaar_2017_Bayesian Inference of Individualized Treatment Effects using Multi-task Gaussian Processes.pdf:application/pdf}
+}
+
+@article{swerskyMultiTaskBayesianOptimization2013a,
+	title = {Multi-Task Bayesian Optimization},
+	abstract = {Bayesian optimization has recently been proposed as a framework for automatically tuning the hyperparameters of machine learning models and has been shown to yield state-of-the-art performance with impressive ease and efﬁciency. In this paper, we explore whether it is possible to transfer the knowledge gained from previous optimizations to new tasks in order to ﬁnd optimal hyperparameter settings more efﬁciently. Our approach is based on extending multi-task Gaussian processes to the framework of Bayesian optimization. We show that this method signiﬁcantly speeds up the optimization process when compared to the standard single-task approach. We further propose a straightforward extension of our algorithm in order to jointly minimize the average error across multiple tasks and demonstrate how this can be used to greatly speed up k-fold cross-validation. Lastly, we propose an adaptation of a recently developed acquisition function, entropy search, to the cost-sensitive, multi-task setting. We demonstrate the utility of this new acquisition function by leveraging a small dataset to explore hyperparameter settings for a large dataset. Our algorithm dynamically chooses which dataset to query in order to yield the most information per unit cost.},
+	pages = {10},
+	author = {Swersky, Kevin and Snoek, Jasper and Adams, Ryan P},
+	date = {2013},
+	langid = {english},
+	keywords = {tbr},
+	file = {Swersky et al. - Multi-Task Bayesian Optimization.pdf:/Users/wpq/Zotero/storage/W7DGRVLW/Swersky et al. - Multi-Task Bayesian Optimization.pdf:application/pdf}
+}
+
+@article{alvarezKernelsVectorValuedFunctions2012,
+	title = {Kernels for Vector-Valued Functions: a Review},
+	url = {http://arxiv.org/abs/1106.6251},
+	shorttitle = {Kernels for Vector-Valued Functions},
+	abstract = {Kernel methods are among the most popular techniques in machine learning. From a frequentist/discriminative perspective they play a central role in regularization theory as they provide a natural choice for the hypotheses space and the regularization functional through the notion of reproducing kernel Hilbert spaces. From a Bayesian/generative perspective they are the key in the context of Gaussian processes, where the kernel function is also known as the covariance function. Traditionally, kernel methods have been used in supervised learning problem with scalar outputs and indeed there has been a considerable amount of work devoted to designing and learning kernels. More recently there has been an increasing interest in methods that deal with multiple outputs, motivated partly by frameworks like multitask learning. In this paper, we review different methods to design or learn valid kernel functions for multiple outputs, paying particular attention to the connection between probabilistic and functional methods.},
+	journaltitle = {{arXiv}:1106.6251 [cs, math, stat]},
+	author = {Alvarez, Mauricio A. and Rosasco, Lorenzo and Lawrence, Neil D.},
+	urldate = {2021-02-16},
+	date = {2012-04-16},
+	eprinttype = {arxiv},
+	eprint = {1106.6251},
+	keywords = {tbr},
+	file = {Alvarez et al_2012_Kernels for Vector-Valued Functions - a Review.pdf:/Users/wpq/Dropbox (MIT)/zotero/Alvarez et al_2012_Kernels for Vector-Valued Functions - a Review.pdf:application/pdf}
+}
+
+@article{zhangMaximumlikelihoodEstimationMultivariate2007,
+	title = {Maximum-likelihood estimation for multivariate spatial linear coregionalization models},
+	volume = {18},
+	issn = {11804009, 1099095X},
+	url = {http://doi.wiley.com/10.1002/env.807},
+	doi = {10.1002/env.807},
+	abstract = {A multivariate spatial linear coregionalization model is considered that incorporates the Mate´rn class of covariograms. An {EM} algorithm is developed for maximum-likelihood estimation that has a few desirable properties and is capable of handling high-dimensional data. Most estimates in the {EM} algorithm are updated through closed form expressions and these estimates automatically satisfy necessary constraints. The model and algorithm are illustrated through a real example. Copyright \# 2006 John Wiley \& Sons, Ltd.},
+	pages = {125--139},
+	number = {2},
+	journaltitle = {Environmetrics},
+	shortjournal = {Environmetrics},
+	author = {Zhang, Hao},
+	urldate = {2021-02-16},
+	date = {2007-03},
+	langid = {english},
+	keywords = {tbr},
+	file = {Zhang_2007_Maximum-likelihood estimation for multivariate spatial linear coregionalization models.pdf:/Users/wpq/Dropbox (MIT)/zotero/Zhang_2007_Maximum-likelihood estimation for multivariate spatial linear coregionalization models.pdf:application/pdf}
+}
+
+@incollection{gerigSpatiallyVaryingRegistration2014,
+	location = {Cham},
+	title = {Spatially Varying Registration Using Gaussian Processes},
+	volume = {8674},
+	isbn = {978-3-319-10469-0 978-3-319-10470-6},
+	url = {http://link.springer.com/10.1007/978-3-319-10470-6_52},
+	abstract = {In this paper we propose a new approach for spatially-varying registration using Gaussian process priors. The method is based on the idea of spectral tempering, i.e. the spectrum of the Gaussian process is modiﬁed depending on a user deﬁned tempering function. The result is a non-stationary Gaussian process, which induces diﬀerent amount of smoothness in diﬀerent areas. In contrast to most other schemes for spatially-varying registration, our approach does not require any change in the registration algorithm itself, but only aﬀects the prior model. Thus we can obtain spatially-varying versions of any registration method whose deformation prior can be formulated in terms of a Gaussian process. This includes for example most spline-based models, but also statistical shape or deformation models. We present results for the problem of atlas based skull-registration of cone beam {CT} images. These datasets are diﬃcult to register as they contain a large amount of noise around the teeth. We show that with our method we can become robust against noise, but still obtain accurate correspondence where the data is clean.},
+	pages = {413--420},
+	booktitle = {Medical Image Computing and Computer-Assisted Intervention – {MICCAI} 2014},
+	publisher = {Springer International Publishing},
+	author = {Gerig, Thomas and Shahim, Kamal and Reyes, Mauricio and Vetter, Thomas and Lüthi, Marcel},
+	editor = {Golland, Polina and Hata, Nobuhiko and Barillot, Christian and Hornegger, Joachim and Howe, Robert},
+	urldate = {2021-02-18},
+	date = {2014},
+	langid = {english},
+	doi = {10.1007/978-3-319-10470-6_52},
+	note = {Series Title: Lecture Notes in Computer Science},
+	keywords = {tbr},
+	file = {Gerig et al_2014_Spatially Varying Registration Using Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Gerig et al_2014_Spatially Varying Registration Using Gaussian Processes.pdf:application/pdf}
+}
+
+@article{lawrenceProbabilisticNonlinearPrincipal2005,
+	title = {Probabilistic Non-linear Principal Component Analysis with Gaussian Process Latent Variable Models},
+	volume = {6},
+	issn = {1533-7928},
+	url = {http://jmlr.org/papers/v6/lawrence05a.html},
+	pages = {1783--1816},
+	number = {60},
+	journaltitle = {Journal of Machine Learning Research},
+	author = {Lawrence, Neil},
+	urldate = {2021-02-19},
+	date = {2005},
+	keywords = {good, read},
+	file = {Lawrence_2005_Probabilistic Non-linear Principal Component Analysis with Gaussian Process Latent Variable Models.pdf:/Users/wpq/Dropbox (MIT)/zotero/Lawrence_2005_Probabilistic Non-linear Principal Component Analysis with Gaussian Process Latent Variable Models.pdf:application/pdf}
+}
+
+@article{damianouVariationalInferenceLatent2016,
+	title = {Variational Inference for Latent Variables and Uncertain Inputs in Gaussian Processes},
+	volume = {17},
+	issn = {1533-7928},
+	url = {http://jmlr.org/papers/v17/damianou16a.html},
+	pages = {1--62},
+	number = {42},
+	journaltitle = {Journal of Machine Learning Research},
+	author = {Damianou, Andreas C. and Titsias, Michalis K. and Lawrence, Neil D.},
+	urldate = {2021-02-19},
+	date = {2016},
+	keywords = {tbr},
+	file = {Damianou et al_2016_Variational Inference for Latent Variables and Uncertain Inputs in Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Damianou et al_2016_Variational Inference for Latent Variables and Uncertain Inputs in Gaussian Processes.pdf:application/pdf}
+}
+
+@article{damianouSemidescribedSemisupervisedLearning2015,
+	title = {Semi-described and semi-supervised learning with Gaussian processes},
+	url = {http://arxiv.org/abs/1509.01168},
+	abstract = {Propagating input uncertainty through non-linear Gaussian process ({GP}) mappings is intractable. This hinders the task of training {GPs} using uncertain and partially observed inputs. In this paper we refer to this task as "semi-described learning". We then introduce a {GP} framework that solves both, the semi-described and the semi-supervised learning problems (where missing values occur in the outputs). Auto-regressive state space simulation is also recognised as a special case of semi-described learning. To achieve our goal we develop variational methods for handling semi-described inputs in {GPs}, and couple them with algorithms that allow for imputing the missing values while treating the uncertainty in a principled, Bayesian manner. Extensive experiments on simulated and real-world data study the problems of iterative forecasting and regression/classification with missing values. The results suggest that the principled propagation of uncertainty stemming from our framework can significantly improve performance in these tasks.},
+	journaltitle = {{arXiv}:1509.01168 [cs, math, stat]},
+	author = {Damianou, Andreas and Lawrence, Neil D.},
+	urldate = {2021-02-19},
+	date = {2015-09-03},
+	eprinttype = {arxiv},
+	eprint = {1509.01168},
+	keywords = {tbr},
+	file = {Damianou_Lawrence_2015_Semi-described and semi-supervised learning with Gaussian processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Damianou_Lawrence_2015_Semi-described and semi-supervised learning with Gaussian processes.pdf:application/pdf}
+}
+
+@article{ghassemiMultivariateTimeseriesModeling2015,
+	title = {A Multivariate Timeseries Modeling Approach to Severity of Illness Assessment and Forecasting in {ICU} with Sparse, Heterogeneous Clinical Data},
+	volume = {2015},
+	issn = {2159-5399},
+	url = {https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4864016/},
+	abstract = {The ability to determine patient acuity (or severity of illness) has immediate practical use for clinicians. We evaluate the use of multivariate timeseries modeling with the multi-task Gaussian process ({GP}) models using noisy, incomplete, sparse, heterogeneous and unevenly-sampled clinical data, including both physiological signals and clinical notes. The learned multi-task {GP} ({MTGP}) hyperparameters are then used to assess and forecast patient acuity. Experiments were conducted with two real clinical data sets acquired from {ICU} patients: firstly, estimating cerebrovascular pressure reactivity, an important indicator of secondary damage for traumatic brain injury patients, by learning the interactions between intracranial pressure and mean arterial blood pressure signals, and secondly, mortality prediction using clinical progress notes. In both cases, {MTGPs} provided improved results: an {MTGP} model provided better results than single-task {GP} models for signal interpolation and forecasting (0.91 vs 0.69 {RMSE}), and the use of {MTGP} hyperparameters obtained improved results when used as additional classification features (0.812 vs 0.788 {AUC}).},
+	pages = {446--453},
+	journaltitle = {Proceedings of the ... {AAAI} Conference on Artificial Intelligence. {AAAI} Conference on Artificial Intelligence},
+	shortjournal = {Proc Conf {AAAI} Artif Intell},
+	author = {Ghassemi, Marzyeh and Pimentel, Marco A.F. and Naumann, Tristan and Brennan, Thomas and Clifton, David A. and Szolovits, Peter and Feng, Mengling},
+	urldate = {2021-02-20},
+	date = {2015-01},
+	pmid = {27182460},
+	pmcid = {PMC4864016},
+	keywords = {read},
+	file = {Ghassemi et al_2015_A Multivariate Timeseries Modeling Approach to Severity of Illness Assessment and Forecasting in ICU with Sparse, Heterogeneous Clinical Data.pdf:/Users/wpq/Dropbox (MIT)/zotero/Ghassemi et al_2015_A Multivariate Timeseries Modeling Approach to Severity of Illness Assessment and Forecasting in ICU with Sparse, Heterogeneous Clinical Data.pdf:application/pdf}
 }

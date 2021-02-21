@@ -1,0 +1,902 @@
+
+@inproceedings{caruanaMultitaskLearningKnowledgeBased1993,
+	title = {Multitask Learning: A Knowledge-Based Source of Inductive Bias},
+	shorttitle = {Multitask Learning},
+	abstract = {This paper suggests that it may be easier to learn several hard tasks at one time than to learn these same tasks separately. In effect, the information provided by the training signal for each task serves as a domain-specific inductive bias for the other tasks. Frequentlythe worldgives us clusters of related tasks to learn. When it does not, it is often straightforward to create additional tasks. For many domains, acquiring inductive bias by collecting additional teaching signal may be more practical than the traditional approach of codifying domain-specific biases acquired from human expertise. We call this approach {MultitaskLearning} ({MTL}). Since much of the power of an inductive learner follows directly from its inductive bias, multitask learning may yield more powerful learning. An empirical example of multitask connectionist learning is presented where learning improves by training one network on several related tasks at the same time. Multitask decision tree induction is also outl...},
+	pages = {41--48},
+	booktitle = {Proceedings of the Tenth International Conference on Machine Learning},
+	publisher = {Morgan Kaufmann},
+	author = {Caruana, Richard},
+	date = {1993},
+	keywords = {tbr},
+	file = {Caruana_1993_Multitask Learning - A Knowledge-Based Source of Inductive Bias.pdf:/Users/wpq/Dropbox (MIT)/zotero/Caruana_1993_Multitask Learning - A Knowledge-Based Source of Inductive Bias.pdf:application/pdf}
+}
+
+@book{caruanaMultitaskLearning1997,
+	title = {Multitask Learning},
+	abstract = {Multitask Learning is an approach to inductive transfer that improves generalization by using the domain information contained in the training signals of related tasks as an inductive bias. It does this by learning tasks in parallel while using a shared representation; what is learned for each task can help other tasks be learned better. This paper reviews prior work on {MTL}, presents new evidence that {MTL} in backprop nets discovers task relatedness without the need of supervisory signals, and presents new results for {MTL} with k-nearest neighbor and kernel regression. In this paper we demonstrate multitask learning in three domains. We explain how multitask learning works, and show that there are many opportunities for multitask learning in real domains. We present an algorithm and results for multitask learning with case-based methods like k-nearest neighbor and kernel regression, and sketch an algorithm for multitask learning in decision trees. Because multitask learning works, can be applied to many different kinds of domains, and can be used with different learning algorithms, we conjecture there will be many opportunities for its use on real-world problems.},
+	author = {Caruana, Rich},
+	date = {1997},
+	keywords = {good, read},
+	file = {Caruana_1997_Multitask Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Caruana_1997_Multitask Learning.pdf:application/pdf}
+}
+
+@article{kendallMultiTaskLearningUsing2018,
+	title = {Multi-Task Learning Using Uncertainty to Weigh Losses for Scene Geometry and Semantics},
+	url = {http://arxiv.org/abs/1705.07115},
+	abstract = {Numerous deep learning applications benefit from multi-task learning with multiple regression and classification objectives. In this paper we make the observation that the performance of such systems is strongly dependent on the relative weighting between each task's loss. Tuning these weights by hand is a difficult and expensive process, making multi-task learning prohibitive in practice. We propose a principled approach to multi-task deep learning which weighs multiple loss functions by considering the homoscedastic uncertainty of each task. This allows us to simultaneously learn various quantities with different units or scales in both classification and regression settings. We demonstrate our model learning per-pixel depth regression, semantic and instance segmentation from a monocular input image. Perhaps surprisingly, we show our model can learn multi-task weightings and outperform separate models trained individually on each task.},
+	journaltitle = {{arXiv}:1705.07115 [cs]},
+	author = {Kendall, Alex and Gal, Yarin and Cipolla, Roberto},
+	urldate = {2020-10-24},
+	date = {2018-04-24},
+	eprinttype = {arxiv},
+	eprint = {1705.07115},
+	keywords = {read},
+	file = {Kendall et al_2018_Multi-Task Learning Using Uncertainty to Weigh Losses for Scene Geometry and Semantics.pdf:/Users/wpq/Dropbox (MIT)/zotero/Kendall et al_2018_Multi-Task Learning Using Uncertainty to Weigh Losses for Scene Geometry and Semantics.pdf:application/pdf}
+}
+
+@article{senerMultiTaskLearningMultiObjective2019,
+	title = {Multi-Task Learning as Multi-Objective Optimization},
+	url = {http://arxiv.org/abs/1810.04650},
+	abstract = {In multi-task learning, multiple tasks are solved jointly, sharing inductive bias between them. Multi-task learning is inherently a multi-objective problem because different tasks may conflict, necessitating a trade-off. A common compromise is to optimize a proxy objective that minimizes a weighted linear combination of per-task losses. However, this workaround is only valid when the tasks do not compete, which is rarely the case. In this paper, we explicitly cast multi-task learning as multi-objective optimization, with the overall objective of finding a Pareto optimal solution. To this end, we use algorithms developed in the gradient-based multi-objective optimization literature. These algorithms are not directly applicable to large-scale learning problems since they scale poorly with the dimensionality of the gradients and the number of tasks. We therefore propose an upper bound for the multi-objective loss and show that it can be optimized efficiently. We further prove that optimizing this upper bound yields a Pareto optimal solution under realistic assumptions. We apply our method to a variety of multi-task deep learning problems including digit classification, scene understanding (joint semantic segmentation, instance segmentation, and depth estimation), and multi-label classification. Our method produces higher-performing models than recent multi-task learning formulations or per-task training.},
+	journaltitle = {{arXiv}:1810.04650 [cs, stat]},
+	author = {Sener, Ozan and Koltun, Vladlen},
+	urldate = {2020-10-24},
+	date = {2019-01-11},
+	eprinttype = {arxiv},
+	eprint = {1810.04650},
+	keywords = {tbr},
+	file = {Sener_Koltun_2019_Multi-Task Learning as Multi-Objective Optimization.pdf:/Users/wpq/Dropbox (MIT)/zotero/Sener_Koltun_2019_Multi-Task Learning as Multi-Objective Optimization.pdf:application/pdf}
+}
+
+@article{liangSimpleGeneralApproach2020,
+	title = {A Simple General Approach to Balance Task Difficulty in Multi-Task Learning},
+	url = {http://arxiv.org/abs/2002.04792},
+	abstract = {In multi-task learning, difficulty levels of different tasks are varying. There are many works to handle this situation and we classify them into five categories, including the direct sum approach, the weighted sum approach, the maximum approach, the curriculum learning approach, and the multi-objective optimization approach. Those approaches have their own limitations, for example, using manually designed rules to update task weights, non-smooth objective function, and failing to incorporate other functions than training losses. In this paper, to alleviate those limitations, we propose a Balanced Multi-Task Learning ({BMTL}) framework. Different from existing studies which rely on task weighting, the {BMTL} framework proposes to transform the training loss of each task to balance difficulty levels among tasks based on an intuitive idea that tasks with larger training losses will receive more attention during the optimization procedure. We analyze the transformation function and derive necessary conditions. The proposed {BMTL} framework is very simple and it can be combined with most multi-task learning models. Empirical studies show the state-of-the-art performance of the proposed {BMTL} framework.},
+	journaltitle = {{arXiv}:2002.04792 [cs, stat]},
+	author = {Liang, Sicong and Zhang, Yu},
+	urldate = {2020-11-16},
+	date = {2020-02-11},
+	eprinttype = {arxiv},
+	eprint = {2002.04792},
+	note = {version: 1},
+	keywords = {read},
+	file = {Liang_Zhang_2020_A Simple General Approach to Balance Task Difficulty in Multi-Task Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Liang_Zhang_2020_A Simple General Approach to Balance Task Difficulty in Multi-Task Learning.pdf:application/pdf}
+}
+
+@article{chenGradNormGradientNormalization2018,
+	title = {{GradNorm}: Gradient Normalization for Adaptive Loss Balancing in Deep Multitask Networks},
+	url = {http://arxiv.org/abs/1711.02257},
+	shorttitle = {{GradNorm}},
+	abstract = {Deep multitask networks, in which one neural network produces multiple predictive outputs, can offer better speed and performance than their single-task counterparts but are challenging to train properly. We present a gradient normalization ({GradNorm}) algorithm that automatically balances training in deep multitask models by dynamically tuning gradient magnitudes. We show that for various network architectures, for both regression and classification tasks, and on both synthetic and real datasets, {GradNorm} improves accuracy and reduces overfitting across multiple tasks when compared to single-task networks, static baselines, and other adaptive multitask loss balancing techniques. {GradNorm} also matches or surpasses the performance of exhaustive grid search methods, despite only involving a single asymmetry hyperparameter \${\textbackslash}alpha\$. Thus, what was once a tedious search process that incurred exponentially more compute for each task added can now be accomplished within a few training runs, irrespective of the number of tasks. Ultimately, we will demonstrate that gradient manipulation affords us great control over the training dynamics of multitask networks and may be one of the keys to unlocking the potential of multitask learning.},
+	journaltitle = {{arXiv}:1711.02257 [cs]},
+	author = {Chen, Zhao and Badrinarayanan, Vijay and Lee, Chen-Yu and Rabinovich, Andrew},
+	urldate = {2020-11-16},
+	date = {2018-06-12},
+	eprinttype = {arxiv},
+	eprint = {1711.02257},
+	keywords = {read},
+	file = {Chen et al_2018_GradNorm - Gradient Normalization for Adaptive Loss Balancing in Deep Multitask Networks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Chen et al_2018_GradNorm - Gradient Normalization for Adaptive Loss Balancing in Deep Multitask Networks.pdf:application/pdf}
+}
+
+@article{romera-paredesExploitingUnrelatedTasks2012,
+	title = {Exploiting Unrelated Tasks in Multi-Task Learning},
+	abstract = {We study the problem of learning a group of principal tasks using a group of auxiliary tasks, unrelated to the principal ones. In many applications, joint learning of unrelated tasks which use the same input data can be beneﬁcial. The reason is that prior knowledge about which tasks are unrelated can lead to sparser and more informative representations for each task, essentially screening out idiosyncrasies of the data distribution. We propose a novel method which builds on a prior multitask methodology by favoring a shared low dimensional representation within each group of tasks. In addition, we impose a penalty on tasks from different groups which encourages the two representations to be orthogonal. We further discuss a condition which ensures convexity of the optimization problem and argue that it can be solved by alternating minimization. We present experiments on synthetic and real data, which indicate that incorporating unrelated tasks can improve signiﬁcantly over standard multi-task learning methods.},
+	pages = {9},
+	author = {Romera-Paredes, Bernardino and Argyriou, Andreas and Bianchi-Berthouze, Nadia and Pontil, Massimiliano},
+	date = {2012},
+	langid = {english},
+	keywords = {read},
+	file = {Romera-Paredes et al_2012_Exploiting Unrelated Tasks in Multi-Task Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Romera-Paredes et al_2012_Exploiting Unrelated Tasks in Multi-Task Learning.pdf:application/pdf}
+}
+
+@article{argyriouMultiTaskFeatureLearning2006,
+	title = {Multi-Task Feature Learning},
+	abstract = {We present a method for learning a low-dimensional representation which is shared across a set of multiple related tasks. The method builds upon the wellknown 1-norm regularization problem using a new regularizer which controls the number of learned features common for all the tasks. We show that this problem is equivalent to a convex optimization problem and develop an iterative algorithm for solving it. The algorithm has a simple interpretation: it alternately performs a supervised and an unsupervised step, where in the latter step we learn commonacross-tasks representations and in the former step we learn task-speciﬁc functions using these representations. We report experiments on a simulated and a real data set which demonstrate that the proposed method dramatically improves the performance relative to learning each task independently. Our algorithm can also be used, as a special case, to simply select – not learn – a few common features across the tasks.},
+	pages = {8},
+	author = {Argyriou, Andreas and Evgeniou, Theodoros and Pontil, Massimiliano},
+	date = {2006},
+	langid = {english},
+	keywords = {read},
+	file = {Argyriou et al_2006_Multi-Task Feature Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Argyriou et al_2006_Multi-Task Feature Learning.pdf:application/pdf}
+}
+
+@article{evgeniouLearningMultipleTasks2005,
+	title = {Learning Multiple Tasks with Kernel Methods},
+	volume = {6},
+	issn = {1533-7928},
+	url = {http://jmlr.org/papers/v6/evgeniou05a.html},
+	pages = {615--637},
+	number = {21},
+	journaltitle = {Journal of Machine Learning Research},
+	author = {Evgeniou, Theodoros and Micchelli, Charles A. and Pontil, Massimiliano},
+	urldate = {2020-11-16},
+	date = {2005},
+	keywords = {tbr},
+	file = {Evgeniou et al_2005_Learning Multiple Tasks with Kernel Methods.pdf:/Users/wpq/Dropbox (MIT)/zotero/Evgeniou et al_2005_Learning Multiple Tasks with Kernel Methods.pdf:application/pdf}
+}
+
+@article{andoFrameworkLearningPredictive2005,
+	title = {A Framework for Learning Predictive Structures from Multiple Tasks and Unlabeled Data},
+	abstract = {One of the most important issues in machine learning is whether one can improve the performance of a supervised learning algorithm by including unlabeled data. Methods that use both labeled and unlabeled data are generally referred to as semi-supervised learning. Although a number of such methods are proposed, at the current stage, we still don’t have a complete understanding of their eﬀectiveness. This paper investigates a closely related problem, which leads to a novel approach to semi-supervised learning. Speciﬁcally we consider learning predictive structures on hypothesis spaces (that is, what kind of classiﬁers have good predictive power) from multiple learning tasks. We present a general framework in which the structural learning problem can be formulated and analyzed theoretically, and relate it to learning with unlabeled data. Under this framework, algorithms for structural learning will be proposed, and computational issues will be investigated. Experiments will be given to demonstrate the eﬀectiveness of the proposed algorithms in the semi-supervised learning setting.},
+	pages = {37},
+	author = {Ando, Rie Kubota and Zhang, Tong},
+	date = {2005},
+	langid = {english},
+	keywords = {tbr},
+	file = {Ando_Zhang_2005_A Framework for Learning Predictive Structures from Multiple Tasks and Unlabeled Data.pdf:/Users/wpq/Dropbox (MIT)/zotero/Ando_Zhang_2005_A Framework for Learning Predictive Structures from Multiple Tasks and Unlabeled Data.pdf:application/pdf}
+}
+
+@incollection{ben-davidExploitingTaskRelatedness2003,
+	location = {Berlin, Heidelberg},
+	title = {Exploiting Task Relatedness for Multiple Task Learning},
+	volume = {2777},
+	isbn = {978-3-540-40720-1 978-3-540-45167-9},
+	url = {http://link.springer.com/10.1007/978-3-540-45167-9_41},
+	abstract = {The approach of learning of multiple ”related” tasks simultaneously has proven quite successful in practice; however, theoretical justiﬁcation for this success has remained elusive. The starting point of previous work on multiple task learning has been that the tasks to be learnt jointly are somehow ”algorithmically related”, in the sense that the results of applying a speciﬁc learning algorithm to these tasks are assumed to be similar. We take a logical step backwards and oﬀer a data generating mechanism through which our notion of task-relatedness is deﬁned.},
+	pages = {567--580},
+	booktitle = {Learning Theory and Kernel Machines},
+	publisher = {Springer Berlin Heidelberg},
+	author = {Ben-David, Shai and Schuller, Reba},
+	editor = {Schölkopf, Bernhard and Warmuth, Manfred K.},
+	editorb = {Goos, Gerhard and Hartmanis, Juris and van Leeuwen, Jan},
+	editorbtype = {redactor},
+	urldate = {2020-11-16},
+	date = {2003},
+	langid = {english},
+	doi = {10.1007/978-3-540-45167-9_41},
+	note = {Series Title: Lecture Notes in Computer Science},
+	keywords = {tbr},
+	file = {Ben-David_Schuller_2003_Exploiting Task Relatedness for Multiple Task Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Ben-David_Schuller_2003_Exploiting Task Relatedness for Multiple Task Learning.pdf:application/pdf}
+}
+
+@inproceedings{schroderEstimatingInfluenceAuxiliary2020,
+	location = {Online},
+	title = {Estimating the influence of auxiliary tasks for multi-task learning of sequence tagging tasks},
+	url = {https://www.aclweb.org/anthology/2020.acl-main.268},
+	doi = {10.18653/v1/2020.acl-main.268},
+	abstract = {Multi-task learning ({MTL}) and transfer learning ({TL}) are techniques to overcome the issue of data scarcity when training state-of-the-art neural networks. However, finding beneficial auxiliary datasets for {MTL} or {TL} is a time- and resource-consuming trial-and-error approach. We propose new methods to automatically assess the similarity of sequence tagging datasets to identify beneficial auxiliary data for {MTL} or {TL} setups. Our methods can compute the similarity between any two sequence tagging datasets, they do not need to be annotated with the same tagset or multiple labels in parallel. Additionally, our methods take tokens and their labels into account, which is more robust than only using either of them as an information source, as conducted in prior work. We empirically show that our similarity measures correlate with the change in test score of neural networks that use the auxiliary dataset for {MTL} to increase the main task performance. We provide an efficient, open-source implementation.},
+	eventtitle = {{ACL} 2020},
+	pages = {2971--2985},
+	booktitle = {Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics},
+	publisher = {Association for Computational Linguistics},
+	author = {Schröder, Fynn and Biemann, Chris},
+	urldate = {2020-11-16},
+	date = {2020-07},
+	keywords = {tbr},
+	file = {Schroder_Biemann_2020_Estimating the influence of auxiliary tasks for multi-task learning of sequence tagging tasks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Schroder_Biemann_2020_Estimating the influence of auxiliary tasks for multi-task learning of sequence tagging tasks.pdf:application/pdf}
+}
+
+@article{augensteinMultitaskLearningPairwise2018,
+	title = {Multi-task Learning of Pairwise Sequence Classification Tasks Over Disparate Label Spaces},
+	url = {http://arxiv.org/abs/1802.09913},
+	abstract = {We combine multi-task learning and semi-supervised learning by inducing a joint embedding space between disparate label spaces and learning transfer functions between label embeddings, enabling us to jointly leverage unlabelled data and auxiliary, annotated datasets. We evaluate our approach on a variety of sequence classification tasks with disparate label spaces. We outperform strong single and multi-task baselines and achieve a new state-of-the-art for topic-based sentiment analysis.},
+	journaltitle = {{arXiv}:1802.09913 [cs, stat]},
+	author = {Augenstein, Isabelle and Ruder, Sebastian and Søgaard, Anders},
+	urldate = {2020-11-16},
+	date = {2018-04-09},
+	eprinttype = {arxiv},
+	eprint = {1802.09913},
+	keywords = {read},
+	file = {Augenstein et al_2018_Multi-task Learning of Pairwise Sequence Classification Tasks Over Disparate Label Spaces.pdf:/Users/wpq/Dropbox (MIT)/zotero/Augenstein et al_2018_Multi-task Learning of Pairwise Sequence Classification Tasks Over Disparate Label Spaces.pdf:application/pdf}
+}
+
+@article{argyriouConvexMultiTaskFeature2008,
+	title = {Convex Multi-Task Feature Learning},
+	abstract = {We present a method for learning sparse representations shared across multiple tasks. This method is a generalization of the well-known singletask 1-norm regularization. It is based on a novel non-convex regularizer which controls the number of learned features common across the tasks. We prove that the method is equivalent to solving a convex optimization problem for which there is an iterative algorithm which converges to an optimal solution. The algorithm has a simple interpretation: it alternately performs a supervised and an unsupervised step, where in the former step it learns task-speciﬁc functions and in the latter step it learns common-across-tasks sparse representations for these functions. We also provide an extension of the algorithm which learns sparse nonlinear representations using kernels. We report experiments on simulated and real data sets which demonstrate that the proposed method can both improve the performance relative to learning each task independently and lead to a few learned features common across related tasks. Our algorithm can also be used, as a special case, to simply select – not learn – a few common variables across the tasks3.},
+	pages = {40},
+	author = {Argyriou, Andreas and Evgeniou, Theodoros and Pontil, Massimiliano},
+	date = {2008},
+	langid = {english},
+	keywords = {read},
+	file = {Argyriou et al_2008_Convex Multi-Task Feature Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Argyriou et al_2008_Convex Multi-Task Feature Learning.pdf:application/pdf}
+}
+
+@inproceedings{yuLearningGaussianProcesses2005,
+	title = {Learning Gaussian Processes from Multiple Tasks},
+	abstract = {We consider the problem of multi-task learning, that is, learning multiple related functions. Our approach is based on a hierarchical Bayesian framework, that exploits the equivalence between parametric linear models and nonparametric Gaussian processes ({GPs}). The resulting models can be learned easily via an {EM}-algorithm. Empirical studies on multi-label text categorization suggest that the presented models allow accurate solutions of these multi-task problems. 1.},
+	pages = {1012--1019},
+	booktitle = {In Proceedings of 22nd International Conference on Machine Learning ({ICML}},
+	author = {Yu, Kai and Tresp, Volker and Schwaighofer, Anton},
+	date = {2005},
+	keywords = {read},
+	file = {Yu et al_2005_Learning Gaussian Processes from Multiple Tasks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Yu et al_2005_Learning Gaussian Processes from Multiple Tasks.pdf:application/pdf}
+}
+
+@article{zhouClusteredMultiTaskLearning2011,
+	title = {Clustered Multi-Task Learning Via Alternating Structure Optimization},
+	volume = {24},
+	url = {https://proceedings.neurips.cc/paper/2011/hash/a516a87cfcaef229b342c437fe2b95f7-Abstract.html},
+	pages = {702--710},
+	journaltitle = {Advances in Neural Information Processing Systems},
+	author = {Zhou, Jiayu and Chen, Jianhui and Ye, Jieping},
+	urldate = {2020-11-17},
+	date = {2011},
+	langid = {english},
+	keywords = {tbr},
+	file = {Zhou et al_2011_Clustered Multi-Task Learning Via Alternating Structure Optimization.pdf:/Users/wpq/Dropbox (MIT)/zotero/Zhou et al_2011_Clustered Multi-Task Learning Via Alternating Structure Optimization.pdf:application/pdf}
+}
+
+@article{kumarLearningTaskGrouping2012,
+	title = {Learning Task Grouping and Overlap in Multi-task Learning},
+	url = {http://arxiv.org/abs/1206.6417},
+	abstract = {In the paradigm of multi-task learning, mul- tiple related prediction tasks are learned jointly, sharing information across the tasks. We propose a framework for multi-task learn- ing that enables one to selectively share the information across the tasks. We assume that each task parameter vector is a linear combi- nation of a finite number of underlying basis tasks. The coefficients of the linear combina- tion are sparse in nature and the overlap in the sparsity patterns of two tasks controls the amount of sharing across these. Our model is based on on the assumption that task pa- rameters within a group lie in a low dimen- sional subspace but allows the tasks in differ- ent groups to overlap with each other in one or more bases. Experimental results on four datasets show that our approach outperforms competing methods.},
+	journaltitle = {{arXiv}:1206.6417 [cs, stat]},
+	author = {Kumar, Abhishek and Daume {III}, Hal},
+	urldate = {2020-11-17},
+	date = {2012-06-27},
+	eprinttype = {arxiv},
+	eprint = {1206.6417},
+	keywords = {tbr},
+	file = {Kumar_Daume III_2012_Learning Task Grouping and Overlap in Multi-task Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Kumar_Daume III_2012_Learning Task Grouping and Overlap in Multi-task Learning.pdf:application/pdf}
+}
+
+@article{jacobClusteredMultiTaskLearning2008,
+	title = {Clustered Multi-Task Learning: A Convex Formulation},
+	url = {http://arxiv.org/abs/0809.2085},
+	shorttitle = {Clustered Multi-Task Learning},
+	abstract = {In multi-task learning several related tasks are considered simultaneously, with the hope that by an appropriate sharing of information across tasks, each task may benefit from the others. In the context of learning linear functions for supervised classification or regression, this can be achieved by including a priori information about the weight vectors associated with the tasks, and how they are expected to be related to each other. In this paper, we assume that tasks are clustered into groups, which are unknown beforehand, and that tasks within a group have similar weight vectors. We design a new spectral norm that encodes this a priori assumption, without the prior knowledge of the partition of tasks into groups, resulting in a new convex optimization formulation for multi-task learning. We show in simulations on synthetic examples and on the {IEDB} {MHC}-I binding dataset, that our approach outperforms well-known convex methods for multi-task learning, as well as related non convex methods dedicated to the same problem.},
+	journaltitle = {{arXiv}:0809.2085 [cs]},
+	author = {Jacob, Laurent and Bach, Francis and Vert, Jean-Philippe},
+	urldate = {2020-11-17},
+	date = {2008-09-11},
+	eprinttype = {arxiv},
+	eprint = {0809.2085},
+	keywords = {tbr},
+	file = {Jacob et al_2008_Clustered Multi-Task Learning - A Convex Formulation.pdf:/Users/wpq/Dropbox (MIT)/zotero/Jacob et al_2008_Clustered Multi-Task Learning - A Convex Formulation.pdf:application/pdf}
+}
+
+@inproceedings{bhattaraiCPmtMLCoupledProjection2016,
+	location = {Las Vegas, {NV}, {USA}},
+	title = {{CP}-{mtML}: Coupled Projection Multi-Task Metric Learning for Large Scale Face Retrieval},
+	isbn = {978-1-4673-8851-1},
+	url = {http://ieeexplore.ieee.org/document/7780827/},
+	doi = {10.1109/CVPR.2016.458},
+	shorttitle = {{CP}-{mtML}},
+	abstract = {We propose a novel Coupled Projection multi-task Metric Learning ({CP}-{mtML}) method for large scale face retrieval. In contrast to previous works which were limited to low dimensional features and small datasets, the proposed method scales to large datasets with high dimensional face descriptors. It utilises pairwise (dis-)similarity constraints as supervision and hence does not require exhaustive class annotation for every training image. While, traditionally, multi-task learning methods have been validated on same dataset but different tasks, we work on the more challenging setting with heterogeneous datasets and different tasks. We show empirical validation on multiple face image datasets of different facial traits, e.g. identity, age and expression. We use classic Local Binary Pattern ({LBP}) descriptors along with the recent Deep Convolutional Neural Network ({CNN}) features. The experiments clearly demonstrate the scalability and improved performance of the proposed method on the tasks of identity and age based face image retrieval compared to competitive existing methods, on the standard datasets and with the presence of a million distractor face images.},
+	eventtitle = {2016 {IEEE} Conference on Computer Vision and Pattern Recognition ({CVPR})},
+	pages = {4226--4235},
+	booktitle = {2016 {IEEE} Conference on Computer Vision and Pattern Recognition ({CVPR})},
+	publisher = {{IEEE}},
+	author = {Bhattarai, Binod and Sharma, Gaurav and Jurie, Frederic},
+	urldate = {2020-11-17},
+	date = {2016-06},
+	langid = {english},
+	keywords = {read},
+	file = {Bhattarai et al. - 2016 - CP-mtML Coupled Projection Multi-Task Metric Lear.pdf:/Users/wpq/Zotero/storage/EZZ2LI22/Bhattarai et al. - 2016 - CP-mtML Coupled Projection Multi-Task Metric Lear.pdf:application/pdf}
+}
+
+@inproceedings{duCrossageFaceVerification2015,
+	location = {Boston, {MA}, {USA}},
+	title = {Cross-age face verification by coordinating with cross-face age verification},
+	isbn = {978-1-4673-6964-0},
+	url = {http://ieeexplore.ieee.org/document/7298846/},
+	doi = {10.1109/CVPR.2015.7298846},
+	abstract = {In this paper we present a novel framework for cross-age face veriﬁcation ({FV}) by seeking help from its “competitor” named cross-face age veriﬁcation ({AV}), i.e., deciding whether two face photos are taken at similar ages. While {FV} and {AV} share some common features, {FV} pursues age insensitivity and {AV} seeks age sensitivity. Such correlation suggests that {AV} may be used to guide feature selection in {FV}, i.e., by reducing the chance of choosing age sensitive features. Driven by this intuition, we propose to learn a solution for cross-age face veriﬁcation by coordinating with a solution for age veriﬁcation. Speciﬁcally, a joint additive model is devised to simultaneously handling both tasks, while encoding feature coordination by a competition regularization term. Then, an alternating greedy coordinate descent ({AGCD}) algorithm is developed to solve this joint model. As shown in our experiments, the algorithm effectively balances feature sharing and feature exclusion between the two tasks; and, for face veriﬁcation, the algorithm effectively removes distracting features used in age veriﬁcation. To evaluate the proposed algorithm, we conduct cross-age face veriﬁcation experiments using two benchmark cross-age face datasets, {FG}-Net and {MORPH}. In all experiments, our algorithm achieves very promising results and outperforms all previously tested solutions.},
+	eventtitle = {2015 {IEEE} Conference on Computer Vision and Pattern Recognition ({CVPR})},
+	pages = {2329--2338},
+	booktitle = {2015 {IEEE} Conference on Computer Vision and Pattern Recognition ({CVPR})},
+	publisher = {{IEEE}},
+	author = {Du, Liang and Ling, Haibin},
+	urldate = {2020-11-17},
+	date = {2015-06},
+	langid = {english},
+	keywords = {read},
+	file = {Du and Ling - 2015 - Cross-age face verification by coordinating with c.pdf:/Users/wpq/Zotero/storage/JMLWTBYR/Du and Ling - 2015 - Cross-age face verification by coordinating with c.pdf:application/pdf}
+}
+
+@article{maurerBenefitMultitaskRepresentation2016,
+	title = {The Benefit of Multitask Representation Learning},
+	url = {http://arxiv.org/abs/1505.06279},
+	abstract = {We discuss a general method to learn data representations from multiple tasks. We provide a justification for this method in both settings of multitask learning and learning-to-learn. The method is illustrated in detail in the special case of linear feature learning. Conditions on the theoretical advantage offered by multitask representation learning over independent task learning are established. In particular, focusing on the important example of half-space learning, we derive the regime in which multitask representation learning is beneficial over independent task learning, as a function of the sample size, the number of tasks and the intrinsic data dimensionality. Other potential applications of our results include multitask feature learning in reproducing kernel Hilbert spaces and multilayer, deep networks.},
+	journaltitle = {{arXiv}:1505.06279 [cs, stat]},
+	author = {Maurer, Andreas and Pontil, Massimiliano and Romera-Paredes, Bernardino},
+	urldate = {2020-11-18},
+	date = {2016-03-25},
+	eprinttype = {arxiv},
+	eprint = {1505.06279},
+	keywords = {tbr},
+	file = {Maurer et al_2016_The Benefit of Multitask Representation Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Maurer et al_2016_The Benefit of Multitask Representation Learning.pdf:application/pdf}
+}
+
+@article{liuAdversarialMultitaskLearning2017,
+	title = {Adversarial Multi-task Learning for Text Classification},
+	url = {http://arxiv.org/abs/1704.05742},
+	abstract = {Neural network models have shown their promising opportunities for multi-task learning, which focus on learning the shared layers to extract the common and task-invariant features. However, in most existing approaches, the extracted shared features are prone to be contaminated by task-specific features or the noise brought by other tasks. In this paper, we propose an adversarial multi-task learning framework, alleviating the shared and private latent feature spaces from interfering with each other. We conduct extensive experiments on 16 different text classification tasks, which demonstrates the benefits of our approach. Besides, we show that the shared knowledge learned by our proposed model can be regarded as off-the-shelf knowledge and easily transferred to new tasks. The datasets of all 16 tasks are publicly available at {\textbackslash}url\{http://nlp.fudan.edu.cn/data/\}},
+	journaltitle = {{arXiv}:1704.05742 [cs]},
+	author = {Liu, Pengfei and Qiu, Xipeng and Huang, Xuanjing},
+	urldate = {2020-11-18},
+	date = {2017-04-19},
+	eprinttype = {arxiv},
+	eprint = {1704.05742},
+	keywords = {tbr},
+	file = {Liu et al_2017_Adversarial Multi-task Learning for Text Classification.pdf:/Users/wpq/Dropbox (MIT)/zotero/Liu et al_2017_Adversarial Multi-task Learning for Text Classification.pdf:application/pdf}
+}
+
+@article{zhangProbabilisticMultiTaskFeature2010,
+	title = {Probabilistic Multi-Task Feature Selection},
+	abstract = {Recently, some variants of the 1 norm, particularly matrix norms such as the 1,2 and 1,∞ norms, have been widely used in multi-task learning, compressed sensing and other related areas to enforce sparsity via joint regularization. In this paper, we unify the 1,2 and 1,∞ norms by considering a family of 1, norms for 1 {\textless} ≤ ∞ and study the problem of determining the most appropriate sparsity enforcing norm to use in the context of multi-task feature selection. Using the generalized normal distribution, we provide a probabilistic interpretation of the general multi-task feature selection problem using the 1, norm. Based on this probabilistic interpretation, we develop a probabilistic model using the noninformative Jeffreys prior. We also extend the model to learn and exploit more general types of pairwise relationships between tasks. For both versions of the model, we devise expectation-maximization ({EM}) algorithms to learn all model parameters, including , automatically. Experiments have been conducted on two cancer classiﬁcation applications using microarray gene expression data.},
+	pages = {9},
+	author = {Zhang, Yu and Yeung, Dit-Yan and Xu, Qian},
+	date = {2010},
+	langid = {english},
+	keywords = {good, tbr},
+	file = {Zhang et al. - Probabilistic Multi-Task Feature Selection.pdf:/Users/wpq/Zotero/storage/LQ9ZVM3M/Zhang et al. - Probabilistic Multi-Task Feature Selection.pdf:application/pdf}
+}
+
+@article{zhangFlexibleLatentVariable2008,
+	title = {Flexible latent variable models for multi-task learning},
+	volume = {73},
+	issn = {0885-6125, 1573-0565},
+	url = {http://link.springer.com/10.1007/s10994-008-5050-1},
+	doi = {10.1007/s10994-008-5050-1},
+	abstract = {Given multiple prediction problems such as regression and classiﬁcation, we are interested in a joint inference framework which can eﬀectively borrow information among tasks to improve the prediction accuracy, especially when the number of training examples per problem is small. In this paper we propose a probabilistic framework which can support a set of latent variable models for diﬀerent multi-task learning scenarios. We show that the framework is a generalization of standard learning methods for single prediction problems and it can eﬀectively model the shared structure among diﬀerent prediction tasks. Furthermore, we present eﬃcient algorithms for the empirical Bayes method as well as point estimation. Our experiments on both simulated datasets and real world classiﬁcation datasets show the eﬀectiveness of the proposed models in two evaluation settings: standard multi-task learning setting and transfer learning setting.},
+	pages = {221--242},
+	number = {3},
+	journaltitle = {Machine Learning},
+	shortjournal = {Mach Learn},
+	author = {Zhang, Jian and Ghahramani, Zoubin and Yang, Yiming},
+	urldate = {2020-11-19},
+	date = {2008-12},
+	langid = {english},
+	keywords = {tbr},
+	file = {Zhang et al. - 2008 - Flexible latent variable models for multi-task lea.pdf:/Users/wpq/Zotero/storage/SHS6GQHA/Zhang et al. - 2008 - Flexible latent variable models for multi-task lea.pdf:application/pdf}
+}
+
+@inproceedings{caruanaLearningManyRelated1995,
+	title = {Learning many related tasks at the same time with backpropagation},
+	abstract = {Hinton [6] proposed that generalization in artificial neural nets should improve if nets learn to represent the domain's underlying regularities. Abu-Mustafa's hints work [1] shows that the outputs of a backprop net can be used as inputs through which domain-specific information can be given to the net. We extend these ideas by showing that a backprop net learning many related tasks at the same time can use these tasks as inductive bias for each other and thus learn better. We identify five mechanisms by which multitask backprop improves generalization and give empirical evidence that multi task backprop generalizes better in real domains. 1},
+	pages = {657--664},
+	booktitle = {In {NIPS}},
+	author = {Caruana, Rich},
+	date = {1995},
+	keywords = {read},
+	file = {Caruana_1995_Learning many related tasks at the same time with backpropagation.pdf:/Users/wpq/Dropbox (MIT)/zotero/Caruana_1995_Learning many related tasks at the same time with backpropagation.pdf:application/pdf}
+}
+
+@article{leeGeneralizationMultitaskDeep2019,
+	title = {Generalization in multitask deep neural classifiers: a statistical physics approach},
+	url = {http://arxiv.org/abs/1910.13593},
+	shorttitle = {Generalization in multitask deep neural classifiers},
+	abstract = {A proper understanding of the striking generalization abilities of deep neural networks presents an enduring puzzle. Recently, there has been a growing body of numerically-grounded theoretical work that has contributed important insights to the theory of learning in deep neural nets. There has also been a recent interest in extending these analyses to understanding how multitask learning can further improve the generalization capacity of deep neural nets. These studies deal almost exclusively with regression tasks which are amenable to existing analytical techniques. We develop an analytic theory of the nonlinear dynamics of generalization of deep neural networks trained to solve classification tasks using softmax outputs and cross-entropy loss, addressing both single task and multitask settings. We do so by adapting techniques from the statistical physics of disordered systems, accounting for both finite size datasets and correlated outputs induced by the training dynamics. We discuss the validity of our theoretical results in comparison to a comprehensive suite of numerical experiments. Our analysis provides theoretical support for the intuition that the performance of multitask learning is determined by the noisiness of the tasks and how well their input features align with each other. Highly related, clean tasks benefit each other, whereas unrelated, clean tasks can be detrimental to individual task performance.},
+	journaltitle = {{arXiv}:1910.13593 [cs, stat]},
+	author = {Lee, Tyler and Ndirango, Anthony},
+	urldate = {2020-11-25},
+	date = {2019-10-29},
+	eprinttype = {arxiv},
+	eprint = {1910.13593},
+	keywords = {tbr},
+	file = {Lee_Ndirango_2019_Generalization in multitask deep neural classifiers - a statistical physics approach.pdf:/Users/wpq/Dropbox (MIT)/zotero/Lee_Ndirango_2019_Generalization in multitask deep neural classifiers - a statistical physics approach.pdf:application/pdf}
+}
+
+@article{collobertUnifiedArchitectureNatural2008,
+	title = {A Uniﬁed Architecture for Natural Language Processing: Deep Neural Networks with Multitask Learning},
+	abstract = {We describe a single convolutional neural network architecture that, given a sentence, outputs a host of language processing predictions: part-of-speech tags, chunks, named entity tags, semantic roles, semantically similar words and the likelihood that the sentence makes sense (grammatically and semantically) using a language model. The entire network is trained jointly on all these tasks using weight-sharing, an instance of multitask learning. All the tasks use labeled data except the language model which is learnt from unlabeled text and represents a novel form of semi-supervised learning for the shared tasks. We show how both multitask learning and semi-supervised learning improve the generalization of the shared tasks, resulting in stateof-the-art performance.},
+	pages = {8},
+	author = {Collobert, Ronan and Weston, Jason},
+	date = {2008},
+	langid = {english},
+	keywords = {read},
+	file = {Collobert and Weston - A Uniﬁed Architecture for Natural Language Process.pdf:/Users/wpq/Zotero/storage/KHEMGYKE/Collobert and Weston - A Uniﬁed Architecture for Natural Language Process.pdf:application/pdf}
+}
+
+@article{standleyWhichTasksShould2020,
+	title = {Which Tasks Should Be Learned Together in Multi-task Learning?},
+	url = {http://arxiv.org/abs/1905.07553},
+	abstract = {Many computer vision applications require solving multiple tasks in real-time. A neural network can be trained to solve multiple tasks simultaneously using multi-task learning. This can save computation at inference time as only a single network needs to be evaluated. Unfortunately, this often leads to inferior overall performance as task objectives can compete, which consequently poses the question: which tasks should and should not be learned together in one network when employing multi-task learning? We study task cooperation and competition in several different learning settings and propose a framework for assigning tasks to a few neural networks such that cooperating tasks are computed by the same neural network, while competing tasks are computed by different networks. Our framework offers a time-accuracy trade-off and can produce better accuracy using less inference time than not only a single large multi-task neural network but also many single-task networks.},
+	journaltitle = {{arXiv}:1905.07553 [cs]},
+	author = {Standley, Trevor and Zamir, Amir R. and Chen, Dawn and Guibas, Leonidas and Malik, Jitendra and Savarese, Silvio},
+	urldate = {2020-11-25},
+	date = {2020-09-02},
+	eprinttype = {arxiv},
+	eprint = {1905.07553},
+	keywords = {read},
+	file = {Standley et al_2020_Which Tasks Should Be Learned Together in Multi-task Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Standley et al_2020_Which Tasks Should Be Learned Together in Multi-task Learning.pdf:application/pdf}
+}
+
+@article{bingelIdentifyingBeneficialTask2017,
+	title = {Identifying beneficial task relations for multi-task learning in deep neural networks},
+	url = {http://arxiv.org/abs/1702.08303},
+	abstract = {Multi-task learning ({MTL}) in deep neural networks for {NLP} has recently received increasing interest due to some compelling benefits, including its potential to efficiently regularize models and to reduce the need for labeled data. While it has brought significant improvements in a number of {NLP} tasks, mixed results have been reported, and little is known about the conditions under which {MTL} leads to gains in {NLP}. This paper sheds light on the specific task relations that can lead to gains from {MTL} models over single-task setups.},
+	journaltitle = {{arXiv}:1702.08303 [cs]},
+	author = {Bingel, Joachim and Søgaard, Anders},
+	urldate = {2020-11-25},
+	date = {2017-02-27},
+	eprinttype = {arxiv},
+	eprint = {1702.08303},
+	keywords = {read},
+	file = {Bingel_Sogaard_2017_Identifying beneficial task relations for multi-task learning in deep neural networks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Bingel_Sogaard_2017_Identifying beneficial task relations for multi-task learning in deep neural networks.pdf:application/pdf}
+}
+
+@article{baxterModelInductiveBias2000,
+	title = {A Model of Inductive Bias Learning},
+	volume = {12},
+	issn = {1076-9757},
+	url = {http://arxiv.org/abs/1106.0245},
+	doi = {10.1613/jair.731},
+	abstract = {A major problem in machine learning is that of inductive bias: how to choose a learner's hypothesis space so that it is large enough to contain a solution to the problem being learnt, yet small enough to ensure reliable generalization from reasonably-sized training sets. Typically such bias is supplied by hand through the skill and insights of experts. In this paper a model for automatically learning bias is investigated. The central assumption of the model is that the learner is embedded within an environment of related learning tasks. Within such an environment the learner can sample from multiple tasks, and hence it can search for a hypothesis space that contains good solutions to many of the problems in the environment. Under certain restrictions on the set of all hypothesis spaces available to the learner, we show that a hypothesis space that performs well on a sufficiently large number of training tasks will also perform well when learning novel tasks in the same environment. Explicit bounds are also derived demonstrating that learning multiple tasks within an environment of related tasks can potentially give much better generalization than learning a single task.},
+	pages = {149--198},
+	journaltitle = {Journal of Artificial Intelligence Research},
+	shortjournal = {jair},
+	author = {Baxter, J.},
+	urldate = {2020-11-25},
+	date = {2000-03-01},
+	eprinttype = {arxiv},
+	eprint = {1106.0245},
+	keywords = {tbr},
+	file = {Baxter_2000_A Model of Inductive Bias Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Baxter_2000_A Model of Inductive Bias Learning.pdf:application/pdf}
+}
+
+@article{qianMultiTaskVariationalInformation2020,
+	title = {Multi-Task Variational Information Bottleneck},
+	url = {http://arxiv.org/abs/2007.00339},
+	abstract = {In this paper we propose a variational information bottleneck ({VIB})-based framework for multi-task learning ({MTL}), where a more accurate latent representation can be obtained from the input data which also learn different tasks in parallel. Moreover, the task-dependent uncertainties are taken into account to learn the relative weights of task loss functions. The proposed method is examined with three publicly available data sets under different adversarial attacks. The overall classification performance of our model is promising. It can achieve comparable classification accuracies as the benchmarked models, and has shown a better robustness against adversarial attacks compared with other {MTL} models.},
+	journaltitle = {{arXiv}:2007.00339 [cs, stat]},
+	author = {Qian, Weizhu and Chen, Bowei and Gechter, Franck},
+	urldate = {2020-11-29},
+	date = {2020-09-10},
+	eprinttype = {arxiv},
+	eprint = {2007.00339},
+	keywords = {read},
+	file = {Qian et al_2020_Multi-Task Variational Information Bottleneck.pdf:/Users/wpq/Dropbox (MIT)/zotero/Qian et al_2020_Multi-Task Variational Information Bottleneck.pdf:application/pdf}
+}
+
+@article{chechikExtractingRelevantStructures2002,
+	title = {Extracting Relevant Structures with Side Information},
+	abstract = {The problem of extracting the relevant aspects of data, in face of multiple conﬂicting structures, is inherent to modeling of complex data. Extracting structure in one random variable that is relevant for another variable has been principally addressed recently via the information bottleneck method [15]. However, such auxiliary variables often contain more information than is actually required due to structures that are irrelevant for the task. In many other cases it is in fact easier to specify what is irrelevant than what is, for the task at hand. Identifying the relevant structures, however, can thus be considerably improved by also minimizing the information about another, irrelevant, variable. In this paper we give a general formulation of this problem and derive its formal, as well as algorithmic, solution. Its operation is demonstrated in a synthetic example and in two real world problems in the context of text categorization and face images. While the original information bottleneck problem is related to rate distortion theory, with the distortion measure replaced by the relevant information, extracting relevant features while removing irrelevant ones is related to rate distortion with side information.},
+	pages = {8},
+	author = {Chechik, Gal and Tishby, Naftali},
+	date = {2002},
+	langid = {english},
+	keywords = {good, read},
+	file = {Chechik and Tishby - Extracting Relevant Structures with Side Informati.pdf:/Users/wpq/Zotero/storage/FYNGXYR4/Chechik and Tishby - Extracting Relevant Structures with Side Informati.pdf:application/pdf}
+}
+
+@article{chenMultiTaskAttentionBasedSemiSupervised2019,
+	title = {Multi-Task Attention-Based Semi-Supervised Learning for Medical Image Segmentation},
+	url = {http://arxiv.org/abs/1907.12303},
+	abstract = {We propose a novel semi-supervised image segmentation method that simultaneously optimizes a supervised segmentation and an unsupervised reconstruction objectives. The reconstruction objective uses an attention mechanism that separates the reconstruction of image areas corresponding to different classes. The proposed approach was evaluated on two applications: brain tumor and white matter hyperintensities segmentation. Our method, trained on unlabeled and a small number of labeled images, outperformed supervised {CNNs} trained with the same number of images and {CNNs} pre-trained on unlabeled data. In ablation experiments, we observed that the proposed attention mechanism substantially improves segmentation performance. We explore two multi-task training strategies: joint training and alternating training. Alternating training requires fewer hyperparameters and achieves a better, more stable performance than joint training. Finally, we analyze the features learned by different methods and find that the attention mechanism helps to learn more discriminative features in the deeper layers of encoders.},
+	journaltitle = {{arXiv}:1907.12303 [cs]},
+	author = {Chen, Shuai and Bortsova, Gerda and Juarez, Antonio Garcia-Uceda and van Tulder, Gijs and de Bruijne, Marleen},
+	urldate = {2020-12-19},
+	date = {2019-07-29},
+	eprinttype = {arxiv},
+	eprint = {1907.12303},
+	keywords = {read},
+	file = {Chen et al_2019_Multi-Task Attention-Based Semi-Supervised Learning for Medical Image Segmentation.pdf:/Users/wpq/Dropbox (MIT)/zotero/Chen et al_2019_Multi-Task Attention-Based Semi-Supervised Learning for Medical Image Segmentation.pdf:application/pdf}
+}
+
+@article{zhangRegularizationApproachLearning2014,
+	title = {A Regularization Approach to Learning Task Relationships in Multitask Learning},
+	volume = {8},
+	issn = {1556-4681, 1556-472X},
+	url = {https://dl.acm.org/doi/10.1145/2538028},
+	doi = {10.1145/2538028},
+	pages = {1--31},
+	number = {3},
+	journaltitle = {{ACM} Transactions on Knowledge Discovery from Data},
+	shortjournal = {{ACM} Trans. Knowl. Discov. Data},
+	author = {Zhang, Yu and Yeung, Dit-Yan},
+	urldate = {2020-12-19},
+	date = {2014-06-02},
+	langid = {english},
+	keywords = {tbr},
+	file = {Zhang and Yeung - 2014 - A Regularization Approach to Learning Task Relatio.pdf:/Users/wpq/Zotero/storage/Q5XX4M5J/Zhang and Yeung - 2014 - A Regularization Approach to Learning Task Relatio.pdf:application/pdf}
+}
+
+@article{xueMultiTaskLearningClassification2007,
+	title = {Multi-Task Learning for Classiﬁcation with Dirichlet Process Priors},
+	abstract = {Consider the problem of learning logistic-regression models for multiple classiﬁcation tasks, where the training data set for each task is not drawn from the same statistical distribution. In such a multi-task learning ({MTL}) scenario, it is necessary to identify groups of similar tasks that should be learned jointly. Relying on a Dirichlet process ({DP}) based statistical model to learn the extent of similarity between classiﬁcation tasks, we develop computationally efﬁcient algorithms for two different forms of the {MTL} problem. First, we consider a symmetric multi-task learning ({SMTL}) situation in which classiﬁers for multiple tasks are learned jointly using a variational Bayesian ({VB}) algorithm. Second, we consider an asymmetric multi-task learning ({AMTL}) formulation in which the posterior density function from the {SMTL} model parameters (from previous tasks) is used as a prior for a new task: this approach has the signiﬁcant advantage of not requiring storage and use of all previous data from prior tasks. The {AMTL} formulation is solved with a simple Markov Chain Monte Carlo ({MCMC}) construction. Experimental results on two real life {MTL} problems indicate that the proposed algorithms: (a) automatically identify subgroups of related tasks whose training data appear to be drawn from similar distributions; and (b) are more accurate than simpler approaches such as single-task learning, pooling of data across all tasks, and simpliﬁed approximations to {DP}.},
+	pages = {29},
+	author = {Xue, Ya and Liao, Xuejun and Carin, Lawrence and Krishnapuram, Balaji},
+	date = {2007},
+	langid = {english},
+	keywords = {tbr},
+	file = {Xue et al. - Multi-Task Learning for Classiﬁcation with Dirichl.pdf:/Users/wpq/Zotero/storage/58BWEM9P/Xue et al. - Multi-Task Learning for Classiﬁcation with Dirichl.pdf:application/pdf}
+}
+
+@article{yuGradientSurgeryMultiTask2020,
+	title = {Gradient Surgery for Multi-Task Learning},
+	url = {http://arxiv.org/abs/2001.06782},
+	abstract = {While deep learning and deep reinforcement learning ({RL}) systems have demonstrated impressive results in domains such as image classification, game playing, and robotic control, data efficiency remains a major challenge. Multi-task learning has emerged as a promising approach for sharing structure across multiple tasks to enable more efficient learning. However, the multi-task setting presents a number of optimization challenges, making it difficult to realize large efficiency gains compared to learning tasks independently. The reasons why multi-task learning is so challenging compared to single-task learning are not fully understood. In this work, we identify a set of three conditions of the multi-task optimization landscape that cause detrimental gradient interference, and develop a simple yet general approach for avoiding such interference between task gradients. We propose a form of gradient surgery that projects a task's gradient onto the normal plane of the gradient of any other task that has a conflicting gradient. On a series of challenging multi-task supervised and multi-task {RL} problems, this approach leads to substantial gains in efficiency and performance. Further, it is model-agnostic and can be combined with previously-proposed multi-task architectures for enhanced performance.},
+	journaltitle = {{arXiv}:2001.06782 [cs, stat]},
+	author = {Yu, Tianhe and Kumar, Saurabh and Gupta, Abhishek and Levine, Sergey and Hausman, Karol and Finn, Chelsea},
+	urldate = {2020-12-23},
+	date = {2020-10-23},
+	eprinttype = {arxiv},
+	eprint = {2001.06782},
+	keywords = {tbr},
+	file = {Yu et al_2020_Gradient Surgery for Multi-Task Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Yu et al_2020_Gradient Surgery for Multi-Task Learning.pdf:application/pdf}
+}
+
+@inproceedings{jayaramanDecorrelatingSemanticVisual2014,
+	location = {Columbus, {OH}, {USA}},
+	title = {Decorrelating Semantic Visual Attributes by Resisting the Urge to Share},
+	isbn = {978-1-4799-5118-5},
+	url = {https://ieeexplore.ieee.org/document/6909607},
+	doi = {10.1109/CVPR.2014.211},
+	abstract = {Existing methods to learn visual attributes are prone to learning the wrong thing—namely, properties that are correlated with the attribute of interest among training samples. Yet, many proposed applications of attributes rely on being able to learn the correct semantic concept corresponding to each attribute. We propose to resolve such confusions by jointly learning decorrelated, discriminative attribute models. Leveraging side information about semantic relatedness, we develop a multi-task learning approach that uses structured sparsity to encourage feature competition among unrelated attributes and feature sharing among related attributes. On three challenging datasets, we show that accounting for structure in the visual attribute space is key to learning attribute models that preserve semantics, yielding improved generalizability that helps in the recognition and discovery of unseen object categories.},
+	eventtitle = {2014 {IEEE} Conference on Computer Vision and Pattern Recognition ({CVPR})},
+	pages = {1629--1636},
+	booktitle = {2014 {IEEE} Conference on Computer Vision and Pattern Recognition},
+	publisher = {{IEEE}},
+	author = {Jayaraman, Dinesh and Sha, Fei and Grauman, Kristen},
+	urldate = {2020-12-23},
+	date = {2014-06},
+	langid = {english},
+	keywords = {read},
+	file = {Jayaraman et al. - 2014 - Decorrelating Semantic Visual Attributes by Resist.pdf:/Users/wpq/Zotero/storage/6A37WYTI/Jayaraman et al. - 2014 - Decorrelating Semantic Visual Attributes by Resist.pdf:application/pdf}
+}
+
+@incollection{puWhichLooksWhich2014,
+	location = {Cham},
+	title = {Which Looks Like Which: Exploring Inter-class Relationships in Fine-Grained Visual Categorization},
+	volume = {8691},
+	isbn = {978-3-319-10577-2 978-3-319-10578-9},
+	url = {http://link.springer.com/10.1007/978-3-319-10578-9_28},
+	shorttitle = {Which Looks Like Which},
+	abstract = {Fine-grained visual categorization aims at classifying visual data at a subordinate level, e.g., identifying diﬀerent species of birds. It is a highly challenging topic receiving signiﬁcant research attention recently. Most existing works focused on the design of more discriminative feature representations to capture the subtle visual diﬀerences among categories. Very limited eﬀorts were spent on the design of robust model learning algorithms. In this paper, we treat the training of each category classiﬁer as a single learning task, and formulate a generic multiple task learning ({MTL}) framework to train multiple classiﬁers simultaneously. Diﬀerent from the existing {MTL} methods, the proposed generic {MTL} algorithm enforces no structure assumptions and thus is more ﬂexible in handling complex inter-class relationships. In particular, it is able to automatically discover both clusters of similar categories and outliers. We show that the objective of our generic {MTL} formulation can be solved using an iterative reweighted ℓ2 method. Through an extensive experimental validation, we demonstrate that our method outperforms several state-of-the-art approaches.},
+	pages = {425--440},
+	booktitle = {Computer Vision – {ECCV} 2014},
+	publisher = {Springer International Publishing},
+	author = {Pu, Jian and Jiang, Yu-Gang and Wang, Jun and Xue, Xiangyang},
+	editor = {Fleet, David and Pajdla, Tomas and Schiele, Bernt and Tuytelaars, Tinne},
+	urldate = {2020-12-23},
+	date = {2014},
+	langid = {english},
+	doi = {10.1007/978-3-319-10578-9_28},
+	note = {Series Title: Lecture Notes in Computer Science},
+	keywords = {tbr},
+	file = {Pu et al. - 2014 - Which Looks Like Which Exploring Inter-class Rela.pdf:/Users/wpq/Zotero/storage/YRCHPDHK/Pu et al. - 2014 - Which Looks Like Which Exploring Inter-class Rela.pdf:application/pdf}
+}
+
+@inproceedings{luPoseRobustFaceVerification2017,
+	title = {Pose-Robust Face Verification by Exploiting Competing Tasks},
+	doi = {10.1109/WACV.2017.130},
+	abstract = {In this paper, we propose a pose-robust metric learning framework for unconstrained face verification by jointly optimizing face and pose verification tasks. We learn a joint model for these two tasks and explicitly discourage the information sharing between pose and identity verification metrics so as to mitigate the information contained in the pose verification task leading to making the identity metrics for face verification more pose-robust. Specifically, we use the joint Bayesian metric learning framework to learn the metrics for both tasks and enforce an orthogonal regularization constraint on the learned projection matrices for the two tasks. The pose labels used for training the joint model are automatically estimated and do not require extra annotations. An efficient stochastic gradient descent ({SGD}) algorithm is used to solve the optimization problem. We conduct extensive experiments on three challenging unconstrained face datasets and show promising results compared to state-of-the-art methods.},
+	eventtitle = {2017 {IEEE} Winter Conference on Applications of Computer Vision ({WACV})},
+	pages = {1124--1132},
+	booktitle = {2017 {IEEE} Winter Conference on Applications of Computer Vision ({WACV})},
+	author = {Lu, B. and Zheng, J. and Chen, J. and Chellappa, R.},
+	date = {2017-03},
+	keywords = {read},
+	file = {Lu et al_2017_Pose-Robust Face Verification by Exploiting Competing Tasks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Lu et al_2017_Pose-Robust Face Verification by Exploiting Competing Tasks.pdf:application/pdf}
+}
+
+@article{tranTransferabilityHardnessSupervised2019,
+	title = {Transferability and Hardness of Supervised Classification Tasks},
+	url = {http://arxiv.org/abs/1908.08142},
+	abstract = {We propose a novel approach for estimating the difficulty and transferability of supervised classification tasks. Unlike previous work, our approach is solution agnostic and does not require or assume trained models. Instead, we estimate these values using an information theoretic approach: treating training labels as random variables and exploring their statistics. When transferring from a source to a target task, we consider the conditional entropy between two such variables (i.e., label assignments of the two tasks). We show analytically and empirically that this value is related to the loss of the transferred model. We further show how to use this value to estimate task hardness. We test our claims extensively on three large scale data sets -- {CelebA} (40 tasks), Animals with Attributes 2 (85 tasks), and Caltech-{UCSD} Birds 200 (312 tasks) -- together representing 437 classification tasks. We provide results showing that our hardness and transferability estimates are strongly correlated with empirical hardness and transferability. As a case study, we transfer a learned face recognition model to {CelebA} attribute classification tasks, showing state of the art accuracy for tasks estimated to be highly transferable.},
+	journaltitle = {{arXiv}:1908.08142 [cs, stat]},
+	author = {Tran, Anh T. and Nguyen, Cuong V. and Hassner, Tal},
+	urldate = {2020-12-25},
+	date = {2019-08-21},
+	eprinttype = {arxiv},
+	eprint = {1908.08142},
+	keywords = {tbr},
+	file = {Tran et al_2019_Transferability and Hardness of Supervised Classification Tasks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Tran et al_2019_Transferability and Hardness of Supervised Classification Tasks.pdf:application/pdf}
+}
+
+@inproceedings{lawrenceLearningLearnInformative2004,
+	location = {Banff, Alberta, Canada},
+	title = {Learning to learn with the informative vector machine},
+	url = {http://portal.acm.org/citation.cfm?doid=1015330.1015382},
+	doi = {10.1145/1015330.1015382},
+	abstract = {This paper describes an e cient method for learning the parameters of a Gaussian process ({GP}). The parameters are learned from multiple tasks which are assumed to have been drawn independently from the same {GP} prior. An e cient algorithm is obtained by extending the informative vector machine ({IVM}) algorithm to handle the multi-task learning case. The multi-task {IVM} ({MTIVM}) saves computation by greedily selecting the most informative examples from the separate tasks. The {MT}-{IVM} is also shown to be more e cient than random sub-sampling on an arti cial data-set and more e ective than the traditional {IVM} in a speaker dependent phoneme recognition task.},
+	eventtitle = {Twenty-first international conference},
+	pages = {65},
+	booktitle = {Twenty-first international conference on Machine learning  - {ICML} '04},
+	publisher = {{ACM} Press},
+	author = {Lawrence, Neil D. and Platt, John C.},
+	urldate = {2020-12-25},
+	date = {2004},
+	langid = {english},
+	keywords = {tbr},
+	file = {Lawrence and Platt - 2004 - Learning to learn with the informative vector mach.pdf:/Users/wpq/Zotero/storage/Q8D44XIX/Lawrence and Platt - 2004 - Learning to learn with the informative vector mach.pdf:application/pdf}
+}
+
+@article{patacchiolaBayesianMetaLearningFewShot2020,
+	title = {Bayesian Meta-Learning for the Few-Shot Setting via Deep Kernels},
+	url = {http://arxiv.org/abs/1910.05199},
+	abstract = {Recently, different machine learning methods have been introduced to tackle the challenging few-shot learning scenario that is, learning from a small labeled dataset related to a specific task. Common approaches have taken the form of meta-learning: learning to learn on the new problem given the old. Following the recognition that meta-learning is implementing learning in a multi-level model, we present a Bayesian treatment for the meta-learning inner loop through the use of deep kernels. As a result we can learn a kernel that transfers to new tasks; we call this Deep Kernel Transfer ({DKT}). This approach has many advantages: is straightforward to implement as a single optimizer, provides uncertainty quantification, and does not require estimation of task-specific parameters. We empirically demonstrate that {DKT} outperforms several state-of-the-art algorithms in few-shot classification, and is the state of the art for cross-domain adaptation and regression. We conclude that complex meta-learning routines can be replaced by a simpler Bayesian model without loss of accuracy.},
+	journaltitle = {{arXiv}:1910.05199 [cs, stat]},
+	author = {Patacchiola, Massimiliano and Turner, Jack and Crowley, Elliot J. and O'Boyle, Michael and Storkey, Amos},
+	urldate = {2020-12-25},
+	date = {2020-10-13},
+	eprinttype = {arxiv},
+	eprint = {1910.05199},
+	keywords = {read},
+	file = {Patacchiola et al_2020_Bayesian Meta-Learning for the Few-Shot Setting via Deep Kernels.pdf:/Users/wpq/Dropbox (MIT)/zotero/Patacchiola et al_2020_Bayesian Meta-Learning for the Few-Shot Setting via Deep Kernels.pdf:application/pdf}
+}
+
+@article{micchelliKernelsMultiTask2004,
+	title = {Kernels for Multi--task Learning},
+	abstract = {This paper provides a foundation for multi–task learning using reproducing kernel Hilbert spaces of vector–valued functions. In this setting, the kernel is a matrix–valued function. Some explicit examples will be described which go beyond our earlier results in [7]. In particular, we characterize classes of matrix–valued kernels which are linear and are of the dot product or the translation invariant type. We discuss how these kernels can be used to model relations between the tasks and present linear multi–task learning algorithms. Finally, we present a novel proof of the representer theorem for a minimizer of a regularization functional which is based on the notion of minimal norm interpolation.},
+	pages = {8},
+	author = {Micchelli, Charles A and Pontil, Massimiliano},
+	date = {2004},
+	langid = {english},
+	keywords = {tbr},
+	file = {Micchelli and Pontil - Kernels for Multi--task Learning.pdf:/Users/wpq/Zotero/storage/2C47AKQH/Micchelli and Pontil - Kernels for Multi--task Learning.pdf:application/pdf}
+}
+
+@article{bonillaMultitaskGaussianProcess2008,
+	title = {Multi-task Gaussian Process Prediction},
+	abstract = {In this paper we investigate multi-task learning in the context of Gaussian Processes ({GP}). We propose a model that learns a shared covariance function on input-dependent features and a “free-form” covariance matrix over tasks. This allows for good ﬂexibility when modelling inter-task dependencies while avoiding the need for large amounts of data for training. We show that under the assumption of noise-free observations and a block design, predictions for a given task only depend on its target values and therefore a cancellation of inter-task transfer occurs. We evaluate the beneﬁts of our model on two practical applications: a compiler performance prediction problem and an exam score prediction task. Additionally, we make use of {GP} approximations and properties of our model in order to provide scalability to large data sets.},
+	pages = {8},
+	author = {Bonilla, Edwin V and Chai, Kian Ming A and Williams, Christopher K I},
+	date = {2008},
+	langid = {english},
+	keywords = {good, read},
+	file = {Bonilla et al_2008_Multi-task Gaussian Process Prediction.pdf:/Users/wpq/Dropbox (MIT)/zotero/Bonilla et al_2008_Multi-task Gaussian Process Prediction.pdf:application/pdf}
+}
+
+@article{rudovicCoupledGaussianProcesses2013,
+	title = {Coupled Gaussian processes for pose-invariant facial expression recognition},
+	volume = {35},
+	issn = {1939-3539},
+	doi = {10.1109/TPAMI.2012.233},
+	abstract = {We propose a method for head-pose invariant facial expression recognition that is based on a set of characteristic facial points. To achieve head-pose invariance, we propose the Coupled Scaled Gaussian Process Regression ({CSGPR}) model for head-pose normalization. In this model, we first learn independently the mappings between the facial points in each pair of (discrete) nonfrontal poses and the frontal pose, and then perform their coupling in order to capture dependences between them. During inference, the outputs of the coupled functions from different poses are combined using a gating function, devised based on the head-pose estimation for the query points. The proposed model outperforms state-of-the-art regression-based approaches to head-pose normalization, 2D and 3D Point Distribution Models ({PDMs}), and Active Appearance Models ({AAMs}), especially in cases of unknown poses and imbalanced training data. To the best of our knowledge, the proposed method is the first one that is able to deal with expressive faces in the range from \$(-45{\textasciicircum}{\textbackslash}circ)\$ to \$(+45{\textasciicircum}{\textbackslash}circ)\$ pan rotation and \$(-30{\textasciicircum}{\textbackslash}circ)\$ to \$(+30{\textasciicircum}{\textbackslash}circ)\$ tilt rotation, and with continuous changes in head pose, despite the fact that training was conducted on a small set of discrete poses. We evaluate the proposed method on synthetic and real images depicting acted and spontaneously displayed facial expressions.},
+	pages = {1357--1369},
+	number = {6},
+	journaltitle = {{IEEE} Transactions on Pattern Analysis and Machine Intelligence},
+	author = {Rudovic, O. and Pantic, M. and Patras, I.},
+	date = {2013-06},
+	note = {Conference Name: {IEEE} Transactions on Pattern Analysis and Machine Intelligence},
+	keywords = {tbr},
+	file = {Rudovic et al_2013_Coupled Gaussian processes for pose-invariant facial expression recognition.pdf:/Users/wpq/Dropbox (MIT)/zotero/Rudovic et al_2013_Coupled Gaussian processes for pose-invariant facial expression recognition.pdf:application/pdf}
+}
+
+@inproceedings{zhangLearningMultipleTasks2010,
+	title = {Learning Multiple Tasks with a Sparse Matrix-Normal Penalty},
+	url = {http://papers.neurips.cc/paper/4095-learning-multiple-tasks-with-a-sparse-matrix-normal-penalty},
+	abstract = {Electronic Proceedings of Neural Information Processing Systems},
+	eventtitle = {Advances in Neural Information Processing Systems},
+	pages = {2550--2558},
+	author = {Zhang, Yi and Schneider, Jeff G.},
+	urldate = {2021-01-03},
+	date = {2010},
+	keywords = {tbr},
+	file = {Zhang_Schneider_2010_Learning Multiple Tasks with a Sparse Matrix-Normal Penalty.pdf:/Users/wpq/Dropbox (MIT)/zotero/Zhang_Schneider_2010_Learning Multiple Tasks with a Sparse Matrix-Normal Penalty.pdf:application/pdf}
+}
+
+@inproceedings{mejjatiMultitaskLearningMaximizing2018,
+	location = {Salt Lake City, {UT}},
+	title = {Multi-task Learning by Maximizing Statistical Dependence},
+	isbn = {978-1-5386-6420-9},
+	url = {https://ieeexplore.ieee.org/document/8578463/},
+	doi = {10.1109/CVPR.2018.00365},
+	abstract = {We present a new multi-task learning ({MTL}) approach that can be applied to multiple heterogeneous task estimators. Our motivation is that the best task estimator could change depending on the task itself. For example, we may have a deep neural network for the first task and a Gaussian process for the second task. Classical {MTL} approaches cannot handle this case, as they require the same model or even the same parameter types for all tasks. We tackle this by considering task-specific estimators as random variables. Then, the task relationships are discovered by measuring the statistical dependence between each pair of random variables. By doing so, our model is independent of the parametric nature of each task, and is even agnostic to the existence of such parametric formulation. We compare our algorithm with existing {MTL} approaches on challenging real world ranking and regression datasets, and show that our approach achieves comparable or better performance without knowing the parametric form.},
+	eventtitle = {2018 {IEEE}/{CVF} Conference on Computer Vision and Pattern Recognition ({CVPR})},
+	pages = {3465--3473},
+	booktitle = {2018 {IEEE}/{CVF} Conference on Computer Vision and Pattern Recognition},
+	publisher = {{IEEE}},
+	author = {Mejjati, Youssef A. and Cosker, Darren and Kim, Kwang In},
+	urldate = {2021-01-12},
+	date = {2018-06},
+	langid = {english},
+	keywords = {good, tbr},
+	file = {Mejjati et al. - 2018 - Multi-task Learning by Maximizing Statistical Depe.pdf:/Users/wpq/Zotero/storage/HQRXHQ8B/Mejjati et al. - 2018 - Multi-task Learning by Maximizing Statistical Depe.pdf:application/pdf}
+}
+
+@article{leeDeepAsymmetricMultitask2018,
+	title = {Deep Asymmetric Multi-task Feature Learning},
+	url = {http://arxiv.org/abs/1708.00260},
+	abstract = {We propose Deep Asymmetric Multitask Feature Learning (Deep-{AMTFL}) which can learn deep representations shared across multiple tasks while effectively preventing negative transfer that may happen in the feature sharing process. Specifically, we introduce an asymmetric autoencoder term that allows reliable predictors for the easy tasks to have high contribution to the feature learning while suppressing the influences of unreliable predictors for more difficult tasks. This allows the learning of less noisy representations, and enables unreliable predictors to exploit knowledge from the reliable predictors via the shared latent features. Such asymmetric knowledge transfer through shared features is also more scalable and efficient than inter-task asymmetric transfer. We validate our Deep-{AMTFL} model on multiple benchmark datasets for multitask learning and image classification, on which it significantly outperforms existing symmetric and asymmetric multitask learning models, by effectively preventing negative transfer in deep feature learning.},
+	journaltitle = {{arXiv}:1708.00260 [cs, stat]},
+	author = {Lee, Hae Beom and Yang, Eunho and Hwang, Sung Ju},
+	urldate = {2021-01-18},
+	date = {2018-06-30},
+	eprinttype = {arxiv},
+	eprint = {1708.00260},
+	keywords = {tbr},
+	file = {Lee et al_2018_Deep Asymmetric Multi-task Feature Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Lee et al_2018_Deep Asymmetric Multi-task Feature Learning.pdf:application/pdf}
+}
+
+@article{leeAsymmetricMultitaskLearning2016,
+	title = {Asymmetric Multi-task Learning Based on Task Relatedness and Loss},
+	abstract = {We propose a novel multi-task learning method that minimizes the effect of negative transfer by allowing asymmetric transfer between the tasks based on task relatedness as well as the amount of individual task losses, which we refer to as Asymmetric Multi-task Learning ({AMTL}). To tackle this problem, we couple multiple tasks via a sparse, directed regularization graph, that enforces each task parameter to be reconstructed as a sparse combination of other tasks selected based on the task-wise loss. We present two different algorithms that jointly learn the task predictors as well as the regularization graph. The ﬁrst algorithm solves for the original learning objective using alternative optimization, and the second algorithm solves an approximation of it using curriculum learning strategy, that learns one task at a time. We perform experiments on multiple datasets for classiﬁcation and regression, on which we obtain signiﬁcant improvements in performance over the single task learning and existing multitask learning models.},
+	pages = {9},
+	author = {Lee, Giwoong and Yang, Eunho and Hwang, Sung Ju},
+	date = {2016},
+	langid = {english},
+	keywords = {tbr},
+	file = {Lee et al. - Asymmetric Multi-task Learning Based on Task Relat.pdf:/Users/wpq/Zotero/storage/CNBZS2ZR/Lee et al. - Asymmetric Multi-task Learning Based on Task Relat.pdf:application/pdf}
+}
+
+@article{jonschkowskiPatternsLearningSide2016,
+	title = {Patterns for Learning with Side Information},
+	url = {http://arxiv.org/abs/1511.06429},
+	abstract = {Supervised, semi-supervised, and unsupervised learning estimate a function given input/output samples. Generalization of the learned function to unseen data can be improved by incorporating side information into learning. Side information are data that are neither from the input space nor from the output space of the function, but include useful information for learning it. In this paper we show that learning with side information subsumes a variety of related approaches, e.g. multi-task learning, multi-view learning and learning using privileged information. Our main contributions are (i) a new perspective that connects these previously isolated approaches, (ii) insights about how these methods incorporate different types of prior knowledge, and hence implement different patterns, (iii) facilitating the application of these methods in novel tasks, as well as (iv) a systematic experimental evaluation of these patterns in two supervised learning tasks.},
+	journaltitle = {{arXiv}:1511.06429 [cs, stat]},
+	author = {Jonschkowski, Rico and Höfer, Sebastian and Brock, Oliver},
+	urldate = {2021-01-27},
+	date = {2016-02-10},
+	eprinttype = {arxiv},
+	eprint = {1511.06429},
+	keywords = {read},
+	file = {Jonschkowski et al_2016_Patterns for Learning with Side Information.pdf:/Users/wpq/Dropbox (MIT)/zotero/Jonschkowski et al_2016_Patterns for Learning with Side Information.pdf:application/pdf}
+}
+
+@article{swerskyMultiTaskBayesianOptimization2013,
+	title = {Multi-Task Bayesian Optimization},
+	abstract = {Bayesian optimization has recently been proposed as a framework for automatically tuning the hyperparameters of machine learning models and has been shown to yield state-of-the-art performance with impressive ease and efﬁciency. In this paper, we explore whether it is possible to transfer the knowledge gained from previous optimizations to new tasks in order to ﬁnd optimal hyperparameter settings more efﬁciently. Our approach is based on extending multi-task Gaussian processes to the framework of Bayesian optimization. We show that this method signiﬁcantly speeds up the optimization process when compared to the standard single-task approach. We further propose a straightforward extension of our algorithm in order to jointly minimize the average error across multiple tasks and demonstrate how this can be used to greatly speed up k-fold cross-validation. Lastly, we propose an adaptation of a recently developed acquisition function, entropy search, to the cost-sensitive, multi-task setting. We demonstrate the utility of this new acquisition function by leveraging a small dataset to explore hyperparameter settings for a large dataset. Our algorithm dynamically chooses which dataset to query in order to yield the most information per unit cost.},
+	pages = {10},
+	author = {Swersky, Kevin and Snoek, Jasper and Adams, Ryan P},
+	date = {2013},
+	langid = {english},
+	keywords = {tbr},
+	file = {Swersky et al. - Multi-Task Bayesian Optimization.pdf:/Users/wpq/Zotero/storage/UX4D8FQJ/Swersky et al. - Multi-Task Bayesian Optimization.pdf:application/pdf}
+}
+
+@inproceedings{heskesEmpiricalBayesLearning2000,
+	title = {Empirical Bayes for Learning to Learn},
+	abstract = {We present a new model for studying multitask  learning, linking theoretical results to  practical simulations. In our model all tasks  are combined in a single feedforward neural  network. Learning is implemented in a  Bayesian fashion. In this Bayesian framework  the hidden-to-output weights, being  specific to each task, play the role of model  parameters. The input-to-hidden weights,  which are shared between all tasks, are  treated as hyperparameters. Other hyperparameters  describe error variance and correlations  and priors for the model parameters.  An important feature of our model  is that the probability of these hyperparameters  given the data can be computed explicitely  and only depends on a set of sufficient  statistics. None of these statistics scales  with the number of tasks or patterns, which  makes empirical Bayes for multitask learning  a relatively straightforward optimization  problem. Simulations on real-world data sets  on single-copy newspaper and magazine sal...},
+	pages = {367--374},
+	booktitle = {Proceedings of {ICML}},
+	publisher = {Morgan Kaufmann},
+	author = {Heskes, Tom},
+	date = {2000},
+	keywords = {good, read},
+	file = {Heskes_2000_Empirical Bayes for Learning to Learn.pdf:/Users/wpq/Dropbox (MIT)/zotero/Heskes_2000_Empirical Bayes for Learning to Learn.pdf:application/pdf}
+}
+
+@article{clarkBAMBornAgainMultiTask2019,
+	title = {{BAM}! Born-Again Multi-Task Networks for Natural Language Understanding},
+	url = {http://arxiv.org/abs/1907.04829},
+	abstract = {It can be challenging to train multi-task neural networks that outperform or even match their single-task counterparts. To help address this, we propose using knowledge distillation where single-task models teach a multi-task model. We enhance this training with teacher annealing, a novel method that gradually transitions the model from distillation to supervised learning, helping the multi-task model surpass its single-task teachers. We evaluate our approach by multi-task fine-tuning {BERT} on the {GLUE} benchmark. Our method consistently improves over standard single-task and multi-task training.},
+	journaltitle = {{arXiv}:1907.04829 [cs]},
+	author = {Clark, Kevin and Luong, Minh-Thang and Khandelwal, Urvashi and Manning, Christopher D. and Le, Quoc V.},
+	urldate = {2021-02-08},
+	date = {2019-07-10},
+	eprinttype = {arxiv},
+	eprint = {1907.04829},
+	keywords = {read},
+	file = {Clark et al_2019_BAM! Born-Again Multi-Task Networks for Natural Language Understanding.pdf:/Users/wpq/Dropbox (MIT)/zotero/Clark et al_2019_BAM! Born-Again Multi-Task Networks for Natural Language Understanding.pdf:application/pdf}
+}
+
+@article{navonAuxiliaryLearningImplicit2020,
+	title = {Auxiliary Learning by Implicit Differentiation},
+	url = {http://arxiv.org/abs/2007.02693},
+	abstract = {Training with multiple auxiliary tasks is a common practice used in deep learning for improving the performance on the main task of interest. Two main challenges arise in this multi-task learning setting: (i) Designing useful auxiliary tasks; and (ii) Combining auxiliary tasks into a single coherent loss. We propose a novel framework, {AuxiLearn}, that targets both challenges, based on implicit differentiation. First, when useful auxiliaries are known, we propose learning a network that combines all losses into a single coherent objective function. This network can learn non-linear interactions between auxiliary tasks. Second, when no useful auxiliary task is known, we describe how to learn a network that generates a meaningful, novel auxiliary task. We evaluate {AuxiLearn} in a series of tasks and domains, including image segmentation and learning with attributes. We find that {AuxiLearn} consistently improves accuracy compared with competing methods.},
+	journaltitle = {{arXiv}:2007.02693 [cs, stat]},
+	author = {Navon, Aviv and Achituve, Idan and Maron, Haggai and Chechik, Gal and Fetaya, Ethan},
+	urldate = {2021-02-08},
+	date = {2020-10-05},
+	eprinttype = {arxiv},
+	eprint = {2007.02693},
+	keywords = {tbr},
+	file = {Navon et al_2020_Auxiliary Learning by Implicit Differentiation.pdf:/Users/wpq/Dropbox (MIT)/zotero/Navon et al_2020_Auxiliary Learning by Implicit Differentiation.pdf:application/pdf}
+}
+
+@article{liuSelfSupervisedGeneralisationMeta2019,
+	title = {Self-Supervised Generalisation with Meta Auxiliary Learning},
+	url = {http://arxiv.org/abs/1901.08933},
+	abstract = {Learning with auxiliary tasks can improve the ability of a primary task to generalise. However, this comes at the cost of manually labelling auxiliary data. We propose a new method which automatically learns appropriate labels for an auxiliary task, such that any supervised learning task can be improved without requiring access to any further data. The approach is to train two neural networks: a label-generation network to predict the auxiliary labels, and a multi-task network to train the primary task alongside the auxiliary task. The loss for the label-generation network incorporates the loss of the multi-task network, and so this interaction between the two networks can be seen as a form of meta learning with a double gradient. We show that our proposed method, Meta {AuXiliary} Learning ({MAXL}), outperforms single-task learning on 7 image datasets, without requiring any additional data. We also show that {MAXL} outperforms several other baselines for generating auxiliary labels, and is even competitive when compared with human-defined auxiliary labels. The self-supervised nature of our method leads to a promising new direction towards automated generalisation. Source code can be found at https://github.com/lorenmt/maxl.},
+	journaltitle = {{arXiv}:1901.08933 [cs, stat]},
+	author = {Liu, Shikun and Davison, Andrew J. and Johns, Edward},
+	urldate = {2021-02-08},
+	date = {2019-11-26},
+	eprinttype = {arxiv},
+	eprint = {1901.08933},
+	keywords = {read},
+	file = {Liu et al_2019_Self-Supervised Generalisation with Meta Auxiliary Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Liu et al_2019_Self-Supervised Generalisation with Meta Auxiliary Learning.pdf:application/pdf}
+}
+
+@article{linAdaptiveAuxiliaryTask2019,
+	title = {Adaptive Auxiliary Task Weighting for Reinforcement Learning},
+	abstract = {Reinforcement learning is known to be sample inefﬁcient, preventing its application to many real-world problems, especially with high dimensional observations like images. Transferring knowledge from other auxiliary tasks is a powerful tool for improving the learning efﬁciency. However, the usage of auxiliary tasks has been limited so far due to the difﬁculty in selecting and combining different auxiliary tasks. In this work, we propose a principled online learning algorithm that dynamically combines different auxiliary tasks to speed up training for reinforcement learning. Our method is based on the idea that auxiliary tasks should provide gradient directions that, in the long term, help to decrease the loss of the main task. We show in various environments that our algorithm can effectively combine a variety of different auxiliary tasks and achieves signiﬁcant speedup compared to previous heuristic approaches of adapting auxiliary task weights.},
+	pages = {12},
+	author = {Lin, Xingyu and Baweja, Harjatin and Kantor, George and Held, David},
+	date = {2019},
+	langid = {english},
+	keywords = {tbr},
+	file = {Lin et al. - Adaptive Auxiliary Task Weighting for Reinforcemen.pdf:/Users/wpq/Zotero/storage/RYPDFAUU/Lin et al. - Adaptive Auxiliary Task Weighting for Reinforcemen.pdf:application/pdf}
+}
+
+@article{gongComparisonLossWeighting2019,
+	title = {A Comparison of Loss Weighting Strategies for Multi task Learning in Deep Neural Networks},
+	volume = {7},
+	issn = {2169-3536},
+	doi = {10.1109/ACCESS.2019.2943604},
+	abstract = {With the success of deep learning in a wide variety of areas, many deep multi-task learning ({MTL}) models have been proposed claiming improvements in performance obtained by sharing the learned structure across several related tasks. However, the dynamics of multi-task learning in deep neural networks is still not well understood at either the theoretical or experimental level. In particular, the usefulness of different task pairs is not known a priori. Practically, this means that properly combining the losses of different tasks becomes a critical issue in multi-task learning, as different methods may yield different results. In this paper, we benchmarked different multi-task learning approaches using shared trunk with task specific branches architecture across three different {MTL} datasets. For the first dataset, i.e. Multi-{MNIST} (Modified National Institute of Standards and Technology database), we thoroughly tested several weighting strategies, including simply adding task-specific cost functions together, dynamic weight average ({DWA}) and uncertainty weighting methods each with various amounts of training data per-task. We find that multi-task learning typically does not improve performance for a user-defined combination of tasks. Further experiments evaluated on diverse tasks and network architectures on various datasets suggested that multi-task learning requires careful selection of both task pairs and weighting strategies to equal or exceed the performance of single task learning.},
+	pages = {141627--141632},
+	journaltitle = {{IEEE} Access},
+	author = {Gong, T. and Lee, T. and Stephenson, C. and Renduchintala, V. and Padhy, S. and Ndirango, A. and Keskin, G. and Elibol, O. H.},
+	date = {2019},
+	note = {Conference Name: {IEEE} Access},
+	keywords = {read},
+	file = {Gong et al_2019_A Comparison of Loss Weighting Strategies for Multi task Learning in Deep Neural Networks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Gong et al_2019_A Comparison of Loss Weighting Strategies for Multi task Learning in Deep Neural Networks.pdf:application/pdf}
+}
+
+@article{leenFocusedMultitaskLearning2012,
+	title = {Focused multi-task learning in a Gaussian process framework},
+	volume = {89},
+	issn = {1573-0565},
+	url = {https://doi.org/10.1007/s10994-012-5302-y},
+	doi = {10.1007/s10994-012-5302-y},
+	abstract = {Multi-task learning, learning of a set of tasks together, can improve performance in the individual learning tasks. Gaussian process models have been applied to learning a set of tasks on different data sets, by constructing joint priors for functions underlying the tasks. In these previous Gaussian process models, the setting has been symmetric in the sense that all the tasks have been assumed to be equally important, whereas in settings such as transfer learning the goal is asymmetric, to enhance performance in a target task given the other tasks. We propose a focused Gaussian process model which introduces an “explaining away” model for each of the additional tasks to model their non-related variation, in order to focus the transfer to the task-of-interest. This focusing helps reduce the key problem of negative transfer, which may cause performance to even decrease if the tasks are not related closely enough. In experiments, our model improves performance compared to single-task learning, symmetric multi-task learning using hierarchical Dirichlet processes, transfer learning based on predictive structure learning, and symmetric multi-task learning with Gaussian processes.},
+	pages = {157--182},
+	number = {1},
+	journaltitle = {Machine Learning},
+	shortjournal = {Mach Learn},
+	author = {Leen, Gayle and Peltonen, Jaakko and Kaski, Samuel},
+	urldate = {2021-02-15},
+	date = {2012-10-01},
+	langid = {english},
+	keywords = {tbr},
+	file = {Leen et al_2012_Focused multi-task learning in a Gaussian process framework.pdf:/Users/wpq/Dropbox (MIT)/zotero/Leen et al_2012_Focused multi-task learning in a Gaussian process framework.pdf:application/pdf}
+}
+
+@article{leroyMAGMAInferencePrediction2020,
+	title = {{MAGMA}: Inference and Prediction with Multi-Task Gaussian Processes},
+	url = {http://arxiv.org/abs/2007.10731},
+	shorttitle = {{MAGMA}},
+	abstract = {We investigate the problem of multiple time series forecasting, with the objective to improve multiple-step-ahead predictions. We propose a multi-task Gaussian process framework to simultaneously model batches of individuals with a common mean function and a specific covariance structure. This common mean is defined as a Gaussian process for which the hyper-posterior distribution is tractable. Therefore an {EM} algorithm can be derived for simultaneous hyper-parameters optimisation and hyper-posterior computation. Unlike previous approaches in the literature, we account for uncertainty and handle uncommon grids of observations while maintaining explicit formulations, by modelling the mean process in a non-parametric probabilistic framework. We also provide predictive formulas integrating this common mean process. This approach greatly improves the predictive performance far from observations, where information shared across individuals provides a relevant prior mean. Our overall algorithm is called {\textbackslash}textsc\{Magma\} (standing for Multi {tAsk} Gaussian processes with common {MeAn}), and publicly available as a R package. The quality of the mean process estimation, predictive performances, and comparisons to alternatives are assessed in various simulated scenarios and on real datasets.},
+	journaltitle = {{arXiv}:2007.10731 [cs, stat]},
+	author = {Leroy, Arthur and Latouche, Pierre and Guedj, Benjamin and Gey, Servane},
+	urldate = {2021-02-16},
+	date = {2020-07-21},
+	eprinttype = {arxiv},
+	eprint = {2007.10731},
+	keywords = {good, tbr},
+	file = {Leroy et al_2020_MAGMA - Inference and Prediction with Multi-Task Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Leroy et al_2020_MAGMA - Inference and Prediction with Multi-Task Gaussian Processes.pdf:application/pdf}
+}
+
+@inproceedings{bonillaKernelMultitaskLearning2007,
+	title = {Kernel Multi-task Learning using Task-specific Features},
+	url = {http://proceedings.mlr.press/v2/bonilla07a.html},
+	abstract = {In this paper we are concerned with multitask learning when task-specific features are available. We describe two ways of achieving this using Gaussian process predictors: in the first method, the ...},
+	eventtitle = {Artificial Intelligence and Statistics},
+	pages = {43--50},
+	booktitle = {Artificial Intelligence and Statistics},
+	publisher = {{PMLR}},
+	author = {Bonilla, Edwin V. and Agakov, Felix V. and Williams, Christopher K. I.},
+	urldate = {2021-02-16},
+	date = {2007-03-11},
+	langid = {english},
+	note = {{ISSN}: 1938-7228},
+	keywords = {tbr},
+	file = {Bonilla et al_2007_Kernel Multi-task Learning using Task-specific Features.pdf:/Users/wpq/Dropbox (MIT)/zotero/Bonilla et al_2007_Kernel Multi-task Learning using Task-specific Features.pdf:application/pdf}
+}
+
+@article{boustatiNonlinearMultitaskLearning2020,
+	title = {Non-linear Multitask Learning with Deep Gaussian Processes},
+	url = {http://arxiv.org/abs/1905.12407},
+	abstract = {We present a multi-task learning formulation for Deep Gaussian processes ({DGPs}), through non-linear mixtures of latent processes. The latent space is composed of private processes that capture within-task information and shared processes that capture across-task dependencies. We propose two different methods for segmenting the latent space: through hard coding shared and task-specific processes or through soft sharing with Automatic Relevance Determination kernels. We show that our formulation is able to improve the learning performance and transfer information between the tasks, outperforming other probabilistic multi-task learning models across real-world and benchmarking settings.},
+	journaltitle = {{arXiv}:1905.12407 [cs, stat]},
+	author = {Boustati, Ayman and Damoulas, Theodoros and Savage, Richard S.},
+	urldate = {2021-02-16},
+	date = {2020-02-23},
+	eprinttype = {arxiv},
+	eprint = {1905.12407},
+	keywords = {good, tbr},
+	file = {Boustati et al_2020_Non-linear Multitask Learning with Deep Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Boustati et al_2020_Non-linear Multitask Learning with Deep Gaussian Processes.pdf:application/pdf}
+}
+
+@article{yeungLearningInverseDynamics2009,
+	title = {Learning Inverse Dynamics by Gaussian Process Regression under the Multi-Task Learning Framework},
+	abstract = {In this chapter, dedicated to Dit-Yan’s mentor and friend George Bekey on the occasion of his 80th birthday, we investigate for the ﬁrst time the feasibility of applying the multi-task learning (or called transfer learning) approach to the learning of inverse dynamics. Due to the difﬁculties of modeling the dynamics completely and accurately and solving the dynamics equations analytically to obtain the control variables, the machine learning approach has been regarded as a viable alternative to the robotic control problem. In particular, we learn the inverse model from measured data as a regression problem and solve it using a nonparametric Bayesian kernel approach called Gaussian process regression ({GPR}). Instead of solving the regression tasks for different degrees of freedom ({DOFs}) separately and independently, the central thesis of this work is that modeling the inter-task dependencies explicitly and allowing adaptive transfer of knowledge between different tasks can make the learning problem much easier. Speciﬁcally, based on data from a 7-{DOF} robot arm, we demonstrate that the learning accuracy can often be signiﬁcantly increased when the multi-task learning approach is adopted.},
+	pages = {13},
+	author = {Yeung, Dit-Yan and Zhang, Yu},
+	date = {2009},
+	langid = {english},
+	keywords = {tbr},
+	file = {Yeung and Zhang - Learning Inverse Dynamics by Gaussian Process Regr.pdf:/Users/wpq/Zotero/storage/8N6FDS2N/Yeung and Zhang - Learning Inverse Dynamics by Gaussian Process Regr.pdf:application/pdf}
+}
+
+@article{skolidisBayesianMultitaskClassification2011,
+	title = {Bayesian Multitask Classification With Gaussian Process Priors},
+	volume = {22},
+	issn = {1941-0093},
+	doi = {10.1109/TNN.2011.2168568},
+	abstract = {We present a novel approach to multitask learning in classification problems based on Gaussian process ({GP}) classification. The method extends previous work on multitask {GP} regression, constraining the overall covariance (across tasks and data points) to factorize as a Kronecker product. Fully Bayesian inference is possible but time consuming using sampling techniques. We propose approximations based on the popular variational Bayes and expectation propagation frameworks, showing that they both achieve excellent accuracy when compared to Gibbs sampling, in a fraction of time. We present results on a toy dataset and two real datasets, showing improved performance against the baseline results obtained by learning each task independently. We also compare with a recently proposed state-of-the-art approach based on support vector machines, obtaining comparable or better results.},
+	pages = {2011--2021},
+	number = {12},
+	journaltitle = {{IEEE} Transactions on Neural Networks},
+	author = {Skolidis, G. and Sanguinetti, G.},
+	date = {2011-12},
+	note = {Conference Name: {IEEE} Transactions on Neural Networks},
+	keywords = {tbr},
+	file = {Skolidis_Sanguinetti_2011_Bayesian Multitask Classification With Gaussian Process Priors.pdf:/Users/wpq/Dropbox (MIT)/zotero/Skolidis_Sanguinetti_2011_Bayesian Multitask Classification With Gaussian Process Priors.pdf:application/pdf}
+}

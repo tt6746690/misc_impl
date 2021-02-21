@@ -22,41 +22,16 @@ mpl.rcParams['font.size'] = 25
 mpl.rcParams['font.family'] = 'Times New Roman'
 cmap = plt.cm.get_cmap('bwr')
 
+from gp import gp_regression_chol, run_sgd
 
-
-def gp_regression(X, y, Xt, k, σn):
-    n = len(X)
-    K = k(X, X)+(σn**2)*np.eye(n)
-    Km = k(X, Xt)
-    Kt = k(Xt, Xt)
-    Kinv = inv(K)
-    μ = Km.T@Kinv@y_train
-    Σ = Kt - Km.T@Kinv@Km
-    logml = -(1/2)*y.T@Kinv@y - (1/2)*np.log(det(K)) - (n/2)*np.log(2*np.pi)
-    return μ, Σ, logml
-
-
-def gp_regression_chol(X, y, Xt, k, σn):
-    n = len(X)
-    K = k(X, X)+(σn**2)*jnp.eye(n)
-    Km = k(X, Xt)
-    Kt = k(Xt, Xt)
-    L = jnp_linalg.cholesky(K)
-    α = jnp_linalg.solve(L.T, jnp_linalg.solve(L, y))
-    μ = Km.T@α
-    v = jnp_linalg.inv(L)@Km
-    Σ = Kt - v.T@v
-    logml = -(1/2)*y.T@α - jnp.sum(jnp.log(jnp.diag(L))) - \
-        (n/2)*jnp.log(2*jnp.pi)
-    return μ, Σ, logml[0, 0]
-
-# Parameters
+## Parameters 
 
 xlim = (-2, 2)
 ylim = (-3, 3)
 n_train = 3
 n_test = 100
 σn = .1
+ℓ = 1
 ℓs = [.1, .3, 1]
 train_sizes = [3, 5, 10]
 lr = .002
@@ -65,8 +40,11 @@ num_steps = 10
 def f_gen(x):
     return np.sin(x)+np.sin(x*5)+np.cos(x*3)
 
-# Plotting
+def log_func(f, params):
+    print(f"loss={f(params):.3f}\t"
+          f"ℓ={params['ℓ']:.3f}\t")
 
+## Plotting
 
 fig, axs = plt.subplots(3, 3, sharey=True)
 fig.set_size_inches(30, 15)
@@ -79,51 +57,41 @@ X_train_all = np.expand_dims(
 
 for i, ℓ in enumerate(ℓs):
     for j, n_train in enumerate(train_sizes):
-
+        
         X_train = X_train_all[:n_train]
         ϵ = ϵ_all[:n_train]
         y_train = f_gen(X_train) + ϵ
-
+        
         if i == 1:
-            jX_train, jy_train, jX_test = device_put(
-                X_train), device_put(y_train), device_put(X_test)
-
-            def gpse_nll(params):
-                def k(X, Y): return cov_se(X, Y, ℓ=params['ℓ'])
-                μ, Σ, logml = gp_regression_chol(
-                    jX_train, jy_train, jX_test, k, σn)
-                return -logml
-            gpse_nll = jit(gpse_nll)
-            gpse_nll_grad = jit(grad(gpse_nll, argnums=0))
-            params = {'ℓ': jnp.ones(1)}
-            opt_init, opt_update, get_params = optimizers.sgd(lr)
-            opt_state = opt_init(params)
-            itercount = itertools.count()
-            for _ in range(num_steps):
-                params = get_params(opt_state)
-                params_grad = gpse_nll_grad(params)
-                opt_state = opt_update(next(itercount), params_grad, opt_state)
-            ℓ = params['ℓ'][0]
+            jX, jy, jXstar = device_put(X_train), device_put(y_train), device_put(X_test)
+            def nmll(params):
+                k = lambda X, Y: cov_se(X, Y, ℓ=params['ℓ'])
+                μ, Σ, mll = gp_regression_chol(jX, jy, jXstar, k, σn=σn)
+                return -mll
+            params = {'ℓ': 1.}
+            res = run_sgd(nmll, params, lr=lr, num_steps=num_steps, log_func=log_func)
+            ℓ = res['ℓ'].item()
         else:
             ℓ = ℓs[i]
+            σn = σns[i]
 
-        def k(X, Y): return cov_se(X, Y, ℓ=ℓ)
-        μ, Σ, logml = gp_regression_chol(X_train, y_train, X_test, k, σn)
+        k = lambda X, Y: cov_se(X, Y, ℓ=ℓ)
+        μ, Σ, mll = gp_regression_chol(X_train, y_train, X_test, k, σn)
         std = np.expand_dims(np.sqrt(np.diag(Σ)), 1)
 
         ax = axs[i, j]
         ax.plot(X_test, μ, color='k')
-        ax.fill_between(X_test.squeeze(), (μ-2*std).squeeze(),
-                        (μ+2*std).squeeze(), alpha=.2, color=cmap(.3))
+        ax.fill_between(X_test.squeeze(), (μ-2*std).squeeze(), (μ+2*std).squeeze(), alpha=.2, color=cmap(.3))
         ax.scatter(X_train, y_train, marker='x', color='r', s=50)
         ax.grid()
         ax.set_xlim(xlim)
         ax.set_ylim(ylim)
-        ax.set_title('$n=$'+f'{n_train}' +
-                     ', $-\log p(\mathbf{y}\mid X)$'+f'={-logml:.2f}')
-
+        ax.set_title('$-\log p(\mathbf{y}\mid X)$'+f'={-mll:.2f}')
+        
         if j == 0 or i == 1:
-            ax.set_ylabel('$K_{SE}$'+f'(ℓ={ℓ:.2f})')
+            ax.set_ylabel(f"ℓ={ℓ:.2f}", fontsize=45)
+        if i == 2:
+            ax.set_xlabel("$n$"+f"={n_train}", fontsize=45)
 
 fig.tight_layout()
 plt_savefig(fig, 'summary/assets/plt_gp_regression_inference.png')
