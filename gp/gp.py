@@ -19,9 +19,16 @@ def gp_regression_slow(X, y, Xt, k, σn):
     return μ, Σ, mll
 
 
-def gp_regression_chol(X, y, Xt, k, σn):
+def gp_regression_chol(X, y, Xt, k, logsn):
+    sn2 = jnp.exp(2*logsn)
+    if sn2.size == 1:
+        sn2I = sn2*jnp.eye(n)
+    else:
+        # mtgp X[:,1] are task indices
+        ind = np.asarray(X[:,1], np.int)
+        sn2I = jnp.diag(sn2[ind])
     n = len(X)
-    K = k(X, X)+(σn**2)*jnp.eye(n)
+    K = k(X, X)+sn2I
     Km = k(X, Xt)
     Kt = k(Xt, Xt)
     L = jnp_linalg.cholesky(K)
@@ -40,7 +47,7 @@ def run_sgd(f, params, lr=.002, num_steps=10, log_func=None):
     from jax.experimental import optimizers
     f = jit(f)
     g = jit(grad(f, argnums=0))
-    opt_init, opt_update, get_params = optimizers.sgd(lr)
+    opt_init, opt_update, get_params = optimizers.momentum(lr, .9)
     opt_state = opt_init(params)
     itercount = itertools.count()
     for _ in range(num_steps):

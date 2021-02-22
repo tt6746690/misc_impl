@@ -42,6 +42,19 @@ def rbf_kernel(X, Y, gamma=1.):
     """
     return np.exp(-gamma*cdist_sqeuclidean(X, Y))
 
+def normalize_K(K):
+    """ Normalize Kernel Matrix `K`
+            http://people.csail.mit.edu/jrennie/writing/normalizeKernel.pdf
+        
+           K̃ᵢⱼ = Kᵢⱼ/sqrt(Kᵢᵢ Kⱼⱼ)
+    """
+    k = 1/np.sqrt(np.diag(K))
+    k = k.reshape(-1,1)
+    K = K*(k@k.T)
+    return K
+
+def LookupKernel(X, Y, A):
+    return distmat(lambda x, y: A[x, y], X, Y)
 
 def cov_se(X, Y=None, σ=1, ℓ=1):
     # Squared Exponential kernel
@@ -50,6 +63,15 @@ def cov_se(X, Y=None, σ=1, ℓ=1):
     #
     if Y is None: Y = X
     return (σ**2)*np.exp(-cdist_sqeuclidean(X, Y)/2/(ℓ**2))
+
+def cov_se2(X, Y=None, σ=1, logℓ=1):
+    # Squared Exponential kernel 
+    #     σ    - vertical lengthscale
+    #     logℓ - log lengthscale (easier optimization -mll)
+    #
+    if Y is None: Y = X
+    ℓ2 = np.exp(2*logℓ)
+    return (σ**2)*np.exp(-cdist_sqeuclidean(X, Y)/2/(ℓ2))
 
 def cov_rq(X, Y=None, σ=1, α=1, ℓ=1):
     # Rational Quadratic kernel 

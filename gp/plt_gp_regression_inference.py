@@ -31,6 +31,7 @@ ylim = (-3, 3)
 n_train = 3
 n_test = 100
 σn = .1
+logsn = np.log(σn)
 ℓ = 1
 ℓs = [.1, .3, 1]
 train_sizes = [3, 5, 10]
@@ -66,17 +67,16 @@ for i, ℓ in enumerate(ℓs):
             jX, jy, jXstar = device_put(X_train), device_put(y_train), device_put(X_test)
             def nmll(params):
                 k = lambda X, Y: cov_se(X, Y, ℓ=params['ℓ'])
-                μ, Σ, mll = gp_regression_chol(jX, jy, jXstar, k, σn=σn)
+                μ, Σ, mll = gp_regression_chol(jX, jy, jXstar, k, logsn=logsn)
                 return -mll
             params = {'ℓ': 1.}
             res = run_sgd(nmll, params, lr=lr, num_steps=num_steps, log_func=log_func)
             ℓ = res['ℓ'].item()
         else:
             ℓ = ℓs[i]
-            σn = σns[i]
 
         k = lambda X, Y: cov_se(X, Y, ℓ=ℓ)
-        μ, Σ, mll = gp_regression_chol(X_train, y_train, X_test, k, σn)
+        μ, Σ, mll = gp_regression_chol(X_train, y_train, X_test, k, logsn)
         std = np.expand_dims(np.sqrt(np.diag(Σ)), 1)
 
         ax = axs[i, j]

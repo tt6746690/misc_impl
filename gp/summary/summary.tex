@@ -146,13 +146,22 @@ Consider a likelihood model with task specific noise variance $y_t \sim \sN( f_t
         K^t_{M1} K & K^t_{M2}K  & \cdots & K^t_{MM} K + \sigma_M^2 I \\
     \end{bmatrix}
 \end{align}
-The task similarity matrix $K_t$ ($\pb{K_t}_{ij} = k_t(i,j)$) induce correlation between tasks. Intuitively, if two tasks $t,t'$ are related in the sense an optimal regressor for $y_t,y_{t'}$ vary together in some systematic manner, then observation at some location $(x,y_t)$ constrains what the value $y_{t'}$ can take. The degree to which we can reduce the uncertainty that $y_{t'}$ can takes depends on $k_t(t,t')$. Therefore, a learner which utilizes information obtained from related tasks can be learnt more efficiently than if learnt without knowledge of other tasks, in which case $K_t = I$. \cite{bonillaMultitaskGaussianProcess2008} proposes to use EM to first impute missing latent variables $\mathbf{f}$ from noisy observations $\by$, then find hyperparameters $\theta = \pc{ \theta_{k_x}, K^t }$ by maximizing the full data likelihoods $p(\by,\mathbf{f} \mid \theta_{k})$. Alternatively, we can simply can learn the hyperparameters by applying gradient descent to maximize type-II likelihood $\theta^* = \argmax_{\theta} \log p(\by\mid X, \theta)$.
+The task similarity matrix $K_t$ ($\pb{K_t}_{ij} = k_t(i,j)$) induce correlation between tasks. Intuitively, if two tasks $t,t'$ are related in the sense an optimal regressor for $y_t,y_{t'}$ vary together in some systematic manner, then observation at some location $(x,y_t)$ constrains what the value $y_{t'}$ can take. The degree to which we can reduce the uncertainty that $y_{t'}$ can takes depends on $k_t(t,t')$. Therefore, a learner which utilizes information obtained from related tasks can be learnt more efficiently than if learnt without knowledge of other tasks, in which case $K_t = I$. \cite{bonillaMultitaskGaussianProcess2008} proposes to use EM to first impute missing latent variables $\mathbf{f}$ from noisy observations $\by$, then find hyperparameters $\theta = \pc{ \theta_{k_x}, K^t }$ by maximizing the full data likelihoods $p(\by,\mathbf{f} \mid \theta_{k})$. Alternatively, we can simply can learn the hyperparameters by applying gradient descent to maximize type-II likelihood $\theta^* = \argmax_{\theta} \log p(\by\mid X, \theta)$. See Figure~(\ref{fig:plt_mtgp}) for an example of MTGP in case where $D=1$ and $M=2$.
+
+
+\begin{center} 
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{assets/plt_mtgp.png}
+    \caption{(Top) Two Gaussian process regressor are learnt to fit data independently. (Bottom) A MTGP is fit to data whereby the task similarity matrix $B:=K^t$ is learnt by maximizing marginal log likelihood. We see that by taking into account of relationship between tasks, samples from task 0 reduces uncertainty that task 1 has at test locations far from its training support. However, this comes at a (potential) cost of higher MSE for task 1 computed over the test locations. The reason why this happens might be due to a variety of reasons, but one potential cause is competition of tasks. Since we are optimizing for likelihood for samples from both tasks, we might arrive at a MTGP solution optimal for both tasks combined but suboptimal for a particular task, in this case task 1.}
+    \label{fig:plt_mtgp}
+\end{figure}
+\end{center} 
+
+    
 
 \subsection{Asymmetric MTGP}
 
-When the goal is to improve performance of a target/main task given the other tasks, optimizing for maximum marginal likelihood of all tasks is suboptimal. 
-
-There are extension of MTGP to the asymmetric case by assuming that auxiliary task functions are addition of a shared main task function and task specific function \cite{leenFocusedMultitaskLearning2012}, however it still uses the full marginal likelihood for all tasks to find task similarity and kernel hyperparameters. Ideally, we want
+When the goal is to improve performance of a target/main task given the other tasks, optimizing for maximum marginal likelihood of all tasks is suboptimal, as shown in Figure~(\ref{fig:plt_mtgp}). There are extension of MTGP to the asymmetric case by assuming that auxiliary task functions are addition of a shared main task function and task specific function \cite{leenFocusedMultitaskLearning2012}, however it still uses the full marginal likelihood for all tasks to find task similarity and kernel hyperparameters. Ideally, we want
 \begin{enumerate}
     \item An objective which depends on likelihood of main task only
     \item Automatically learn the task similarity such that auxiliary task or side information can improve learning of main task. If a side task is totally unrelated to the main task, it should have minimal influence on learning of the main task.
