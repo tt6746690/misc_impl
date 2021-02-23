@@ -146,13 +146,13 @@ Consider a likelihood model with task specific noise variance $y_t \sim \sN( f_t
         K^t_{M1} K & K^t_{M2}K  & \cdots & K^t_{MM} K + \sigma_M^2 I \\
     \end{bmatrix}
 \end{align}
-The task similarity matrix $K_t$ ($\pb{K_t}_{ij} = k_t(i,j)$) induce correlation between tasks. Intuitively, if two tasks $t,t'$ are related in the sense an optimal regressor for $y_t,y_{t'}$ vary together in some systematic manner, then observation at some location $(x,y_t)$ constrains what the value $y_{t'}$ can take. The degree to which we can reduce the uncertainty that $y_{t'}$ can takes depends on $k_t(t,t')$. Therefore, a learner which utilizes information obtained from related tasks can be learnt more efficiently than if learnt without knowledge of other tasks, in which case $K_t = I$. \cite{bonillaMultitaskGaussianProcess2008} proposes to use EM to first impute missing latent variables $\mathbf{f}$ from noisy observations $\by$, then find hyperparameters $\theta = \pc{ \theta_{k_x}, K^t }$ by maximizing the full data likelihoods $p(\by,\mathbf{f} \mid \theta_{k})$. Alternatively, we can simply can learn the hyperparameters by applying gradient descent to maximize type-II likelihood $\theta^* = \argmax_{\theta} \log p(\by\mid X, \theta)$. See Figure~(\ref{fig:plt_mtgp}) for an example of MTGP in case where $D=1$ and $M=2$.
+Note this is the covariance matrix with no missing outputs, which leads to efficient inference methods. The task similarity matrix $K_t$ ($\pb{K_t}_{ij} = k_t(i,j)$) induce correlation between tasks. Intuitively, if two tasks $t,t'$ are related in the sense an optimal regressor for $y_t,y_{t'}$ vary together in some systematic manner, then observation at some location $(x,y_t)$ constrains what the value $y_{t'}$ can take. The degree to which we can reduce the uncertainty that $y_{t'}$ can takes depends on $k_t(t,t')$. Therefore, a learner which utilizes information obtained from related tasks can be learnt more efficiently than if learnt without knowledge of other tasks, in which case $K_t = I$. \cite{bonillaMultitaskGaussianProcess2008} proposes to use EM to first impute missing latent variables $\mathbf{f}$ from noisy observations $\by$, then find hyperparameters $\theta = \pc{ \theta_{k_x}, K^t }$ by maximizing the full data likelihoods $p(\by,\mathbf{f} \mid \theta_{k})$. Alternatively, we can simply can learn the hyperparameters by applying gradient descent to maximize type-II likelihood $\theta^* = \argmax_{\theta} \log p(\by\mid X, \theta)$. See Figure~(\ref{fig:plt_mtgp}) for an example of MTGP in case where $D=1$ and $M=2$.
 
 
 \begin{center} 
 \begin{figure}[h!]
     \includegraphics[width=\textwidth]{assets/plt_mtgp.png}
-    \caption{(Top) Two Gaussian process regressor are learnt to fit data independently. (Bottom) A MTGP is fit to data whereby the task similarity matrix $B:=K^t$ is learnt by maximizing marginal log likelihood. We see that by taking into account of relationship between tasks, samples from task 0 reduces uncertainty that task 1 has at test locations far from its training support. However, this comes at a (potential) cost of higher MSE for task 1 computed over the test locations. The reason why this happens might be due to a variety of reasons, but one potential cause is competition of tasks. Since we are optimizing for likelihood for samples from both tasks, we might arrive at a MTGP solution optimal for both tasks combined but suboptimal for a particular task, in this case task 1.}
+    \caption{Observations for the two tasks are generated $y_0(x)=\sin(6x) + .03 \epsilon$ and $y_1(x)=\sin(6x + 1) + .1 \epsilon$ where $\epsilon\overset{iid}{\sim} \sN(0,1)$. Here for task 1 we only sample points in $[0,.5]$ while for task 0 we sample points in $[0,1]$. (Top) Two Gaussian process regressor are learnt to fit data independently. (Bottom) A MTGP is fit to data whereby the task similarity matrix $B:=K^t$ is learnt by maximizing marginal log likelihood. We see that by taking into account of relationship between tasks, samples from task 0 reduces uncertainty that task 1 has at test locations far from its training support. However, this comes at a (potential) cost of higher MSE for task 1 computed over the test locations. The reason why this happens might be due to a variety of reasons, but one potential cause is competition of tasks. Since we are optimizing for likelihood for samples from both tasks, we might arrive at a MTGP solution optimal for both tasks combined but suboptimal for a particular task, in this case task 1.}
     \label{fig:plt_mtgp}
 \end{figure}
 \end{center} 
@@ -166,9 +166,83 @@ When the goal is to improve performance of a target/main task given the other ta
     \item An objective which depends on likelihood of main task only
     \item Automatically learn the task similarity such that auxiliary task or side information can improve learning of main task. If a side task is totally unrelated to the main task, it should have minimal influence on learning of the main task.
 \end{enumerate}
+Given design $X\in\R^{N\times D}, Y\in \R^{N\times 1}, S\in\R^{N\times M}$, we want to learn a scalar valued regressor $f:\R^D \to \R$ that fits the data well. We can alternatively try to learn the scalar valued regressor taking into account of relevant side information $f:\R^D\times \R^M \to\R$. Relevant side information that helps with learning the main task should be selected from potentially irrelevant side information. A simple thing one can do is to define a kernel that captures similarity between inputs via $k_x$ and similarity of side information $k_s$, similar to the setup of MTGP. Let $k$ be a tensor product $k_x\otimes k_s$ over $\sX\times \sS$, 
+\begin{align}
+    k((x,s),(x',s'))
+        = k_x(x,x') k_s(s,s')
+    \label{eq:amtgp_product_kernel}
+\end{align}
+Instead of task similarity matrix, correlation between any pair $y,y'$ depends on value of $k_s(s,s')$. In the case where $s$ describes a particular sub-population of our training dataset, it gives rise to a stratification dependent kernel. In health care domain, we might want to provide stratification dependent predictions given our side information of scanner, patient orientation, and existence of comorbidities. In this setting, automatic selection of relevance can be achieved via an Automatic Relevance Determination (ARD) kernel
+\begin{align}
+    k_s(s,s')
+        = \sigma^2 \exp\left(
+            -\frac{1}{2} \sum_{l=1}^M \frac{1}{\ell_l^2} (s_l - s'_l)^2 
+        \right)
+    \label{eq:amtgp_ard_kernel}
+\end{align}
+Hyperparameters $\pc{\pc{\ell_l}_{l=1}^M, \theta_{k_x}}$ can be learnt by maximizing marginal likelihood. One complication is missing side information during training, no information exists for some components of $s$. A more serious issue is at test time, we would want our parameterized function $f$ to make prediction based on $x_*$ only, absent of any side information. Naively this is not possible, since our regressor is supported over $\sX\times\sS$. A easy way to fix this is to pre-train a model with the goal of predicting side information from $x$ - we first impute the missing side information, then proceed with both training and testing. A more principled way to do this is to train some GP model and use its predictive distribution over the side information as inputs for training and testing of $f$. This is related to GP with uncertain inputs and there is closed form solution for inference. 
+
+For a toy case where $D=1,M=1$, we see that the asymmetric MTGP described just now is able to utilize side information when they help Figure (\ref{fig:plt_mtgp_shift=0.1}) and ignore side information when they are irrelevant Figure (\ref{fig:plt_mtgp_shift=1.5}). A summary of model performance for main task regressor with varying side information relevance is in Table (\ref{table:amtgp_mse_wrt_shift}). A summary of how much \texttt{amtgp} depends on side information is in Table (\ref{table:amtgp_lengthscale_ratio})
+
+\begin{table}[h!]
+\begin{center}
+    \begin{tabular}{r|rrr}
+        \texttt{shift} &  \texttt{stgp} &   \texttt{mtgp} &   \texttt{amtgp} \\
+    \hline
+        0.000 &  0.069 &  0.052 &   0.046 \\
+        0.100 &  0.083 &  0.052 &   0.082 \\
+        0.500 &  0.188 &  0.098 &   0.187 \\
+        1.000 &  0.360 &  0.403 &   0.366 \\
+        1.500 &  0.433 &  0.881 &   0.458 \\
+    \end{tabular}
+    \caption{Mean squared error for main task (task=1) regressor at test locations along the grid ($\texttt{linspace}$(0,1,100)) for the three different methods \texttt{stgp},\texttt{mtgp},\texttt{amgtp} trained on data of varying task similarity. Larger values of \texttt{shift} implies the two task functions are more unrelated. \texttt{mtgp} is really effective when the two functions are coorperative but fails in cases where the two functions are dissimilar. \texttt{amtgp} is able to utilize side information when they are really relevant $\texttt{shift}=0$, and does not suffer from performance drop when the two tasks are irrelevant $\texttt{shift}=1.5$ }
+    \label{table:amtgp_mse_wrt_shift}
+\end{center}
+\end{table}
+
+\begin{table}[h!]
+\begin{center}
+    \begin{tabular}{r|r}
+        \texttt{shift} &   $\frac{\ell_s}{\ell_x}$ \\
+    \hline
+            0.0 &     0.1 \\
+            0.1 &     0.7 \\
+            0.5 &     8.8 \\
+            1.0 &    23.4 \\
+            1.5 &    29.4 \\
+    \end{tabular}
+    \caption{Ratio of lengthscale for $k_s$ over length scale for $k_x$, e.g. $\frac{\ell_s}{\ell_x}$ for main task (task=1) regressor trained via \texttt{amtgp}. A larger ratio implies the model relies more on $x$ and less on side information $s$}
+    \label{table:amtgp_lengthscale_ratio}
+\end{center}
+\end{table}
 
 
- 
+
+
+
+
+
+\begin{center} 
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{{{assets/plt_mtgp_shift=0.1}}}
+    \caption{(Top) \texttt{stgp} GP regressors are learnt independently (Middle) \texttt{mtgp} GP regressors learnt via MTGP (Bottom) \texttt{amtgp} GP regressor for task 1 (main task) where the GP prior has kernel defined in Equation (\ref{eq:amtgp_product_kernel}, \ref{eq:amtgp_ard_kernel}). Missing side information is imputed from the predictive mean of a pre-trained \texttt{stgp} GP regressor for task 0. Bandwidth for the squared exponential kernel $k_x$ and ARD kernel $k_s$, e.g. $\pc{\ell_x, \ell_s}$, is optimized by maximizing the marginal likelihood of task 1 data points. We see, in case where the tasks are related, as measured by a large $\texttt{shift}=.1$ betwen these two task functions. We see \texttt{mtgp} is able to utilize side information really effectively while \texttt{amtgp} also learns to rely on side information, as seen from a small $\ell_s$, and reduce its uncertainty of prediction far away from its training support. }
+    \label{fig:plt_mtgp_shift=0.1}
+\end{figure}
+\end{center} 
+    
+
+
+
+\begin{center} 
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{{{assets/plt_mtgp_shift=1.5}}}
+    \caption{(Top) \texttt{stgp} GP regressors are learnt independently (Middle) \texttt{mtgp} GP regressors learnt via MTGP (Bottom) \texttt{amtgp} GP regressor for task 1 (main task) where the GP prior has kernel defined in Equation (\ref{eq:amtgp_product_kernel}, \ref{eq:amtgp_ard_kernel}). Missing side information is imputed from the predictive mean of a pre-trained \texttt{stgp} GP regressor for task 0. Bandwidth for the squared exponential kernel $k_x$ and ARD kernel $k_s$, e.g. $\pc{\ell_x, \ell_s}$, is optimized by maximizing the marginal likelihood of task 1 data points. We see, in case where the tasks are unrelated and perhaps even conflicting, as measured by a large $\texttt{shift}=1.5$ betwen these two task functions, we see \texttt{mtgp} sacrifice the performance of main task while \texttt{amtgp} learns to ignore side information as seen from large values of $\ell_s$, and therefore maintains its performance as measured by MSE along the grid points. }
+    \label{fig:plt_mtgp_shift=1.5}
+\end{figure}
+\end{center} 
+
+
+    
 
 
 \newpage

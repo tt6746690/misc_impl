@@ -20,6 +20,7 @@ def gp_regression_slow(X, y, Xt, k, σn):
 
 
 def gp_regression_chol(X, y, Xt, k, logsn):
+    n = len(X)
     sn2 = jnp.exp(2*logsn)
     if sn2.size == 1:
         sn2I = sn2*jnp.eye(n)
@@ -27,7 +28,6 @@ def gp_regression_chol(X, y, Xt, k, logsn):
         # mtgp X[:,1] are task indices
         ind = np.asarray(X[:,1], np.int)
         sn2I = jnp.diag(sn2[ind])
-    n = len(X)
     K = k(X, X)+sn2I
     Km = k(X, Xt)
     Kt = k(Xt, Xt)
@@ -50,9 +50,9 @@ def run_sgd(f, params, lr=.002, num_steps=10, log_func=None):
     opt_init, opt_update, get_params = optimizers.momentum(lr, .9)
     opt_state = opt_init(params)
     itercount = itertools.count()
-    for _ in range(num_steps):
+    for i in range(num_steps):
         params = get_params(opt_state)
-        if log_func: log_func(f, params)
+        if log_func: log_func(i, f, params)
         params_grad = g(params)
         opt_state = opt_update(next(itercount),params_grad, opt_state)
     return params
