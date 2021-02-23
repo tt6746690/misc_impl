@@ -104,7 +104,7 @@ which has exact form compared to (\ref{eq:kernel_bayesian_regression_predictive_
 \begin{center} 
 \begin{figure}[h!]
     \includegraphics[width=\textwidth]{assets/plt_gp_regression_inference.png} 
-    \caption{This plot shows mean (black) and 95\% confidence interval (light blue) for predictive distribution $p(\mathbf{f}_*\mid X,\by, X_*)$ fit using Gaussian process regression assuming a SE prior over $f\sim\sG\sP(0,k_{SE})$ of varying lengthscale $\ell$ and observed sample sizes $n$. The middle row's kernel hyperparameter is taken to be the empirical Bayes estimate $\ell = \argmax p(\by\mid X, \ell)$ where $p(\by\mid X,\ell)$ given by Equation (\ref{eq:gp_regression_marginal_likelihood}), optimized via gradient descent. Here the we cheat by providing the groundtruth noise $\sigma_n=.1$. Optimizing for $\pc{\ell,\sigma_n}$ is hard and prone to local minima.}
+    \caption{This plot shows mean (black) and 95\% confidence interval (light blue) for predictive distribution $p(\mathbf{f}_*\mid X,\by, X_*)$ fit using Gaussian process regression assuming a SE prior over $f\sim\sG\sP(0,k_{SE})$ of varying lengthscale $\ell$ and observed sample sizes $n$ given groundtruth noise $\sigma_n=0.1$. The middle row's hyperparameters is taken to be the empirical Bayes estimate $\ell,\sigma_n = \argmax p(\by\mid X, \ell,\sigma_n)$ where $p(\by\mid X,\ell,\sigma_n)$ given by Equation (\ref{eq:gp_regression_marginal_likelihood}), optimized via gradient descent. Note estimating $\log(\ell),\log(\sigma_n)$ makes the optimization problem much easier.}
     \label{fig:plt_gp_regression_inference}
 \end{figure}
 \end{center}
@@ -160,7 +160,7 @@ Note this is the covariance matrix with no missing outputs, which leads to effic
 \begin{center} 
 \begin{figure}[h!]
     \includegraphics[width=\textwidth]{assets/plt_mtgp_competitive.png}
-    \caption{Observations for the two tasks are generated $y_0(x)=\sin(6x) + .03 \epsilon$ and $y_1(x)=\sin(6x + \texttt{shift}) + .1 \epsilon$ where $\epsilon\overset{iid}{\sim} \sN(0,1)$ and  and $\texttt{shift}=1.5$. Here for task 1 we only sample points in $[0,.5]$ while for task 0 we sample points in $[0,1]$. There are 4 times training points for task 0 than task 1 (Top) Two Gaussian process regressor are learnt to fit data independently. (Bottom) A MTGP is fit to data whereby the task similarity matrix $B:=K^t$ is learnt by maximizing marginal log likelihood. We see in case of data imbalance, which often happens in multitask learning, we arrive at an optimal marginal likelihood for all data points (a larger marginal likelihood), by renders prediction suboptimal for task 1 (a higher MSE)}
+    \caption{Observations for the two tasks are generated $y_0(x)=\sin(6x) + .03 \epsilon$ and $y_1(x)=\sin(6x + \texttt{shift}) + .1 \epsilon$ where $\epsilon\overset{iid}{\sim} \sN(0,1)$ and  and $\texttt{shift}=1.5$. Here for task 1 we only sample points in $[0,.5]$ while for task 0 we sample points in $[0,1]$. There are 4 times training points for task 0 than task 1 (Top) Two Gaussian process regressor are learnt to fit data independently. (Bottom) A MTGP is fit to data whereby the task similarity matrix $B:=K^t$ is learnt by maximizing marginal log likelihood. We see in case of data imbalance, which often happens in multitask learning, we arrive at an optimal marginal likelihood for all data points (a larger marginal likelihood), but renders prediction suboptimal for task 1 (a higher MSE)}
     \label{fig:plt_mtgp_competitive}
 \end{figure}
 \end{center} 
@@ -190,7 +190,7 @@ Instead of task similarity matrix, correlation between any pair $y,y'$ depends o
 \end{align}
 Hyperparameters $\pc{\pc{\ell_l}_{l=1}^M, \theta_{k_x}}$ can be learnt by maximizing marginal likelihood. One complication is missing side information during training, no information exists for some components of $s$. A more serious issue is at test time, we would want our parameterized function $f$ to make prediction based on $x_*$ only, absent of any side information. Naively this is not possible, since our regressor is supported over $\sX\times\sS$. A easy way to fix this is to pre-train a model with the goal of predicting side information from $x$ - we first impute the missing side information, then proceed with both training and testing. A more principled way to do this is to train some GP model and use its predictive distribution over the side information as inputs for training and testing of $f$. This is related to GP with uncertain inputs and there is closed form solution for inference. 
 
-For a toy case where $D=1,M=1$, we see that the asymmetric MTGP described just now is able to utilize side information when they help Figure (\ref{fig:plt_amtgp_shift=0.1}) and ignore side information when they are irrelevant Figure (\ref{fig:plt_amtgp_shift=1.5}). A summary of model performance for main task regressor with varying side information relevance is in Table (\ref{table:amtgp_mse_wrt_shift}). A summary of how much \texttt{amtgp} depends on side information is in Table (\ref{table:amtgp_lengthscale_ratio})
+For a toy case where $D=1,M=1$, we see that the asymmetric MTGP described just now is able to utilize side information when they help Figure (\ref{fig:plt_amtgp_shift=0.0}) and ignore side information when they are irrelevant Figure (\ref{fig:plt_amtgp_shift=1.0}). A summary of model performance for main task regressor with varying side information relevance is in Table (\ref{table:amtgp_mse_wrt_shift}). A summary of how much \texttt{amtgp} depends on side information is in Table (\ref{table:amtgp_lengthscale_ratio})
 
 \begin{table}[h!]
 \begin{center}
@@ -226,12 +226,11 @@ For a toy case where $D=1,M=1$, we see that the asymmetric MTGP described just n
 
 
 
-
 \begin{center} 
 \begin{figure}[h!]
     \includegraphics[width=\textwidth]{{{assets/plt_amtgp_shift=0.0}}}
     \caption{(Top) \texttt{stgp} GP regressors are learnt independently (Middle) \texttt{mtgp} GP regressors learnt via MTGP (Bottom) \texttt{amtgp} GP regressor for task 1 (main task) where the GP prior has kernel defined in Equation (\ref{eq:amtgp_product_kernel}, \ref{eq:amtgp_ard_kernel}). Missing side information is imputed from the predictive mean of a pre-trained \texttt{stgp} GP regressor for task 0. Bandwidth for the squared exponential kernel $k_x$ and ARD kernel $k_s$, e.g. $\pc{\ell_x, \ell_s}$, is optimized by maximizing the marginal likelihood of task 1 data points. We see, in case where the tasks are related, as measured by a large $\texttt{shift}=0.$ betwen these two task functions. We see \texttt{mtgp} is able to utilize side information really effectively while \texttt{amtgp} also learns to rely on side information, as seen from a small $\ell_s$, and reduce its uncertainty of prediction far away from its training support. }
-    \label{fig:plt_amtgp_shift=0.1}
+    \label{fig:plt_amtgp_shift=0.0}
 \end{figure}
 \end{center} 
     
@@ -248,7 +247,6 @@ For a toy case where $D=1,M=1$, we see that the asymmetric MTGP described just n
 
 
     
-
 
 \newpage
 \printbibliography 
