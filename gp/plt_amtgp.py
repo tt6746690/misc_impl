@@ -29,14 +29,15 @@ from jaxkern import (cov_se2, LookupKernel, normalize_K)
 from plt_utils import plt_savefig, plt_scaled_colobar_ax
 from gp import gp_regression_chol, run_sgd
 
+
 ## Parameters
 
 M = 2
-n_train = 50
+n_train = 60
 n_test = 50
 ylim = (-3,3)
 xlim = (-.2,1.2)
-σn = [.03, .1]
+σns = [.03, .1]
 ℓ = .2
 mode = 'stgp'
 mode = 'mtgp'
@@ -57,23 +58,31 @@ def log_func(i, f, params):
 
 colors_b = [cmap(.1), cmap(.3)]
 colors_r = [cmap(.9), cmap(.7)]
+mses = {}
+modes = ['stgp', 'mtgp', 'amtgp']
+shifts = [0., .5, 1., 1.5, 2]
+task0_n_ratio = 4/5
 
-for si, shift in enumerate([1.5]):
+# modes = ['stgp', 'mtgp']
+# shifts = [1.5]
+# task0_n_ratio = 1/2
+
+for si, shift in enumerate(shifts): # 
     
-    nrows = 3
+    nrows = len(modes)
     gridspec_kw = {'width_ratios': [2, 1], 'height_ratios': [1 for _ in range(nrows)]}
     fig, axs = plt.subplots(nrows, 2, gridspec_kw=gridspec_kw)
     fig.set_size_inches(15, 5*nrows)
 
 
-    for i, mode in enumerate(['stgp', 'mtgp', 'amtgp']):
+    for i, mode in enumerate(modes):
 
         ## Data
         np.random.seed(0)
 
         B = jnp.eye(M)
 
-        X0 = np.random.rand(n_train*2//4, 1) # *.5+.5
+        X0 = np.random.rand(int(n_train*task0_n_ratio), 1) # *.5+.5
         X1 = np.random.rand(n_train-len(X0), 1)*.5
         X_train = np.vstack((np.hstack((X0, np.zeros_like(X0))),
                              np.hstack((X1, np.ones_like(X1)))))
@@ -81,8 +90,8 @@ for si, shift in enumerate([1.5]):
         f0 = lambda X: np.sin(6*X)
         f1 = lambda X: np.sin(6*X + shift)
         fs = [f0,f1]
-        Y0 = f0(X0) + np.random.randn(*X0.shape)*σn[0]
-        Y1 = f1(X1) + np.random.randn(*X1.shape)*σn[1]
+        Y0 = f0(X0) + np.random.randn(*X0.shape)*σns[0]
+        Y1 = f1(X1) + np.random.randn(*X1.shape)*σns[1]
         y_train = np.vstack((Y0,Y1))
 
         X_test = np.vstack((np.tile(np.linspace(xlim[0], xlim[1], n_test), M),
@@ -128,7 +137,7 @@ for si, shift in enumerate([1.5]):
                 return -mll
             params = {'logℓ': jnp.log(1.),
                       'logsn': jnp.log(.1*jnp.ones(M)),
-                      'logL': jnp.log(jnp.array(np.random.rand(M,M)))}
+                      'logL': jnp.log(jnp.array(np.eye(M))*shift + np.random.rand(M,M) )}
             res = run_sgd(nmll, params, lr=lr, num_steps=num_steps, log_func=None)
             logℓ, logsn = res['logℓ'].item(), res['logsn']
             ℓ, σn = jnp.exp(logℓ), jnp.exp(logsn)
@@ -189,7 +198,8 @@ for si, shift in enumerate([1.5]):
                 if t == 1:
                     ax.plot(X_test_, fs[t](X_test_), color='k', linestyle='dashed', linewidth=1)
 
-                mse = mean_squared_error(μ[I], f1(X_test[I,0]))
+                mse = mean_squared_error(μ[I], fs[t](X_test[I,0]))
+                if t==1: mses[(shift,mode)]=mse
                 # train data points
                 I = X_train[:,1] == t
                 ax.scatter(X_train[I,0], y_train[I],
@@ -199,11 +209,13 @@ for si, shift in enumerate([1.5]):
             ax.grid()
             ax.set_xlim(xlim)
             ax.set_ylim(ylim)
+            ax.set_ylabel('$'+f'{mode}'+'}$')
             ax.legend(fontsize=15)
             title = '$\ell$'+f'={ℓ:.2f}'+ \
                 ' $B_{01}/B_{00}$'+f'={B[0,1]*2/(B[0,0]+B[1,1]):.2f}'+ \
                 ' $-mll$'+f'={-mll:.2f}'
             ax.set_title(title, fontsize=30)
+            
 
 
             ax = axs[i, 1]
@@ -232,7 +244,8 @@ for si, shift in enumerate([1.5]):
             ax.fill_between(X_test_main[:,0], Y1μ-2*Y1std, Y1μ+2*Y1std, alpha=.2, color=colors_b[t])
             ax.plot(X_test_main[:,0], fs[t](X_test_main[:,0]), color='k', linestyle='dashed', linewidth=1)
 
-            mse = mean_squared_error(Y1μ, f1(X_test[I,0]))
+            mse = mean_squared_error(Y1μ, fs[1](X_test[I,0]))
+            mses[(shift, mode)] = mse
             I = X_train[:,1] == t
             ax.scatter(X_train[I,0], y_train[I],
                        marker='x', color=colors_r[t], s=50,
@@ -241,6 +254,7 @@ for si, shift in enumerate([1.5]):
             ax.grid()
             ax.set_xlim(xlim)
             ax.set_ylim(ylim)
+            ax.set_ylabel('$'+f'{mode}'+'}$')
             ax.legend(fontsize=15)
             title = '$\ell_x,\ell_y$'+f'={ℓx:.2f},{ℓy:.2f}'+' $-mll_{1}$'+f'={-mll:.2f}'
             ax.set_title(title, fontsize=30)
@@ -254,7 +268,16 @@ for si, shift in enumerate([1.5]):
             ax.set_title('$K(X_{train@1}, X_{test@1})$')
 
 
-
     fig.tight_layout()
-    plt_savefig(fig, f'summary/assets/plt_mtgp_shift={shift}.png')
+    plt_savefig(fig, f'summary/assets/plt_amtgp_shift={shift}.png')
+#    plt_savefig(fig, f'summary/assets/plt_mtgp_coorperative.png')
+#    plt_savefig(fig, f'summary/assets/plt_mtgp_competitive.png')
 
+
+
+data = []
+shifts = np.unique([x[0] for x in mses.keys()])
+for s in shifts:
+    data.append([s] + list([mses[(s,mode)] for mode in modes]))
+
+print(tabulate(data, tablefmt='simple', headers=['shift']+modes, floatfmt='.3f'))
