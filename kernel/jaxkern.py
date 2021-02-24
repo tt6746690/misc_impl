@@ -64,14 +64,15 @@ def cov_se(X, Y=None, σ=1, ℓ=1):
     if Y is None: Y = X
     return (σ**2)*np.exp(-cdist_sqeuclidean(X, Y)/2/(ℓ**2))
 
-def cov_se2(X, Y=None, σ=1, logℓ=0):
+def cov_se2(X, Y=None, logσ=1, logℓ=0):
     # Squared Exponential kernel 
     #     σ    - vertical lengthscale
     #     logℓ - log lengthscale (easier optimization -mll)
     #
     if Y is None: Y = X
+    σ2 = np.exp(2*logσ)
     ℓ2 = np.exp(2*logℓ)
-    return (σ**2)*np.exp(-cdist_sqeuclidean(X, Y)/2/(ℓ2))
+    return σ2*np.exp(-cdist_sqeuclidean(X, Y)/2/(ℓ2))
 
 def cov_rq(X, Y=None, σ=1, α=1, ℓ=1):
     # Rational Quadratic kernel 
