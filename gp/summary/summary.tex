@@ -188,9 +188,11 @@ Instead of task similarity matrix, correlation between any pair $y,y'$ depends o
         \right)
     \label{eq:amtgp_ard_kernel}
 \end{align}
-Hyperparameters $\pc{\pc{\ell_l}_{l=1}^M, \theta_{k_x}}$ can be learnt by maximizing marginal likelihood. One complication is missing side information during training, no information exists for some components of $s$. A more serious issue is at test time, we would want our parameterized function $f$ to make prediction based on $x_*$ only, absent of any side information. Naively this is not possible, since our regressor is supported over $\sX\times\sS$. A easy way to fix this is to pre-train a model with the goal of predicting side information from $x$ - we first impute the missing side information, then proceed with both training and testing. A more principled way to do this is to train some GP model and use its predictive distribution over the side information as inputs for training and testing of $f$. This is related to GP with uncertain inputs and there is closed form solution for inference. 
+If ARD kernel is used, current formulation captures the prior that main task regressor is smooth with respect to some stratification of dataset - at test time the model will give similar prediction to those that appears to be likely in the same training stratification, as shown in Figure (\ref{fig:plt_amtgp_shift=0.0_scale=12}). Hyperparameters $\pc{\pc{\ell_l}_{l=1}^M, \theta_{k_x}}$ can be learnt by maximizing marginal likelihood. 
 
-For a toy case where $D=1,M=1$, we see that the asymmetric MTGP described just now is able to utilize side information when they help Figure (\ref{fig:plt_amtgp_shift=0.0}) and ignore side information when they are irrelevant Figure (\ref{fig:plt_amtgp_shift=1.0}). A summary of model performance for main task regressor with varying side information relevance is in Table (\ref{table:amtgp_mse_wrt_shift}). A summary of how much \texttt{amtgp} depends on side information is in Table (\ref{table:amtgp_lengthscale_ratio})
+One complication is missing side information during training, no information exists for some components of $s$. A more serious issue is at test time, we would want our parameterized function $f$ to make prediction based on $x_*$ only, absent of any side information. Naively this is not possible, since our regressor is supported over $\sX\times\sS$. A easy way to fix this is to pre-train a model with the goal of predicting side information from $x$ - we first impute the missing side information, then proceed with both training and testing. A more principled way to do this is to train some GP model and use its predictive distribution over the side information as inputs for training and testing of $f$. This is related to GP with uncertain inputs and there is closed form solution for inference. 
+
+For a toy case where $D=1,M=1$, we see that the asymmetric MTGP described just now is able to utilize side information when they help Figure (\ref{fig:plt_amtgp_shift=0.0}) and ignore side information when they are irrelevant Figure (\ref{fig:plt_amtgp_shift=1.0}). A summary of model performance for main task regressor with varying side information relevance is in Table (\ref{table:amtgp_mse_wrt_shift}). A summary of how much \texttt{amtgp} depends on side information is in Table (\ref{table:amtgp_lengthscale_ratio}). 
 
 \begin{table}[h!]
 \begin{center}
@@ -249,6 +251,17 @@ For a toy case where $D=1,M=1$, we see that the asymmetric MTGP described just n
 
 
     
+
+
+\begin{center} 
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{{{assets/plt_amtgp_shift=0.0_scale=12}}}
+    \caption{(Top) \texttt{stgp} GP regressors are learnt independently (Middle) \texttt{mtgp} GP regressors learnt via MTGP (Bottom) \texttt{amtgp} GP regressor for task 1 (main task) where the GP prior has kernel defined in Equation (\ref{eq:amtgp_product_kernel}, \ref{eq:amtgp_ard_kernel}). We see \texttt{amtgp} can extrapolate training support by utilizing prediction of side task.}
+    \label{fig:plt_amtgp_shift=0.0_scale=12}
+\end{figure}
+\end{center} 
+
+
 
 \newpage
 \printbibliography 
