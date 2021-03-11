@@ -3,3 +3,5 @@ pyro-ppl==1.4.0
 torchsummary==1.5.1
 jax
 jaxlib
+plotly
+vtk

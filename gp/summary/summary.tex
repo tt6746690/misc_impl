@@ -4,7 +4,18 @@
 \addbibresource{multitask.bib}
 
 
+\usepackage{tikz}
+\newcommand*\circled[1]{\tikz[baseline=(char.base)]{
+    \node[shape=circle, draw, inner sep=1pt, 
+        minimum height=12pt] (char) {\vphantom{1g}#1};}}
+\renewcommand\bf{\ensuremath{\mathbf{f}}} 
+
+
+
 \begin{document}
+
+
+
  
 \section{Gaussian Process}
 
@@ -76,10 +87,10 @@ Instead of placing a prior over weights $p(w)$ to quantify randomness in functio
 \end{align}
 Therefore, $f\sim \sG\sP(0, k)$ where $k(x,x') = \phi(x)^T \Sigma_p \phi(x')$. Note $k$ is in fact a valid kernel. (Since $\Sigma_p$ is psd, $\Sigma_p = UDU^T$ by SVD. We can write $k(x,x') = \inner{\psi(x)}{\psi(x')}$ where $\psi(x) = \Sigma_p^{1/2} \phi(x)$ and $\Sigma_p^{1/2} = UD^{1/2}U^T$). Conversely, any valid kernel used in kernel Bayesian regression can be used to parameterize the covariance function of the Gaussian process model over $f$.
 
-Since $y=f(x)+\epsilon$, we have $\by = \mathbf{f} + \sigma_n^2 I \sim \sN(0, k(X,X)+\sigma_n^2I)$ where $\by,\mathbf{f}\in\R^{n\times 1}$. We can write the joint distribution of observed values and function values at some test locations $X_*$ as
+Since $y=f(x)+\epsilon$, we have $\by = \bf + \sigma_n^2 I \sim \sN(0, k(X,X)+\sigma_n^2I)$ where $\by,\bf\in\R^{n\times 1}$. We can write the joint distribution of observed values and function values at some test locations $X_*$ as
 \begin{align}
     \begin{bmatrix}
-        \by \\ \mathbf{f}_*
+        \by \\ \bf_*
     \end{bmatrix}
     \sim
     \sN\left(
@@ -91,30 +102,30 @@ Since $y=f(x)+\epsilon$, we have $\by = \mathbf{f} + \sigma_n^2 I \sim \sN(0, k(
     \right)
     \label{eq:gaussian_process_regression_noisy_model}
 \end{align}
-We can derive the predictive distribution for $\mathbf{f}_*\mid \by$ by simply apply conditional distribution formula
+We can derive the predictive distribution for $\bf_*\mid \by$ by simply apply conditional distribution formula
 \begin{align}
-    \mathbf{f}_* \mid X,\by, X_* \sim \sN(
+    \bf_* \mid X,\by, X_* \sim \sN(
         & k(X_*,X) (k(X,X)+\sigma_n^2 I)^{-1} \by  \\
         & k(X_*,X_*) - k(X_*,X) (k(X,X)+\sigma_n^2 I)^{-1} k(X,X_*) )
     \label{eq:gp_regression_predictive_distribution}
 \end{align}
-which has exact form compared to (\ref{eq:kernel_bayesian_regression_predictive_distribution}). More compactly, for a single test point $x_*$, $\mu_{\mathbf{f}_*} =  k_*^T (K+\sigma_n^2 I)^{-1}$ and $\var(\mathbf{f}_*) = k(x_*,x_*) - k_*^T (K+\sigma_n^2 I)^{-1} k_* $ where $k_* = k(X,x_*)\in \R^{n\times 1}$. See Figure (\ref{fig:plt_gp_regression_inference}) for examples of Gaussian process regression with varying data size and hyperparameters. 
+which has exact form compared to (\ref{eq:kernel_bayesian_regression_predictive_distribution}). More compactly, for a single test point $x_*$, $\mu_{\bf_*} =  k_*^T (K+\sigma_n^2 I)^{-1}$ and $\var(\bf_*) = k(x_*,x_*) - k_*^T (K+\sigma_n^2 I)^{-1} k_* $ where $k_* = k(X,x_*)\in \R^{n\times 1}$. See Figure (\ref{fig:plt_gp_regression_inference}) for examples of Gaussian process regression with varying data size and hyperparameters. 
 
 
 \begin{center} 
 \begin{figure}[h!]
     \includegraphics[width=\textwidth]{assets/plt_gp_regression_inference.png} 
-    \caption{This plot shows mean (black) and 95\% confidence interval (light blue) for predictive distribution $p(\mathbf{f}_*\mid X,\by, X_*)$ fit using Gaussian process regression assuming a SE prior over $f\sim\sG\sP(0,k_{SE})$ of varying lengthscale $\ell$ and observed sample sizes $n$ given groundtruth noise $\sigma_n=0.1$. The middle row's hyperparameters is taken to be the empirical Bayes estimate $\ell,\sigma_n = \argmax p(\by\mid X, \ell,\sigma_n)$ where $p(\by\mid X,\ell,\sigma_n)$ given by Equation (\ref{eq:gp_regression_marginal_likelihood}), optimized via gradient descent. Note estimating $\log(\ell),\log(\sigma_n)$ makes the optimization problem much easier.}
+    \caption{This plot shows mean (black) and 95\% confidence interval (light blue) for predictive distribution $p(\bf_*\mid X,\by, X_*)$ fit using Gaussian process regression assuming a SE prior over $f\sim\sG\sP(0,k_{SE})$ of varying lengthscale $\ell$ and observed sample sizes $n$ given groundtruth noise $\sigma_n=0.1$. The middle row's hyperparameters is taken to be the empirical Bayes estimate $\ell,\sigma_n = \argmax p(\by\mid X, \ell,\sigma_n)$ where $p(\by\mid X,\ell,\sigma_n)$ given by Equation (\ref{eq:gp_regression_marginal_likelihood}), optimized via gradient descent. Note estimating $\log(\ell),\log(\sigma_n)$ makes the optimization problem much easier.}
     \label{fig:plt_gp_regression_inference}
 \end{figure}
 \end{center}
 
 \subsection{Model Selection}
 
-Model selection for Gaussian process regression involves picking the form and the hyperparameters of the covariance function. Given data $(X,\by)$, marginal likelihood $p(\by\mid X)$ quantifies how likely data is observed under our additive noise model $\by\mid \mathbf{f} \sim \sN(\mathbf{f},\sigma_n^2 I)$ on average with respect to latent function values (or parameters of our model) $\mathbf{f}\mid X \sim \sN(0,K)$ (due to assumption of Gaussian process prior over f),
+Model selection for Gaussian process regression involves picking the form and the hyperparameters of the covariance function. Given data $(X,\by)$, marginal likelihood $p(\by\mid X)$ quantifies how likely data is observed under our additive noise model $\by\mid \bf \sim \sN(\bf,\sigma_n^2 I)$ on average with respect to latent function values (or parameters of our model) $\bf\mid X \sim \sN(0,K)$ (due to assumption of Gaussian process prior over f),
 \begin{align}
     p(\by\mid X)
-        = \int p(\by\mid \mathbf{f},X) p(\mathbf{f}\mid X) \, d\mathbf{f}
+        = \int p(\by\mid \bf,X) p(\bf\mid X) \, d\bf
 \end{align}
 This formulation is analogous to that in Bayesian linear regression where the marginal likelihood marginalizes over weights $p(\by\mid X) = \int p(\by\mid X,w)p(w) \, dw$. We can obtain a closed form expression by reading off (\ref{eq:gaussian_process_regression_noisy_model}), i.e. $\by \sim \sN(\mathbf{0}, K+\sigma_n^2 I)$. 
 \begin{align}
@@ -123,6 +134,147 @@ This formulation is analogous to that in Bayesian linear regression where the ma
     \label{eq:gp_regression_marginal_likelihood}
 \end{align}
 In Bayesian model selection, model hyperparameters for Gaussian process regression $\theta = \pc{\sigma_n, \ell}$ can be found by maximizing the marginal likelihood or the type II likelihood $\theta^* = \argmax_{\theta}\, \log p(\by\mid X, \theta)$.
+
+
+
+
+\section{Approximate Gaussian Process}
+
+\subsection{Inducing Variables (DIC/FITC)}
+
+The unifying view paper \cite{quinonero-candelaUnifyingViewSparse2005} gives a pretty good explanation/interpretation of sparse GP methods based on inducing points till circa 2005. The basic idea is to augment existing model $p(\by,\bf)$ with $m$ additional inducing variables $\bu = \pc{u}_{i=1}^m$ that are instantiation from the same GP prior, corresponding to a set of inducing locations $X_{\bu}$. Inducing variables act as an information channel between training/testing latent function values $\bf,\bf_*$, alternatively we can think of $\bu$ as a sufficient statistics of potentially redundant latent function values $\bf$. This translates to a conditional independence assumption $\bf \dperp \bf_* \mid \bu$, which implies the following factorization,
+\begin{align}
+    p(\by\mid\bf)p(\bf,\bf_*,\bu)
+        = p(\by\mid\bf) p(\bf\mid \bu) p(\bf_*\mid \bu) p(\bu)
+\end{align}
+Without additional assumptions, we can think of joint priors factorizes akin to a latent variable model,
+\begin{align}
+    \bu
+        &\sim \sN(0, K_{\bu\bu}) \\ 
+    \bf\mid\bu
+        &\sim \sN( K_{\bf\bu}K_{\bu\bu}^{-1} \bu, K_{\bu\bu} - Q_{\bf\bf} ) 
+    \label{eq:inducing_variables_conditional_prior}
+\end{align}
+where $Q_{\bf\bf}=K_{\bf\bu}K_{\bu\bu}^{-1}K_{\bu\bf}$ is Nystr\"om approximation of $K_{\bf\bf}$. Various approximation schemes corresponds to approximations to the conditional prior, $q(\bf\mid \bu), q(\bf_* \mid \bu)$. For exact GP, inference using the posterior GP $p(\bf\mid\by)$ requires inversion of a large kernel matrix; The introduction of inducing variables modifies the form that posterior GP $q(\bf\mid\by)$ takes.
+
+To start, the Subset of Regressor (SoR) or Deterministic Inducing Conditional (DIC) approximation assumes that the latent function values as a linear mapping of inducing variables, e.g. $\bf = K_{\bf\bu} K_{\bu\bu}^{-1} \bu$. Note that the linear projection is one which preserves the mean of conditional prior in Equation (\ref{eq:inducing_variables_conditional_prior}). This assumption gives to an approximate conditional prior with zero covariance, $q_{\text{SOR}}(\bf\mid\bu) = \sN(  K_{\bf\bu} K_{\bu\bu}^{-1} \bu, 0 )$. Because of the linear mapping, $\E_q\pb{\bf} = 0$ and $\cov_q(\bf) = K_{\bf\bu}K_{\bu\bu}^{-1} K_{\bu\bu} K_{\bu\bu}^{-1} K_{\bu\bf} = Q_{\bf\bf}$, similarly for $q(\bf_*)$, and therefore,
+\begin{align}
+    q_{\text{DIC}}(\bf,\bf_*)
+        = \sN\left( 0,
+            \begin{bmatrix}
+                Q_{\bf\bf} & Q_{\bf*} \\
+                Q_{\bf*} & Q_{**} \\ 
+            \end{bmatrix}
+        \right)
+\end{align}
+Inference with the DIC approximation is equivalent to exact inference with a modified covariance function $k_{\text{DIC}}(x_i,x_j) = k(x_i, \bu) K_{\bu\bu}^{-1} k(\bu, x_j)$. The predictive distribution is then given by 
+\begin{align}
+    q_{\text{DIC}}(\bf_*\mid \by)
+        \sim \sN\left(
+            Q_{*\bf} ( Q_{\bf\bf} + \sigma_n^2 I )^{-1} \by,
+            Q_{**} - Q_{*\bf} ( Q_{\bf\bf} + \sigma_n^2 I )^{-1} Q_{\bf*}
+        \right)
+\end{align}
+Inversion of a $n\times n$ matrix is replaced with inversion of $m\times m$ matrix, making computation faster. 
+
+Sparse Gaussian Process using Pseudo-inputs (SGPP) or Fully Independent Training Conditional (FITC) approximation is another popular approximate GP method \cite{snelsonSparseGaussianProcesses2005}. Simply, FITC assumes $\bf_i\dperp \bf_j \mid \bu$ for all $i,j\in\pb{n}$, henceforth the conditional priors are fully (conditionally) independent. 
+\begin{align}
+    q_{\text{FITC}}(\bf\mid\bu)
+        = \prod_{i=1}^n p(f_i\mid \bu)
+        = \sN( K_{\bf\bu}K_{\bu\bu}^{-1} \bu, \text{diag}\pb{ K_{\bu\bu} - Q_{\bf\bf} } )
+\end{align}
+Compare this to Equation (\ref{eq:inducing_variables_conditional_prior}), we see that FITC replaces approximate covariances with exact covariances on the diagonal. Equivalently, we can think of $\bf$ as a noisy linear map of $\bu$ where the noise has a particular form, e.g. $\bf = K_{\bf\bu}K_{\bu\bu}^{-1} \bu + \gamma$ where $\gamma \sim \sN(0, \text{diag}\pb{ K_{\bu\bu} - Q_{\bf\bf} })$. We can derive the covariance for the approximate posterior $\cov_q(\bf) = \cov( K_{\bf\bu}K_{\bu\bu}^{-1} \bu ) + \cov( \gamma ) = Q_{\bf\bf} + \text{diag}\pb{  K_{\bu\bu} - Q_{\bf\bf} }$. Therefore,
+\begin{align}
+    q_{\text{FITC}}(\bf,\bf_*)
+        = \sN\left(
+            0,
+            \begin{bmatrix}
+                Q_{\bf\bf} - \text{diag}\pb{Q_{\bf\bf} - K_{\bf\bf}} & Q_{\bf*} \\ 
+                Q_{*\bf} & K_{**} \\
+            \end{bmatrix}
+        \right)
+\end{align}
+Inference with FITC approximation is equivalent to exact inference with a modified covariance function $k_{\text{FITC}}(x_i,x_j) = k_{\text{DIC}}(x_i,x_j) + \delta_{i,j} (k(x_i,x_j) - k_{\text{DIC}}(x_i,x_j))$. The predictive distribution follows,
+\begin{align}
+    q_{\text{FITC}}(\bf_*\mid \by)
+        \sim \sN\left(
+            Q_{*\bf} ( Q_{\bf\bf} + \Lambda )^{-1} \by,
+            Q_{**} - Q_{*\bf} ( Q_{\bf\bf} + \Lambda )^{-1} Q_{\bf*}
+        \right)
+\end{align}
+where $\Lambda = \text{diag}\pb{ K_{\bf\bf} - Q_{\bf\bf} + \sigma_n^2 I }$.
+
+One popular methods for selecting inducing inputs $\bX_u$ is simply by maximizing the marginal likelihood
+\begin{align}
+    q(\by\mid X_{\bu})
+        = \iint p(\by\mid \bf) q(\bf\mid \bu) p(\bu\mid X_{\bu}) \, d\bu \, d\bf
+\end{align}
+
+
+\subsection{Variational Formulation (VFE/SVGP)}
+
+
+Sparse GP with inducing variables is inflicted with the problem that modeling assumptions, e.g. choice of covariance function, is interwined with approximation assumptions. Specifically, we see that inference using approximation schemes like DIC and FITC can be interpreted as performing exact inference on GP model with a modified covariance function, where inducing locations $X_{\bu}$ are part of kernel hyperparameters. This is undesirable.
+
+\cite{titsiasVariationalLearningInducing2009} proposes to use variational inference to learning inducing locations. \cite{hensmanGaussianProcessesBig2013} extends the variational bound for stochastic gradient optimization, \cite{hensmanScalableVariationalGaussian2014} extends the variational bound to account for non-conjugate likelihood. The accompanying technical report for the 2009 paper \cite{titsiasVariationalModelSelection2009}, the gentle tutorial \cite{galVariationalInferenceSparse2014}, another report by Thang Bui \cite{buiSparseApproximationsNonConjugate2014}, Mark van der Wilk's PhD thesis \cite{SparseGaussianProcess2018} are helpful in understanding the derivations.
+
+\cite{titsiasVariationalLearningInducing2009} proposes Variational Free Energy (VFE) which applies variational inference to learn inducing variables in sparse GP, alleviating the above concern. Similar to inducing variable approximations, the model is augmented with inducing variables and assume the same conditional independence relationship so that the joint density factorizes $p(\by,\bf,\bu) = p(\by\mid\bf) p(\bf\mid \bu) p(\bu)$. Here $\by$ is observed while $\pc{\bu,\bf}$ are latent variables. In contrast to inducing variable methods which makes approximating assumptions about the conditional priors, the paper introduce a variational density that preserves the true conditional prior with a freely varying prior over the inducing variables, e.g. $q(\bf,\bu) = p(\bf\mid\bu)q(\bu)$ for some $q(\bu)\sim \sN(\mu_{\bu},\Sigma_{\bu})$ that depends on inducing locations $X_{\bu}$ as well as kernel hyperparameters. Together with Equation (\ref{eq:inducing_variables_conditional_prior}), we can derive an approximate posterior for $\bf$,
+\begin{align}
+    q(\bf)
+        = \int p(\bf\mid\bu)q(\bu) \, d\bu
+        = \sN( K_{\bf\bu} K_{\bu\bu}^{-1} \mu_{\bu},
+               K_{\bf\bf} - Q_{\bf\bf} +  K_{\bf\bu} K_{\bu\bu}^{-1} \Sigma_{\bu} K_{\bu\bu}^{-1} K_{\bu\bf} )
+    \label{eq:inducing_variables_approximate_prior_f}
+\end{align}
+The paper then proposes to find variational parameters $\pc{\mu_n,\Sigma_n,X_{\bu},\theta}$ by minimizing the distance between the approximate and true posterior, $q^* = \argmin_{q(\bu)} \text{KL}(q(\bf,\bu)\mid p(\bf,\bu\mid \by))$. As usual in variational inference, we derive the ELBO to make objective tractable for optimization,
+\begin{align}
+    \text{KL}(q(\bf,\bu)\mid p(\bf,\bu\mid \by))
+        &= \int p(\bf\mid\bu) q(\bu) \log \left( \frac{p(\bf\mid\bu)q(\bu)}{p(\by\mid\bf) p(\bf\mid\bu) p(\bu)}  \right) \, d\bf\, d\bu + \log p(\by) \\
+    \log p(\by)
+        &\geq \int q(\bu) \int p(\bf\mid\bu) \log p(\by\mid \bf) \, d\bf \, d\bu - \text{KL}(q(\bu) \Vert p(\bu))
+    \label{eq:sparse_gp_vfe_elbo}
+\end{align}
+With $\E\pb{\bf\mid\bu} = K_{\bf\bu} K_{\bu\bu}^{-1}\bu$ and $\cov(\bf\mid\bu) = K_{\bf\bf} - Q_{\bf\bf}$, we can simplify,
+\begin{align}
+    \langle \log p(\by\mid\bf) \rangle_{p(\bf\mid\bu)}
+        &= \int p(\bf\mid\bu) \pb{
+            -\frac{n}{2} \log(2\pi \sigma^2) - \frac{1}{2\sigma^2} \tr\left( \by\by^T - 2\by\bf^T + \bf\bf^T \right)
+        }\, d\bf \\
+        &=  -\frac{n}{2} \log(2\pi \sigma^2) - \frac{1}{2\sigma^2} \tr\left( \by\by^T - 2\by (\E\pb{\bf\mid\bu})^T + \cov(\bf\mid\bu) + \E\pb{\bf\mid\bu} \E\pb{\bf\mid\bu}^T \right) \\
+        &=  \log \sN(\bf \mid K_{\bf\bu}K_{\bu\bu}^{-1}\bu, \sigma^2I) - \frac{1}{2\sigma^2} \tr\left( K_{\bf\bf} - Q_{\bf\bf} \right)
+\end{align}
+Now with $P:= K_{\bf\bu}K_{\bu\bu}^{-1}$, $\E_q\pb{\bu} = \mu_{\bu}$, and $\cov_q(\bu) = \Sigma_{\bu} + \mu_{\bu}\mu_{\bu}^T$, then
+\begin{align}
+    \langle p(\by\mid \bf) \rangle_{q(\bf,\bu)}
+        &=  -\frac{n}{2} \log(2\pi \sigma^2) - \frac{1}{2\sigma^2} \tr\left( \by\by^T - 2\by ( P \mu_{\bu})^T + P ( \Sigma_{\bu} + \mu_{\bu}\mu_{\bu}^T ) P^T + K_{\bu\bu} - Q_{\bu\bu} \right) \\
+        &=  \log \sN(\bf \mid K_{\bf\bu}K_{\bu\bu}^{-1}\mu_{\bu}, \sigma^2I) - \frac{1}{2 \sigma^2} \tr\left( K_{\bf\bf} - Q_{\bf\bf} \right) - \frac{1}{2\sigma^2} \tr\left( K_{\bf\bu}K_{\bu\bu}^{-1} \Sigma_{\bu} K_{\bu\bu}^{-1} K_{\bu\bf} \right)
+    \label{eq:sparse_gp_vfe_elbo_1}
+\end{align}
+\cite{titsiasVariationalLearningInducing2009} finds the optimal variational distribution $q(\bu)$ and substitute back into the lower bound, resulting in a bound where the first term is simply the marginal likelihoood for sparse GP with DIC/DTC approximation while the second term regularizes approximate kernel be close to the true kernel matrix,
+\begin{align}
+    \sL_{\text{VFE}}
+        :=  \log \sN(\bf \mid K_{\bf\bu}K_{\bu\bu}^{-1}\bu,Q_{\bf\bf} -  \sigma^2I) - \frac{1}{2\sigma^2} \tr\left( K_{\bf\bf} - Q_{\bf\bf} \right)
+    \label{eq:sparse_gp_vfe_collapsed_bound}
+\end{align}
+The bound is strictly better with additional inducing variables and becomes tight when $X_{\bu}=X$, recovering the full GP marginal likelihood. Maximizing $\sL_{\text{VFE}}$ with respect to kernel hyperparameters and inducing locations is tractable as the objective requires $\sO(nm^2)$ to compute.
+
+\cite{hensmanGaussianProcessesBig2013} proposes Stochastic Variational Gaussian Process (SVGP) that extends the bound (\ref{eq:sparse_gp_vfe_elbo}) to allow for stochastic variational inference. The key obseration is that with $p(\by\mid\bf) = \prod_{i=1}^n p(y_i\mid f_i)$, the lower bound factors with respect to data points. Start with Equation (\ref{eq:sparse_gp_vfe_elbo}),
+\begin{align}
+    \log p(\by) 
+        &\geq \langle \log p(\by\mid\bf) \rangle_{q(\bf)} - \text{KL}\left( q(\bu) \Vert p(\bu) \right) 
+        = \sum_{i=1}^n \langle  \log p(y_i\mid f_i) \rangle_{q(f_i)} - \text{KL}\left( q(\bu) \Vert p(\bu) \right) \\
+    \langle  \log p(y_i\mid f_i) \rangle_{q(f_i)}
+        &= \langle -\frac{1}{2} \log (2\pi \sigma^2) - \frac{1}{2\sigma^2} (y_i^2 - 2y_if_i + f_i^2) \rangle_{q(f_i)} \\
+        &=  -\frac{1}{2} \log (2\pi \sigma^2) - \frac{1}{2\sigma^2} (y_i^2 - 2y_i \E_q\pb{f_i}  + \var_q(f_i) + \E_q\pb{f_i}^2 ) \\
+        &= \log \sN(y_i \mid K_{f_i\bu} K_{\bu\bu}^{-1} \mu_{\bu}, \sigma^2) - \frac{1}{2\sigma^2} \left( K_{f_if_i} - Q_{f_if_i} - K_{f_i\bu} K_{\bu\bu}^{-1} \Sigma_{\bu} K_{\bu\bu}^{-1} K_{\bu f_i}  \right)
+\end{align}
+where we have used fact that $q(f_i) \sim \sN(P_i \mu_{\bu}, K_{f_if_i} - Q_{f_if_i} - P_i \Sigma_{\bu} P_i^T )$ from (\ref{eq:inducing_variables_approximate_prior_f}) and write $P_i :=  K_{f_i\bu} K_{\bu\bu}^{-1}$. This de-coupled term when summed over data points is exactly same as the coupled term in Equation (\ref{eq:sparse_gp_vfe_elbo_1}). Now we can write down the lower bound which can be optimized with stochastic optimization,
+\begin{align}
+    \sL_{\text{SVGP}}
+        := \sum_{i=1}^n \left(
+            \log \sN(y_i \mid P_i \mu_{\bu}, \sigma^2) - \frac{1}{2\sigma^2} \left( K_{f_if_i} - Q_{f_if_i} - P_i \Sigma_{\bu} P_i^T  \right)
+        \right) - \text{KL}\left(q(\bu)\Vert p(\bu)\right)
+\end{align}
 
 
 
@@ -146,7 +298,7 @@ Consider a likelihood model with task specific noise variance $y_t \sim \sN( f_t
         K^t_{M1} K & K^t_{M2}K  & \cdots & K^t_{MM} K + \sigma_M^2 I \\
     \end{bmatrix}
 \end{align}
-Note this is the covariance matrix with no missing outputs, which leads to efficient inference methods. The task similarity matrix $K_t$ ($\pb{K_t}_{ij} = k_t(i,j)$) induce correlation between tasks. Intuitively, if two tasks $t,t'$ are related in the sense an optimal regressor for $y_t,y_{t'}$ vary together in some systematic manner, then observation at some location $(x,y_t)$ constrains what the value $y_{t'}$ can take. The degree to which we can reduce the uncertainty that $y_{t'}$ can takes depends on $k_t(t,t')$. Therefore, a learner which utilizes information obtained from related tasks can be learnt more efficiently than if learnt without knowledge of other tasks, in which case $K_t = I$. \cite{bonillaMultitaskGaussianProcess2008} proposes to use EM to first impute missing latent variables $\mathbf{f}$ from noisy observations $\by$, then find hyperparameters $\theta = \pc{ \theta_{k_x}, K^t }$ by maximizing the full data likelihoods $p(\by,\mathbf{f} \mid \theta_{k})$. Alternatively, we can simply can learn the hyperparameters by applying gradient descent to maximize type-II likelihood $\theta^* = \argmax_{\theta} \log p(\by\mid X, \theta)$. See Figure~(\ref{fig:plt_mtgp_coorperative}) for an example of MTGP in case where $D=1$ and $M=2$.
+Note this is the covariance matrix with no missing outputs, which leads to efficient inference methods. The task similarity matrix $K_t$ ($\pb{K_t}_{ij} = k_t(i,j)$) induce correlation between tasks. Intuitively, if two tasks $t,t'$ are related in the sense an optimal regressor for $y_t,y_{t'}$ vary together in some systematic manner, then observation at some location $(x,y_t)$ constrains what the value $y_{t'}$ can take. The degree to which we can reduce the uncertainty that $y_{t'}$ can takes depends on $k_t(t,t')$. Therefore, a learner which utilizes information obtained from related tasks can be learnt more efficiently than if learnt without knowledge of other tasks, in which case $K_t = I$. \cite{bonillaMultitaskGaussianProcess2008} proposes to use EM to first impute missing latent variables $\bf$ from noisy observations $\by$, then find hyperparameters $\theta = \pc{ \theta_{k_x}, K^t }$ by maximizing the full data likelihoods $p(\by,\bf \mid \theta_{k})$. Alternatively, we can simply can learn the hyperparameters by applying gradient descent to maximize type-II likelihood $\theta^* = \argmax_{\theta} \log p(\by\mid X, \theta)$. See Figure~(\ref{fig:plt_mtgp_coorperative}) for an example of MTGP in case where $D=1$ and $M=2$.
 
 
 \begin{center} 
