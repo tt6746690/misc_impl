@@ -30,20 +30,20 @@ xlim = (-2, 2)
 ylim = (-3, 3)
 n_train = 3
 n_test = 100
-σn = .1
+σn = .3
 logsn = np.log(σn)
 ℓ = 1
 ℓs = [.1, .3, 1]
-train_sizes = [3, 5, 10]
-lr = .002
-num_steps = 10
+train_sizes = [5, 10, 50]
+lr = .0001
+num_steps = 20
 
 def f_gen(x):
     return np.sin(x)+np.sin(x*5)+np.cos(x*3)
 
-def log_func(f, params):
+def log_func(i, f, params):
     print(f"loss={f(params):.3f}\t"
-          f"ℓ={params['ℓ']:.3f}\t")
+          f"ℓ={np.exp(params['logℓ']):.3f}\t")
 
 ## Plotting
 
@@ -64,18 +64,18 @@ for i, ℓ in enumerate(ℓs):
         y_train = f_gen(X_train) + ϵ
         
         if i == 1:
-            jX, jy, jXstar = device_put(X_train), device_put(y_train), device_put(X_test)
             def nmll(params):
-                k = lambda X, Y: cov_se(X, Y, ℓ=params['ℓ'])
-                μ, Σ, mll = gp_regression_chol(jX, jy, jXstar, k, logsn=logsn)
+                k = lambda X, Y: cov_se(X, Y, logℓ=params['logℓ'])
+                μ, Σ, mll = gp_regression_chol(X_train, y_train, X_test, k, logsn=logsn)
                 return -mll
-            params = {'ℓ': 1.}
-            res = run_sgd(nmll, params, lr=lr, num_steps=num_steps, log_func=log_func)
-            ℓ = res['ℓ'].item()
+            params = {'logℓ': np.log(1.)}
+            res = run_sgd(nmll, params, lr=lr, num_steps=num_steps, optimizer='sgd')
+            ℓ = np.exp(res['logℓ'].item())
         else:
             ℓ = ℓs[i]
-
-        k = lambda X, Y: cov_se(X, Y, ℓ=ℓ)
+            
+        logℓ = np.log(ℓ)
+        k = lambda X, Y: cov_se(X, Y, logℓ=logℓ)
         μ, Σ, mll = gp_regression_chol(X_train, y_train, X_test, k, logsn)
         std = np.expand_dims(np.sqrt(np.diag(Σ)), 1)
 
@@ -92,6 +92,7 @@ for i, ℓ in enumerate(ℓs):
             ax.set_ylabel(f"ℓ={ℓ:.2f}", fontsize=45)
         if i == 2:
             ax.set_xlabel("$n$"+f"={n_train}", fontsize=45)
+
 
 fig.tight_layout()
 plt_savefig(fig, 'summary/assets/plt_gp_regression_inference.png')

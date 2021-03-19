@@ -56,23 +56,18 @@ def normalize_K(K):
 def LookupKernel(X, Y, A):
     return distmat(lambda x, y: A[x, y], X, Y)
 
-def cov_se(X, Y=None, σ=1, ℓ=1):
-    # Squared Exponential kernel
-    #     σ - vertical lengthscale
-    #     ℓ - lengthscale 
-    #
-    if Y is None: Y = X
-    return (σ**2)*np.exp(-cdist_sqeuclidean(X, Y)/2/(ℓ**2))
 
-def cov_se2(X, Y=None, logσ=1, logℓ=0):
+def cov_se(X, Y=None, logσ=1, logℓ=0):
     # Squared Exponential kernel 
-    #     σ    - vertical lengthscale
-    #     logℓ - log lengthscale (easier optimization -mll)
+    #     logσ - vertical lengthscale
+    #     logℓ - log lengthscale
+    #
+    #     (σ**2)*np.exp(-cdist_sqeuclidean(X, Y)/2/(ℓ**2))
     #
     if Y is None: Y = X
     σ2 = np.exp(2*logσ)
     ℓ2 = np.exp(2*logℓ)
-    return σ2*np.exp(-cdist_sqeuclidean(X, Y)/2/(ℓ2))
+    return σ2*np.exp(-cdist_sqeuclidean(X, Y)/2/ℓ2)
 
 def cov_rq(X, Y=None, σ=1, α=1, ℓ=1):
     # Rational Quadratic kernel 

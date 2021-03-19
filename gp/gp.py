@@ -41,18 +41,26 @@ def gp_regression_chol(X, y, Xt, k, logsn):
     return μ, Σ, mll[0, 0]
 
 
-def run_sgd(f, params, lr=.002, num_steps=10, log_func=None):
+def run_sgd(f, params, lr=.002, num_steps=10, log_func=lambda i,x,params: None, optimizer='momentum'):
     import itertools
     from jax import jit, grad
-    from jax.experimental import optimizers
     f = jit(f)
     g = jit(grad(f, argnums=0))
-    opt_init, opt_update, get_params = optimizers.momentum(lr, .9)
+    opt_init, opt_update, get_params = get_optimizer(optimizer, lr=lr)
     opt_state = opt_init(params)
     itercount = itertools.count()
     for i in range(num_steps):
         params = get_params(opt_state)
-        if log_func: log_func(i, f, params)
+        log_func(i, f, params)
         params_grad = g(params)
         opt_state = opt_update(next(itercount),params_grad, opt_state)
     return params
+
+
+def get_optimizer(optimizer, lr=.002):
+    from jax.experimental import optimizers
+    if optimizer == 'sgd':
+        return optimizers.sgd(lr)
+    if optimizer == 'momentum':
+        return optimizers.momentum(lr, .9)
+    
