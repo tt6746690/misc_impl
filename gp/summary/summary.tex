@@ -109,11 +109,11 @@ We can derive the predictive distribution for $\bf_*\mid \by$ by simply apply co
 \end{align}
 which has exact form compared to (\ref{eq:kernel_bayesian_regression_predictive_distribution}). More compactly, for a single test point $x_*$, $\mu_{\bf_*} =  k_*^T (K+\sigma_n^2 I)^{-1}$ and $\var(\bf_*) = k(x_*,x_*) - k_*^T (K+\sigma_n^2 I)^{-1} k_* $ where $k_* = k(X,x_*)\in \R^{n\times 1}$. See Figure (\ref{fig:plt_gp_regression_inference}) for examples of Gaussian process regression with varying data size and hyperparameters. 
 
-
+ 
 \begin{center} 
 \begin{figure}[h!]
     \includegraphics[width=\textwidth]{assets/plt_gp_regression_inference.png} 
-    \caption{This plot shows mean (black) and 95\% confidence interval (light blue) for predictive distribution $p(\bf_*\mid X,\by, X_*)$ fit using Gaussian process regression assuming a SE prior over $f\sim\sG\sP(0,k_{SE})$ of varying lengthscale $\ell$ and observed sample sizes $n$ given groundtruth noise $\sigma_n=0.1$. The middle row's hyperparameters is taken to be the empirical Bayes estimate $\ell,\sigma_n = \argmax p(\by\mid X, \ell,\sigma_n)$ where $p(\by\mid X,\ell,\sigma_n)$ given by Equation (\ref{eq:gp_regression_marginal_likelihood}), optimized via gradient descent. Note estimating $\log(\ell),\log(\sigma_n)$ makes the optimization problem much easier.}
+    \caption{This plot shows mean (black) and 95\% confidence interval (light blue) for predictive distribution $p(\bf_*\mid X,\by, X_*)$ fit using Gaussian process regression assuming a SE prior over $f\sim\sG\sP(0,k_{SE})$ of varying lengthscale $\ell$ and observed sample sizes $n$ given groundtruth noise $\sigma_n=0.3$. The middle row's hyperparameters is taken to be the empirical Bayes estimate $\ell,\sigma_n = \argmax p(\by\mid X, \ell,\sigma_n)$ where $p(\by\mid X,\ell,\sigma_n)$ given by Equation (\ref{eq:gp_regression_marginal_likelihood}), optimized via gradient descent. Note estimating $\log(\ell),\log(\sigma_n)$ makes the optimization problem much easier.}
     \label{fig:plt_gp_regression_inference}
 \end{figure}
 \end{center}

@@ -22,10 +22,10 @@ cmap = plt.cm.get_cmap('bwr')
 
 import sys
 sys.path.append('../kernel')
-from jaxkern import (cov_se2, LookupKernel, normalize_K)
+from jaxkern import (cov_se, LookupKernel, normalize_K, mtgp_k)
 
 from plt_utils import plt_savefig, plt_scaled_colobar_ax
-from gp import gp_regression_chol, run_sgd
+from gp import gp_regression_chol, run_sgd, log_func_default
 
 
 ## Parameters
@@ -37,22 +37,14 @@ ylim = (-3,3)
 xlim = (-.2,1.2)
 σn = [.03, .1]
 ℓ = .2
-max_mml = True
 mtl = True
 lr = .002
-num_steps = 200
-verbose = False
-
-def log_func(f, params):
-    if verbose:
-        print(f"loss={f(params):.3f}\t"
-              f"ℓ={jnp.exp(params['logℓ']):.3f}\t"
-              f"σn={np.asarray(jnp.exp(params['logsn']))}\t")
+num_steps = 100
+verbose = True
+opt = 'sgd'
 
 ## Data
 np.random.seed(0)
-
-B = jnp.eye(M)
 
 X0 = np.random.rand(n_train*2//4, 1) # *.5+.5
 X1 = np.random.rand(n_train-len(X0), 1)*.5
@@ -81,49 +73,35 @@ fig.set_size_inches(15, 10)
 
 for i, mtl in enumerate([False, True]):
     ax = axs[i, 0]
+    
+    def get_mtgp_Lv(params):
+        if mtl:
+            return jnp.exp(params['logL']), jnp.exp(params['logv'])
+        else:
+            return jnp.log(jnp.zeros((M,1))), jnp.log(jnp.ones((M,)))
 
     ## Training
-
-    def mtgp_k(XT, XTp, logℓ, B):
-        X, Xp = XT[:,0], XTp[:,0]
-        Kx = cov_se2(X, Xp, logℓ=logℓ)
-        T, Tp = np.asarray(XT[:,1], np.int), np.asarray(XTp[:,1], np.int)
-        Kt = LookupKernel(T, Tp, B)
-        K = Kx*Kt
-        return K
-
-    if max_mml:
-        if mtl:
-            def nmll(params):
-                L = jnp.exp(params['logL'])
-                B = L@L.T
-                k = lambda X, Y: mtgp_k(X, Y, params['logℓ'], B)
-                μ, Σ, mll = gp_regression_chol(
-                    X_train, y_train, X_test, k, logsn=params['logsn'])
-                return -mll
-            params = {'logℓ': jnp.log(1.),
-                      'logsn': jnp.log(.1*jnp.ones(M)),
-                      'logL': jnp.log(jnp.array(np.random.rand(M,M)))}
-            res = run_sgd(nmll, params, lr=lr, num_steps=num_steps, log_func=log_func)
-            logℓ, logsn = res['logℓ'].item(), res['logsn']
-            ℓ, σn = jnp.exp(logℓ), jnp.exp(logsn)
-            L = jnp.exp(params['logL'])
-            B = L@L.T
-        else:
-            def nmll(params):
-                k = lambda X, Y: mtgp_k(X, Y, params['logℓ'], B)
-                μ, Σ, mll = gp_regression_chol(
-                    X_train, y_train, X_test, k, logsn=params['logsn'])
-                return -mll
-            params = {'logℓ': jnp.log(1.),
-                      'logsn': jnp.log(.1*jnp.ones(M))}
-            res = run_sgd(nmll, params, lr=lr, num_steps=num_steps, log_func=None)
-            logℓ, logsn = res['logℓ'].item(), res['logsn']
-            ℓ, σn = jnp.exp(logℓ), jnp.exp(logsn)
+    
+    def nmll(params):
+        logL, logv = get_mtgp_Lv(params)
+        k = lambda X, Y: mtgp_k(X, Y, logℓ=params['logℓ'], logL=logL, logv=logv)
+        μ, Σ, mll = gp_regression_chol(
+            X_train, y_train, X_test, k, logsn=params['logsn'])
+        return -mll
+    params = {'logℓ': jnp.log(1.),
+              'logsn': jnp.log(.1*jnp.ones(M)),
+              'logL': jnp.log(jnp.array(np.random.rand(M,M))),
+              'logv': jnp.log(jnp.ones((M,1)))}
+    res = run_sgd(nmll, params, lr=lr, num_steps=num_steps, optimizer=opt, log_func=log_func_default)
+    logℓ, logsn = res['logℓ'].item(), res['logsn']
+    ℓ, σn = jnp.exp(logℓ), jnp.exp(logsn)
+    logL, logv = get_mtgp_Lv(params)
+    L = jnp.exp(logL); v = jnp.exp(logv)
+    B = L@L.T + jnp.diag(v)
 
     ## Plotting
 
-    k = lambda X, Y: mtgp_k(X, Y, logℓ, B)
+    k = lambda X, Y: mtgp_k(X, Y, logℓ, logL, logv)
     μ, Σ, mll = gp_regression_chol(X_train, y_train, X_test, k, logsn)
     std = np.expand_dims(np.sqrt(np.diag(Σ)), 1)
 
@@ -162,5 +140,6 @@ for i, mtl in enumerate([False, True]):
     fig.colorbar(im, cax=plt_scaled_colobar_ax(ax))
     ax.set_title('$K(X_{train}, X_{test@1})$')
     
+
 fig.tight_layout()
 plt_savefig(fig, 'summary/assets/plt_mtgp.png')

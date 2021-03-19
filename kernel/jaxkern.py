@@ -57,6 +57,20 @@ def LookupKernel(X, Y, A):
     return distmat(lambda x, y: A[x, y], X, Y)
 
 
+def mtgp_k(XT, XTp, logℓ, logL, logv):
+    X, Xp = XT[:,0], XTp[:,0]
+    T, Tp = np.asarray(XT[:,1], np.int32), np.asarray(XTp[:,1], np.int32)
+    
+    Kx = cov_se(X, Xp, logℓ=logℓ)
+    
+    L = np.exp(logL)
+    v = np.exp(logv)
+    B = L@L.T + np.diag(v)
+    Kt = LookupKernel(T, Tp, B)
+
+    K = Kx*Kt
+    return K
+
 def cov_se(X, Y=None, logσ=1, logℓ=0):
     # Squared Exponential kernel 
     #     logσ - vertical lengthscale
