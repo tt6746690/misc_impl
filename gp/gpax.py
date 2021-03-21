@@ -6,6 +6,7 @@ import jax.numpy as np
 import jax.numpy.linalg as linalg
 
 import flax
+from flax import optim
 from flax import linen as nn
 
 from jaxkern import cov_se
@@ -22,7 +23,6 @@ class CovSE(nn.Module):
         return cov_se(X, Y, logℓ=self.logℓ, logσ=self.logσ)
 
 
-    
 class GPR(nn.Module):
     data: Tuple[np.ndarray, np.ndarray]
         
@@ -75,23 +75,13 @@ class GPR(nn.Module):
         ns = len(Σf)
         μy, Σy = μf, Σf + σ2*np.diag(np.ones((ns,)))
         return μy, Σy
-        
-
-class InducingPoints(nn.Module):
-    
-    def setup(self):
-        init_fn = nn.initializers.zeros
-        self.Xu = self.params('Xu', init_fn, ())
-        
-        
-        self.logℓ = self.param('logℓ', init_fn, (1,))
-        self.logσ = self.param('logσ', init_fn, (1,))
-
-    def __call__(self, X, Y=None):
-        return cov_se(X, Y, logℓ=self.logℓ, logσ=self.logσ)
 
 
-    
+def randsub_init_fn(key, shape, dtype=np.float32, X=None):
+    idx = random.choice(key, np.arange(len(X)),
+                        shape=(shape[0],), replace=False)
+    return X[idx]
+
     
 class GPRFITC(nn.Module):
     data: Tuple[np.ndarray, np.ndarray]
@@ -102,11 +92,7 @@ class GPRFITC(nn.Module):
         self.logσn = self.param('logσn',
                                 nn.initializers.zeros, (1,))
         X, y = self.data
-        def randsub_init_fn(key, shape, dtype=np.float32):
-            idx = random.choice(key, np.arange(len(X)),
-                                shape=(shape[0],), replace=False)
-            return X[idx]
-        self.Xu = self.param('Xu', randsub_init_fn,
+        self.Xu = self.param('Xu', lambda k,s : X[:self.n_inducing],
                              (self.n_inducing, X.shape[-1]))
 
     def get_init_params(self, key):
@@ -124,11 +110,13 @@ class GPRFITC(nn.Module):
         K = k(X)
         Kuu = k(Xu, Xu)
         Kuf = k(Xu, X)
-        Luu = linalg.cholesky(Kuu)
+        Luu = linalg.cholesky(Kuu+1e-5*np.eye(m))
+        
         V = linalg.solve(Luu, Kuf)
         Qff = V.T@V
         Λ = np.diag(K) - np.diag(Qff) + σ2
         Λ = Λ.reshape(-1, 1)
+        
         B = np.eye(m) + (V/Λ.T)@V.T
         LB = linalg.cholesky(B)
         γ = linalg.solve(LB, (V/Λ.T)@y)
@@ -172,13 +160,13 @@ class GPRFITC(nn.Module):
         return μy, Σy
 
 
-
-def log_func_simple(i, f, params):
-    print(f'[{i:3}]\tLoss={f(params):.3f}')
+def log_func_simple(i, f, params, everyn=10):
+    if i%everyn==0:
+        print(f'[{i:3}]\tLoss={f(params):.3f}')
 
 
 def log_func_default(i, f, params, everyn=10):
-    if (i+1)%everyn==0:
+    if i%everyn==0:
         S = []
         for k, v in params.items():
             if k.startswith('log'):
@@ -193,8 +181,8 @@ def log_func_default(i, f, params, everyn=10):
         S = '\t'.join(S)
         print(f'[{i:3}]:\tLoss={f(params):.3f}\t{S}')
 
+
 def flax_create_optimizer(params, lr, optimizer='GradientDescent'):
-    from flax import optim
     optimizer_cls = getattr(optim, optimizer)
     return optimizer_cls(learning_rate=lr).create(params)
 
@@ -213,3 +201,6 @@ def flax_run_optim(f, params, lr=.002, num_steps=10,
         opt = opt.apply_gradient(grad)
     return opt.target
 
+
+def is_psd(x):
+    return np.all(linalg.eigvals(x) > 0)
