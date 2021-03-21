@@ -4,6 +4,7 @@ from plt_utils import plt_savefig
 from jaxkern import cov_se
 
 import numpy as np
+import numpy.random as npr
 from numpy.linalg import inv, det, cholesky
 from numpy.linalg import solve as backsolve
 
@@ -12,6 +13,7 @@ from jax import grad, jit, vmap, device_put
 import jax.numpy as jnp
 import jax.numpy.linalg as jnp_linalg
 from jax.experimental import optimizers
+from flax.core import freeze, unfreeze
 import itertools
 
 import matplotlib.pyplot as plt
@@ -23,9 +25,9 @@ mpl.rcParams['font.family'] = 'Times New Roman'
 cmap = plt.cm.get_cmap('bwr')
 
 from gp import gp_regression_chol, run_sgd
+from gp import Gpr, flax_run_optim
 
 ## Parameters 
-
 xlim = (-2, 2)
 ylim = (-3, 3)
 n_train = 3
@@ -35,26 +37,30 @@ logsn = np.log(σn)
 ℓ = 1
 ℓs = [.1, .3, 1]
 train_sizes = [5, 10, 50]
-lr = .0001
-num_steps = 20
+lr = .01
+num_steps = 50
 
 def f_gen(x):
     return np.sin(x)+np.sin(x*5)+np.cos(x*3)
 
+
 def log_func(i, f, params):
-    print(f"loss={f(params):.3f}\t"
-          f"ℓ={np.exp(params['logℓ']):.3f}\t")
+    if i&10==0:
+        print(f'[{i:3}]\tLoss={f(params):.3f}\t'
+            f'σn={jnp.exp(params["logσn"][0]):.3f}')
+
 
 ## Plotting
 
 fig, axs = plt.subplots(3, 3, sharey=True)
 fig.set_size_inches(30, 15)
 
-np.random.seed(0)
+key = jax.random.PRNGKey(0)
+npr.seed(0)
 X_test = np.expand_dims(np.linspace(*xlim, n_test), 1)
 X_train_all = np.expand_dims(
-    np.random.uniform(xlim[0], xlim[1], size=np.max(train_sizes)), 1)
-ϵ_all = σn*np.random.rand(np.max(train_sizes), 1)
+    npr.uniform(xlim[0], xlim[1], size=train_sizes[-1]), 1)
+ϵ_all = σn*npr.rand(train_sizes[-1], 1)
 
 for i, ℓ in enumerate(ℓs):
     for j, n_train in enumerate(train_sizes):
@@ -64,19 +70,24 @@ for i, ℓ in enumerate(ℓs):
         y_train = f_gen(X_train) + ϵ
         
         if i == 1:
+            model = Gpr((X_train, y_train))
+            params = model.get_init_params(key)
             def nmll(params):
-                k = lambda X, Y: cov_se(X, Y, logℓ=params['logℓ'])
-                μ, Σ, mll = gp_regression_chol(X_train, y_train, X_test, k, logsn=logsn)
-                return -mll
-            params = {'logℓ': np.log(1.)}
-            res = run_sgd(nmll, params, lr=lr, num_steps=num_steps, optimizer='sgd')
-            ℓ = np.exp(res['logℓ'].item())
+                return -model.apply({'params': params}, method=model.mll)
+            params = flax_run_optim(nmll, params, lr=lr,
+                                    num_steps=num_steps, log_func=log_func)
         else:
-            ℓ = ℓs[i]
-            
-        logℓ = np.log(ℓ)
-        k = lambda X, Y: cov_se(X, Y, logℓ=logℓ)
-        μ, Σ, mll = gp_regression_chol(X_train, y_train, X_test, k, logsn)
+            params = {'k': {'logσ': np.log(np.array([1.])),
+                            'logℓ': np.log(np.array([ℓ]))},
+                      'logσn': np.log(np.array([σn]))}
+            params = freeze(params)
+        
+        ℓ = np.exp(params['k']['logℓ'])[0]
+        params = {'params': params}
+
+        model = Gpr((X_train, y_train))
+        mll = model.apply(params, method=model.mll)
+        μ, Σ = model.apply(params, X_test, method=model.pred_f)
         std = np.expand_dims(np.sqrt(np.diag(Σ)), 1)
 
         ax = axs[i, j]
@@ -92,7 +103,6 @@ for i, ℓ in enumerate(ℓs):
             ax.set_ylabel(f"ℓ={ℓ:.2f}", fontsize=45)
         if i == 2:
             ax.set_xlabel("$n$"+f"={n_train}", fontsize=45)
-
 
 fig.tight_layout()
 plt_savefig(fig, 'summary/assets/plt_gp_regression_inference.png')

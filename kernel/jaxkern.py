@@ -71,7 +71,7 @@ def mtgp_k(XT, XTp, logℓ, logL, logv):
     K = Kx*Kt
     return K
 
-def cov_se(X, Y=None, logσ=1, logℓ=0):
+def cov_se(X, Y=None, logσ=0, logℓ=0):
     # Squared Exponential kernel 
     #     logσ - vertical lengthscale
     #     logℓ - log lengthscale
