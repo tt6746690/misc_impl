@@ -46,7 +46,7 @@ class GPR(nn.Module):
         n = len(X)
         σ2 = np.exp(2*self.logσn)
         
-        K = k(X, X) + σ2*np.eye(n)
+        K = k(X) + σ2*np.eye(n)
         L = linalg.cholesky(K)
         α = linalg.solve(L.T, linalg.solve(L, y))
 
@@ -63,7 +63,7 @@ class GPR(nn.Module):
         n = len(X)
         σ2 = np.exp(2*self.logσn)
         
-        K = k(X, X) + σ2*np.eye(n)
+        K = k(X) + σ2*np.eye(n)
         Ks = k(X, Xs)
         Kss = k(Xs, Xs)
         L = linalg.cholesky(K)

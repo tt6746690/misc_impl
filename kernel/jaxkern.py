@@ -1,8 +1,34 @@
 import jax
 import jax.numpy as np
 
-def squared_l2_norm(x):
-    return np.sum(x**2)
+def sqdist(X, Y=None):
+    """ Returns D where D_ij = ||X_i - Y_j||^2 if Y is not `None`
+            https://www.robots.ox.ac.uk/~albanie/notes/Euclidean_distance_trick.pdf
+            https://github.com/GPflow/GPflow/gpflow/utilities/ops.py#L84
+
+        For Y!=None, similar speed to `jit(cdist_sqeuclidean)`
+            jitting does not improve performance
+        For Y==None, 10x faster than jitted `jit(cdist_sqeuclidean)`
+
+        X   (n, d)
+    """
+    if X.ndim == 1:
+        X = X.reshape(-1, 1)
+    if Y is not None and Y.ndim == 1:
+        Y = Y.reshape(-1, 1)
+
+    if Y is None:
+        D = X@X.T
+        Xsqnorm = np.diag(D).reshape(-1, 1)
+        D = - 2*D + Xsqnorm + Xsqnorm.T
+        D = np.maximum(D, 0)
+    else:
+        Xsqnorm = np.sum(np.square(X), axis=-1).reshape(-1, 1)
+        Ysqnorm = np.sum(np.square(Y), axis=-1).reshape(-1, 1)
+        D = -2*np.tensordot(X, Y, axes=(-1,-1))
+        D += Xsqnorm + Ysqnorm.T
+        D = np.maximum(D, 0)
+    return D
 
 # Taken from https://github.com/IPL-UV/jaxkern
 
@@ -16,6 +42,7 @@ def euclidean_distance(x, y):
     return np.sqrt(sqeuclidean_distance(x, y))
 
 def distmat(func, x, y):
+    if y == None: y = x
     return jax.vmap(lambda x1: jax.vmap(lambda y1: func(x1, y1))(y))(x)
 
 def cdist_sqeuclidean(x, y):
@@ -76,10 +103,9 @@ def cov_se(X, Y=None, logσ=0., logℓ=0.):
     #     logσ - log vertical lengthscale
     #     logℓ - log lengthscale
     #
-    if Y is None: Y = X
     σ2 = np.exp(2*logσ)
     ℓ2 = np.exp(2*logℓ)
-    return σ2*np.exp(-cdist_sqeuclidean(X, Y)/2/ℓ2)
+    return σ2*np.exp(-sqdist(X, Y)/2/ℓ2)
 
 def cov_rq(X, Y=None, logσ=0., logℓ=0., logα=0.):
     # Rational Quadratic kernel 
@@ -87,7 +113,6 @@ def cov_rq(X, Y=None, logσ=0., logℓ=0., logα=0.):
     #     logℓ - log lengthscale
     #     logα - log scale mixture
     # 
-    if Y is None: Y = X
     σ2 = np.exp(2*logσ)
     ℓ2 = np.exp(2*logℓ)
     α = np.exp(logα)
@@ -97,7 +122,6 @@ def cov_pe(X, Y=None, σ=1, p=1, ℓ=1):
     # Periodic kernel (https://www.cs.toronto.edu/~duvenaud/cookbook/)
     #     p - period
     #     ℓ - lengthscale 
-    if Y is None: Y = X
     return (σ**2)*np.exp( - 2*np.sin(np.pi*cdist_l1(X, Y)/p)**2/(ℓ**2) )
 
 def linear_kernel(X, Y):

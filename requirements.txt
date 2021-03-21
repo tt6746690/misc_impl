@@ -6,3 +6,4 @@ jaxlib
 flax
 plotly
 vtk
+tabulate

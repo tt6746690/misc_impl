@@ -24,3 +24,6 @@ create_ipykernel:
 
 remove_ipykernel:
 	jupyter kernelspec uninstall misc_impl
+
+update_jaxlib:
+	pip install --upgrade jax jaxlib==0.1.64+cuda110 -f https://storage.googleapis.com/jax-releases/jax_releases.html
