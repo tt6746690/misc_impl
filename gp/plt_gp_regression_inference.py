@@ -25,7 +25,7 @@ mpl.rcParams['font.family'] = 'Times New Roman'
 cmap = plt.cm.get_cmap('bwr')
 
 from gp import gp_regression_chol, run_sgd
-from gp import Gpr, flax_run_optim
+from gpax import GPR, flax_run_optim
 
 ## Parameters 
 xlim = (-2, 2)
@@ -70,7 +70,7 @@ for i, ℓ in enumerate(ℓs):
         y_train = f_gen(X_train) + ϵ
         
         if i == 1:
-            model = Gpr((X_train, y_train))
+            model = GPR((X_train, y_train))
             params = model.get_init_params(key)
             def nmll(params):
                 return -model.apply({'params': params}, method=model.mll)
@@ -85,7 +85,7 @@ for i, ℓ in enumerate(ℓs):
         ℓ = np.exp(params['k']['logℓ'])[0]
         params = {'params': params}
 
-        model = Gpr((X_train, y_train))
+        model = GPR((X_train, y_train))
         mll = model.apply(params, method=model.mll)
         μ, Σ = model.apply(params, X_test, method=model.pred_f)
         std = np.expand_dims(np.sqrt(np.diag(Σ)), 1)
