@@ -144,7 +144,7 @@ def jax_opt_get_optimizer(optimizer, lr=.002):
         return optimizers.sgd(lr)
     if optimizer == 'momentum':
         return optimizers.momentum(lr, .9)
-    
+
 
 def flax_create_optimizer(params, lr, optimizer='GradientDescent'):
     from flax import optim
