@@ -71,25 +71,27 @@ def mtgp_k(XT, XTp, logℓ, logL, logv):
     K = Kx*Kt
     return K
 
-def cov_se(X, Y=None, logσ=0, logℓ=0):
+def cov_se(X, Y=None, logσ=0., logℓ=0.):
     # Squared Exponential kernel 
-    #     logσ - vertical lengthscale
+    #     logσ - log vertical lengthscale
     #     logℓ - log lengthscale
-    #
-    #     (σ**2)*np.exp(-cdist_sqeuclidean(X, Y)/2/(ℓ**2))
     #
     if Y is None: Y = X
     σ2 = np.exp(2*logσ)
     ℓ2 = np.exp(2*logℓ)
     return σ2*np.exp(-cdist_sqeuclidean(X, Y)/2/ℓ2)
 
-def cov_rq(X, Y=None, σ=1, α=1, ℓ=1):
+def cov_rq(X, Y=None, logσ=0., logℓ=0., logα=0.):
     # Rational Quadratic kernel 
-    #     α - scale mixture
-    #     ℓ - lengthscale
+    #     logσ - log vertical lengthscale
+    #     logℓ - log lengthscale
+    #     logα - log scale mixture
     # 
     if Y is None: Y = X
-    return (σ**2)*(cdist_euclidean(X, Y)/2/α/(ℓ**2) + 1)**(-α)
+    σ2 = np.exp(2*logσ)
+    ℓ2 = np.exp(2*logℓ)
+    α = np.exp(logα)
+    return σ2*(cdist_euclidean(X, Y)/2/α/ℓ2 + 1)**(-α)
 
 def cov_pe(X, Y=None, σ=1, p=1, ℓ=1):
     # Periodic kernel (https://www.cs.toronto.edu/~duvenaud/cookbook/)

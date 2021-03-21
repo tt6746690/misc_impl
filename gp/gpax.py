@@ -13,14 +13,19 @@ from jaxkern import cov_se
 
 
 class CovSE(nn.Module):
-    
+#     k = CovSE()
+#     k.apply(k.init(key, X), X)
+# 
     def setup(self):
         init_fn = nn.initializers.zeros
         self.logℓ = self.param('logℓ', init_fn, (1,))
         self.logσ = self.param('logσ', init_fn, (1,))
 
-    def __call__(self, X, Y=None):
-        return cov_se(X, Y, logℓ=self.logℓ, logσ=self.logσ)
+    def __call__(self, X, Y=None, diag=False):
+        if diag:
+            return np.full((len(X),), 1.)
+        else:
+            return cov_se(X, Y, logℓ=self.logℓ, logσ=self.logσ)
 
 
 class GPR(nn.Module):
@@ -107,19 +112,18 @@ class GPRFITC(nn.Module):
         Xu = self.Xu
         n, m = len(X), self.n_inducing
         
-        K = k(X)
+        Kdiag = k(X, diag=True)
         Kuu = k(Xu, Xu)
         Kuf = k(Xu, X)
         Luu = linalg.cholesky(Kuu+1e-5*np.eye(m))
         
         V = linalg.solve(Luu, Kuf)
         Qff = V.T@V
-        Λ = np.diag(K) - np.diag(Qff) + σ2
-        Λ = Λ.reshape(-1, 1)
+        Λ = Kdiag - np.diag(Qff) + σ2
         
-        B = np.eye(m) + (V/Λ.T)@V.T
+        B = np.eye(m) + (V/Λ)@V.T
         LB = linalg.cholesky(B)
-        γ = linalg.solve(LB, (V/Λ.T)@y)
+        γ = linalg.solve(LB, (V/Λ)@y)
 
         return Luu, Λ, LB, γ
     
