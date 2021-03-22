@@ -269,7 +269,7 @@ To optimize for inducing variables, we need a computationally stable way to comp
 Put everything together, we have an expression that involves mostly $\sO(m^3)$ \texttt{chol} and $\sO(nm^2)$ \texttt{backsolve},
 \begin{align}
     \log p(\by\mid X)
-        = - \frac{1}{2} \by^T \Lambda^{-1} \by + \frac{1}{2} \bgamma^T\bgamma - \sum_{i=1}^m \pb{L_B}_{ii} -\frac{1}{2} \sum_{i=1}^n \pb{\Lambda}_{ii} - \frac{n}{2} \log(2\pi)
+        = - \frac{1}{2} \by^T \Lambda^{-1} \by + \frac{1}{2} \bgamma^T\bgamma - \sum_{i=1}^m \log \pb{L_B}_{ii} -\frac{1}{2} \sum_{i=1}^n \log \pb{\Lambda}_{ii} - \frac{n}{2} \log(2\pi)
 \end{align}
 We can also compute the predictive distribution in Equation (\ref{eq:fitc_predictive_computation}) as follows,
 \begin{align*}
