@@ -4,6 +4,7 @@ import jax
 from jax import random
 import jax.numpy as np
 import jax.numpy.linalg as linalg
+from jax.scipy.linalg import cho_solve, solve_triangular
 
 import flax
 from flax import optim
@@ -12,10 +13,13 @@ from flax import linen as nn
 from jaxkern import cov_se
 
 
+def cholesky_jitter(K, jitter=1e-6):
+    L = linalg.cholesky(K+jitter*np.eye(len(K)))
+    return L
+
+
 class CovSE(nn.Module):
-#     k = CovSE()
-#     k.apply(k.init(key, X), X)
-# 
+
     def setup(self):
         init_fn = nn.initializers.zeros
         self.logℓ = self.param('logℓ', init_fn, (1,))
@@ -23,7 +27,7 @@ class CovSE(nn.Module):
 
     def __call__(self, X, Y=None, diag=False):
         if diag:
-            return np.full((len(X),), 1.)
+            return np.full((len(X),), np.exp(2*self.logσ)[0])
         else:
             return cov_se(X, Y, logℓ=self.logℓ, logσ=self.logσ)
 
@@ -48,7 +52,7 @@ class GPR(nn.Module):
         
         K = k(X) + σ2*np.eye(n)
         L = linalg.cholesky(K)
-        α = linalg.solve(L.T, linalg.solve(L, y))
+        α = cho_solve((L, True), y)
 
         mll_quad  = -(1/2)*np.sum(y*α)
         mll_det   = - np.sum(np.log(np.diag(L)))
@@ -67,9 +71,9 @@ class GPR(nn.Module):
         Ks = k(X, Xs)
         Kss = k(Xs, Xs)
         L = linalg.cholesky(K)
-        α = linalg.solve(L.T, linalg.solve(L, y))
+        α = cho_solve((L, True), y)
         μ = Ks.T@α
-        v = linalg.inv(L)@Ks
+        v = solve_triangular(L, Ks, lower=True)
         Σ = Kss - v.T@v
         
         return μ, Σ
@@ -82,12 +86,6 @@ class GPR(nn.Module):
         return μy, Σy
 
 
-def randsub_init_fn(key, shape, dtype=np.float32, X=None):
-    idx = random.choice(key, np.arange(len(X)),
-                        shape=(shape[0],), replace=False)
-    return X[idx]
-
-    
 class GPRFITC(nn.Module):
     data: Tuple[np.ndarray, np.ndarray]
     n_inducing: int
@@ -115,15 +113,16 @@ class GPRFITC(nn.Module):
         Kdiag = k(X, diag=True)
         Kuu = k(Xu, Xu)
         Kuf = k(Xu, X)
-        Luu = linalg.cholesky(Kuu+1e-5*np.eye(m))
+        Luu = cholesky_jitter(Kuu, jitter=1e-4)
         
-        V = linalg.solve(Luu, Kuf)
+        V = solve_triangular(Luu, Kuf, lower=True)
         Qff = V.T@V
         Λ = Kdiag - np.diag(Qff) + σ2
+        Λ = Λ.reshape(-1,1)
         
-        B = np.eye(m) + (V/Λ)@V.T
-        LB = linalg.cholesky(B)
-        γ = linalg.solve(LB, (V/Λ)@y)
+        B = np.eye(m) + (V/Λ.T)@V.T
+        LB = cholesky_jitter(B, jitter=1e-5)
+        γ = solve_triangular(LB, V@(y/Λ), lower=True)
 
         return Luu, Λ, LB, γ
     
@@ -132,7 +131,7 @@ class GPRFITC(nn.Module):
         n = len(X)
         Luu, Λ, LB, γ = self.precompute()
         
-        mll_quad  = -.5*( sum(y/Λ*y) - sum(np.square(γ)) )[0]
+        mll_quad  = -.5*( sum((y/Λ)*y) - sum(np.square(γ)) )[0]
         mll_det   = -np.sum(np.log(np.diag(LB)))-.5*np.sum(np.log(Λ))
         mll_const = -(n/2)*np.log(2*np.pi)
         mll = mll_quad + mll_det + mll_const
@@ -148,10 +147,10 @@ class GPRFITC(nn.Module):
         
         Kss = k(Xs, Xs)
         Kus = k(Xu, Xs)
-        ω = linalg.solve(Luu, Kus)
-        ν = linalg.solve(LB, ω)
+        ω = solve_triangular(Luu, Kus, lower=True)
+        ν = solve_triangular(LB, ω, lower=True)
         
-        μ = ω.T@linalg.solve(LB.T, γ)
+        μ = ω.T@solve_triangular(LB.T, γ, lower=False)
         Σ = Kss - ω.T@ω + ν.T@ν
         
         return μ, Σ
@@ -162,6 +161,12 @@ class GPRFITC(nn.Module):
         ns = len(Σf)
         μy, Σy = μf, Σf + σ2*np.diag(np.ones((ns,)))
         return μy, Σy
+
+
+def randsub_init_fn(key, shape, dtype=np.float32, X=None):
+    idx = random.choice(key, np.arange(len(X)),
+                        shape=(shape[0],), replace=False)
+    return X[idx]
 
 
 def log_func_simple(i, f, params, everyn=10):
@@ -186,23 +191,23 @@ def log_func_default(i, f, params, everyn=10):
         print(f'[{i:3}]:\tLoss={f(params):.3f}\t{S}')
 
 
-def flax_create_optimizer(params, lr, optimizer='GradientDescent'):
+def flax_create_optimizer(params, optimizer, optimizer_kwargs):
     optimizer_cls = getattr(optim, optimizer)
-    return optimizer_cls(learning_rate=lr).create(params)
+    return optimizer_cls(**optimizer_kwargs).create(params)
 
 
-def flax_run_optim(f, params, lr=.002, num_steps=10,
-                   log_func=None,
-                   optimizer='GradientDescent'):
+def flax_run_optim(f, params, num_steps=10, log_func=None,
+                   optimizer='GradientDescent',
+                   optimizer_kwargs={'learning_rate': .002}):
     import itertools
-    f = jax.jit(f)
     fg_fn = jax.value_and_grad(f)
-    opt = flax_create_optimizer(params, lr=lr, optimizer=optimizer)
+    opt = flax_create_optimizer(
+        params, optimizer=optimizer, optimizer_kwargs=optimizer_kwargs)
     itercount = itertools.count()
     for i in range(num_steps):
         fx, grad = fg_fn(opt.target)
-        if log_func is not None: log_func(i, f, opt.target)
         opt = opt.apply_gradient(grad)
+        if log_func is not None: log_func(i, f, opt.target)
     return opt.target
 
 

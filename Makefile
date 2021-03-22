@@ -26,7 +26,7 @@ remove_ipykernel:
 	jupyter kernelspec uninstall misc_impl
 
 update_jaxlib:
-	pip install --upgrade jax jaxlib==0.1.64+cuda110 -f https://storage.googleapis.com/jax-releases/jax_releases.html
+	pip install --upgrade jax jaxlib==0.1.64+cuda112 -f https://storage.googleapis.com/jax-releases/jax_releases.html
 
 install_cuda:
 	# Install cuda helper: https://developer.nvidia.com/cuda-11.0-download-archive?target_os=Linux&target_arch=x86_64&target_distro=Ubuntu&target_version=1804&target_type=debnetwork
