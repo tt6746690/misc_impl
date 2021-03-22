@@ -264,7 +264,7 @@ To optimize for inducing variables, we need a computationally stable way to comp
             \tag{ Matrix inversion lemma, $Q_{\bf\bf} = V^TV$} \\ 
         &= \log \det(B) + \log \det(\Lambda)  
             \tag{defn $B$} \\
-        &= 2\sum_{i=1}^m \log \pb{L_B}_{ii} + \sum_{i=1}^n \log \pb{\Lambda}_{ii}
+        &= 2\log \det(L_B) + \log \det(\Lambda)
 \end{align*}
 Put everything together, we have an expression that involves mostly $\sO(m^3)$ \texttt{chol} and $\sO(nm^2)$ \texttt{backsolve},
 \begin{align}
@@ -340,10 +340,10 @@ Now with $P:= K_{\bf\bu}K_{\bu\bu}^{-1}$, $\E_q\pb{\bu} = \mu_{\bu}$, and $\cov_
         &=  \log \sN(\bf \mid K_{\bf\bu}K_{\bu\bu}^{-1}\mu_{\bu}, \sigma^2I) - \frac{1}{2 \sigma^2} \tr\left( K_{\bf\bf} - Q_{\bf\bf} \right) - \frac{1}{2\sigma^2} \tr\left( K_{\bf\bu}K_{\bu\bu}^{-1} \Sigma_{\bu} K_{\bu\bu}^{-1} K_{\bu\bf} \right)
     \label{eq:sparse_gp_vfe_elbo_1}
 \end{align}
-\cite{titsiasVariationalLearningInducing2009} finds the optimal variational distribution $q(\bu)$ and substitute back into the lower bound, resulting in a bound where the first term is simply the marginal likelihoood for sparse GP with DIC/DTC approximation while the second term regularizes approximate kernel be close to the true kernel matrix,
+\cite{titsiasVariationalLearningInducing2009} finds the optimal variational distribution $q(\bu)$ and substitute back into the lower bound, resulting in a bound where the first term is simply the marginal likelihoood for sparse GP with DIC approximation while the second term minimizes the error of predicting $\bf$ from $\bu$, e.g. $\tr(\cov(\bf\mid\bu)) = \min \E\norm{P \bu-\bf}_2^2$,
 \begin{align}
     \sL_{\text{VFE}}
-        :=  \log \sN(\bf \mid K_{\bf\bu}K_{\bu\bu}^{-1}\bu,Q_{\bf\bf} -  \sigma^2I) - \frac{1}{2\sigma^2} \tr\left( K_{\bf\bf} - Q_{\bf\bf} \right)
+        :=  \log \sN(\bf \mid \mathbf{0},Q_{\bf\bf} +  \sigma^2I) - \frac{1}{2\sigma^2} \tr\left( K_{\bf\bf} - Q_{\bf\bf} \right)
     \label{eq:sparse_gp_vfe_collapsed_bound}
 \end{align}
 The bound is strictly better with additional inducing variables and becomes tight when $X_{\bu}=X$, recovering the full GP marginal likelihood. Maximizing $\sL_{\text{VFE}}$ with respect to kernel hyperparameters and inducing locations is tractable as the objective requires $\sO(nm^2)$ to compute.

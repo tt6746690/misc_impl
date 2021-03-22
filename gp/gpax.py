@@ -116,8 +116,8 @@ class GPRFITC(nn.Module):
         Luu = cholesky_jitter(Kuu, jitter=1e-4)
         
         V = solve_triangular(Luu, Kuf, lower=True)
-        Qff = V.T@V
-        Λ = Kdiag - np.diag(Qff) + σ2
+        Qffdiag = np.sum(np.square(V), axis=0)
+        Λ = Kdiag - Qffdiag + σ2
         Λ = Λ.reshape(-1,1)
         
         B = np.eye(m) + (V/Λ.T)@V.T
@@ -131,7 +131,7 @@ class GPRFITC(nn.Module):
         n = len(X)
         Luu, Λ, LB, γ = self.precompute()
         
-        mll_quad  = -.5*( sum((y/Λ)*y) - sum(np.square(γ)) )[0]
+        mll_quad  = -.5*( np.sum((y/Λ)*y) - np.sum(np.square(γ)) )
         mll_det   = -np.sum(np.log(np.diag(LB)))-.5*np.sum(np.log(Λ))
         mll_const = -(n/2)*np.log(2*np.pi)
         mll = mll_quad + mll_det + mll_const
@@ -144,6 +144,85 @@ class GPRFITC(nn.Module):
         Xu = self.Xu
         n = len(X)
         Luu, Λ, LB, γ = self.precompute()
+        
+        Kss = k(Xs, Xs)
+        Kus = k(Xu, Xs)
+        ω = solve_triangular(Luu, Kus, lower=True)
+        ν = solve_triangular(LB, ω, lower=True)
+        
+        μ = ω.T@solve_triangular(LB.T, γ, lower=False)
+        Σ = Kss - ω.T@ω + ν.T@ν
+        
+        return μ, Σ
+
+    def pred_y(self, Xs):
+        σ2 = np.exp(2*self.logσn)
+        μf, Σf = self.pred_f(Xs)
+        ns = len(Σf)
+        μy, Σy = μf, Σf + σ2*np.diag(np.ones((ns,)))
+        return μy, Σy
+
+
+class VFE(nn.Module):
+    data: Tuple[np.ndarray, np.ndarray]
+    n_inducing: int
+
+    def setup(self):
+        self.k = CovSE()
+        self.logσn = self.param('logσn',
+                                nn.initializers.zeros, (1,))
+        X, y = self.data
+        self.Xu = self.param('Xu', lambda k,s : X[:self.n_inducing],
+                             (self.n_inducing, X.shape[-1]))
+
+    def get_init_params(self, key):
+        params = self.init(key, np.ones((1, self.data[0].shape[-1])),
+                           method=self.pred_f)
+        return params
+    
+    def precompute(self):
+        X, y = self.data
+        k = self.k
+        σ2 = np.exp(2*self.logσn)
+        Xu = self.Xu
+        n, m = len(X), self.n_inducing
+        
+        Kdiag = k(X, diag=True)
+        Kuu = k(Xu, Xu)
+        Kuf = k(Xu, X)
+        Luu = cholesky_jitter(Kuu, jitter=1e-4)
+        
+        V = solve_triangular(Luu, Kuf, lower=True)
+        Qffdiag = np.sum(np.square(V), axis=0)
+        Λ = Kdiag - Qffdiag + σ2
+        Λ = Λ.reshape(-1,1)
+        
+        B = np.eye(m) + (V/Λ.T)@V.T
+        LB = cholesky_jitter(B, jitter=1e-5)
+        γ = solve_triangular(LB, V@(y/Λ), lower=True)
+
+        return Kdiag, Luu, V, Λ, LB, γ
+    
+    def mll(self):
+        X, y = self.data
+        n = len(X)
+        σ2 = np.exp(2*self.logσn)[0]
+        Kdiag, Luu, V, Λ, LB, γ = self.precompute()
+        
+        elbo_quad  = -.5*( np.sum((y/Λ)*y) - np.sum(np.square(γ)) )
+        elbo_det   = -np.sum(np.log(np.diag(LB)))-.5*np.sum(np.log(Λ))
+        elbo_const = -(n/2)*np.log(2*np.pi)
+        elbo_trcc  = -(1/2/σ2)*( np.sum(Kdiag) - np.sum(np.square(V)) )
+        
+        elbo = elbo_quad + elbo_det + elbo_const + elbo_trcc
+        return elbo
+    
+    def pred_f(self, Xs):
+        X, y = self.data
+        k = self.k
+        Xu = self.Xu
+        n = len(X)
+        Kdiag, Luu, V, Λ, LB, γ = self.precompute()
         
         Kss = k(Xs, Xs)
         Kus = k(Xu, Xs)
