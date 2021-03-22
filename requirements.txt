@@ -1,6 +1,12 @@
 # Compatible with PyTorch=1.5.1
 pyro-ppl==1.4.0
 torchsummary==1.5.1
+scipy
+scikit-learn
+tqdm
+numpy
+pandas
+matplotlib
 jax
 jaxlib
 flax

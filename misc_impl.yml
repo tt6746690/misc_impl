@@ -1,22 +1,13 @@
 name: misc_impl
 channels:
-    - conda-forge
     - pytorch
+    - conda-forge
 dependencies:
     - python=3.7
-    - pytorch::pytorch=1.7.0
+    - pytorch::pytorch
     - pytorch::torchvision
-    # - cudatoolkit=11
+    - cudatoolkit=11
     - gpytorch
-    - numpy
-    - pandas
-    - matplotlib
     - jupyter
     - nb_conda
-    - autograd
-    - tqdm
-    - opencv
-    - scikit-learn
-    - scipy
-    - pillow
-    - graphviz
+
