@@ -7,6 +7,7 @@ import jax.numpy.linalg as linalg
 from jax.scipy.linalg import cho_solve, solve_triangular
 
 import flax
+from flax.core import unfreeze
 from flax import optim
 from flax import linen as nn
 
@@ -248,26 +249,40 @@ def randsub_init_fn(key, shape, dtype=np.float32, X=None):
     return X[idx]
 
 
+proc_leaf_logscalar = lambda k, v: \
+    (k.split('log')[1], np.exp(v[0])) if (k.startswith('log') and v.size==1) else (k, v)
+proc_leaf_logvector = lambda k, v: \
+    (k.split('log')[1], np.exp(v)) if (k.startswith('log') and v.size>1) else (k, v)
+VEC_LENGTH_LIMIT = 5
+prof_leaf_veclength = lambda k, v: \
+    (f'{k}[:{VEC_LENGTH_LIMIT}]', v[:VEC_LENGTH_LIMIT]) if isinstance(v, np.ndarray) and v.size>1 else (k, v)
+prof_leaf_vecsqueeze = lambda k, v: \
+    (k, v.squeeze()) if isinstance(v, np.ndarray) else (k, v)
+prof_leaf_fns = [proc_leaf_logscalar,
+                 proc_leaf_logvector,
+                 prof_leaf_veclength,
+                 prof_leaf_vecsqueeze]
+
 def log_func_simple(i, f, params, everyn=10):
     if i%everyn==0:
         print(f'[{i:3}]\tLoss={f(params):.3f}')
 
 
-def log_func_default(i, f, params, everyn=10):
-    if i%everyn==0:
+def log_func_default(i, f, params, everyn=20):
+    if i%everyn == 0:
+        flattened = flax.traverse_util.flatten_dict(unfreeze(params['params']))
         S = []
-        for k, v in params.items():
-            if k.startswith('log'):
-                if v.size == 1:
-                    s = f'{k}={np.exp(v):.3f}'
-                else:
-                    s = f'{k}={np.asarray(np.exp(v))}'
-                    s = s.replace('\n', ',')
-            else:
-                s = f'{k}={v}'
-            S.append(s)
+        for k, v in flattened.items():
+            lk = k[-1]
+            for proc in prof_leaf_fns:
+                lk, v = proc(lk, v)
+            k = list(k)
+            k[-1] = lk
+            k = '.'.join(k)
+            S.append(f'{k}={v:.3f}' if v.size==1 else f'{k}={v}')
+
         S = '\t'.join(S)
-        print(f'[{i:3}]:\tLoss={f(params):.3f}\t{S}')
+        print(f'[{i:3}]\tLoss={f(params):.3f}\t{S}')
 
 
 def flax_create_optimizer(params, optimizer, optimizer_kwargs):
