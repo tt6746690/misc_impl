@@ -348,11 +348,15 @@ Now with $P:= K_{\bf\bu}K_{\bu\bu}^{-1}$, $\E_q\pb{\bu} = \mu_{\bu}$, and $\cov_
 \end{align}
 The bound is strictly better with additional inducing variables and becomes tight when $X_{\bu}=X$, recovering the full GP marginal likelihood. Maximizing $\sL_{\text{VFE}}$ with respect to kernel hyperparameters and inducing locations is tractable as the objective requires $\sO(nm^2)$ to compute.
 
-\cite{hensmanGaussianProcessesBig2013} proposes Stochastic Variational Gaussian Process (SVGP) that extends the bound (\ref{eq:sparse_gp_vfe_elbo}) to allow for stochastic variational inference. The key obseration is that with $p(\by\mid\bf) = \prod_{i=1}^n p(y_i\mid f_i)$, the lower bound factors with respect to data points. Start with Equation (\ref{eq:sparse_gp_vfe_elbo}),
+\cite{hensmanGaussianProcessesBig2013,hensmanScalableVariationalGaussian2014} proposes Stochastic Variational Gaussian Process (SVGP) that extends the bound (\ref{eq:sparse_gp_vfe_elbo}) to allow for stochastic variational inference. The key obseration is that with $p(\by\mid\bf) = \prod_{i=1}^n p(y_i\mid f_i)$, the lower bound factors with respect to data points. Start with Equation (\ref{eq:sparse_gp_vfe_elbo}),
 \begin{align}
     \log p(\by) 
         &\geq \langle \log p(\by\mid\bf) \rangle_{q(\bf)} - \text{KL}\left( q(\bu) \Vert p(\bu) \right) 
-        = \sum_{i=1}^n \langle  \log p(y_i\mid f_i) \rangle_{q(f_i)} - \text{KL}\left( q(\bu) \Vert p(\bu) \right) \\
+        = \sum_{i=1}^n \langle  \log p(y_i\mid f_i) \rangle_{q(f_i)} - \text{KL}\left( q(\bu) \Vert p(\bu) \right) 
+        \label{eq:sparse_gp_klsp_bound}
+\end{align}
+\cite{hensmanScalableVariationalGaussian2014} optimizes this bound (\ref{eq:sparse_gp_klsp_bound}) directly, where the 1 dimension integral $\langle \cdot \rangle_{q(f_i)}$ and derivatives are computed using Hermite-Gauss Quadrature. For Gaussian likelihoods,
+\begin{align}
     \langle  \log p(y_i\mid f_i) \rangle_{q(f_i)}
         &= \langle -\frac{1}{2} \log (2\pi \sigma^2) - \frac{1}{2\sigma^2} (y_i^2 - 2y_if_i + f_i^2) \rangle_{q(f_i)} \\
         &=  -\frac{1}{2} \log (2\pi \sigma^2) - \frac{1}{2\sigma^2} (y_i^2 - 2y_i \E_q\pb{f_i}  + \var_q(f_i) + \E_q\pb{f_i}^2 ) \\

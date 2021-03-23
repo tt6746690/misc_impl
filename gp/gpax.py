@@ -1,3 +1,4 @@
+import math
 from typing import Any, Callable, Sequence, Optional, Tuple
 
 import jax
@@ -12,11 +13,6 @@ from flax import optim
 from flax import linen as nn
 
 from jaxkern import cov_se
-
-
-def cholesky_jitter(K, jitter=1e-6):
-    L = linalg.cholesky(K+jitter*np.eye(len(K)))
-    return L
 
 
 class CovSE(nn.Module):
@@ -241,6 +237,110 @@ class VFE(nn.Module):
         ns = len(Σf)
         μy, Σy = μf, Σf + σ2*np.diag(np.ones((ns,)))
         return μy, Σy
+
+
+
+class FillTril(object):
+    """Transofrms vector to lower triangular matrix
+            v (n,) -> L (m,m)
+                where `m = (-1+sqrt(1+8*n))/2`
+                      `n = m*(m+1)/2`.`
+                      
+        ```
+            v = np.arange(6)
+            L = FillTril.forward(v)
+            w = FillTril.reverse(L)
+            print(L, w)
+            # [[0. 0. 0.]
+            #  [1. 2. 0.]
+            #  [3. 4. 5.]]
+            # [0. 1. 2. 3. 4. 5.]
+        ```
+
+        Reference
+        - https://www.tensorflow.org/probability/api_docs/python/tfp/bijectors/FillTriangular
+        - https://www.tensorflow.org/probability/api_docs/python/tfp/math/fill_triangular
+    """
+    @classmethod
+    def forward_shape(self, n):
+        return int((-1+math.sqrt(1+8*n))/2)
+    
+    @classmethod
+    def reverse_shape(self, m):
+        return int(m*(m+1)/2)
+    
+    @classmethod
+    def forward(self, v):
+        m = self.forward_shape(v.size)
+        L = np.zeros((m,m))
+        L = jax.ops.index_update(L, np.tril_indices(m), v.squeeze())
+        return L
+    
+    @classmethod
+    def reverse(self, L):
+        m = len(L)
+        v = L[np.tril_indices(m)]
+        v = v.reshape(-1,1)
+        return v
+
+
+def kl_mvn(μ0, Σ0, μ1, Σ1):
+    """KL(q||p) where q~N(μ0,Σ0), p~N(μ1,Σ1) """
+    n = μ0.size
+    kl_trace = np.trace(linalg.solve(Σ1, Σ0))
+    kl_mahan = np.sum((μ1-μ0).T@linalg.solve(Σ1, (μ1-μ0)))
+    kl_const = -n
+    kl_lgdet = np.log(linalg.det(Σ1)) - np.log(linalg.det(Σ0))
+    kl = .5*( kl_trace + kl_mahan + kl_const + kl_lgdet )
+    return kl
+
+
+def kl_mvn_tril(μ0, L0, μ1, L1):
+    """KL(q||p) where q~N(μ0,L0@L0.T), p~N(μ1,L1@L1.T) 
+    
+        ```
+            def rand_μΣ(key, m):
+                μ = random.normal(key, (m,1))
+                Σ = random.normal(key, (m,m))
+                Σ = jax.ops.index_update(Σ, np.tril_indices(m), 0)
+                Σ = Σ@Σ.T+0.1*np.eye(m)
+                return μ,Σ
+            m = 50
+            μ0,Σ0 = rand_μΣ(jax.random.PRNGKey(0), m)
+            μ1,Σ1 = rand_μΣ(jax.random.PRNGKey(1), m)
+            μ1 = np.zeros((m,1))
+            L0 = linalg.cholesky(Σ0)
+            L1 = linalg.cholesky(Σ1)
+            print(kl_mvn(μ0, Σ0, μ1, Σ1))
+            print(kl_mvn_tril(μ0, L0, μ1, L1))
+            print(kl_mvn_tril_zero_mean_prior(μ0, L0, L1))
+        ```
+    """
+    n = μ0.size
+    α = solve_triangular(L1, L0, lower=True)
+    β = solve_triangular(L1, μ1 - μ0, lower=True)
+    kl_trace = np.sum(np.square(α))
+    kl_mahan = np.sum(np.square(β))
+    kl_const = -n
+    kl_lgdet = 2*(np.sum(np.log(np.diag(L1))) - np.sum(np.log(np.diag(L0))))
+    kl = .5*( kl_trace + kl_mahan + kl_const + kl_lgdet )
+    return kl
+
+def kl_mvn_tril_zero_mean_prior(μ0, L0, L1):
+    """KL(q||p) where q~N(μ0,L0@L0.T), p~N(0,L1@L1.T) """
+    n = μ0.size
+    α = solve_triangular(L1,  L0, lower=True)
+    β = solve_triangular(L1, -μ0, lower=True)
+    kl_trace = np.sum(np.square(α))
+    kl_mahan = np.sum(np.square(β))
+    kl_const = -n
+    kl_lgdet = 2*(np.sum(np.log(np.diag(L1))) - np.sum(np.log(np.diag(L0))))
+    kl = .5*( kl_trace + kl_mahan + kl_const + kl_lgdet )
+    return kl
+
+def cholesky_jitter(K, jitter=1e-6):
+    L = linalg.cholesky(K+jitter*np.eye(len(K)))
+    return L
 
 
 def randsub_init_fn(key, shape, dtype=np.float32, X=None):
