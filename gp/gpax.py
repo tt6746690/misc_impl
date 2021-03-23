@@ -261,23 +261,23 @@ class FillTril(object):
         - https://www.tensorflow.org/probability/api_docs/python/tfp/bijectors/FillTriangular
         - https://www.tensorflow.org/probability/api_docs/python/tfp/math/fill_triangular
     """
-    @classmethod
-    def forward_shape(self, n):
+    @staticmethod
+    def forward_shape(staticmethodn):
         return int((-1+math.sqrt(1+8*n))/2)
     
-    @classmethod
-    def reverse_shape(self, m):
+    @staticmethod
+    def reverse_shape(m):
         return int(m*(m+1)/2)
     
-    @classmethod
-    def forward(self, v):
-        m = self.forward_shape(v.size)
+    @staticmethod
+    def forward(v):
+        m = FillTril.forward_shape(v.size)
         L = np.zeros((m,m))
         L = jax.ops.index_update(L, np.tril_indices(m), v.squeeze())
         return L
     
-    @classmethod
-    def reverse(self, L):
+    @staticmethod
+    def reverse(L):
         m = len(L)
         v = L[np.tril_indices(m)]
         v = v.reshape(-1,1)
@@ -349,19 +349,20 @@ def randsub_init_fn(key, shape, dtype=np.float32, X=None):
     return X[idx]
 
 
-proc_leaf_logscalar = lambda k, v: \
+proc_leaf_scalar_exponentiate = lambda k, v: \
     (k.split('log')[1], np.exp(v[0])) if (k.startswith('log') and v.size==1) else (k, v)
-proc_leaf_logvector = lambda k, v: \
+proc_leaf_vector_exponentiate = lambda k, v: \
     (k.split('log')[1], np.exp(v)) if (k.startswith('log') and v.size>1) else (k, v)
-VEC_LENGTH_LIMIT = 5
-prof_leaf_veclength = lambda k, v: \
-    (f'{k}[:{VEC_LENGTH_LIMIT}]', v[:VEC_LENGTH_LIMIT]) if isinstance(v, np.ndarray) and v.size>1 else (k, v)
-prof_leaf_vecsqueeze = lambda k, v: \
+PROC_LEAF_VECTOR_LENGTH_LIMIT = 5
+proc_leaf_vector_firstn = lambda k, v: \
+    (f'{k}[:{PROC_LEAF_VECTOR_LENGTH_LIMIT}]', v[:PROC_LEAF_VECTOR_LENGTH_LIMIT]) \
+        if isinstance(v, np.ndarray) and v.size>1 else (k, v)
+proc_leaf_vector_squeeze = lambda k, v: \
     (k, v.squeeze()) if isinstance(v, np.ndarray) else (k, v)
-prof_leaf_fns = [proc_leaf_logscalar,
-                 proc_leaf_logvector,
-                 prof_leaf_veclength,
-                 prof_leaf_vecsqueeze]
+prof_leaf_fns = [proc_leaf_scalar_exponentiate,
+                 proc_leaf_vector_exponentiate,
+                 proc_leaf_vector_firstn,
+                 proc_leaf_vector_squeeze]
 
 def log_func_simple(i, f, params, everyn=10):
     if i%everyn==0:
