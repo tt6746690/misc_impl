@@ -35,6 +35,13 @@ class CovSE(nn.Module):
             return self.σ2*np.exp(-sqdist(X, Y)/2)
 
 
+class LikNormal(nn.Module):
+    
+    def setup(self):
+        transform = BijectiveSoftplus()
+        init_fn = lambda k, s: transform.reverse(np.array([1.]))
+        self.σ2 = transform.forward(self.param('σ2', init_fn, (1,)))
+
 
 class GPR(nn.Module):
     data: Tuple[np.ndarray, np.ndarray]
