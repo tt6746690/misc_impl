@@ -12,21 +12,28 @@ from flax.core import unfreeze
 from flax import optim
 from flax import linen as nn
 
-from jaxkern import cov_se
+from jaxkern import cov_se, sqdist
 
 
 class CovSE(nn.Module):
 
     def setup(self):
-        init_fn = nn.initializers.zeros
-        self.logℓ = self.param('logℓ', init_fn, (1,))
-        self.logσ = self.param('logσ', init_fn, (1,))
+        self.transform = BijectiveSoftplus()
+        init_fn = lambda k, s: self.transform.reverse(np.array([1.]))
+        self.ℓ  = self.transform.forward(self.param('ℓ',  init_fn, (1,)))
+        self.σ2 = self.transform.forward(self.param('σ2', init_fn, (1,)))
+        
+    def scale(self, X):
+        return X/self.ℓ if X is not None else X
 
     def __call__(self, X, Y=None, diag=False):
         if diag:
-            return np.full((len(X),), np.exp(2*self.logσ)[0])
+            return np.tile(self.σ2, len(X))
         else:
-            return cov_se(X, Y, logℓ=self.logℓ, logσ=self.logσ)
+            X = self.scale(X)
+            Y = self.scale(Y)
+            return self.σ2*np.exp(-sqdist(X, Y)/2)
+
 
 
 class GPR(nn.Module):
@@ -34,7 +41,7 @@ class GPR(nn.Module):
         
     def setup(self):
         self.k = CovSE()
-        self.logσn = self.param('logσn', nn.initializers.zeros, (1,))
+        self.lik = LikNormal()
         
     def get_init_params(self, key):
         params = self.init(key, np.ones((1, self.data[0].shape[-1])),
@@ -45,9 +52,8 @@ class GPR(nn.Module):
         X, y = self.data
         k = self.k
         n = len(X)
-        σ2 = np.exp(2*self.logσn)
         
-        K = k(X) + σ2*np.eye(n)
+        K = k(X) + self.lik.σ2*np.eye(n)
         L = linalg.cholesky(K)
         α = cho_solve((L, True), y)
 
@@ -62,9 +68,8 @@ class GPR(nn.Module):
         X, y = self.data
         k = self.k
         n = len(X)
-        σ2 = np.exp(2*self.logσn)
         
-        K = k(X) + σ2*np.eye(n)
+        K = k(X) + self.lik.σ2*np.eye(n)
         Ks = k(X, Xs)
         Kss = k(Xs, Xs)
         L = linalg.cholesky(K)
@@ -76,10 +81,9 @@ class GPR(nn.Module):
         return μ, Σ
     
     def pred_y(self, Xs):
-        σ2 = np.exp(2*self.logσn)
         μf, Σf = self.pred_f(Xs)
         ns = len(Σf)
-        μy, Σy = μf, Σf + σ2*np.diag(np.ones((ns,)))
+        μy, Σy = μf, Σf + self.lik.σ2*np.diag(np.ones((ns,)))
         return μy, Σy
 
 
@@ -89,8 +93,7 @@ class GPRFITC(nn.Module):
 
     def setup(self):
         self.k = CovSE()
-        self.logσn = self.param('logσn',
-                                nn.initializers.zeros, (1,))
+        self.lik = LikNormal()
         X, y = self.data
         self.Xu = self.param('Xu', lambda k,s : X[:self.n_inducing],
                              (self.n_inducing, X.shape[-1]))
@@ -103,7 +106,6 @@ class GPRFITC(nn.Module):
     def precompute(self):
         X, y = self.data
         k = self.k
-        σ2 = np.exp(2*self.logσn)
         Xu = self.Xu
         n, m = len(X), self.n_inducing
         
@@ -114,7 +116,7 @@ class GPRFITC(nn.Module):
         
         V = solve_triangular(Luu, Kuf, lower=True)
         Qffdiag = np.sum(np.square(V), axis=0)
-        Λ = Kdiag - Qffdiag + σ2
+        Λ = Kdiag - Qffdiag + self.lik.σ2
         Λ = Λ.reshape(-1,1)
         
         B = np.eye(m) + (V/Λ.T)@V.T
@@ -153,10 +155,9 @@ class GPRFITC(nn.Module):
         return μ, Σ
 
     def pred_y(self, Xs):
-        σ2 = np.exp(2*self.logσn)
         μf, Σf = self.pred_f(Xs)
         ns = len(Σf)
-        μy, Σy = μf, Σf + σ2*np.diag(np.ones((ns,)))
+        μy, Σy = μf, Σf + self.lik.σ2*np.diag(np.ones((ns,)))
         return μy, Σy
 
 
@@ -166,8 +167,7 @@ class VFE(nn.Module):
 
     def setup(self):
         self.k = CovSE()
-        self.logσn = self.param('logσn',
-                                nn.initializers.zeros, (1,))
+        self.lik = LikNormal()
         X, y = self.data
         self.Xu = self.param('Xu', lambda k,s : X[:self.n_inducing],
                              (self.n_inducing, X.shape[-1]))
@@ -180,7 +180,6 @@ class VFE(nn.Module):
     def precompute(self):
         X, y = self.data
         k = self.k
-        σ2 = np.exp(2*self.logσn)
         Xu = self.Xu
         n, m = len(X), self.n_inducing
         
@@ -191,7 +190,7 @@ class VFE(nn.Module):
         
         V = solve_triangular(Luu, Kuf, lower=True)
         Qffdiag = np.sum(np.square(V), axis=0)
-        Λ = Kdiag - Qffdiag + σ2
+        Λ = Kdiag - Qffdiag + self.lik.σ2
         Λ = Λ.reshape(-1,1)
         
         B = np.eye(m) + (V/Λ.T)@V.T
@@ -203,13 +202,12 @@ class VFE(nn.Module):
     def mll(self):
         X, y = self.data
         n = len(X)
-        σ2 = np.exp(2*self.logσn)[0]
         Kdiag, Luu, V, Λ, LB, γ = self.precompute()
         
         elbo_quad  = -.5*( np.sum((y/Λ)*y) - np.sum(np.square(γ)) )
         elbo_det   = -np.sum(np.log(np.diag(LB)))-.5*np.sum(np.log(Λ))
         elbo_const = -(n/2)*np.log(2*np.pi)
-        elbo_trcc  = -(1/2/σ2)*( np.sum(Kdiag) - np.sum(np.square(V)) )
+        elbo_trcc  = -(1/2/self.lik.σ2[0])*( np.sum(Kdiag) - np.sum(np.square(V)) )
         
         elbo = elbo_quad + elbo_det + elbo_const + elbo_trcc
         return elbo
@@ -232,15 +230,43 @@ class VFE(nn.Module):
         return μ, Σ
 
     def pred_y(self, Xs):
-        σ2 = np.exp(2*self.logσn)
         μf, Σf = self.pred_f(Xs)
         ns = len(Σf)
-        μy, Σy = μf, Σf + σ2*np.diag(np.ones((ns,)))
+        μy, Σy = μf, Σf + self.lik.σ2*np.diag(np.ones((ns,)))
         return μy, Σy
 
 
+class BijectiveExp(object):
+    
+    @staticmethod
+    def forward(x):
+        """ x -> exp(x) \in \R+ """
+        return np.exp(x)
+    
+    @staticmethod
+    def reverse(y):
+        return np.log(y)
 
-class FillTril(object):
+
+class BijectiveSoftplus(object):
+    # Reference
+    # - https://www.tensorflow.org/probability/api_docs/python/tfp/bijectors/Softplus
+    # - http://num.pyro.ai/en/stable/_modules/numpyro/distributions/transforms.html
+    @staticmethod
+    def forward(x):
+        """ x -> log(1+exp(x)) \in \R+ """
+        return jax.nn.softplus(x)
+    
+    @staticmethod
+    def reverse(y):
+        """ y -> log(exp(y)-1)
+                 log(1-exp(-y))+log(exp(y))
+                 log(1-exp(-y))+y
+        """
+        return np.log(-np.expm1(-y)) + y
+
+
+class BijectiveFillTril(object):
     """Transofrms vector to lower triangular matrix
             v (n,) -> L (m,m)
                 where `m = (-1+sqrt(1+8*n))/2`
@@ -262,7 +288,7 @@ class FillTril(object):
         - https://www.tensorflow.org/probability/api_docs/python/tfp/math/fill_triangular
     """
     @staticmethod
-    def forward_shape(staticmethodn):
+    def forward_shape(n):
         return int((-1+math.sqrt(1+8*n))/2)
     
     @staticmethod
@@ -271,7 +297,7 @@ class FillTril(object):
     
     @staticmethod
     def forward(v):
-        m = FillTril.forward_shape(v.size)
+        m = BijectiveFillTril.forward_shape(v.size)
         L = np.zeros((m,m))
         L = jax.ops.index_update(L, np.tril_indices(m), v.squeeze())
         return L
