@@ -26,13 +26,13 @@ class CovSE(nn.Module):
     def scale(self, X):
         return X/self.ℓ if X is not None else X
 
-    def __call__(self, X, Y=None, diag=False):
-        if diag:
-            return np.tile(self.σ2, len(X))
-        else:
+    def __call__(self, X, Y=None, full_cov=True):
+        if full_cov:
             X = self.scale(X)
             Y = self.scale(Y)
             return self.σ2*np.exp(-sqdist(X, Y)/2)
+        else:
+            return np.tile(self.σ2, len(X))
 
 
 class LikNormal(nn.Module):
@@ -41,7 +41,15 @@ class LikNormal(nn.Module):
         transform = BijectiveSoftplus()
         init_fn = lambda k, s: transform.reverse(np.array([1.]))
         self.σ2 = transform.forward(self.param('σ2', init_fn, (1,)))
-
+        
+    def variational_expectation(self, y, μf, σ2f):
+        """Computes E[log(p(y|f))] 
+                where f ~ N(μ, diag[v]) and y = \prod_i p(yi|fi)
+                      
+        E[log(p(y|f))] = Σᵢ E[ -.5log(2πσ2) - (.5/σ2) (yᵢ^2 - 2yᵢfᵢ + fᵢ^2) ]
+                       = Σᵢ -.5log(2πσ2) - (.5/σ2) ((yᵢ-fᵢ)^2 + vᵢ)   by fᵢ^2 = vᵢ + μ^2
+        """
+        return np.sum(-.5*np.log(2*np.pi*σ2) - (.5/σ2)*(np.square((y-μf)) + σ2f))
 
 class GPR(nn.Module):
     data: Tuple[np.ndarray, np.ndarray]
@@ -64,10 +72,10 @@ class GPR(nn.Module):
         L = linalg.cholesky(K)
         α = cho_solve((L, True), y)
 
-        mll_quad  = -(1/2)*np.sum(y*α)
-        mll_det   = - np.sum(np.log(np.diag(L)))
+        mll_mahan  = -(1/2)*np.sum(y*α)
+        mll_lgdet   = - np.sum(np.log(np.diag(L)))
         mll_const = - (n/2)*np.log(2*np.pi)
-        mll = mll_quad + mll_det + mll_const
+        mll = mll_mahan + mll_lgdet + mll_const
 
         return mll
     
@@ -116,8 +124,8 @@ class GPRFITC(nn.Module):
         Xu = self.Xu
         n, m = len(X), self.n_inducing
         
-        Kdiag = k(X, diag=True)
-        Kuu = k(Xu, Xu)
+        Kdiag = k(X, full_cov=True)
+        Kuu = k(Xu)
         Kuf = k(Xu, X)
         Luu = cholesky_jitter(Kuu, jitter=1e-4)
         
@@ -137,10 +145,10 @@ class GPRFITC(nn.Module):
         n = len(X)
         Luu, Λ, LB, γ = self.precompute()
         
-        mll_quad  = -.5*( np.sum((y/Λ)*y) - np.sum(np.square(γ)) )
-        mll_det   = -np.sum(np.log(np.diag(LB)))-.5*np.sum(np.log(Λ))
+        mll_mahan  = -.5*( np.sum((y/Λ)*y) - np.sum(np.square(γ)) )
+        mll_lgdet   = -np.sum(np.log(np.diag(LB)))-.5*np.sum(np.log(Λ))
         mll_const = -(n/2)*np.log(2*np.pi)
-        mll = mll_quad + mll_det + mll_const
+        mll = mll_mahan + mll_lgdet + mll_const
 
         return mll
     
@@ -151,7 +159,7 @@ class GPRFITC(nn.Module):
         n = len(X)
         Luu, Λ, LB, γ = self.precompute()
         
-        Kss = k(Xs, Xs)
+        Kss = k(Xs)
         Kus = k(Xu, Xs)
         ω = solve_triangular(Luu, Kus, lower=True)
         ν = solve_triangular(LB, ω, lower=True)
@@ -190,8 +198,8 @@ class VFE(nn.Module):
         Xu = self.Xu
         n, m = len(X), self.n_inducing
         
-        Kdiag = k(X, diag=True)
-        Kuu = k(Xu, Xu)
+        Kdiag = k(X, full_cov=True)
+        Kuu = k(Xu)
         Kuf = k(Xu, X)
         Luu = cholesky_jitter(Kuu, jitter=1e-4)
         
@@ -211,22 +219,21 @@ class VFE(nn.Module):
         n = len(X)
         Kdiag, Luu, V, Λ, LB, γ = self.precompute()
         
-        elbo_quad  = -.5*( np.sum((y/Λ)*y) - np.sum(np.square(γ)) )
-        elbo_det   = -np.sum(np.log(np.diag(LB)))-.5*np.sum(np.log(Λ))
+        elbo_mahan  = -.5*( np.sum((y/Λ)*y) - np.sum(np.square(γ)) )
+        elbo_lgdet   = -np.sum(np.log(np.diag(LB)))-.5*np.sum(np.log(Λ))
         elbo_const = -(n/2)*np.log(2*np.pi)
-        elbo_trcc  = -(1/2/self.lik.σ2[0])*( np.sum(Kdiag) - np.sum(np.square(V)) )
+        elbo_trace  = -(1/2/self.lik.σ2[0])*( np.sum(Kdiag) - np.sum(np.square(V)) )
         
-        elbo = elbo_quad + elbo_det + elbo_const + elbo_trcc
+        elbo = elbo_mahan + elbo_lgdet + elbo_const + elbo_trace
         return elbo
     
     def pred_f(self, Xs):
         X, y = self.data
         k = self.k
         Xu = self.Xu
-        n = len(X)
         Kdiag, Luu, V, Λ, LB, γ = self.precompute()
         
-        Kss = k(Xs, Xs)
+        Kss = k(Xs)
         Kus = k(Xu, Xs)
         ω = solve_triangular(Luu, Kus, lower=True)
         ν = solve_triangular(LB, ω, lower=True)
@@ -255,22 +262,27 @@ class BijectiveExp(object):
         return np.log(y)
 
 
+def softplus_inv(y):
+    """ y -> log(exp(y)-1)
+                log(1-exp(-y))+log(exp(y))
+                log(1-exp(-y))+y
+    """
+    return np.log(-np.expm1(-y)) + y
+
+
 class BijectiveSoftplus(object):
-    # Reference
-    # - https://www.tensorflow.org/probability/api_docs/python/tfp/bijectors/Softplus
-    # - http://num.pyro.ai/en/stable/_modules/numpyro/distributions/transforms.html
+    """
+    Reference
+    - https://www.tensorflow.org/probability/api_docs/python/tfp/bijectors/Softplus
+    - http://num.pyro.ai/en/stable/_modules/numpyro/distributions/transforms.html
+    """
     @staticmethod
     def forward(x):
-        """ x -> log(1+exp(x)) \in \R+ """
         return jax.nn.softplus(x)
     
     @staticmethod
     def reverse(y):
-        """ y -> log(exp(y)-1)
-                 log(1-exp(-y))+log(exp(y))
-                 log(1-exp(-y))+y
-        """
-        return np.log(-np.expm1(-y)) + y
+        return softplus_inv(y)
 
 
 class BijectiveFillTril(object):
@@ -290,9 +302,9 @@ class BijectiveFillTril(object):
             # [0. 1. 2. 3. 4. 5.]
         ```
 
-        Reference
-        - https://www.tensorflow.org/probability/api_docs/python/tfp/bijectors/FillTriangular
-        - https://www.tensorflow.org/probability/api_docs/python/tfp/math/fill_triangular
+    Reference
+    - https://www.tensorflow.org/probability/api_docs/python/tfp/bijectors/FillTriangular
+    - https://www.tensorflow.org/probability/api_docs/python/tfp/math/fill_triangular
     """
     @staticmethod
     def forward_shape(n):
@@ -317,6 +329,108 @@ class BijectiveFillTril(object):
         return v
 
 
+class BijectiveSoftplusFillTril(object):
+
+    @staticmethod
+    def forward_shape(n):
+        return int((-1+math.sqrt(1+8*n))/2)
+    
+    @staticmethod
+    def reverse_shape(m):
+        return int(m*(m+1)/2)
+    
+    @staticmethod
+    def forward(v):
+        m = BijectiveSoftplusFillTril.forward_shape(v.size)
+        L = np.zeros((m,m))
+        L = jax.ops.index_update(L, np.tril_indices(m, k=-1), v[:-m].squeeze())
+        L = jax.ops.index_update(L, np.diag_indices(m), jax.nn.softplus(v[-m:].squeeze()))
+        return L
+    
+    @staticmethod
+    def reverse(L):
+        m = len(L)
+        v1 = L[np.tril_indices(m, k=-1)]
+        v2 = softplus_inv(L[np.diag_indices(m)])
+        v = np.concatenate((v1, v2), axis=-1)
+        v = v.reshape(-1,1)
+        return v
+
+
+def diag_indices_kth(n, k):
+    rows, cols = np.diag_indices(n)
+    if k < 0:
+        return rows[-k:], cols[:k]
+    elif k > 0:
+        return rows[:-k], cols[k:]
+    else:
+        return rows, cols
+
+
+def vgp_qf_unstable(Kff, Kuf, Kuu, μq, Σq, full_cov=False):
+    """ ```
+            n,m,l = 10,5,5
+            key = jax.random.PRNGKey(0)
+            X, Xu = random.normal(key, (n,2)), random.normal(key, (m,2))
+            k = CovSE()
+            Kff = k.apply(k.init(key, Xu), X)
+            Kuf = k.apply(k.init(key, Xu), Xu, X)
+            Kuu = k.apply(k.init(key, Xu), Xu)+1*np.eye(m)
+            μq, Σq = rand_μΣ(key, m)
+            Lq = linalg.cholesky(Σq)
+            print(is_psd(Kuu), is_psd(Σu))
+            μf1, Σf1 = vgp_qf_unstable(Kff, Kuf, Kuu, μq, Σq, full_cov=True)
+            μf2, Σf2 = vgp_qf_tril(Kff, Kuf, linalg.cholesky(Kuu), μq, Lq, full_cov=True)
+            print((μf2-μf1)[:l])
+            print((Σf2-Σf1)[:l,:l])
+        ```
+    """
+    Lq = linalg.cholesky(Σq)
+    Luu = linalg.cholesky(Kuu)
+    μf = Kuf.T@linalg.solve(Kuu, μq)
+    α = solve_triangular(Luu, Kuf, lower=True)
+    Qff = α.T@α
+    β = linalg.solve(Kuu, Kuf)
+    if full_cov:
+        Σf = Kff - Qff + β.T@Σq@β
+        print(Σf.shape)
+    else:
+        Σf = np.diag(Kff - Qff + β.T@Σq@β)
+    return μf, Σf
+
+
+def vgp_qf_tril(Kff, Kuf, Luu, μq, Lq, full_cov=False):
+    """q(f) = \int p(f|u)q(u) du
+            = N(Kfu Kuu^-1 μq, Kff - Qff + Kfu Kuu^-1 Σq Kuu^-1 Kuf)
+            
+        where q(u)   ~ N(μu, Σu) w/  Σu := Lu@Lu.T
+              p(u)   ~ N(0, Kuu) w/ Kuu := Luu@Luu.T
+              p(f|u) ~ N(0, Kfu Kuu^-1 u, Kff - Qff)
+              
+        when `full_cov=True`
+            assume `Kff` is also the diagonal
+    """
+    α = solve_triangular(Luu, Kuf, lower=True)
+    β = solve_triangular(Luu, α, lower=False)
+    γ = Lq.T@β
+    μf = β.T@μq
+    if full_cov:
+        Σf = Kff - α.T@α + γ.T@γ
+    else:
+        Σf = Kff - \
+            np.sum(np.square(α), axis=0) + \
+            np.sum(np.square(γ), axis=0)
+    return μf, Σf
+
+
+def rand_μΣ(key, m):
+    μ = random.normal(key, (m,1))
+    Σ = random.normal(key, (m,m))
+    Σ = jax.ops.index_update(Σ, np.tril_indices(m), 0)
+    Σ = Σ@Σ.T+0.1*np.eye(m)
+    return μ,Σ
+
+
 def kl_mvn(μ0, Σ0, μ1, Σ1):
     """KL(q||p) where q~N(μ0,Σ0), p~N(μ1,Σ1) """
     n = μ0.size
@@ -332,12 +446,6 @@ def kl_mvn_tril(μ0, L0, μ1, L1):
     """KL(q||p) where q~N(μ0,L0@L0.T), p~N(μ1,L1@L1.T) 
     
         ```
-            def rand_μΣ(key, m):
-                μ = random.normal(key, (m,1))
-                Σ = random.normal(key, (m,m))
-                Σ = jax.ops.index_update(Σ, np.tril_indices(m), 0)
-                Σ = Σ@Σ.T+0.1*np.eye(m)
-                return μ,Σ
             m = 50
             μ0,Σ0 = rand_μΣ(jax.random.PRNGKey(0), m)
             μ1,Σ1 = rand_μΣ(jax.random.PRNGKey(1), m)
