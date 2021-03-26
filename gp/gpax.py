@@ -9,7 +9,7 @@ from jax.scipy.linalg import cho_solve, solve_triangular
 
 import flax
 from flax.core import unfreeze
-from flax import optim
+from flax import optim, struct
 from flax import linen as nn
 
 from jaxkern import cov_se, sqdist
@@ -49,7 +49,8 @@ class LikNormal(nn.Module):
         E[log(p(y|f))] = Σᵢ E[ -.5log(2πσ2) - (.5/σ2) (yᵢ^2 - 2yᵢfᵢ + fᵢ^2) ]
                        = Σᵢ -.5log(2πσ2) - (.5/σ2) ((yᵢ-μᵢ)^2 + vᵢ)   by E[fᵢ]^2 = μᵢ^2 + vᵢ
         """
-        return np.sum(-.5*np.log(2*np.pi*σ2) - (.5/σ2)*(np.square((y-μf)) + σ2f))
+        return np.sum(-.5*np.log(2*np.pi*self.σ2) -
+                      (.5/self.σ2)*(np.square((y-μf)) + σ2f))
 
 
 class GPR(nn.Module):
@@ -60,8 +61,8 @@ class GPR(nn.Module):
         self.lik = LikNormal()
 
     def get_init_params(self, key):
-        params = self.init(key, np.ones((1, self.data[0].shape[-1])),
-                           method=self.pred_f)
+        Xs = np.ones((1, self.data[0].shape[-1]))
+        params = self.init(key, Xs, method=self.pred_f)
         return params
 
     def mll(self):
@@ -115,8 +116,8 @@ class GPRFITC(nn.Module):
                              (self.n_inducing, X.shape[-1]))
 
     def get_init_params(self, key):
-        params = self.init(key, np.ones((1, self.data[0].shape[-1])),
-                           method=self.pred_f)
+        Xs = np.ones((1, self.data[0].shape[-1]))
+        params = self.init(key, Xs, method=self.pred_f)
         return params
 
     def precompute(self):
@@ -125,7 +126,7 @@ class GPRFITC(nn.Module):
         Xu = self.Xu
         n, m = len(X), self.n_inducing
 
-        Kdiag = k(X, full_cov=True)
+        Kdiag = k(X, full_cov=False)
         Kuu = k(Xu)
         Kuf = k(Xu, X)
         Luu = cholesky_jitter(Kuu, jitter=1e-4)
@@ -199,7 +200,7 @@ class VFE(nn.Module):
         Xu = self.Xu
         n, m = len(X), self.n_inducing
 
-        Kdiag = k(X, full_cov=True)
+        Kdiag = k(X, full_cov=False)
         Kuu = k(Xu)
         Kuf = k(Xu, X)
         Luu = cholesky_jitter(Kuu, jitter=1e-4)
@@ -255,32 +256,29 @@ class VFE(nn.Module):
 class SVGP(nn.Module):
     data: Tuple[np.ndarray, np.ndarray]
     n_inducing: int
+    n_data: int
 
     def setup(self):
         self.k = CovSE()
         self.lik = LikNormal()
         X, y = self.data
-        self.Xu = self.param('Xu', lambda k, s: X[:self.n_inducing],
+        def init_fn(k, s): return X[:self.n_inducing]
+        self.Xu = self.param('Xu', init_fn,
                              (self.n_inducing, X.shape[-1]))
-        self.μq = self.param('μq', jax.nn.initializers.zeros,
-                             (n_inducing, 1))
         Luu = cholesky_jitter(self.k(self.Xu), 1e-4)
-        def init_fn_Lq(k, s): return BijectiveFillTril.reverse(Luu)
-        self.Lq = BijectiveFillTril.forward(
-            self.param('Lq', init_fn_Lq,
-                       (BijectiveFillTril.reverse_shape(n_inducing), 1)))
+        self.q = VariationalMultivariateNormal(Luu)
 
     def get_init_params(self, key):
         Xs = np.ones((1, self.data[0].shape[-1]))
         ys = np.ones((1, self.data[1].shape[-1]))
-        params = self.init(key, method=self.mll)
+        params = self.init(key, (Xs, ys), method=self.mll)
         return params
 
-    def mll(self):
-        X, y = self.data
+    def mll(self, data):
+        X, y = data
         k = self.k
         m = self.n_inducing
-        Xu, μq, Lq = self.Xu, self.μq, self.Lq
+        Xu, μq, Lq = self.Xu, self.q.μ, self.q.L
 
         Kss = k(X, full_cov=False)
         Kus = k(Xu, X)
@@ -289,15 +287,17 @@ class SVGP(nn.Module):
 
         μqf, σ2qf = vgp_qf_tril(Kss, Kus, Luu, μq, Lq, full_cov=False)
         elbo_lik = self.lik.variational_expectation(y, μqf, σ2qf)
-        elbo_kl = -kl_mvn_tril_zero_mean_prior(μq, Lq, Luu)
-        elbo = elbo_lik + elbo_kl
+        elbo_nkl = -kl_mvn_tril_zero_mean_prior(μq, Lq, Luu)
 
+        α = self.n_data/len(X) \
+            if self.n_data is not None else 1.
+        elbo = α*elbo_lik + elbo_nkl
         return elbo
 
     def pred_f(self, Xs, full_cov=False):
         k = self.k
         m = self.n_inducing
-        Xu, μq, Lq = self.Xu, self.μq, self.Lq
+        Xu, μq, Lq = self.Xu, self.q.μ, self.q.L
 
         Kss = k(Xs, full_cov=full_cov)
         Kus = k(Xu, Xs)
@@ -312,6 +312,43 @@ class SVGP(nn.Module):
         ns = len(Σf)
         μy, Σy = μf, Σf + self.lik.σ2*np.diag(np.ones((ns,)))
         return μy, Σy
+
+
+@struct.dataclass
+class MultivariateNormalTril(object):
+    μ: np.ndarray
+    L: np.ndarray
+
+    def log_prob(self, x):
+        d = μ.size
+        α = solve_triangular(L, (x-self.μ), lower=True)
+        mahan = -.5*np.sum(np.square(α))
+        const = -.5*d*np.log(2*np.pi)
+        lgdet = -np.sum(np.log(np.diag(self.L)))
+        return mahan + const + lgdet
+
+    def cov(self):
+        return L@L.T
+
+    def sample(self, key, shape=()):
+        """Outputs μ+Lϵ where ϵ~N(0,I)"""
+        shape = shape + self.μ.squeeze().shape
+        ϵ = random.normal(key, shape)
+        return self.μ.T + np.tensordot(ϵ, self.L, [-1, 1])
+
+
+class VariationalMultivariateNormal(nn.Module):
+    L_initial: np.ndarray
+
+    def setup(self):
+        m = len(self.L_initial)
+        self.μ = self.param('μ', jax.nn.initializers.zeros, (m, 1))
+        self.L = BijectiveFillTril.forward(
+            self.param('L', lambda k, s: BijectiveFillTril.reverse(self.L_initial),
+                       (BijectiveFillTril.reverse_shape(m), 1)))
+
+    def __call__(self):
+        return MultivariateNormalTril(self.μ, self.L)
 
 
 class BijectiveExp(object):
@@ -528,7 +565,8 @@ def kl_mvn_tril(μ0, L0, μ1, L1):
     kl_trace = np.sum(np.square(α))
     kl_mahan = np.sum(np.square(β))
     kl_const = -n
-    kl_lgdet = 2*(np.sum(np.log(np.diag(L1))) - np.sum(np.log(np.diag(L0))))
+    kl_lgdet = np.sum(np.log(np.diag(np.square(L1)))) - \
+        np.sum(np.log(np.diag(np.square(L0))))
     kl = .5*(kl_trace + kl_mahan + kl_const + kl_lgdet)
     return kl
 
@@ -541,7 +579,8 @@ def kl_mvn_tril_zero_mean_prior(μ0, L0, L1):
     kl_trace = np.sum(np.square(α))
     kl_mahan = np.sum(np.square(β))
     kl_const = -n
-    kl_lgdet = 2*(np.sum(np.log(np.diag(L1))) - np.sum(np.log(np.diag(L0))))
+    kl_lgdet = np.sum(np.log(np.diag(np.square(L1)))) - \
+        np.sum(np.log(np.diag(np.square(L0))))
     kl = .5*(kl_trace + kl_mahan + kl_const + kl_lgdet)
     return kl
 
@@ -607,9 +646,47 @@ def log_func_default(i, f, params, everyn=20):
         print(f'[{i:3}]\tLoss={f(params):.3f}\t{S}')
 
 
-def flax_create_optimizer(params, optimizer, optimizer_kwargs):
-    optimizer_cls = getattr(optim, optimizer)
-    return optimizer_cls(**optimizer_kwargs).create(params)
+def get_data_stream(key, bsz, X, y):
+    n = len(X)
+    n_complete_batches, leftover = divmod(n, bsz)
+    n_batches = n_complete_batches + bool(leftover)
+
+    def data_stream():
+        while True:
+            perm = random.permutation(key, n)
+            for i in range(n_batches):
+                ind = perm[i*bsz:(i+1)*bsz]
+                yield (X[ind], y[ind])
+    return n_batches, data_stream
+
+
+def filter_contains(k, v, kwd, b=True):
+    if kwd in k.split('/'):
+        return b
+    else:
+        return not b
+
+
+def flax_get_optimizer(optimizer_name):
+    optimizer_cls = getattr(optim, optimizer_name)
+    return optimizer_cls
+
+
+def flax_create_optimizer(params, optimizer_name, optimizer_kwargs):
+    return flax_get_optimizer(optimizer_name)(**optimizer_kwargs).create(params)
+
+
+def flax_create_multioptimizer(params, optimizer_name, optimizer_kwargs):
+    vari_traverse = optim.ModelParamTraversal(
+        lambda k, v: filter_contains(k, v, 'q', True))
+    rest_traverse = optim.ModelParamTraversal(
+        lambda k, v: filter_contains(k, v, 'q', False))
+    vari_opt = flax_get_optimizer(optimizer_name)(optimizer_kwargs)
+    rest_opt = flax_get_optimizer(optimizer_name)(optimizer_kwargs)
+    opt_def = optim.MultiOptimizer((vari_traverse, vari_opt),
+                                   (rest_traverse, rest_opt))
+    opt = opt_def.create(params)
+    return opt
 
 
 def flax_run_optim(f, params, num_steps=10, log_func=None,
@@ -617,8 +694,9 @@ def flax_run_optim(f, params, num_steps=10, log_func=None,
                    optimizer_kwargs={'learning_rate': .002}):
     import itertools
     fg_fn = jax.value_and_grad(f)
-    opt = flax_create_optimizer(
-        params, optimizer=optimizer, optimizer_kwargs=optimizer_kwargs)
+    opt = flax_create_optimizer(params,
+                                optimizer_name=optimizer,
+                                optimizer_kwargs=optimizer_kwargs)
     itercount = itertools.count()
     for i in range(num_steps):
         fx, grad = fg_fn(opt.target)
