@@ -8,7 +8,7 @@ import jax.numpy.linalg as linalg
 from jax.scipy.linalg import cho_solve, solve_triangular
 
 import flax
-from flax.core import unfreeze
+from flax.core import freeze, unfreeze
 from flax import optim, struct
 from flax import linen as nn
 
@@ -20,7 +20,7 @@ class CovSE(nn.Module):
     def setup(self):
         self.transform = BijectiveSoftplus()
         def init_fn(k, s): return self.transform.reverse(np.array([1.]))
-        self.ℓ = self.transform.forward(self.param('ℓ',  init_fn, (1,)))
+        self.ℓ  = self.transform.forward(self.param('ℓ',  init_fn, (1,)))
         self.σ2 = self.transform.forward(self.param('σ2', init_fn, (1,)))
 
     def scale(self, X):
@@ -328,7 +328,7 @@ class MultivariateNormalTril(object):
         return mahan + const + lgdet
 
     def cov(self):
-        return L@L.T
+        return self.L@self.L.T
 
     def sample(self, key, shape=()):
         """Outputs μ+Lϵ where ϵ~N(0,I)"""
@@ -657,7 +657,8 @@ def get_data_stream(key, bsz, X, y):
             for i in range(n_batches):
                 ind = perm[i*bsz:(i+1)*bsz]
                 yield (X[ind], y[ind])
-    return n_batches, data_stream
+
+    return n_batches, data_stream()
 
 
 def filter_contains(k, v, kwd, b=True):
@@ -665,6 +666,21 @@ def filter_contains(k, v, kwd, b=True):
         return b
     else:
         return not b
+
+
+def pytree_mutate(tree, kvs):
+    """Mutate `tree` with `kvs: {path: value}` """
+    aggregate = []
+    for k, v in flax.traverse_util.flatten_dict(
+        unfreeze(tree)).items():
+        path = '/'.join(k)
+        if path in kvs:
+            assert(v.size == kvs[path].size)
+            k, v = k, kvs[path]
+        aggregate.append((k, v))
+    tree = freeze(
+        flax.traverse_util.unflatten_dict(dict(aggregate)))
+    return tree
 
 
 def flax_get_optimizer(optimizer_name):
