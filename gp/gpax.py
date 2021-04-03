@@ -18,7 +18,7 @@ from jaxkern import cov_se, sqdist
 class CovSE(nn.Module):
 
     def setup(self):
-        self.transform = BijectiveSoftplus()
+        self.transform = BijSoftplus()
         def init_fn(k, s): return self.transform.reverse(np.array([1.]))
         self.ℓ  = self.transform.forward(self.param('ℓ',  init_fn, (1,)))
         self.σ2 = self.transform.forward(self.param('σ2', init_fn, (1,)))
@@ -38,11 +38,11 @@ class CovSE(nn.Module):
 class LikNormal(nn.Module):
 
     def setup(self):
-        transform = BijectiveSoftplus()
+        transform = BijSoftplus()
         def init_fn(k, s): return transform.reverse(np.array([1.]))
         self.σ2 = transform.forward(self.param('σ2', init_fn, (1,)))
 
-    def variational_expectation(self, y, μf, σ2f):
+    def variational_log_prob(self, y, μf, σ2f):
         """Computes E[log(p(y|f))] 
                 where f ~ N(μ, diag[v]) and y = \prod_i p(yi|fi)
 
@@ -203,7 +203,7 @@ class VFE(nn.Module):
         Kdiag = k(X, full_cov=False)
         Kuu = k(Xu)
         Kuf = k(Xu, X)
-        Luu = cholesky_jitter(Kuu, jitter=1e-4)
+        Luu = cholesky_jitter(Kuu, jitter=1e-5)
 
         V = solve_triangular(Luu, Kuf, lower=True)
         Qffdiag = np.sum(np.square(V), axis=0)
@@ -286,7 +286,7 @@ class SVGP(nn.Module):
         Luu = cholesky_jitter(Kuu, jitter=1e-6)
 
         μqf, σ2qf = vgp_qf_tril(Kss, Kus, Luu, μq, Lq, full_cov=False)
-        elbo_lik = self.lik.variational_expectation(y, μqf, σ2qf)
+        elbo_lik = self.lik.variational_log_prob(y, μqf, σ2qf)
         elbo_nkl = -kl_mvn_tril_zero_mean_prior(μq, Lq, Luu)
 
         α = self.n_data/len(X) \
@@ -343,15 +343,15 @@ class VariationalMultivariateNormal(nn.Module):
     def setup(self):
         m = len(self.L_initial)
         self.μ = self.param('μ', jax.nn.initializers.zeros, (m, 1))
-        self.L = BijectiveFillTril.forward(
-            self.param('L', lambda k, s: BijectiveFillTril.reverse(self.L_initial),
-                       (BijectiveFillTril.reverse_shape(m), 1)))
+        self.L = BijFillTril.forward(
+            self.param('L', lambda k, s: BijFillTril.reverse(self.L_initial),
+                       (BijFillTril.reverse_shape(m), 1)))
 
     def __call__(self):
         return MultivariateNormalTril(self.μ, self.L)
 
 
-class BijectiveExp(object):
+class BijExp(object):
 
     @staticmethod
     def forward(x):
@@ -371,7 +371,7 @@ def softplus_inv(y):
     return np.log(-np.expm1(-y)) + y
 
 
-class BijectiveSoftplus(object):
+class BijSoftplus(object):
     """
     Reference
     - https://www.tensorflow.org/probability/api_docs/python/tfp/bijectors/Softplus
@@ -386,7 +386,7 @@ class BijectiveSoftplus(object):
         return softplus_inv(y)
 
 
-class BijectiveFillTril(object):
+class BijFillTril(object):
     """Transofrms vector to lower triangular matrix
             v (n,) -> L (m,m)
                 where `m = (-1+sqrt(1+8*n))/2`
@@ -417,7 +417,7 @@ class BijectiveFillTril(object):
 
     @staticmethod
     def forward(v):
-        m = BijectiveFillTril.forward_shape(v.size)
+        m = BijFillTril.forward_shape(v.size)
         L = np.zeros((m, m))
         L = jax.ops.index_update(L, np.tril_indices(m), v.squeeze())
         return L
@@ -430,7 +430,7 @@ class BijectiveFillTril(object):
         return v
 
 
-class BijectiveSoftplusFillTril(object):
+class BijSoftplusFillTril(object):
 
     @staticmethod
     def forward_shape(n):
@@ -442,7 +442,7 @@ class BijectiveSoftplusFillTril(object):
 
     @staticmethod
     def forward(v):
-        m = BijectiveSoftplusFillTril.forward_shape(v.size)
+        m = BijSoftplusFillTril.forward_shape(v.size)
         L = np.zeros((m, m))
         L = jax.ops.index_update(L, np.tril_indices(m, k=-1), v[:-m].squeeze())
         L = jax.ops.index_update(L, np.diag_indices(
