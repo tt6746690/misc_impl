@@ -1,5 +1,6 @@
 import math
 from typing import Any, Callable, Sequence, Optional, Tuple
+from dataclasses import dataclass
 
 import jax
 from jax import random
@@ -72,12 +73,9 @@ class GPR(nn.Module):
 
         K = k(X) + self.lik.σ2*np.eye(n)
         L = linalg.cholesky(K)
-        α = cho_solve((L, True), y)
 
-        mll_mahan = -(1/2)*np.sum(y*α)
-        mll_lgdet = - np.sum(np.log(np.diag(L)))
-        mll_const = - (n/2)*np.log(2*np.pi)
-        mll = mll_mahan + mll_lgdet + mll_const
+        mlik = MultivariateNormalTril(np.zeros(n), L)
+        mll = mlik.log_prob(y)
 
         return mll
 
@@ -129,7 +127,7 @@ class GPRFITC(nn.Module):
         Kdiag = k(X, full_cov=False)
         Kuu = k(Xu)
         Kuf = k(Xu, X)
-        Luu = cholesky_jitter(Kuu, jitter=1e-4)
+        Luu = cholesky_jitter(Kuu, jitter=1e-5)
 
         V = solve_triangular(Luu, Kuf, lower=True)
         Qffdiag = np.sum(np.square(V), axis=0)
@@ -144,13 +142,20 @@ class GPRFITC(nn.Module):
 
     def mll(self):
         X, y = self.data
-        n = len(X)
-        Luu, Λ, LB, γ = self.precompute()
-
-        mll_mahan = -.5*(np.sum((y/Λ)*y) - np.sum(np.square(γ)))
-        mll_lgdet = -np.sum(np.log(np.diag(LB)))-.5*np.sum(np.log(Λ))
-        mll_const = -(n/2)*np.log(2*np.pi)
-        mll = mll_mahan + mll_lgdet + mll_const
+        k = self.k
+        Xu = self.Xu
+        n, m = len(X), self.n_inducing
+        
+        Kdiag = k(X, full_cov=False)
+        Kuu = k(Xu)
+        Kuf = k(Xu, X)
+        Luu = cholesky_jitter(Kuu, jitter=1e-5)
+        V = solve_triangular(Luu, Kuf, lower=True)
+        Qffdiag = np.sum(np.square(V), axis=0)
+        Λ = Kdiag - Qffdiag + self.lik.σ2
+        
+        mlik = MultivariateNormalInducing(np.zeros(n), V, Λ)
+        mll = mlik.log_prob(y)
 
         return mll
 
@@ -206,8 +211,7 @@ class VFE(nn.Module):
         Luu = cholesky_jitter(Kuu, jitter=1e-5)
 
         V = solve_triangular(Luu, Kuf, lower=True)
-        Qffdiag = np.sum(np.square(V), axis=0)
-        Λ = Kdiag - Qffdiag + self.lik.σ2
+        Λ = self.lik.σ2*np.ones(n)
         Λ = Λ.reshape(-1, 1)
 
         B = np.eye(m) + (V/Λ.T)@V.T
@@ -218,16 +222,23 @@ class VFE(nn.Module):
 
     def mll(self):
         X, y = self.data
-        n = len(X)
-        Kdiag, Luu, V, Λ, LB, γ = self.precompute()
+        k = self.k
+        Xu = self.Xu
+        n, m = len(X), self.n_inducing
 
-        elbo_mahan = -.5*(np.sum((y/Λ)*y) - np.sum(np.square(γ)))
-        elbo_lgdet = -np.sum(np.log(np.diag(LB)))-.5*np.sum(np.log(Λ))
-        elbo_const = -(n/2)*np.log(2*np.pi)
+        Kdiag = k(X, full_cov=False)
+        Kuu = k(Xu)
+        Kuf = k(Xu, X)
+        Luu = cholesky_jitter(Kuu, jitter=1e-5)
+        V = solve_triangular(Luu, Kuf, lower=True)
+        Λ = self.lik.σ2*np.ones(n)
+        
+        mlik = MultivariateNormalInducing(np.zeros(n), V, Λ)
+        elbo_mll = mlik.log_prob(y)
         elbo_trace = -(1/2/self.lik.σ2[0]) * \
             (np.sum(Kdiag) - np.sum(np.square(V)))
-
-        elbo = elbo_mahan + elbo_lgdet + elbo_const + elbo_trace
+        elbo = elbo_mll + elbo_trace
+        
         return elbo
 
     def pred_f(self, Xs):
@@ -262,11 +273,10 @@ class SVGP(nn.Module):
         self.k = CovSE()
         self.lik = LikNormal()
         X, y = self.data
-        def init_fn(k, s): return X[:self.n_inducing]
-        self.Xu = self.param('Xu', init_fn,
+        init_fn = lambda k,s: X[:self.n_inducing]
+        self.Xu = self.param('Xu', init_fn, 
                              (self.n_inducing, X.shape[-1]))
-        Luu = cholesky_jitter(self.k(self.Xu), 1e-4)
-        self.q = VariationalMultivariateNormal(Luu)
+        self.q = VariationalMultivariateNormal(np.eye(len(self.Xu)))
 
     def get_init_params(self, key):
         Xs = np.ones((1, self.data[0].shape[-1]))
@@ -285,13 +295,14 @@ class SVGP(nn.Module):
         Kuu = k(Xu, Xu)
         Luu = cholesky_jitter(Kuu, jitter=1e-6)
 
-        μqf, σ2qf = vgp_qf_tril(Kss, Kus, Luu, μq, Lq, full_cov=False)
-        elbo_lik = self.lik.variational_log_prob(y, μqf, σ2qf)
-        elbo_nkl = -kl_mvn_tril_zero_mean_prior(μq, Lq, Luu)
-
         α = self.n_data/len(X) \
             if self.n_data is not None else 1.
-        elbo = α*elbo_lik + elbo_nkl
+        
+        μqf, σ2qf = vgp_qf_tril(Kss, Kus, Luu, μq, Lq, full_cov=False)
+        elbo_lik = α*self.lik.variational_log_prob(y, μqf, σ2qf)
+        elbo_nkl = -kl_mvn_tril_zero_mean_prior(μq, Lq, Luu)
+        elbo = elbo_lik + elbo_nkl
+        
         return elbo
 
     def pred_f(self, Xs, full_cov=False):
@@ -314,17 +325,21 @@ class SVGP(nn.Module):
         return μy, Σy
 
 
-@struct.dataclass
+
 class MultivariateNormalTril(object):
-    μ: np.ndarray
-    L: np.ndarray
+    """N(μ, LLᵀ) """
+
+    def __init__(self, μ, L):
+        self.μ = μ.reshape(-1,1)
+        self.L = L
 
     def log_prob(self, x):
-        d = μ.size
-        α = solve_triangular(L, (x-self.μ), lower=True)
+        d = self.μ.size
+        x = x.reshape(self.μ.shape)
+        α = solve_triangular(self.L, (x-self.μ), lower=True)
         mahan = -.5*np.sum(np.square(α))
-        const = -.5*d*np.log(2*np.pi)
         lgdet = -np.sum(np.log(np.diag(self.L)))
+        const = -.5*d*np.log(2*np.pi)
         return mahan + const + lgdet
 
     def cov(self):
@@ -336,6 +351,41 @@ class MultivariateNormalTril(object):
         ϵ = random.normal(key, shape)
         return self.μ.T + np.tensordot(ϵ, self.L, [-1, 1])
 
+
+class MultivariateNormalInducing(object):
+    """N(μ, VᵀV + Λ) where
+            - Λ diagonal
+            
+        Used to represent p(f|X) for sparse GPs
+            e.g. 
+                - Λ_dic  = diag[σ2*I]
+                - Λ_fitc = diag[Kff-Qff+σ2*I]
+                - Qff = VᵀV w/ V = inv(Luu)@Kuf
+    """
+    
+    def __init__(self, μ, V, Λ):
+        self.μ = μ.reshape(-1,1)
+        self.V = V
+        self.Λ = Λ.reshape(-1,1)
+
+    def log_prob(self, x):
+        μ, Λ, V = self.μ, self.Λ, self.V
+        d = μ.size
+        x = x.reshape(μ.shape)
+        e = x - μ
+
+        B = np.eye(V.shape[0]) + (V/Λ.T)@V.T
+        LB = cholesky_jitter(B, jitter=1e-5)
+        γ = solve_triangular(LB, V@(e/Λ), lower=True)
+
+        mahan = -.5*(np.sum((e/Λ)*e) - np.sum(np.square(γ)))
+        lgdet = -np.sum(np.log(np.diag(LB)))-.5*np.sum(np.log(Λ))
+        const = -(d/2)*np.log(2*np.pi)
+        return mahan + const + lgdet
+    
+    def cov(self):
+        return self.V.T@self.V + self.Λ
+    
 
 class VariationalMultivariateNormal(nn.Module):
     L_initial: np.ndarray
