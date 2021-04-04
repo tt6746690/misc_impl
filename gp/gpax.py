@@ -325,14 +325,12 @@ class MultivariateNormalTril(object):
 
 
 class MultivariateNormalInducing(object):
-    """N(μ, VᵀV + Λ) where
-            - Λ diagonal
+    """N(μ, VᵀV + Λ) where V low rank, Λ diagonal
             
         Used to represent p(f|X) for sparse GPs
-            e.g. 
+                - Q = VᵀV where V = inv(L)@Kuf, Q=LLᵀ
                 - Λ_dic  = diag[σ2*I]
                 - Λ_fitc = diag[K-Q+σ2*I]
-                - Q = VᵀV w/ V = inv(L)@Kuf
     """
     
     def __init__(self, μ, V, Λ):
