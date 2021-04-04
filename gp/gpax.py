@@ -134,25 +134,12 @@ class GPRFITC(nn.Module):
         Λ = Kdiag - Qffdiag + self.lik.σ2
         Λ = Λ.reshape(-1, 1)
 
-        B = np.eye(m) + (V/Λ.T)@V.T
-        LB = cholesky_jitter(B, jitter=1e-5)
-        γ = solve_triangular(LB, V@(y/Λ), lower=True)
-
-        return Luu, Λ, LB, γ
+        return Luu, V, Λ
 
     def mll(self):
         X, y = self.data
-        k = self.k
-        Xu = self.Xu
-        n, m = len(X), self.n_inducing
-        
-        Kdiag = k(X, full_cov=False)
-        Kuu = k(Xu)
-        Kuf = k(Xu, X)
-        Luu = cholesky_jitter(Kuu, jitter=1e-5)
-        V = solve_triangular(Luu, Kuf, lower=True)
-        Qffdiag = np.sum(np.square(V), axis=0)
-        Λ = Kdiag - Qffdiag + self.lik.σ2
+        n = len(X)
+        Luu, V, Λ = self.precompute()
         
         mlik = MultivariateNormalInducing(np.zeros(n), V, Λ)
         mll = mlik.log_prob(y)
@@ -162,18 +149,13 @@ class GPRFITC(nn.Module):
     def pred_f(self, Xs):
         X, y = self.data
         k = self.k
-        Xu = self.Xu
-        n = len(X)
-        Luu, Λ, LB, γ = self.precompute()
-
+        Luu, V, Λ = self.precompute()
+        
         Kss = k(Xs)
         Kus = k(Xu, Xs)
-        ω = solve_triangular(Luu, Kus, lower=True)
-        ν = solve_triangular(LB, ω, lower=True)
 
-        μ = ω.T@solve_triangular(LB.T, γ, lower=False)
-        Σ = Kss - ω.T@ω + ν.T@ν
-
+        μ, Σ = mvn_conditional_sparse(Kss, Kus,
+                                      Luu, V, Λ, y, full_cov=True)
         return μ, Σ
 
     def pred_y(self, Xs):
@@ -214,24 +196,13 @@ class VFE(nn.Module):
         Λ = self.lik.σ2*np.ones(n)
         Λ = Λ.reshape(-1, 1)
 
-        B = np.eye(m) + (V/Λ.T)@V.T
-        LB = cholesky_jitter(B, jitter=1e-5)
-        γ = solve_triangular(LB, V@(y/Λ), lower=True)
-
-        return Kdiag, Luu, V, Λ, LB, γ
+        return Kdiag, Luu, V, Λ
 
     def mll(self):
         X, y = self.data
-        k = self.k
-        Xu = self.Xu
-        n, m = len(X), self.n_inducing
-
-        Kdiag = k(X, full_cov=False)
-        Kuu = k(Xu)
-        Kuf = k(Xu, X)
-        Luu = cholesky_jitter(Kuu, jitter=1e-5)
-        V = solve_triangular(Luu, Kuf, lower=True)
-        Λ = self.lik.σ2*np.ones(n)
+        n = len(X)
+        
+        Kdiag, Luu, V, Λ = self.precompute()
         
         mlik = MultivariateNormalInducing(np.zeros(n), V, Λ)
         elbo_mll = mlik.log_prob(y)
@@ -245,15 +216,12 @@ class VFE(nn.Module):
         X, y = self.data
         k = self.k
         Xu = self.Xu
-        Kdiag, Luu, V, Λ, LB, γ = self.precompute()
-
+        _, Luu, V, Λ = self.precompute()
+        
         Kss = k(Xs)
         Kus = k(Xu, Xs)
-        ω = solve_triangular(Luu, Kus, lower=True)
-        ν = solve_triangular(LB, ω, lower=True)
-
-        μ = ω.T@solve_triangular(LB.T, γ, lower=False)
-        Σ = Kss - ω.T@ω + ν.T@ν
+        μ, Σ = mvn_conditional_sparse(Kss, Kus,
+                                      Luu, V, Λ, y, full_cov=True)
 
         return μ, Σ
 
@@ -262,6 +230,7 @@ class VFE(nn.Module):
         ns = len(Σf)
         μy, Σy = μf, Σf + self.lik.σ2*np.diag(np.ones((ns,)))
         return μy, Σy
+
 
 
 class SVGP(nn.Module):
@@ -298,7 +267,7 @@ class SVGP(nn.Module):
         α = self.n_data/len(X) \
             if self.n_data is not None else 1.
         
-        μqf, σ2qf = vgp_qf_tril(Kss, Kus, Luu, μq, Lq, full_cov=False)
+        μqf, σ2qf = mvn_conditional_variational(Kss, Kus, Luu, μq, Lq, full_cov=False)
         elbo_lik = α*self.lik.variational_log_prob(y, μqf, σ2qf)
         elbo_nkl = -kl_mvn_tril_zero_mean_prior(μq, Lq, Luu)
         elbo = elbo_lik + elbo_nkl
@@ -315,7 +284,7 @@ class SVGP(nn.Module):
         Kuu = k(Xu, Xu)
         Luu = cholesky_jitter(Kuu, jitter=1e-6)
 
-        μf, Σf = vgp_qf_tril(Kss, Kus, Luu, μq, Lq, full_cov=full_cov)
+        μf, Σf = mvn_conditional_variational(Kss, Kus, Luu, μq, Lq, full_cov=full_cov)
         return μf, Σf
 
     def pred_y(self, Xs):
@@ -359,8 +328,8 @@ class MultivariateNormalInducing(object):
         Used to represent p(f|X) for sparse GPs
             e.g. 
                 - Λ_dic  = diag[σ2*I]
-                - Λ_fitc = diag[Kff-Qff+σ2*I]
-                - Qff = VᵀV w/ V = inv(Luu)@Kuf
+                - Λ_fitc = diag[K-Q+σ2*I]
+                - Q = VᵀV w/ V = inv(L)@Kuf
     """
     
     def __init__(self, μ, V, Λ):
@@ -519,22 +488,22 @@ def diag_indices_kth(n, k):
         return rows, cols
 
 
-def vgp_qf_unstable(Kff, Kuf, Kuu, μq, Σq, full_cov=False):
+def mvn_conditional_variational_us(Kff, Kuf, Kuu, μq, Σq, full_cov=False):
     """ ```
-            n,m,l = 10,5,5
-            key = jax.random.PRNGKey(0)
-            X, Xu = random.normal(key, (n,2)), random.normal(key, (m,2))
-            k = CovSE()
-            Kff = k.apply(k.init(key, Xu), X)
-            Kuf = k.apply(k.init(key, Xu), Xu, X)
-            Kuu = k.apply(k.init(key, Xu), Xu)+1*np.eye(m)
-            μq, Σq = rand_μΣ(key, m)
-            Lq = linalg.cholesky(Σq)
-            print(is_psd(Kuu), is_psd(Σu))
-            μf1, Σf1 = vgp_qf_unstable(Kff, Kuf, Kuu, μq, Σq, full_cov=True)
-            μf2, Σf2 = vgp_qf_tril(Kff, Kuf, linalg.cholesky(Kuu), μq, Lq, full_cov=True)
-            print((μf2-μf1)[:l])
-            print((Σf2-Σf1)[:l,:l])
+        n,m,l = 100,30,5
+        key = jax.random.PRNGKey(0)
+        X, Xu = random.normal(key, (n,2)), random.normal(key, (m,2))
+        k = CovSE()
+        Kff = k.apply(k.init(key, Xu), X)
+        Kuf = k.apply(k.init(key, Xu), Xu, X)
+        Kuu = k.apply(k.init(key, Xu), Xu)+1*np.eye(m)
+        μq, Σq = rand_μΣ(key, m)
+        Lq = linalg.cholesky(Σq)
+        print(is_psd(Kuu), is_psd(Σq))
+        μf1, Σf1 = mvn_conditional_variational_us(Kff, Kuf, Kuu, μq, Σq, full_cov=True)
+        μf2, Σf2 = mvn_conditional_variational(Kff, Kuf, linalg.cholesky(Kuu), μq, Lq, full_cov=True)
+        print(np.allclose(μf1, μf1))
+        print(np.allclose(Σf1, Σf2, rtol=1e-5, atol=1e-5))
         ```
     """
     Lq = linalg.cholesky(Σq)
@@ -545,13 +514,13 @@ def vgp_qf_unstable(Kff, Kuf, Kuu, μq, Σq, full_cov=False):
     β = linalg.solve(Kuu, Kuf)
     if full_cov:
         Σf = Kff - Qff + β.T@Σq@β
-        print(Σf.shape)
     else:
         Σf = np.diag(Kff - Qff + β.T@Σq@β)
     return μf, Σf
 
 
-def vgp_qf_tril(Kff, Kuf, Luu, μq, Lq, full_cov=False):
+def mvn_conditional_variational(Kff, Kuf,
+                                Luu, μq, Lq, full_cov=False):
     """q(f) = \int p(f|u)q(u) du
             = N(Kfu Kuu^-1 μq, Kff - Qff + Kfu Kuu^-1 Σq Kuu^-1 Kuf)
 
@@ -563,7 +532,7 @@ def vgp_qf_tril(Kff, Kuf, Luu, μq, Lq, full_cov=False):
             assume `Kff` is also the diagonal
     """
     α = solve_triangular(Luu, Kuf, lower=True)
-    β = solve_triangular(Luu, α, lower=False)
+    β = solve_triangular(Luu.T, α, lower=False)
     γ = Lq.T@β
     μf = β.T@μq
     if full_cov:
@@ -573,6 +542,41 @@ def vgp_qf_tril(Kff, Kuf, Luu, μq, Lq, full_cov=False):
             np.sum(np.square(α), axis=0) + \
             np.sum(np.square(γ), axis=0)
     return μf, Σf
+
+
+def mvn_conditional_sparse(Kss, Kus,
+                           Luu, V, Λ, y, full_cov=False):
+    """Computes q(fs|y) ~ N( Qsf*(Qff+Λ)^(-1)*y, 
+                             Kss - Qsf(Qff+Λ)^(-1)*Qfs )
+            where,
+                q(f,fs) ~ N([0], [Qff + Λ, Qfs]
+                            [0], [Qsf,     Kss])
+                            
+        Qff = VᵀV
+        Kuu = Luu*Luuᵀ
+
+        when `full_cov=True`
+            assume `Kff` is also the diagonal
+    """
+    Λ = Λ.reshape(-1,1)
+    
+    B = np.eye(V.shape[0]) + (V/Λ.T)@V.T
+    LB = cholesky_jitter(B, jitter=1e-5)
+    γ = solve_triangular(LB, V@(y/Λ), lower=True)
+    
+    ω = solve_triangular(Luu, Kus, lower=True)
+    ν = solve_triangular(LB, ω, lower=True)
+
+    if full_cov:
+        Σ = Kss - ω.T@ω + ν.T@ν
+    else:
+        Σ = Kss - \
+            np.sum(np.square(ω), axis=0) + \
+            np.sum(np.square(ν), axis=0)
+
+    μ = ω.T@solve_triangular(LB.T, γ, lower=False)
+    return μ, Σ
+
 
 
 def rand_μΣ(key, m):
