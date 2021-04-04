@@ -50,6 +50,7 @@ class LikNormal(nn.Module):
         E[log(p(y|f))] = Σᵢ E[ -.5log(2πσ2) - (.5/σ2) (yᵢ^2 - 2yᵢfᵢ + fᵢ^2) ]
                        = Σᵢ -.5log(2πσ2) - (.5/σ2) ((yᵢ-μᵢ)^2 + vᵢ)   by E[fᵢ]^2 = μᵢ^2 + vᵢ
         """
+        μf, σ2f = μf.reshape(y.shape), σ2f.reshape(y.shape)
         return np.sum(-.5*np.log(2*np.pi*self.σ2) -
                       (.5/self.σ2)*(np.square((y-μf)) + σ2f))
 
@@ -149,6 +150,7 @@ class GPRFITC(nn.Module):
     def pred_f(self, Xs):
         X, y = self.data
         k = self.k
+        Xu = self.Xu
         Luu, V, Λ = self.precompute()
         
         Kss = k(Xs)
@@ -232,7 +234,6 @@ class VFE(nn.Module):
         return μy, Σy
 
 
-
 class SVGP(nn.Module):
     data: Tuple[np.ndarray, np.ndarray]
     n_inducing: int
@@ -248,8 +249,8 @@ class SVGP(nn.Module):
         self.q = VariationalMultivariateNormal(np.eye(len(self.Xu)))
 
     def get_init_params(self, key):
-        Xs = np.ones((1, self.data[0].shape[-1]))
-        ys = np.ones((1, self.data[1].shape[-1]))
+        Xs = np.ones((2, self.data[0].shape[-1]))
+        ys = np.ones((2, self.data[1].shape[-1]))
         params = self.init(key, (Xs, ys), method=self.mll)
         return params
 
@@ -259,15 +260,16 @@ class SVGP(nn.Module):
         m = self.n_inducing
         Xu, μq, Lq = self.Xu, self.q.μ, self.q.L
 
-        Kss = k(X, full_cov=False)
-        Kus = k(Xu, X)
-        Kuu = k(Xu, Xu)
-        Luu = cholesky_jitter(Kuu, jitter=1e-6)
-
+        Kff = k(X, full_cov=False)
+        Kuf = k(Xu, X)
+        Kuu = k(Xu)
+        Luu = cholesky_jitter(Kuu, jitter=1e-5)
+        
         α = self.n_data/len(X) \
             if self.n_data is not None else 1.
-        
-        μqf, σ2qf = mvn_conditional_variational(Kss, Kus, Luu, μq, Lq, full_cov=False)
+
+        μqf, σ2qf = mvn_conditional_variational(Kff, Kuf,
+                                                Luu, μq, Lq, full_cov=False)
         elbo_lik = α*self.lik.variational_log_prob(y, μqf, σ2qf)
         elbo_nkl = -kl_mvn_tril_zero_mean_prior(μq, Lq, Luu)
         elbo = elbo_lik + elbo_nkl
@@ -282,9 +284,10 @@ class SVGP(nn.Module):
         Kss = k(Xs, full_cov=full_cov)
         Kus = k(Xu, Xs)
         Kuu = k(Xu, Xu)
-        Luu = cholesky_jitter(Kuu, jitter=1e-6)
+        Luu = cholesky_jitter(Kuu, jitter=1e-5)
 
-        μf, Σf = mvn_conditional_variational(Kss, Kus, Luu, μq, Lq, full_cov=full_cov)
+        μf, Σf = mvn_conditional_variational(Kss, Kus,
+                                             Luu, μq, Lq, full_cov=full_cov)
         return μf, Σf
 
     def pred_y(self, Xs):
@@ -534,13 +537,13 @@ def mvn_conditional_variational(Kff, Kuf,
     α = solve_triangular(Luu, Kuf, lower=True)
     β = solve_triangular(Luu.T, α, lower=False)
     γ = Lq.T@β
-    μf = β.T@μq
     if full_cov:
         Σf = Kff - α.T@α + γ.T@γ
     else:
         Σf = Kff - \
             np.sum(np.square(α), axis=0) + \
             np.sum(np.square(γ), axis=0)
+    μf = β.T@μq
     return μf, Σf
 
 
@@ -611,6 +614,13 @@ def kl_mvn_tril(μ0, L0, μ1, L1):
             print(kl_mvn(μ0, Σ0, μ1, Σ1))
             print(kl_mvn_tril(μ0, L0, μ1, L1))
             print(kl_mvn_tril_zero_mean_prior(μ0, L0, L1))
+            print(torch.distributions.kl_divergence(
+                torch.distributions.MultivariateNormal(
+                    loc=torch.tensor(onp.array(μ0)),
+                    scale_tril=torch.tensor(onp.array(L0))),
+                torch.distributions.MultivariateNormal(
+                    loc=torch.tensor(onp.array(μ1)),
+                    scale_tril=torch.tensor(onp.array(L1)))).mean())
         ```
     """
     n = μ0.size
@@ -639,7 +649,7 @@ def kl_mvn_tril_zero_mean_prior(μ0, L0, L1):
     return kl
 
 
-def cholesky_jitter(K, jitter=1e-6):
+def cholesky_jitter(K, jitter=1e-5):
     L = linalg.cholesky(K+jitter*np.eye(len(K)))
     return L
 
