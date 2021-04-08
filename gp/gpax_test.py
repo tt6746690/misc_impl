@@ -16,6 +16,27 @@ from gpax import *
 from jaxkern import *
 
 
+class TestJaxUtilities(unittest.TestCase):
+
+    def test_add_to_diagonal(self):
+
+        n = 100
+        key = jax.random.PRNGKey(0)
+        A = random.normal(key, (n,n))
+        jitter = 10
+
+        a = jax_add_to_diagonal(A, jitter)
+        b = A+jitter*np.eye(len(A))
+        self.assertTrue(np.array_equal(a,b))
+
+        v = np.ones(n)*jitter
+        a = jax_add_to_diagonal(A, v)
+        b = A+np.diag(v)
+        self.assertTrue(np.array_equal(a,b))
+
+
+
+
 class TestKernel(unittest.TestCase):
 
     def test_CovIndex(self):

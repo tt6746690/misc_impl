@@ -16,6 +16,8 @@ from flax import linen as nn
 from jaxkern import cov_se, sqdist
 
 
+
+
 class Kernel(nn.Module):
 
     active_dims: Union[slice, list, np.ndarray] = None
@@ -149,26 +151,73 @@ class CovIndex(Kernel):
         return np.take(Bdiag, X)
 
 
-class LikNormal(nn.Module):
+
+
+class Lik(nn.Module):
+    """ p(y|f) """
+    
+    def predictive_dist(μ, Σ, full_cov=True):
+        """Computes predictive distribution for `y`
+                E[y] = ∫∫ y  p(y|f)q(f) dfdy 
+                V[y] = ∫∫ y² p(y|f)q(f) dfdy
+                
+            where q(f) = N(f; μ, Σ)
+            
+            `full_cov` if True implies Σ a vector
+        """
+        raise NotImplementedError
+    
+    def variational_log_prob(self, y, μf, σ2f):
+        """Computes variational expectation of log density 
+                E[log(p(y|f))] = ∫ log(p(y|f)) q(f) df
+                
+            where q(f) = N(f; μf, diag[σ2f])
+        """
+        raise NotImplementedError
+        
+
+class LikNormal(Lik):
 
     def setup(self):
         transform = BijSoftplus()
         def init_fn(k, s): return transform.reverse(np.array([1.]))
         self.σ2 = transform.forward(self.param('σ2', init_fn, (1,)))
 
+    def predictive_dist(self, μ, Σ, full_cov=True):
+        """ y ~ N(μ, K+σ²*I)
+                where f~N(μ, Σ), y|f ~N(0,σ²I)
+        """
+        if full_cov:
+            assert(Σ.shape[-1] == Σ.shape[-2])
+            Σ = jax_add_to_diagonal(Σ, self.σ2)
+        else:
+            Σ = Σ.reshape(-1,1)
+            Σ = Σ + self.σ2
+        return μ, Σ
+
     def variational_log_prob(self, y, μf, σ2f):
         """Computes E[log(p(y|f))] 
                 where f ~ N(μ, diag[v]) and y = \prod_i p(yi|fi)
 
-        E[log(p(y|f))] = Σᵢ E[ -.5log(2πσ2) - (.5/σ2) (yᵢ^2 - 2yᵢfᵢ + fᵢ^2) ]
-                       = Σᵢ -.5log(2πσ2) - (.5/σ2) ((yᵢ-μᵢ)^2 + vᵢ)   by E[fᵢ]^2 = μᵢ^2 + vᵢ
+        E[log(p(y|f))] = Σᵢ E[ -.5log(2πσ²) - (.5/σ²) (yᵢ^2 - 2yᵢfᵢ + fᵢ^2) ]
+                       = Σᵢ -.5log(2πσ²) - (.5/σ²) ((yᵢ-μᵢ)^2 + vᵢ)   by E[fᵢ]^2 = μᵢ^2 + vᵢ
         """
         μf, σ2f = μf.reshape(y.shape), σ2f.reshape(y.shape)
         return np.sum(-.5*np.log(2*np.pi*self.σ2) -
                       (.5/self.σ2)*(np.square((y-μf)) + σ2f))
 
 
-class GPR(nn.Module):
+    
+class GPModel(nn.Module):
+    
+    def pred_y(self, Xs, full_cov=False):
+        """ Assumes `self.lik` and implments `self.pred_f()` """
+        μf, σ2f = self.pred_f(Xs, full_cov=full_cov)
+        μy, σ2y = self.lik.predictive_dist(μf, σ2f, full_cov=full_cov)
+        return μy, σ2y
+
+    
+class GPR(GPModel):
     data: Tuple[np.ndarray, np.ndarray]
 
     def setup(self):
@@ -193,7 +242,7 @@ class GPR(nn.Module):
 
         return mll
 
-    def pred_f(self, Xs):
+    def pred_f(self, Xs, full_cov=True):
         X, y = self.data
         k = self.k
         n = len(X)
@@ -206,17 +255,14 @@ class GPR(nn.Module):
         μ = Ks.T@α
         v = solve_triangular(L, Ks, lower=True)
         Σ = Kss - v.T@v
+        
+        if not full_cov:
+            Σ = np.diag(Σ)
 
         return μ, Σ
 
-    def pred_y(self, Xs):
-        μf, Σf = self.pred_f(Xs)
-        ns = len(Σf)
-        μy, Σy = μf, Σf + self.lik.σ2*np.diag(np.ones((ns,)))
-        return μy, Σy
 
-
-class GPRFITC(nn.Module):
+class GPRFITC(GPModel):
     data: Tuple[np.ndarray, np.ndarray]
     n_inducing: int
 
@@ -260,27 +306,22 @@ class GPRFITC(nn.Module):
 
         return mll
 
-    def pred_f(self, Xs):
+    def pred_f(self, Xs, full_cov=True):
         X, y = self.data
         k = self.k
         Xu = self.Xu
         Luu, V, Λ = self.precompute()
 
-        Kss = k(Xs)
+        Kss = k(Xs, full_cov=full_cov)
         Kus = k(Xu, Xs)
 
         μ, Σ = mvn_conditional_sparse(Kss, Kus,
-                                      Luu, V, Λ, y, full_cov=True)
+                                      Luu, V, Λ, y, full_cov=full_cov)
         return μ, Σ
 
-    def pred_y(self, Xs):
-        μf, Σf = self.pred_f(Xs)
-        ns = len(Σf)
-        μy, Σy = μf, Σf + self.lik.σ2*np.diag(np.ones((ns,)))
-        return μy, Σy
 
 
-class VFE(nn.Module):
+class VFE(GPModel):
     data: Tuple[np.ndarray, np.ndarray]
     n_inducing: int
 
@@ -327,27 +368,22 @@ class VFE(nn.Module):
 
         return elbo
 
-    def pred_f(self, Xs):
+    def pred_f(self, Xs, full_cov=True):
         X, y = self.data
         k = self.k
         Xu = self.Xu
         _, Luu, V, Λ = self.precompute()
 
-        Kss = k(Xs)
+        Kss = k(Xs, full_cov=full_cov)
         Kus = k(Xu, Xs)
         μ, Σ = mvn_conditional_sparse(Kss, Kus,
-                                      Luu, V, Λ, y, full_cov=True)
+                                      Luu, V, Λ, y, full_cov=full_cov)
 
         return μ, Σ
 
-    def pred_y(self, Xs):
-        μf, Σf = self.pred_f(Xs)
-        ns = len(Σf)
-        μy, Σy = μf, Σf + self.lik.σ2*np.diag(np.ones((ns,)))
-        return μy, Σy
 
 
-class SVGP(nn.Module):
+class SVGP(GPModel):
     data: Tuple[np.ndarray, np.ndarray]
     n_inducing: int
     n_data: int
@@ -389,7 +425,7 @@ class SVGP(nn.Module):
 
         return elbo
 
-    def pred_f(self, Xs, full_cov=False):
+    def pred_f(self, Xs, full_cov=True):
         k = self.k
         m = self.n_inducing
         Xu, μq, Lq = self.Xu, self.q.μ, self.q.L
@@ -403,11 +439,6 @@ class SVGP(nn.Module):
                                              Luu, μq, Lq, full_cov=full_cov)
         return μf, Σf
 
-    def pred_y(self, Xs):
-        μf, Σf = self.pred_f(Xs)
-        ns = len(Σf)
-        μy, Σy = μf, Σf + self.lik.σ2*np.diag(np.ones((ns,)))
-        return μy, Σy
 
 
 class MultivariateNormalTril(object):
@@ -723,8 +754,15 @@ def kl_mvn_tril_zero_mean_prior(μ0, L0, L1):
 
 
 def cholesky_jitter(K, jitter=1e-5):
-    L = linalg.cholesky(K+jitter*np.eye(len(K)))
+    L = linalg.cholesky(jax_add_to_diagonal(K, jitter))
     return L
+
+
+def jax_add_to_diagonal(A, v):
+    """ Computes A s.t. diag[A] = diag[A] + v"""
+    diag_idx = np.diag_indices(A.shape[-1])
+    Adiag = A[diag_idx].squeeze()
+    return jax.ops.index_update(A, diag_idx, Adiag+v)
 
 
 def randsub_init_fn(key, shape, dtype=np.float32, X=None):
