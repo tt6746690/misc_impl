@@ -35,6 +35,18 @@ class TestJaxUtilities(unittest.TestCase):
         self.assertTrue(np.array_equal(a,b))
 
 
+class TestLikelihoods(unittest.TestCase):
+
+    def test_LikNormal(self):
+
+        key = jax.random.PRNGKey(0)
+        lik = LikNormal()
+        μ = np.ones((10,1)).astype(np.float32)
+        Σ = np.eye(10)
+        params = lik.init(key, μ, Σ, method=lik.predictive_dist)
+        μ1, Σ1 = lik.apply(params, μ, Σ, full_cov=True, method=lik.predictive_dist)
+        self.assertTrue(np.array_equal(μ, μ1))
+        self.assertTrue(np.array_equal(Σ+np.eye(10), Σ1))
 
 
 class TestKernel(unittest.TestCase):

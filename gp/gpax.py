@@ -208,7 +208,7 @@ class LikNormal(Lik):
 
 
     
-class GPModel(nn.Module):
+class GPModel(object):
     
     def pred_y(self, Xs, full_cov=False):
         """ Assumes `self.lik` and implments `self.pred_f()` """
@@ -216,8 +216,8 @@ class GPModel(nn.Module):
         μy, σ2y = self.lik.predictive_dist(μf, σ2f, full_cov=full_cov)
         return μy, σ2y
 
-    
-class GPR(GPModel):
+
+class GPR(nn.Module, GPModel):
     data: Tuple[np.ndarray, np.ndarray]
 
     def setup(self):
@@ -262,7 +262,7 @@ class GPR(GPModel):
         return μ, Σ
 
 
-class GPRFITC(GPModel):
+class GPRFITC(nn.Module, GPModel):
     data: Tuple[np.ndarray, np.ndarray]
     n_inducing: int
 
@@ -321,7 +321,7 @@ class GPRFITC(GPModel):
 
 
 
-class VFE(GPModel):
+class VFE(nn.Module, GPModel):
     data: Tuple[np.ndarray, np.ndarray]
     n_inducing: int
 
@@ -382,8 +382,7 @@ class VFE(GPModel):
         return μ, Σ
 
 
-
-class SVGP(GPModel):
+class SVGP(nn.Module, GPModel):
     data: Tuple[np.ndarray, np.ndarray]
     n_inducing: int
     n_data: int
