@@ -36,6 +36,40 @@ class CovSE(nn.Module):
             return np.tile(self.σ2, len(X))
 
 
+class CovIndex(nn.Module):
+    """A kernel applied to indices over a lookup take B
+            K[i,j] = B[i,j]
+                where B = WWᵀ + diag[v]
+    """
+    # #rows of W
+    output_dim: int
+    # #columns of W
+    rank: int
+
+    def setup(self):
+        self.W = self.param('W', lambda k,s: random.normal(k,s),
+                             (self.output_dim, self.rank))
+        self.v = BijSoftplus.forward(
+            self.param('v', lambda k,s: np.ones(s), (self.output_dim)))
+
+    def cov(self):
+        return self.W@self.W.T + np.diag(self.v)
+
+    def __call__(self, X, Y=None, full_cov=True):
+        if full_cov:
+            Y = X if Y is None else Y
+            X = np.asarray(X[:,-1], np.int32).squeeze()
+            Y = np.asarray(Y[:,-1], np.int32).squeeze()
+            B = self.cov()
+            K = np.take(np.take(B,Y,axis=1),X,axis=0)
+            return K
+        else:
+            Bdiag = np.sum(np.square(self.W),axis=1)+self.v
+            return np.take(Bdiag, X)
+        
+
+
+
 class LikNormal(nn.Module):
 
     def setup(self):
@@ -490,23 +524,7 @@ def diag_indices_kth(n, k):
 
 
 def mvn_conditional_variational_us(Kff, Kuf, Kuu, μq, Σq, full_cov=False):
-    """ ```
-        n,m,l = 100,30,5
-        key = jax.random.PRNGKey(0)
-        X, Xu = random.normal(key, (n,2)), random.normal(key, (m,2))
-        k = CovSE()
-        Kff = k.apply(k.init(key, Xu), X)
-        Kuf = k.apply(k.init(key, Xu), Xu, X)
-        Kuu = k.apply(k.init(key, Xu), Xu)+1*np.eye(m)
-        μq, Σq = rand_μΣ(key, m)
-        Lq = linalg.cholesky(Σq)
-        print(is_psd(Kuu), is_psd(Σq))
-        μf1, Σf1 = mvn_conditional_variational_us(Kff, Kuf, Kuu, μq, Σq, full_cov=True)
-        μf2, Σf2 = mvn_conditional_variational(Kff, Kuf, linalg.cholesky(Kuu), μq, Lq, full_cov=True)
-        print(np.allclose(μf1, μf1))
-        print(np.allclose(Σf1, Σf2, rtol=1e-5, atol=1e-5))
-        ```
-    """
+    """ Unstable version of `mvn_conditional_variational` """
     Lq = linalg.cholesky(Σq)
     Luu = linalg.cholesky(Kuu)
     μf = Kuf.T@linalg.solve(Kuu, μq)
@@ -600,27 +618,7 @@ def kl_mvn(μ0, Σ0, μ1, Σ1):
 
 
 def kl_mvn_tril(μ0, L0, μ1, L1):
-    """KL(q||p) where q~N(μ0,L0@L0.T), p~N(μ1,L1@L1.T) 
-
-        ```
-            m = 50
-            μ0,Σ0 = rand_μΣ(jax.random.PRNGKey(0), m)
-            μ1,Σ1 = rand_μΣ(jax.random.PRNGKey(1), m)
-            μ1 = np.zeros((m,1))
-            L0 = linalg.cholesky(Σ0)
-            L1 = linalg.cholesky(Σ1)
-            print(kl_mvn(μ0, Σ0, μ1, Σ1))
-            print(kl_mvn_tril(μ0, L0, μ1, L1))
-            print(kl_mvn_tril_zero_mean_prior(μ0, L0, L1))
-            print(torch.distributions.kl_divergence(
-                torch.distributions.MultivariateNormal(
-                    loc=torch.tensor(onp.array(μ0)),
-                    scale_tril=torch.tensor(onp.array(L0))),
-                torch.distributions.MultivariateNormal(
-                    loc=torch.tensor(onp.array(μ1)),
-                    scale_tril=torch.tensor(onp.array(L1)))).mean())
-        ```
-    """
+    """KL(q||p) where q~N(μ0,L0@L0.T), p~N(μ1,L1@L1.T) """
     n = μ0.size
     α = solve_triangular(L1, L0, lower=True)
     β = solve_triangular(L1, μ1 - μ0, lower=True)

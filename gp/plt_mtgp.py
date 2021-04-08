@@ -9,7 +9,7 @@ np.set_printoptions(precision=3,suppress=True)
 from sklearn.metrics import mean_squared_error
 
 import jax
-import jax.numpy as jnp
+import jax.numpy as np
 from jax import grad, jit, vmap, device_put
 
 import matplotlib.pyplot as plt
@@ -76,9 +76,9 @@ for i, mtl in enumerate([False, True]):
     
     def get_mtgp_Lv(params):
         if mtl:
-            return jnp.exp(params['logL']), jnp.exp(params['logv'])
+            return np.exp(params['logL']), np.exp(params['logv'])
         else:
-            return jnp.log(jnp.zeros((M,1))), jnp.log(jnp.ones((M,)))
+            return np.log(np.zeros((M,1))), np.log(np.ones((M,)))
 
     ## Training
     
@@ -88,16 +88,16 @@ for i, mtl in enumerate([False, True]):
         μ, Σ, mll = gp_regression_chol(
             X_train, y_train, X_test, k, logsn=params['logsn'])
         return -mll
-    params = {'logℓ': jnp.log(1.),
-              'logsn': jnp.log(.1*jnp.ones(M)),
-              'logL': jnp.log(jnp.array(np.random.rand(M,M))),
-              'logv': jnp.log(jnp.ones((M,1)))}
+    params = {'logℓ': np.log(1.),
+              'logsn': np.log(.1*np.ones(M)),
+              'logL': np.log(np.array(np.random.rand(M,M))),
+              'logv': np.log(np.ones((M,1)))}
     res = run_sgd(nmll, params, lr=lr, num_steps=num_steps, optimizer=opt, log_func=log_func_default)
     logℓ, logsn = res['logℓ'].item(), res['logsn']
-    ℓ, σn = jnp.exp(logℓ), jnp.exp(logsn)
+    ℓ, σn = np.exp(logℓ), np.exp(logsn)
     logL, logv = get_mtgp_Lv(params)
-    L = jnp.exp(logL); v = jnp.exp(logv)
-    B = L@L.T + jnp.diag(v)
+    L = np.exp(logL); v = np.exp(logv)
+    B = L@L.T + np.diag(v)
 
     ## Plotting
 
