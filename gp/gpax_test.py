@@ -19,18 +19,22 @@ from jaxkern import *
 class TestKernel(unittest.TestCase):
 
     def test_CovIndex(self):
-        for i in range(3):
-            key = jax.random.PRNGKey(i)
-            X = random.randint(key, (10,1), 0, 3)
-            Y = random.randint(key, (10,1), 0, 3)
-            k = CovIndex(4,2)
-            params = k.init(key, X)
-            W = params['params']['W']
-            v = BijSoftplus.forward(params['params']['v'])
-            B = W@W.T+np.diag(v)
-            K1 = k.apply(params, X, Y, full_cov=True)
-            K2 = LookupKernel(X[:,-1],Y[:,-1],B)
-            self.assertTrue(np.array_equal(K1, K2))
+        for d in [1,3]: # active_dims
+            for i in range(2):
+                key = jax.random.PRNGKey(i)
+                X = random.randint(key, (10,5), 0, 3)
+                Y = random.randint(key, (10,5), 0, 3)
+                k = CovIndex(active_dims=[d], output_dim=4, rank=2)
+                params = k.init(key, X)
+                W = params['params']['W']
+                v = BijSoftplus.forward(params['params']['v'])
+                B = W@W.T+np.diag(v)
+                K1 = k.apply(params, X, Y, full_cov=True)
+                K2 = LookupKernel(X[:,d],Y[:,d], B)
+                self.assertTrue(np.array_equal(K1, K2))
+                K1diag = k.apply(params, X, full_cov=False)
+                K2diag = np.diag(LookupKernel(X[:,d],X[:,d], B)).reshape(-1,1)
+                self.assertTrue(np.array_equal(K1diag, K2diag))
 
 
 def rand_μΣ(key, m):

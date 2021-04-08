@@ -1,5 +1,5 @@
 import math
-from typing import Any, Callable, Sequence, Optional, Tuple
+from typing import Any, Callable, Sequence, Optional, Tuple, Union, List
 from dataclasses import dataclass
 
 import jax
@@ -16,7 +16,88 @@ from flax import linen as nn
 from jaxkern import cov_se, sqdist
 
 
-class CovSE(nn.Module):
+
+class Kernel(nn.Module):
+
+    active_dims: Union[slice, list, np.ndarray] = None
+    
+    def slice(self, X):
+        if self.active_dims is None:
+            self.active_dims = slice(None,None,None)
+        return X[...,self.active_dims] if X is not None else X
+    
+    def K(self, X, Y=None):
+        raise NotImplementedError
+        
+    def Kdiag(self, X, Y=None):
+        raise NotImplementedError
+        
+    def __call__(self, X, Y=None, full_cov=True):
+        X = self.slice(X)
+        Y = self.slice(Y)
+        
+        if full_cov:
+            return self.K(X, Y)
+        else:
+            if Y is not None:
+                raise ValueError('full_cov=True & Y=None not compatible')
+            return self.Kdiag(X, Y)
+        
+    def __add__(self, other):
+        return compose_kernel(self, other, np.add)
+    
+    def __mul__(self, other):
+        return compose_kernel(self, other, np.multiply)
+    
+
+def compose_kernel(k, l, op_reduce):
+
+    class KernelComposition(nn.Module):
+        op_reduce: Any
+
+        def setup(self):
+            self.ks = [k, l]
+
+        def __call__(self, X, Y=None, full_cov=True):
+            Ks = [k.__call__(X, Y, full_cov=full_cov) for k in self.ks]
+            return op_reduce(*Ks)
+
+    return KernelComposition(op_reduce)
+    
+    
+def slice_to_array(s):
+    """ Converts a slice `s` to np.ndarray 
+        Returns (out, success) 
+    """
+    if isinstance(s, slice):
+        if s.stop is not None:
+            ifnone = lambda a, b: b if a is None else a
+            return np.array(list(range(
+                ifnone(s.start, 0), s.stop, ifnone(s.step, 1)))), True
+        else:
+            return s, False
+    elif isinstance(s, np.ndarray):
+        return s, True
+    elif isinstance(s, list):
+        return np.array(s), True
+    else:
+        raise ValueError('s must be Tuple[slice, list, np.ndarray]')
+        
+
+def kernel_active_dims_overlap(k1, k2):
+    """Check if `k1,k2` active_dims overlap 
+        Returns (overlaps, overlapped index)
+    """
+    a1, b1 = slice_to_array(k1.active_dims)
+    a2, b2 = slice_to_array(k2.active_dims)
+    if all([b1, b2]):
+        o = np.intersect1d(a1,a2)
+        return (len(o)>0), o
+    else:
+        return True, None
+
+
+class CovSE(Kernel):
 
     def setup(self):
         self.transform = BijSoftplus()
@@ -27,24 +108,24 @@ class CovSE(nn.Module):
     def scale(self, X):
         return X/self.ℓ if X is not None else X
 
-    def __call__(self, X, Y=None, full_cov=True):
-        if full_cov:
-            X = self.scale(X)
-            Y = self.scale(Y)
-            return self.σ2*np.exp(-sqdist(X, Y)/2)
-        else:
-            return np.tile(self.σ2, len(X))
+    def K(self, X, Y=None):
+        X = self.scale(X)
+        Y = self.scale(Y)
+        return self.σ2*np.exp(-sqdist(X, Y)/2)
+        
+    def Kdiag(self, X, Y=None):
+        return np.tile(self.σ2, len(X))
+    
 
-
-class CovIndex(nn.Module):
+class CovIndex(Kernel):
     """A kernel applied to indices over a lookup take B
             K[i,j] = B[i,j]
                 where B = WWᵀ + diag[v]
     """
     # #rows of W
-    output_dim: int
+    output_dim: int = 1
     # #columns of W
-    rank: int
+    rank: int = 1
 
     def setup(self):
         self.W = self.param('W', lambda k,s: random.normal(k,s),
@@ -55,18 +136,17 @@ class CovIndex(nn.Module):
     def cov(self):
         return self.W@self.W.T + np.diag(self.v)
 
-    def __call__(self, X, Y=None, full_cov=True):
-        if full_cov:
-            Y = X if Y is None else Y
-            X = np.asarray(X[:,-1], np.int32).squeeze()
-            Y = np.asarray(Y[:,-1], np.int32).squeeze()
-            B = self.cov()
-            K = np.take(np.take(B,Y,axis=1),X,axis=0)
-            return K
-        else:
-            Bdiag = np.sum(np.square(self.W),axis=1)+self.v
-            return np.take(Bdiag, X)
-        
+    def K(self, X, Y=None):
+        Y = X if Y is None else Y
+        X = np.asarray(X, np.int32).squeeze()
+        Y = np.asarray(Y, np.int32).squeeze()
+        B = self.cov()
+        K = np.take(np.take(B,Y,axis=1),X,axis=0)
+        return K
+    
+    def Kdiag(self, X, Y=None):
+        Bdiag = np.sum(np.square(self.W),axis=1)+self.v
+        return np.take(Bdiag, X)
 
 
 

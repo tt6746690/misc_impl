@@ -83,7 +83,6 @@ def normalize_K(K):
 def LookupKernel(X, Y, A):
     return distmat(lambda x, y: A[x, y], X, Y)
 
-
 def mtgp_k(XT, XTp, logℓ, logL, logv):
     X, Xp = XT[:,0], XTp[:,0]
     T, Tp = np.asarray(XT[:,1], np.int32), np.asarray(XTp[:,1], np.int32)
