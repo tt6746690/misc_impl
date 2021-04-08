@@ -16,39 +16,39 @@ from flax import linen as nn
 from jaxkern import cov_se, sqdist
 
 
-
 class Kernel(nn.Module):
 
     active_dims: Union[slice, list, np.ndarray] = None
-    
+
     def slice(self, X):
         if self.active_dims is None:
-            self.active_dims = slice(None,None,None)
-        return X[...,self.active_dims] if X is not None else X
-    
+            return X
+        else:
+            return X[..., self.active_dims] if X is not None else X
+
     def K(self, X, Y=None):
         raise NotImplementedError
-        
+
     def Kdiag(self, X, Y=None):
         raise NotImplementedError
-        
+
     def __call__(self, X, Y=None, full_cov=True):
         X = self.slice(X)
         Y = self.slice(Y)
-        
+
         if full_cov:
             return self.K(X, Y)
         else:
             if Y is not None:
                 raise ValueError('full_cov=True & Y=None not compatible')
             return self.Kdiag(X, Y)
-        
+
     def __add__(self, other):
         return compose_kernel(self, other, np.add)
-    
+
     def __mul__(self, other):
         return compose_kernel(self, other, np.multiply)
-    
+
 
 def compose_kernel(k, l, op_reduce):
 
@@ -63,15 +63,15 @@ def compose_kernel(k, l, op_reduce):
             return op_reduce(*Ks)
 
     return KernelComposition(op_reduce)
-    
-    
+
+
 def slice_to_array(s):
     """ Converts a slice `s` to np.ndarray 
         Returns (out, success) 
     """
     if isinstance(s, slice):
         if s.stop is not None:
-            ifnone = lambda a, b: b if a is None else a
+            def ifnone(a, b): return b if a is None else a
             return np.array(list(range(
                 ifnone(s.start, 0), s.stop, ifnone(s.step, 1)))), True
         else:
@@ -82,7 +82,7 @@ def slice_to_array(s):
         return np.array(s), True
     else:
         raise ValueError('s must be Tuple[slice, list, np.ndarray]')
-        
+
 
 def kernel_active_dims_overlap(k1, k2):
     """Check if `k1,k2` active_dims overlap 
@@ -91,8 +91,8 @@ def kernel_active_dims_overlap(k1, k2):
     a1, b1 = slice_to_array(k1.active_dims)
     a2, b2 = slice_to_array(k2.active_dims)
     if all([b1, b2]):
-        o = np.intersect1d(a1,a2)
-        return (len(o)>0), o
+        o = np.intersect1d(a1, a2)
+        return (len(o) > 0), o
     else:
         return True, None
 
@@ -102,7 +102,7 @@ class CovSE(Kernel):
     def setup(self):
         self.transform = BijSoftplus()
         def init_fn(k, s): return self.transform.reverse(np.array([1.]))
-        self.ℓ  = self.transform.forward(self.param('ℓ',  init_fn, (1,)))
+        self.ℓ = self.transform.forward(self.param('ℓ',  init_fn, (1,)))
         self.σ2 = self.transform.forward(self.param('σ2', init_fn, (1,)))
 
     def scale(self, X):
@@ -112,10 +112,10 @@ class CovSE(Kernel):
         X = self.scale(X)
         Y = self.scale(Y)
         return self.σ2*np.exp(-sqdist(X, Y)/2)
-        
+
     def Kdiag(self, X, Y=None):
         return np.tile(self.σ2, len(X))
-    
+
 
 class CovIndex(Kernel):
     """A kernel applied to indices over a lookup take B
@@ -128,10 +128,10 @@ class CovIndex(Kernel):
     rank: int = 1
 
     def setup(self):
-        self.W = self.param('W', lambda k,s: random.normal(k,s),
-                             (self.output_dim, self.rank))
+        self.W = self.param('W', lambda k, s: random.normal(k, s),
+                            (self.output_dim, self.rank))
         self.v = BijSoftplus.forward(
-            self.param('v', lambda k,s: np.ones(s), (self.output_dim)))
+            self.param('v', lambda k, s: np.ones(s), (self.output_dim)))
 
     def cov(self):
         return self.W@self.W.T + np.diag(self.v)
@@ -141,13 +141,12 @@ class CovIndex(Kernel):
         X = np.asarray(X, np.int32).squeeze()
         Y = np.asarray(Y, np.int32).squeeze()
         B = self.cov()
-        K = np.take(np.take(B,Y,axis=1),X,axis=0)
+        K = np.take(np.take(B, Y, axis=1), X, axis=0)
         return K
-    
-    def Kdiag(self, X, Y=None):
-        Bdiag = np.sum(np.square(self.W),axis=1)+self.v
-        return np.take(Bdiag, X)
 
+    def Kdiag(self, X, Y=None):
+        Bdiag = np.sum(np.square(self.W), axis=1)+self.v
+        return np.take(Bdiag, X)
 
 
 class LikNormal(nn.Module):
@@ -255,7 +254,7 @@ class GPRFITC(nn.Module):
         X, y = self.data
         n = len(X)
         Luu, V, Λ = self.precompute()
-        
+
         mlik = MultivariateNormalInducing(np.zeros(n), V, Λ)
         mll = mlik.log_prob(y)
 
@@ -266,7 +265,7 @@ class GPRFITC(nn.Module):
         k = self.k
         Xu = self.Xu
         Luu, V, Λ = self.precompute()
-        
+
         Kss = k(Xs)
         Kus = k(Xu, Xs)
 
@@ -317,15 +316,15 @@ class VFE(nn.Module):
     def mll(self):
         X, y = self.data
         n = len(X)
-        
+
         Kdiag, Luu, V, Λ = self.precompute()
-        
+
         mlik = MultivariateNormalInducing(np.zeros(n), V, Λ)
         elbo_mll = mlik.log_prob(y)
         elbo_trace = -(1/2/self.lik.σ2[0]) * \
             (np.sum(Kdiag) - np.sum(np.square(V)))
         elbo = elbo_mll + elbo_trace
-        
+
         return elbo
 
     def pred_f(self, Xs):
@@ -333,7 +332,7 @@ class VFE(nn.Module):
         k = self.k
         Xu = self.Xu
         _, Luu, V, Λ = self.precompute()
-        
+
         Kss = k(Xs)
         Kus = k(Xu, Xs)
         μ, Σ = mvn_conditional_sparse(Kss, Kus,
@@ -357,8 +356,8 @@ class SVGP(nn.Module):
         self.k = CovSE()
         self.lik = LikNormal()
         X, y = self.data
-        init_fn = lambda k,s: X[:self.n_inducing]
-        self.Xu = self.param('Xu', init_fn, 
+        def init_fn(k, s): return X[:self.n_inducing]
+        self.Xu = self.param('Xu', init_fn,
                              (self.n_inducing, X.shape[-1]))
         self.q = VariationalMultivariateNormal(np.eye(len(self.Xu)))
 
@@ -378,7 +377,7 @@ class SVGP(nn.Module):
         Kuf = k(Xu, X)
         Kuu = k(Xu)
         Luu = cholesky_jitter(Kuu, jitter=1e-5)
-        
+
         α = self.n_data/len(X) \
             if self.n_data is not None else 1.
 
@@ -387,7 +386,7 @@ class SVGP(nn.Module):
         elbo_lik = α*self.lik.variational_log_prob(y, μqf, σ2qf)
         elbo_nkl = -kl_mvn_tril_zero_mean_prior(μq, Lq, Luu)
         elbo = elbo_lik + elbo_nkl
-        
+
         return elbo
 
     def pred_f(self, Xs, full_cov=False):
@@ -411,12 +410,11 @@ class SVGP(nn.Module):
         return μy, Σy
 
 
-
 class MultivariateNormalTril(object):
     """N(μ, LLᵀ) """
 
     def __init__(self, μ, L):
-        self.μ = μ.reshape(-1,1)
+        self.μ = μ.reshape(-1, 1)
         self.L = L
 
     def log_prob(self, x):
@@ -440,17 +438,17 @@ class MultivariateNormalTril(object):
 
 class MultivariateNormalInducing(object):
     """N(μ, VᵀV + Λ) where V low rank, Λ diagonal
-            
+
         Used to represent p(f|X) for sparse GPs
                 - Q = VᵀV where V = inv(L)@Kuf, Q=LLᵀ
                 - Λ_dic  = diag[σ2*I]
                 - Λ_fitc = diag[K-Q+σ2*I]
     """
-    
+
     def __init__(self, μ, V, Λ):
-        self.μ = μ.reshape(-1,1)
+        self.μ = μ.reshape(-1, 1)
         self.V = V
-        self.Λ = Λ.reshape(-1,1)
+        self.Λ = Λ.reshape(-1, 1)
 
     def log_prob(self, x):
         μ, Λ, V = self.μ, self.Λ, self.V
@@ -466,10 +464,10 @@ class MultivariateNormalInducing(object):
         lgdet = -np.sum(np.log(np.diag(LB)))-.5*np.sum(np.log(Λ))
         const = -(d/2)*np.log(2*np.pi)
         return mahan + const + lgdet
-    
+
     def cov(self):
         return self.V.T@self.V + self.Λ
-    
+
 
 class VariationalMultivariateNormal(nn.Module):
     L_initial: np.ndarray
@@ -650,19 +648,19 @@ def mvn_conditional_sparse(Kss, Kus,
             where,
                 q(f,fs) ~ N([0], [Qff + Λ, Qfs]
                             [0], [Qsf,     Kss])
-                            
+
         Qff = VᵀV
         Kuu = Luu*Luuᵀ
 
         when `full_cov=True`
             assume `Kff` is also the diagonal
     """
-    Λ = Λ.reshape(-1,1)
-    
+    Λ = Λ.reshape(-1, 1)
+
     B = np.eye(V.shape[0]) + (V/Λ.T)@V.T
     LB = cholesky_jitter(B, jitter=1e-5)
     γ = solve_triangular(LB, V@(y/Λ), lower=True)
-    
+
     ω = solve_triangular(Luu, Kus, lower=True)
     ν = solve_triangular(LB, ω, lower=True)
 
@@ -675,7 +673,6 @@ def mvn_conditional_sparse(Kss, Kus,
 
     μ = ω.T@solve_triangular(LB.T, γ, lower=False)
     return μ, Σ
-
 
 
 def rand_μΣ(key, m):
@@ -812,7 +809,7 @@ def pytree_mutate(tree, kvs):
     """Mutate `tree` with `kvs: {path: value}` """
     aggregate = []
     for k, v in flax.traverse_util.flatten_dict(
-        unfreeze(tree)).items():
+            unfreeze(tree)).items():
         path = '/'.join(k)
         if path in kvs:
             assert(v.size == kvs[path].size)
