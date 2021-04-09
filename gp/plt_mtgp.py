@@ -4,13 +4,13 @@
 #    https://gpflow.readthedocs.io/en/master/notebooks/advanced/coregionalisation.html
 #    
 #
-import numpy as np
-np.set_printoptions(precision=3,suppress=True)
+import numpy as onp
+onp.set_printoptions(precision=3,suppress=True)
 from sklearn.metrics import mean_squared_error
 
 import jax
 import jax.numpy as np
-from jax import grad, jit, vmap, device_put
+from jax import grad, jit, vmap, device_put, random
 
 import matplotlib.pyplot as plt
 import matplotlib as mpl
@@ -20,48 +20,62 @@ mpl.rcParams['font.size'] = 25
 mpl.rcParams['font.family'] = 'Times New Roman'
 cmap = plt.cm.get_cmap('bwr')
 
+
+from tabulate import tabulate
+
 import sys
 sys.path.append('../kernel')
-from jaxkern import (cov_se, LookupKernel, normalize_K, mtgp_k)
+from jaxkern import normalize_K
 
 from plt_utils import plt_savefig, plt_scaled_colobar_ax
-from gp import gp_regression_chol, run_sgd, log_func_default
+from gpax import *
+
 
 
 ## Parameters
 
 M = 2
-n_train = 50
-n_test = 50
+n_train = 150
+n_test = 100
 ylim = (-3,3)
 xlim = (-.2,1.2)
 σn = [.03, .1]
 ℓ = .2
 mtl = True
 lr = .002
-num_steps = 100
+num_steps = 600
 verbose = True
 opt = 'sgd'
 
-## Data
-np.random.seed(0)
 
-X0 = np.random.rand(n_train*2//4, 1) # *.5+.5
-X1 = np.random.rand(n_train-len(X0), 1)*.5
+## Data
+key = jax.random.PRNGKey(0)
+onp.random.seed(0)
+
+X0 = np.sort(random.uniform(key, (n_train*2//3, 1)), axis=0)
+X1 = np.sort(random.uniform(key, (n_train-len(X0), 1))*.5, axis=0)
 X_train = np.vstack((np.hstack((X0, np.zeros_like(X0))),
                      np.hstack((X1, np.ones_like(X1)))))
 
 f0 = lambda X: np.sin(6*X)
-f1 = lambda X: np.sin(6*X + 1)
+f1 = lambda X: np.sin(6*X + .7)
 fs = [f0,f1]
-Y0 = f0(X0) + np.random.randn(*X0.shape)*σn[0]
-Y1 = f1(X1) + np.random.randn(*X1.shape)*σn[1]
+Y0 = f0(X0) + random.normal(key, X0.shape)*σn[0]
+Y1 = f1(X1) + random.normal(key, X1.shape)*σn[1]
 y_train = np.vstack((Y0,Y1))
+
+data = (X_train, y_train)
 
 X_test = np.vstack((np.tile(np.linspace(xlim[0], xlim[1], n_test), M),
                     np.hstack([t*np.ones(n_test) for t in range(M)]))).T
 
+print(X_train.shape)
+print(X_test.shape)
+
+
+
 ## Plotting
+
 
 colors_b = [cmap(.1), cmap(.3)]
 colors_r = [cmap(.9), cmap(.7)]
@@ -74,37 +88,48 @@ fig.set_size_inches(15, 10)
 for i, mtl in enumerate([False, True]):
     ax = axs[i, 0]
     
-    def get_mtgp_Lv(params):
-        if mtl:
-            return np.exp(params['logL']), np.exp(params['logv'])
-        else:
-            return np.log(np.zeros((M,1))), np.log(np.ones((M,)))
+    ## model
+    
+    if mtl:
+        rank = 2
+        optimizer_focus = None
+    else:
+        rank = 0
+        optimizer_focus = optim.ModelParamTraversal(
+            lambda k, v: filter_contains(k, v, 'ks_1', False))
+    
+    class MTGP(GPR):
+        def setup(self):
+            self.k = compose_kernel(CovSE(active_dims=[0]),
+                                    CovIndex(active_dims=[1], output_dim=2, rank=rank),
+                                    np.multiply)
+            self.lik = LikMultipleNormal(2)
+
 
     ## Training
-    
+
+    model = MTGP((X_train, y_train))
+    params = model.get_init_params(key)
+    @jax.jit
     def nmll(params):
-        logL, logv = get_mtgp_Lv(params)
-        k = lambda X, Y: mtgp_k(X, Y, logℓ=params['logℓ'], logL=logL, logv=logv)
-        μ, Σ, mll = gp_regression_chol(
-            X_train, y_train, X_test, k, logsn=params['logsn'])
-        return -mll
-    params = {'logℓ': np.log(1.),
-              'logsn': np.log(.1*np.ones(M)),
-              'logL': np.log(np.array(np.random.rand(M,M))),
-              'logv': np.log(np.ones((M,1)))}
-    res = run_sgd(nmll, params, lr=lr, num_steps=num_steps, optimizer=opt, log_func=log_func_default)
-    logℓ, logsn = res['logℓ'].item(), res['logsn']
-    ℓ, σn = np.exp(logℓ), np.exp(logsn)
-    logL, logv = get_mtgp_Lv(params)
-    L = np.exp(logL); v = np.exp(logv)
-    B = L@L.T + np.diag(v)
+        return -model.apply(params, method=model.mll)
+    params = flax_run_optim(nmll, params, num_steps=num_steps,
+                            optimizer_kwargs={'learning_rate': 0.002},
+                            optimizer_focus=optimizer_focus,
+                            log_func=lambda i,f,params: log_func_default(i,f,params,100))
 
     ## Plotting
 
-    k = lambda X, Y: mtgp_k(X, Y, logℓ, logL, logv)
-    μ, Σ, mll = gp_regression_chol(X_train, y_train, X_test, k, logsn)
-    std = np.expand_dims(np.sqrt(np.diag(Σ)), 1)
-
+    model = MTGP(data)
+    model = model.bind(params)
+    
+    mll = model.mll()
+    μ, Σ = model.pred_f(X_test, full_cov=False)
+    std = np.sqrt(Σ)
+    ℓ = model.k.ks[0].ℓ[0]
+    σn = np.sqrt(model.lik.σ2)
+    B = model.k.ks[1].cov()
+    
     for t in range(M):
         # task-specific mll
         I = X_test[:,1] == t
@@ -121,7 +146,7 @@ for i, mtl in enumerate([False, True]):
         I = X_train[:,1] == t
         ax.scatter(X_train[I,0], y_train[I],
                    marker='x', color=colors_r[t], s=50,
-                   label=f'Task {t}'+' ($\sigma_n$'+f'={σn[t]:.2f}, '+'$mse$'+f'={mse:.3f})')
+                   label=f'Task {t}'+' ($\sigma_n$'+f'={σn[t]:.3f}, '+'$mse$'+f'={mse:.3f})')
         
     ax.grid()
     ax.set_xlim(xlim)
@@ -129,13 +154,13 @@ for i, mtl in enumerate([False, True]):
     ax.legend(fontsize=15)
     title = '$\ell$'+f'={ℓ:.2f}'+ \
         ' $B_{01}/B_{00}$'+f'={B[0,1]*2/(B[0,0]+B[1,1]):.2f}'+ \
-        ' $-mll$'+f'={-mll:.2f}'
+        ' $-mll$'+f'={-np.array(mll):.2f}'
     ax.set_title(title, fontsize=30)
     
 
     ax = axs[i, 1]
     XX = np.vstack((X_train, X_test[X_test[:,1]==1]))
-    K = k(XX, XX)
+    K = model.k(XX)
     im = ax.imshow(normalize_K(K), cmap=cmap)
     fig.colorbar(im, cax=plt_scaled_colobar_ax(ax))
     ax.set_title('$K(X_{train}, X_{test@1})$')
