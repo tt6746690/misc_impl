@@ -16,8 +16,6 @@ from flax import linen as nn
 from jaxkern import cov_se, sqdist
 
 
-
-
 class Kernel(nn.Module):
 
     active_dims: Union[slice, list, np.ndarray] = None
@@ -130,10 +128,11 @@ class CovIndex(Kernel):
     rank: int = 1
 
     def setup(self):
-        self.W = self.param('W', lambda k, s: random.normal(k, s),
+        self.W = self.param('W', lambda k, s: .1*np.ones(s),
                             (self.output_dim, self.rank))
         self.v = BijSoftplus.forward(
-            self.param('v', lambda k, s: np.ones(s), (self.output_dim)))
+            self.param('v', lambda k, s: BijSoftplus.reverse(np.ones(s)),
+                       (self.output_dim)))
 
     def cov(self):
         return self.W@self.W.T + np.diag(self.v)
@@ -151,37 +150,34 @@ class CovIndex(Kernel):
         return np.take(Bdiag, X)
 
 
-
-
 class Lik(nn.Module):
     """ p(y|f) """
-    
+
     def predictive_dist(μ, Σ, full_cov=True):
         """Computes predictive distribution for `y`
                 E[y] = ∫∫ y  p(y|f)q(f) dfdy 
                 V[y] = ∫∫ y² p(y|f)q(f) dfdy
-                
+
             where q(f) = N(f; μ, Σ)
-            
+
             `full_cov` if True implies Σ a vector
         """
         raise NotImplementedError
-    
+
     def variational_log_prob(self, y, μf, σ2f):
         """Computes variational expectation of log density 
                 E[log(p(y|f))] = ∫ log(p(y|f)) q(f) df
-                
+
             where q(f) = N(f; μf, diag[σ2f])
         """
         raise NotImplementedError
-        
+
 
 class LikNormal(Lik):
 
     def setup(self):
-        transform = BijSoftplus()
-        def init_fn(k, s): return transform.reverse(np.array([1.]))
-        self.σ2 = transform.forward(self.param('σ2', init_fn, (1,)))
+        def init_fn(k, s): return BijSoftplus.reverse(np.repeat(1., 1))
+        self.σ2 = BijSoftplus.forward(self.param('σ2', init_fn, (1,)))
 
     def predictive_dist(self, μ, Σ, full_cov=True):
         """ y ~ N(μ, K+σ²*I)
@@ -191,7 +187,7 @@ class LikNormal(Lik):
             assert(Σ.shape[-1] == Σ.shape[-2])
             Σ = jax_add_to_diagonal(Σ, self.σ2)
         else:
-            Σ = Σ.reshape(-1,1)
+            Σ = Σ.reshape(-1, 1)
             Σ = Σ + self.σ2
         return μ, Σ
 
@@ -207,13 +203,45 @@ class LikNormal(Lik):
                       (.5/self.σ2)*(np.square((y-μf)) + σ2f))
 
 
-    
+class LikMultipleNormal(Lik):
+    n_σ2: int = 1
+
+    def setup(self):
+        def init_fn(k, s): return BijSoftplus.reverse(np.repeat(1., self.n_σ2))
+        self.σ2 = BijSoftplus.forward(self.param('σ2', init_fn, (self.n_σ2,)))
+
+    def σ2s(self, ind):
+        ind = np.asarray(ind, np.int32)
+        return self.σ2[ind]
+
+    def predictive_dist(self, μ, Σ, ind, full_cov=True):
+        σ2s = self.σ2s(ind)
+        if full_cov:
+            assert(Σ.shape[-1] == Σ.shape[-2])
+            Σ = jax_add_to_diagonal(Σ, σ2s)
+        else:
+            assert(Σ.size == σ2s.size)
+            Σ = Σ + σ2s
+        return μ, Σ
+
+    def variational_log_prob(self, y, μf, σ2f, ind):
+        ind = ind.reshape(y.shape)
+        μf, σ2f = μf.reshape(y.shape), σ2f.reshape(y.shape)
+        σ2s = self.σ2s(ind)
+        return np.sum(-.5*np.log(2*np.pi*σ2s) -
+                      (.5/σ2s)*(np.square((y-μf)) + σ2f))
+
+
 class GPModel(object):
-    
+
     def pred_y(self, Xs, full_cov=False):
         """ Assumes `self.lik` and implments `self.pred_f()` """
         μf, σ2f = self.pred_f(Xs, full_cov=full_cov)
-        μy, σ2y = self.lik.predictive_dist(μf, σ2f, full_cov=full_cov)
+        if isinstance(self.lik, LikMultipleNormal):
+            μy, σ2y = self.lik.predictive_dist(
+                μf, σ2f, Xs[:, -1], full_cov=full_cov)
+        else:
+            μy, σ2y = self.lik.predictive_dist(μf, σ2f, full_cov=full_cov)
         return μy, σ2y
 
 
@@ -225,16 +253,24 @@ class GPR(nn.Module, GPModel):
         self.lik = LikNormal()
 
     def get_init_params(self, key):
-        Xs = np.ones((1, self.data[0].shape[-1]))
-        params = self.init(key, Xs, method=self.pred_f)
+        Xs = np.zeros((1, self.data[0].shape[-1]))
+        params = self.init(key, method=self.mll)
         return params
+
+    def pred_cov(self, K, ind):
+        """Computes K+σ2I"""
+        if isinstance(self.lik, LikMultipleNormal):
+            _, K = self.lik.predictive_dist(None, K, ind)
+        else:
+            _, K = self.lik.predictive_dist(None, K)
+        return K
 
     def mll(self):
         X, y = self.data
         k = self.k
         n = len(X)
 
-        K = k(X) + self.lik.σ2*np.eye(n)
+        K = self.pred_cov(k(X), X[:, -1])
         L = linalg.cholesky(K)
 
         mlik = MultivariateNormalTril(np.zeros(n), L)
@@ -247,7 +283,7 @@ class GPR(nn.Module, GPModel):
         k = self.k
         n = len(X)
 
-        K = k(X) + self.lik.σ2*np.eye(n)
+        K = self.pred_cov(k(X), X[:, -1])
         Ks = k(X, Xs)
         Kss = k(Xs, Xs)
         L = linalg.cholesky(K)
@@ -255,7 +291,7 @@ class GPR(nn.Module, GPModel):
         μ = Ks.T@α
         v = solve_triangular(L, Ks, lower=True)
         Σ = Kss - v.T@v
-        
+
         if not full_cov:
             Σ = np.diag(Σ)
 
@@ -318,7 +354,6 @@ class GPRFITC(nn.Module, GPModel):
         μ, Σ = mvn_conditional_sparse(Kss, Kus,
                                       Luu, V, Λ, y, full_cov=full_cov)
         return μ, Σ
-
 
 
 class VFE(nn.Module, GPModel):
@@ -437,7 +472,6 @@ class SVGP(nn.Module, GPModel):
         μf, Σf = mvn_conditional_variational(Kss, Kus,
                                              Luu, μq, Lq, full_cov=full_cov)
         return μf, Σf
-
 
 
 class MultivariateNormalTril(object):
@@ -649,7 +683,8 @@ def mvn_conditional_variational_us(Kff, Kuf, Kuu, μq, Σq, full_cov=False):
 def mvn_conditional_variational(Kff, Kuf,
                                 Luu, μq, Lq, full_cov=False):
     """q(f) = \int p(f|u)q(u) du
-            = N(Kfu Kuu^-1 μq, Kff - Qff + Kfu Kuu^-1 Σq Kuu^-1 Kuf)
+            = N(Kfu Kuu^-1 μq,
+                Kff - Qff + Kfu Kuu^-1 Σq Kuu^-1 Kuf)
 
         where q(u)   ~ N(μq, Σq) w/  Σq := Lq@Lq.T
               p(u)   ~ N(0, Kuu) w/ Kuu := Luu@Luu.T
@@ -862,8 +897,8 @@ def flax_get_optimizer(optimizer_name):
     return optimizer_cls
 
 
-def flax_create_optimizer(params, optimizer_name, optimizer_kwargs):
-    return flax_get_optimizer(optimizer_name)(**optimizer_kwargs).create(params)
+def flax_create_optimizer(params, optimizer_name, optimizer_kwargs, optimizer_focus=None):
+    return flax_get_optimizer(optimizer_name)(**optimizer_kwargs).create(params, optimizer_focus)
 
 
 def flax_create_multioptimizer(params, optimizer_name, optimizer_kwargs):
@@ -881,12 +916,14 @@ def flax_create_multioptimizer(params, optimizer_name, optimizer_kwargs):
 
 def flax_run_optim(f, params, num_steps=10, log_func=None,
                    optimizer='GradientDescent',
-                   optimizer_kwargs={'learning_rate': .002}):
+                   optimizer_kwargs={'learning_rate': .002},
+                   optimizer_focus=None):
     import itertools
     fg_fn = jax.value_and_grad(f)
     opt = flax_create_optimizer(params,
                                 optimizer_name=optimizer,
-                                optimizer_kwargs=optimizer_kwargs)
+                                optimizer_kwargs=optimizer_kwargs,
+                                optimizer_focus=optimizer_focus)
     itercount = itertools.count()
     for i in range(num_steps):
         fx, grad = fg_fn(opt.target)
