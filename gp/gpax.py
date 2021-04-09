@@ -3,7 +3,7 @@ from typing import Any, Callable, Sequence, Optional, Tuple, Union, List
 from dataclasses import dataclass
 
 import jax
-from jax import random
+from jax import random, device_put
 import jax.numpy as np
 import jax.numpy.linalg as linalg
 from jax.scipy.linalg import cho_solve, solve_triangular
@@ -126,9 +126,10 @@ class CovIndex(Kernel):
     output_dim: int = 1
     # #columns of W
     rank: int = 1
+    W_init_scale: float = .1
 
     def setup(self):
-        self.W = self.param('W', lambda k, s: .1*np.ones(s),
+        self.W = self.param('W', lambda k, s: self.W_init_scale*random.normal(k,s),
                             (self.output_dim, self.rank))
         self.v = BijSoftplus.forward(
             self.param('v', lambda k, s: BijSoftplus.reverse(np.ones(s)),
@@ -446,7 +447,7 @@ class SVGP(nn.Module, GPModel):
         Kff = k(X, full_cov=False)
         Kuf = k(Xu, X)
         Kuu = k(Xu)
-        Luu = cholesky_jitter(Kuu, jitter=1e-5)
+        Luu = cholesky_jitter(Kuu, jitter=5e-5)
 
         α = self.n_data/len(X) \
             if self.n_data is not None else 1.
@@ -467,7 +468,7 @@ class SVGP(nn.Module, GPModel):
         Kss = k(Xs, full_cov=full_cov)
         Kus = k(Xu, Xs)
         Kuu = k(Xu, Xu)
-        Luu = cholesky_jitter(Kuu, jitter=1e-5)
+        Luu = cholesky_jitter(Kuu, jitter=5e-5)
 
         μf, Σf = mvn_conditional_variational(Kss, Kus,
                                              Luu, μq, Lq, full_cov=full_cov)
@@ -933,5 +934,46 @@ def flax_run_optim(f, params, num_steps=10, log_func=None,
     return opt.target
 
 
-def is_psd(x):
-    return np.all(linalg.eigvals(x) > 0)
+def is_symm(A, rtol=1e-05, atol=1e-08):
+    return np.allclose(A, A.T, rtol=rtol, atol=atol)
+
+
+def is_pd(A):
+    return np.all(linalg.eigvals(A) > 0)
+
+
+def is_psd(A):
+    return is_symm(A) and np.all(linalg.eigvalsh(A) > 0)
+
+
+def jax_to_cpu(x, i=0):
+    return device_put(x, jax.devices('cpu')[i])
+
+
+def jax_to_gpu(x, i=0):
+    return device_put(x, jax.devices('gpu')[i])
+
+
+def torch_to_array(x):
+    if isinstance(x, np.ndarray):
+        return x
+    else:
+        return np.asarray(x.to('cpu').numpy())
+
+
+def preproc_data(data, T):
+    """Appends index info to `X` and onehot encode `y`"""
+    X, y = data
+    if X is not None:
+        X = torch_to_array(X)
+        n = len(X)
+        X = np.repeat(X, T, axis=0)
+        I = np.tile(np.arange(T), n).reshape(-1, 1)
+        X = np.hstack((X, I))
+    if y is not None:
+        y = torch_to_array(y)
+        y = jax.nn.one_hot(y.reshape(-1, 1), T).reshape(-1, 1)
+        assert(y.shape[1] == 1)
+    if X is not None and y is not None:
+        assert(X.shape[0] == y.shape[0])
+    return X, y
