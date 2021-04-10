@@ -13,3 +13,4 @@ flax
 plotly
 vtk
 tabulate
+pytest

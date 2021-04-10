@@ -600,18 +600,6 @@ class BijFillTril(object):
             v (n,) -> L (m,m)
                 where `m = (-1+sqrt(1+8*n))/2`
                       `n = m*(m+1)/2`.`
-
-        ```
-            v = np.arange(6)
-            L = FillTril.forward(v)
-            w = FillTril.reverse(L)
-            print(L, w)
-            # [[0. 0. 0.]
-            #  [1. 2. 0.]
-            #  [3. 4. 5.]]
-            # [0. 1. 2. 3. 4. 5.]
-        ```
-
     Reference
     - https://www.tensorflow.org/probability/api_docs/python/tfp/bijectors/FillTriangular
     - https://www.tensorflow.org/probability/api_docs/python/tfp/math/fill_triangular
@@ -635,7 +623,7 @@ class BijFillTril(object):
     def reverse(L):
         m = len(L)
         v = L[np.tril_indices(m)]
-        v = v.reshape(-1, 1)
+        v = v.squeeze()
         return v
 
 

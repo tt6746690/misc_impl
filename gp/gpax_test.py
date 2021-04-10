@@ -35,6 +35,22 @@ class TestJaxUtilities(unittest.TestCase):
         self.assertTrue(np.array_equal(a,b))
 
 
+class TestBijectors(unittest.TestCase):
+
+    def test_BijFillTril(self):
+        n = 6
+        v = np.arange(n, dtype=np.float32)
+        L = BijFillTril.forward(v)
+        w = BijFillTril.reverse(L)
+        K = np.array([[0,0,0],
+                      [1,2,0],
+                      [3,4,5]])
+        same_vec = np.array_equal(v,w)
+        same_mat = np.array_equal(K,L)
+        self.assertTrue(same_vec)
+        self.assertTrue(same_mat)
+
+
 class TestLikelihoods(unittest.TestCase):
 
     def test_LikNormal(self):
