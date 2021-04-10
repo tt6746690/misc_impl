@@ -49,6 +49,15 @@ class Kernel(nn.Module):
     def __mul__(self, other):
         return compose_kernel(self, other, np.multiply)
 
+    def check_ard_dims(self, ℓ):
+        """Verify that ard ℓ size matches with `active_dims` 
+            when `active_dims` is specified, `ard_len>1` """
+        if ℓ.size > 1 and self.active_dims is not None:
+            s, cvt = slice_to_array(self.active_dims)
+            if cvt and s.size != ℓ.size:
+                raise ValueError(
+                    f'ardℓ {ℓ} does not match with active_dims={s}')
+
 
 def compose_kernel(k, l, op_reduce):
 
@@ -69,7 +78,9 @@ def slice_to_array(s):
     """ Converts a slice `s` to np.ndarray 
         Returns (out, success) 
     """
-    if isinstance(s, slice):
+    if s is None:
+        return s, False
+    elif isinstance(s, slice):
         if s.stop is not None:
             def ifnone(a, b): return b if a is None else a
             return np.array(list(range(
@@ -78,10 +89,10 @@ def slice_to_array(s):
             return s, False
     elif isinstance(s, np.ndarray):
         return s, True
-    elif isinstance(s, list):
-        return np.array(s), True
+    elif isinstance(s, Sequence):
+        return np.asarray(s), True
     else:
-        raise ValueError('s must be Tuple[slice, list, np.ndarray]')
+        raise ValueError('s must be Tuple[None, slice, list, np.ndarray]')
 
 
 def kernel_active_dims_overlap(k1, k2):
@@ -98,12 +109,15 @@ def kernel_active_dims_overlap(k1, k2):
 
 
 class CovSE(Kernel):
+    # #ard lengthscales
+    ard_len: int = 1
 
     def setup(self):
-        self.transform = BijSoftplus()
-        def init_fn(k, s): return self.transform.reverse(np.array([1.]))
-        self.ℓ = self.transform.forward(self.param('ℓ',  init_fn, (1,)))
-        self.σ2 = self.transform.forward(self.param('σ2', init_fn, (1,)))
+        self.ℓ = BijSoftplus.forward(self.param(
+            'ℓ', lambda k, s: BijSoftplus.reverse(1.*np.ones(s, dtype=np.float32)), (self.ard_len,)))
+        self.σ2 = BijSoftplus.forward(self.param(
+            'σ2', lambda k, s: BijSoftplus.reverse(np.array([1.])), (1,)))
+        self.check_ard_dims(self.ℓ)
 
     def scale(self, X):
         return X/self.ℓ if X is not None else X
@@ -129,11 +143,11 @@ class CovIndex(Kernel):
     W_init_scale: float = .1
 
     def setup(self):
-        self.W = self.param('W', lambda k, s: self.W_init_scale*random.normal(k,s),
+        self.W = self.param('W', lambda k, s: self.W_init_scale*random.normal(k, s),
                             (self.output_dim, self.rank))
         self.v = BijSoftplus.forward(
             self.param('v', lambda k, s: BijSoftplus.reverse(np.ones(s)),
-                       (self.output_dim)))
+                       (self.output_dim,)))
 
     def cov(self):
         return self.W@self.W.T + np.diag(self.v)
@@ -148,6 +162,7 @@ class CovIndex(Kernel):
 
     def Kdiag(self, X, Y=None):
         Bdiag = np.sum(np.square(self.W), axis=1)+self.v
+        X = np.asarray(X, np.int32).squeeze()
         return np.take(Bdiag, X)
 
 
@@ -454,7 +469,10 @@ class SVGP(nn.Module, GPModel):
 
         μqf, σ2qf = mvn_conditional_variational(Kff, Kuf,
                                                 Luu, μq, Lq, full_cov=False)
-        elbo_lik = α*self.lik.variational_log_prob(y, μqf, σ2qf)
+        if isinstance(self.lik, LikMultipleNormal):
+            elbo_lik = α*self.lik.variational_log_prob(y, μqf, σ2qf, X[:, -1])
+        else:
+            elbo_lik = α*self.lik.variational_log_prob(y, μqf, σ2qf)
         elbo_nkl = -kl_mvn_tril_zero_mean_prior(μq, Lq, Luu)
         elbo = elbo_lik + elbo_nkl
 
@@ -894,6 +912,7 @@ def pytree_mutate(tree, kvs):
         flax.traverse_util.unflatten_dict(dict(aggregate)))
     return tree
 
+
 def pytree_leaves(tree, ks):
     """Access `tree` leaves using `ks: [path]` """
 
@@ -907,6 +926,7 @@ def pytree_leaves(tree, ks):
     if len(ks) != len(leafs):
         raise ValueError('Did not find all leafs!')
     return leafs
+
 
 def flax_get_optimizer(optimizer_name):
     optimizer_cls = getattr(optim, optimizer_name)
