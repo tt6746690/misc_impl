@@ -87,7 +87,7 @@ class TestKernel(unittest.TestCase):
 
 
 def rand_μΣ(key, m):
-    μ = random.normal(key, (m, 1))
+    μ = random.normal(key, (m,))
     Σ = random.normal(key, (m, m))
     Σ = Σ@Σ.T
     return μ, Σ
@@ -97,10 +97,12 @@ class TestKL(unittest.TestCase):
 
     def test_kl_mvn(self):
 
+        import tensorflow_probability as tfp
+
         for i, m in enumerate([30,50]):
             μ0,Σ0 = rand_μΣ(random.PRNGKey(i), m)
             μ1,Σ1 = rand_μΣ(random.PRNGKey(i*2), m)
-            μ1 = np.zeros((m,1))
+            μ1 = np.zeros((m,))
             L0 = linalg.cholesky(Σ0)
             L1 = linalg.cholesky(Σ1)
 
@@ -114,10 +116,17 @@ class TestKL(unittest.TestCase):
                 torch.distributions.MultivariateNormal(
                     loc=torch.tensor(onp.array(μ1)),
                     scale_tril=torch.tensor(onp.array(L1)))).mean().item()
+            kl5 = tfp.distributions.kl_divergence(
+                tfp.distributions.MultivariateNormalTriL(
+                    loc=μ0, scale_tril=L0),
+                tfp.distributions.MultivariateNormalTriL(
+                    loc=μ1, scale_tril=L1)).numpy()
 
             if not np.isnan(kl1):
                 self.assertTrue(np.allclose(kl1, kl2, rtol=1e-3))
             self.assertTrue(np.allclose(kl2, kl3))
+            self.assertTrue(np.allclose(kl2, kl4))
+            self.assertTrue(np.allclose(kl2, kl5))
 
 
 class TestMvnConditional(unittest.TestCase):

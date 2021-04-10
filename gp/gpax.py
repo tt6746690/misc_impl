@@ -487,7 +487,7 @@ class SVGP(nn.Module, GPModel):
 
         Kss = k(Xs, full_cov=full_cov)
         Kus = k(Xu, Xs)
-        Kuu = k(Xu, Xu)
+        Kuu = k(Xu)
         Luu = cholesky_jitter(Kuu, jitter=5e-5)
 
         μf, Σf = mvn_conditional_variational(Kss, Kus,
