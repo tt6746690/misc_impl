@@ -742,8 +742,9 @@ def mvn_conditional_sparse(Kss, Kus,
 
 
 def rand_μΣ(key, m):
-    μ = random.normal(key, (m, 1))
-    Σ = random.normal(key, (m, m))
+    k1, k2 = random.split(key)
+    μ = random.normal(k1, (m, 1))
+    Σ = random.normal(k2, (m, m))
     Σ = jax.ops.index_update(Σ, np.tril_indices(m), 0)
     Σ = Σ@Σ.T+0.1*np.eye(m)
     return μ, Σ
@@ -861,14 +862,15 @@ def get_data_stream(key, bsz, X, y):
     n_complete_batches, leftover = divmod(n, bsz)
     n_batches = n_complete_batches + bool(leftover)
 
-    def data_stream():
+    def data_stream(key):
         while True:
-            perm = random.permutation(key, n)
+            key, permkey = random.split(key)
+            perm = random.permutation(permkey, n)
             for i in range(n_batches):
                 ind = perm[i*bsz:(i+1)*bsz]
                 yield (X[ind], y[ind])
 
-    return n_batches, data_stream()
+    return n_batches, data_stream(key)
 
 
 def filter_contains(k, v, kwd, b=True):
@@ -892,6 +894,19 @@ def pytree_mutate(tree, kvs):
         flax.traverse_util.unflatten_dict(dict(aggregate)))
     return tree
 
+def pytree_leaves(tree, ks):
+    """Access `tree` leaves using `ks: [path]` """
+
+    leafs = {}
+    for k, v in flax.traverse_util.flatten_dict(
+            unfreeze(tree)).items():
+        path = '/'.join(k)
+        if any([path.endswith(k) for k in ks]):
+            leafs[path] = v
+
+    if len(ks) != len(leafs):
+        raise ValueError('Did not find all leafs!')
+    return leafs
 
 def flax_get_optimizer(optimizer_name):
     optimizer_cls = getattr(optim, optimizer_name)
