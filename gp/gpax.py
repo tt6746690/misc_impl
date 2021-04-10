@@ -16,48 +16,6 @@ from flax import linen as nn
 from jaxkern import cov_se, sqdist
 
 
-class Kernel(nn.Module):
-
-    active_dims: Union[slice, list, np.ndarray] = None
-
-    def slice(self, X):
-        if self.active_dims is None:
-            return X
-        else:
-            return X[..., self.active_dims] if X is not None else X
-
-    def K(self, X, Y=None):
-        raise NotImplementedError
-
-    def Kdiag(self, X, Y=None):
-        raise NotImplementedError
-
-    def __call__(self, X, Y=None, full_cov=True):
-        X = self.slice(X)
-        Y = self.slice(Y)
-
-        if full_cov:
-            return self.K(X, Y)
-        else:
-            if Y is not None:
-                raise ValueError('full_cov=True & Y=None not compatible')
-            return self.Kdiag(X, Y)
-
-    def __add__(self, other):
-        return compose_kernel(self, other, np.add)
-
-    def __mul__(self, other):
-        return compose_kernel(self, other, np.multiply)
-
-    def check_ard_dims(self, ℓ):
-        """Verify that ard ℓ size matches with `active_dims` 
-            when `active_dims` is specified, `ard_len>1` """
-        if ℓ.size > 1 and self.active_dims is not None:
-            s, cvt = slice_to_array(self.active_dims)
-            if cvt and s.size != ℓ.size:
-                raise ValueError(
-                    f'ardℓ {ℓ} does not match with active_dims={s}')
-
 
 def compose_kernel(k, l, op_reduce):
 
@@ -106,6 +64,50 @@ def kernel_active_dims_overlap(k1, k2):
         return (len(o) > 0), o
     else:
         return True, None
+
+
+class Kernel(nn.Module):
+
+    active_dims: Union[slice, list, np.ndarray] = None
+
+    def slice(self, X):
+        if self.active_dims is None:
+            return X
+        else:
+            return X[..., self.active_dims] if X is not None else X
+
+    def K(self, X, Y=None):
+        raise NotImplementedError
+
+    def Kdiag(self, X, Y=None):
+        raise NotImplementedError
+
+    def __call__(self, X, Y=None, full_cov=True):
+        X = self.slice(X)
+        Y = self.slice(Y)
+
+        if full_cov:
+            return self.K(X, Y)
+        else:
+            if Y is not None:
+                raise ValueError('full_cov=True & Y=None not compatible')
+            return self.Kdiag(X, Y)
+
+    def __add__(self, other):
+        return compose_kernel(self, other, np.add)
+
+    def __mul__(self, other):
+        return compose_kernel(self, other, np.multiply)
+
+    def check_ard_dims(self, ℓ):
+        """Verify that ard ℓ size matches with `active_dims` 
+            when `active_dims` is specified, `ard_len>1` """
+        if ℓ.size > 1 and self.active_dims is not None:
+            s, cvt = slice_to_array(self.active_dims)
+            if cvt and s.size != ℓ.size:
+                raise ValueError(
+                    f'ardℓ {ℓ} does not match with active_dims={s}')
+
 
 
 class CovSE(Kernel):
@@ -578,14 +580,6 @@ class BijExp(object):
         return np.log(y)
 
 
-def softplus_inv(y):
-    """ y -> log(exp(y)-1)
-                log(1-exp(-y))+log(exp(y))
-                log(1-exp(-y))+y
-    """
-    return np.log(-np.expm1(-y)) + y
-
-
 class BijSoftplus(object):
     """
     Reference
@@ -674,6 +668,14 @@ class BijSoftplusFillTril(object):
         return v
 
 
+def softplus_inv(y):
+    """ y -> log(exp(y)-1)
+                log(1-exp(-y))+log(exp(y))
+                log(1-exp(-y))+y
+    """
+    return np.log(-np.expm1(-y)) + y
+
+
 def diag_indices_kth(n, k):
     rows, cols = np.diag_indices(n)
     if k < 0:
@@ -682,21 +684,6 @@ def diag_indices_kth(n, k):
         return rows[:-k], cols[k:]
     else:
         return rows, cols
-
-
-def mvn_conditional_variational_us(Kff, Kuf, Kuu, μq, Σq, full_cov=False):
-    """ Unstable version of `mvn_conditional_variational` """
-    Lq = linalg.cholesky(Σq)
-    Luu = linalg.cholesky(Kuu)
-    μf = Kuf.T@linalg.solve(Kuu, μq)
-    α = solve_triangular(Luu, Kuf, lower=True)
-    Qff = α.T@α
-    β = linalg.solve(Kuu, Kuf)
-    if full_cov:
-        Σf = Kff - Qff + β.T@Σq@β
-    else:
-        Σf = np.diag(Kff - Qff + β.T@Σq@β)
-    return μf, Σf
 
 
 def mvn_conditional_variational(Kff, Kuf,

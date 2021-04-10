@@ -66,7 +66,7 @@ class TestKernel(unittest.TestCase):
                 K2 = LookupKernel(X[:,d],Y[:,d], B)
                 self.assertTrue(np.array_equal(K1, K2))
                 K1diag = k.apply(params, X, full_cov=False)
-                K2diag = np.diag(LookupKernel(X[:,d],X[:,d], B)).reshape(-1,1)
+                K2diag = np.diag(LookupKernel(X[:,d],X[:,d], B))
                 self.assertTrue(np.array_equal(K1diag, K2diag))
 
 
@@ -107,6 +107,24 @@ class TestKL(unittest.TestCase):
 class TestMvnConditional(unittest.TestCase):
 
     def test_mvn_conditional_variational(self):
+
+        from jax.scipy.linalg import solve_triangular
+
+        def mvn_conditional_variational_unstable(Kff, Kuf, Kuu, μq, Σq, full_cov=False):
+            """ Unstable version of `mvn_conditional_variational` """
+            Lq = linalg.cholesky(Σq)
+            Luu = linalg.cholesky(Kuu)
+            μf = Kuf.T@linalg.solve(Kuu, μq)
+            α = solve_triangular(Luu, Kuf, lower=True)
+            Qff = α.T@α
+            β = linalg.solve(Kuu, Kuf)
+            if full_cov:
+                Σf = Kff - Qff + β.T@Σq@β
+            else:
+                Σf = np.diag(Kff - Qff + β.T@Σq@β)
+            return μf, Σf
+
+
         n,m,l = 100,30,5
         key = jax.random.PRNGKey(0)
         X, Xu = random.normal(key, (n,2)), random.normal(key, (m,2))
@@ -116,7 +134,7 @@ class TestMvnConditional(unittest.TestCase):
         Kuu = k.apply(k.init(key, Xu), Xu)+1*np.eye(m)
         μq, Σq = rand_μΣ(key, m)
         Lq = linalg.cholesky(Σq)
-        μf1, Σf1 = mvn_conditional_variational_us(Kff, Kuf, Kuu, μq, Σq, full_cov=True)
+        μf1, Σf1 = mvn_conditional_variational_unstable(Kff, Kuf, Kuu, μq, Σq, full_cov=True)
         μf2, Σf2 = mvn_conditional_variational(Kff, Kuf, linalg.cholesky(Kuu), μq, Lq, full_cov=True)
         self.assertTrue(np.allclose(μf1, μf1))
         self.assertTrue(np.allclose(Σf1, Σf2, rtol=1e-5, atol=1e-5))
