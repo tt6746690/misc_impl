@@ -447,7 +447,7 @@ class SVGP(nn.Module, GPModel):
         def init_fn(k, s): return X[:self.n_inducing]
         self.Xu = self.param('Xu', init_fn,
                              (self.n_inducing, X.shape[-1]))
-        self.q = VariationalMultivariateNormal(np.eye(len(self.Xu)))
+        self.q = VariationalMultivariateNormal(self.n_inducing)
 
     def get_init_params(self, key):
         Xs = np.ones((2, self.data[0].shape[-1]))
@@ -499,7 +499,7 @@ class MultivariateNormalTril(object):
     """N(μ, LLᵀ) """
 
     def __init__(self, μ, L):
-        self.μ = μ.reshape(-1, 1)
+        self.μ = μ.squeeze()
         self.L = L
 
     def log_prob(self, x):
@@ -516,7 +516,7 @@ class MultivariateNormalTril(object):
 
     def sample(self, key, shape=()):
         """Outputs μ+Lϵ where ϵ~N(0,I)"""
-        shape = shape + self.μ.squeeze().shape
+        shape = shape + self.μ.shape
         ϵ = random.normal(key, shape)
         return self.μ.T + np.tensordot(ϵ, self.L, [-1, 1])
 
@@ -555,14 +555,13 @@ class MultivariateNormalInducing(object):
 
 
 class VariationalMultivariateNormal(nn.Module):
-    L_initial: np.ndarray
+    d: int = 1
 
     def setup(self):
-        m = len(self.L_initial)
-        self.μ = self.param('μ', jax.nn.initializers.zeros, (m, 1))
+        self.μ = self.param('μ', jax.nn.initializers.zeros, (self.d,))
         self.L = BijFillTril.forward(
-            self.param('L', lambda k, s: BijFillTril.reverse(self.L_initial),
-                       (BijFillTril.reverse_shape(m), 1)))
+            self.param('L', lambda k, s: BijFillTril.reverse(np.eye(self.d)),
+                       (BijFillTril.reverse_shape(self.d),)))
 
     def __call__(self):
         return MultivariateNormalTril(self.μ, self.L)
@@ -736,7 +735,7 @@ def mvn_conditional_sparse(Kss, Kus,
 
 def rand_μΣ(key, m):
     k1, k2 = random.split(key)
-    μ = random.normal(k1, (m, 1))
+    μ = random.normal(k1, (m,))
     Σ = random.normal(k2, (m, m))
     Σ = jax.ops.index_update(Σ, np.tril_indices(m), 0)
     Σ = Σ@Σ.T+0.1*np.eye(m)
