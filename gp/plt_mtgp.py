@@ -87,42 +87,49 @@ fig, axs = plt.subplots(3, 2, gridspec_kw=gridspec_kw)
 fig.set_size_inches(15, 15)
 
 
+def get_model_cls(k1_cls=CovSE,
+                  k1_kwargs={'active_dims': [0]},
+                  k2_cls=CovSE,
+                  k2_kwargs={'active_dims': [1]},
+                  T=2):
+    
+    class model_cls(GPR):
+        def setup(self):
+            self.k = compose_kernel(k1_cls(**k1_kwargs),
+                                    k2_cls(**k2_kwargs),
+                                    np.multiply)
+            self.lik = LikMultipleNormal(T)
+            
+    return model_cls
+
+            
 def get_model(i):
     if i == 0:
-        class STGP(GPR):
-            def setup(self):
-                self.k = compose_kernel(CovSE(active_dims=[0]),
-                                        CovIndex(active_dims=[
-                                                 1], output_dim=M, rank=0),
-                                        np.multiply)
-                self.lik = LikMultipleNormal(M)
+        model_cls = get_model_cls(k2_cls=CovIndex,
+                                  k2_kwargs={'active_dims': [1],
+                                             'output_dim': M,
+                                             'rank': 0})
         optimizer_focus = optim.ModelParamTraversal(
             lambda k, v: filter_contains(k, v, 'ks_1', False))
         model_name = 'stgp'
-        model = STGP(data)
+        model = model_cls(data)
     if i == 1:
-        class MTGP(GPR):
-            def setup(self):
-                self.k = compose_kernel(CovSE(active_dims=[0]),
-                                        CovIndex(active_dims=[
-                                                 1], output_dim=M, rank=M),
-                                        np.multiply)
-                self.lik = LikMultipleNormal(M)
+        model_cls = get_model_cls(k2_cls=CovIndex,
+                                  k2_kwargs={'active_dims': [1],
+                                             'output_dim': M,
+                                             'rank': M})
         optimizer_focus = None
         model_name = 'mtgp'
-        model = MTGP(data)
+        model = model_cls(data)
     if i == 2:
-        class AMTGP(GPR):
-            def setup(self):
-                self.k = compose_kernel(CovSE(active_dims=[0]),
-                                        CovSE(active_dims=[1]),
-                                        np.multiply)
-                self.lik = LikMultipleNormal(M)
+        model_cls = get_model_cls(k2_cls=CovSE,
+                                  k2_kwargs={'active_dims': [1]})
         optimizer_focus = None
         model_name = 'amtgp'
-        model = AMTGP(data)
+        model = model_cls(data)
 
     return model_name, model, optimizer_focus
+
 
 
 for i in [0, 1, 2]:

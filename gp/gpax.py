@@ -1,6 +1,6 @@
 import math
 from typing import Any, Callable, Sequence, Optional, Tuple, Union, List
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import jax
 from jax import random, device_put
@@ -166,6 +166,33 @@ class CovIndex(Kernel):
         return np.take(Bdiag, X)
 
 
+class CovICM(Kernel):
+    """Intrinsic Coregionalization Kernel
+            k(X,Y) = kx(X,Y) ⊗ B
+                - fully observed multiple-outputs
+
+    https://homepages.inf.ed.ac.uk/ckiw/postscript/multitaskGP_v22.pdf
+    """
+    # base kernel
+    kx_cls: Kernel.__class__ = CovSE
+    kx_kwargs: dict = field(default_factory=dict)
+    # index kernel
+    kt_cls: Kernel.__class__ = CovIndex
+    kt_kwargs: dict = field(default_factory=dict)
+
+    def setup(self):
+        self.kx = self.kx_cls(**self.kx_kwargs)
+        self.kt = self.kt_cls(**self.kt_kwargs)
+
+    def K(self, X, Y=None):
+        Kx = self.kx.K(X, Y)
+        return np.kron(Kx, self.kt.cov())
+
+    def Kdiag(self, X, Y=None):
+        Kx = self.kx.Kdiag(X, Y)
+        return np.kron(Kx, np.diag(self.kt.cov()))
+
+
 class Lik(nn.Module):
     """ p(y|f) """
 
@@ -248,6 +275,40 @@ class LikMultipleNormal(Lik):
                       (.5/σ2s)*(np.square((y-μf)) + σ2f))
 
 
+class LikMultipleNormalKron(Lik):
+    n_σ2: int = 1
+
+    def setup(self):
+        def init_fn(k, s): return BijSoftplus.reverse(np.repeat(1., self.n_σ2))
+        self.σ2 = BijSoftplus.forward(self.param('σ2', init_fn, (self.n_σ2,)))
+
+    def σ2I(self, σ2I_size):
+        n = σ2I_size/self.n_σ2
+        if not n.is_integer():
+            raise ValueError(
+                f'LikMultipleNormalKron.n_σ2={self.n_σ2}'
+                f' not compatible with #data={n}')
+        σ2I = np.kron(self.σ2, np.ones(int(n),))
+        return σ2I
+
+    def predictive_dist(self, μ, Σ, full_cov=True):
+        """Computes μ, Σ -> μ, Σ+(D ⊗ I) where D = diag[σ2]"""
+        if full_cov:
+            assert(Σ.shape[-1] == Σ.shape[-2])
+            σ2I = self.σ2I(Σ.shape[-1])
+            Σ = jax_add_to_diagonal(Σ, σ2I)
+        else:
+            σ2I = self.σ2I(Σ.size)
+            Σ = Σ + σ2I.reshape(Σ.shape)
+        return μ, Σ
+
+    def variational_log_prob(self, y, μf, σ2f):
+        μf, σ2f = μf.reshape(y.shape), σ2f.reshape(y.shape)
+        σ2I = self.σ2I(y.size).reshape(y.shape)
+        return np.sum(-.5*np.log(2*np.pi*σ2I) -
+                      (.5/σ2I)*(np.square((y-μf)) + σ2f))
+
+
 class GPModel(object):
 
     def pred_y(self, Xs, full_cov=False):
@@ -289,7 +350,7 @@ class GPR(nn.Module, GPModel):
         K = self.pred_cov(k(X), X[:, -1])
         L = linalg.cholesky(K)
 
-        mlik = MultivariateNormalTril(np.zeros(n), L)
+        mlik = MultivariateNormalTril(np.zeros(len(K)), L)
         mll = mlik.log_prob(y)
 
         return mll
@@ -309,7 +370,7 @@ class GPR(nn.Module, GPModel):
         Σ = Kss - v.T@v
 
         if not full_cov:
-            Σ = np.diag(Σ)
+            Σ = np.diag(Σ).squeeze()
 
         return μ, Σ
 
@@ -443,13 +504,13 @@ class SVGP(nn.Module, GPModel):
 
         self.k = CovSE()
         self.lik = LikNormal()
-        def init_fn(k, s): return self.Xu_initial
-        self.Xu = self.param('Xu', init_fn, (self.n_inducing, self.d))
+        self.Xu = self.param('Xu', lambda k, s: self.Xu_initial,
+                             (self.n_inducing, self.d))
         self.q = VariationalMultivariateNormal(self.n_inducing)
 
     def get_init_params(self, key):
         Xs = np.ones((1, self.Xu_initial.shape[-1]))
-        ys = np.ones((1, self.Xu_initial.shape[-1]))
+        ys = np.ones((1,))
         params = self.init(key, (Xs, ys), method=self.mll)
         return params
 

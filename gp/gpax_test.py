@@ -65,6 +65,17 @@ class TestLikelihoods(unittest.TestCase):
         self.assertTrue(np.array_equal(Σ+np.eye(10), Σ1))
 
 
+    def test_LikMultipleNormalKron(self):
+
+        n, T = 10, 2
+        lik = LikMultipleNormalKron(n_σ2=T)
+        lik = lik.bind({'params': {'σ2': np.arange(T)}})
+        Σ = np.zeros((n,n))
+        Σy = lik.predictive_dist(None, Σ)[1] 
+        test_diagonal_entries = np.allclose(np.diag(Σy),
+                                            np.kron(lik.σ2, np.ones((n//2,))))
+
+
 class TestKernel(unittest.TestCase):
 
     def test_CovIndex(self):
@@ -84,6 +95,29 @@ class TestKernel(unittest.TestCase):
                 K1diag = k.apply(params, X, full_cov=False)
                 K2diag = np.diag(LookupKernel(X[:,d],X[:,d], B))
                 self.assertTrue(np.array_equal(K1diag, K2diag))
+
+
+    def test_CovICM(self):
+
+        for T in [3,5]:
+            n, d = 12, 2
+
+            key = jax.random.PRNGKey(0)
+            X = random.normal(key, (n,d))
+            k = CovICM(kx_cls=CovSE,
+                    kt_kwargs={'output_dim': T, 'rank': 1})
+            params = k.init(key, X)
+            k = k.bind(params)
+            K = k(X)
+            Kdiag = k(X, full_cov=False)
+
+            test_output_dim = (K.shape[0] == n*T) and (K.shape[1] == n*T)
+            test_diag_entries = np.allclose(Kdiag, np.diag(K), rtol=1e-6).item()
+
+            self.assertTrue(test_output_dim)
+            self.assertTrue(test_diag_entries)
+
+
 
 
 def rand_μΣ(key, m):
