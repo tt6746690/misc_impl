@@ -173,10 +173,10 @@ class CovICM(Kernel):
 
     https://homepages.inf.ed.ac.uk/ckiw/postscript/multitaskGP_v22.pdf
     """
-    # base kernel
+    # data kernel
     kx_cls: Kernel.__class__ = CovSE
     kx_kwargs: dict = field(default_factory=dict)
-    # index kernel
+    # task kernel
     kt_cls: Kernel.__class__ = CovIndex
     kt_kwargs: dict = field(default_factory=dict)
 
@@ -191,6 +191,53 @@ class CovICM(Kernel):
     def Kdiag(self, X, Y=None):
         Kx = self.kx.Kdiag(X, Y)
         return np.kron(Kx, np.diag(self.kt.cov()))
+
+
+class CovICMLearnable(Kernel):
+    """ICM kernel where kt is formed from additional kernels
+
+        mode: diag
+            k(X,Y)= (kˣ(X,Y)⊗I) ◦ (Σᵢ kᵗⁱ(X,Y)⊗diag[eᵢ])
+    """
+    mode: str = 'diag'
+    # number of outputs/tasks
+    output_dim: int = 1
+    # data kernel
+    kx_cls: Kernel.__class__ = CovSE
+    kx_kwargs: dict = field(default_factory=dict)
+    # task kernel
+    kt_cls: Kernel.__class__ = CovSE
+    kt_kwargs: dict = field(default_factory=dict)
+
+    def setup(self):
+        self.kx = self.kx_cls(**self.kx_kwargs)
+        self.kt = [self.kt_cls(**self.kt_kwargs)
+                   for _ in range(self.output_dim)]
+
+    def K(self, X, Y=None):
+        m = self.output_dim
+        n = len(X)
+        Kx = np.kron(self.kx.K(X, Y), np.ones((m, m)))
+        for i in range(m):
+            for j in range(m):
+                ind = np.arange(m*n, step=m)
+                ind = tuple(x.T for x in np.meshgrid(ind, ind))
+                ind = (ind[0]+i, ind[1]+j)
+                if i == j:
+                    ktⁱ = self.kt[i].K(X, Y)
+                    M = Kx[ind]*ktⁱ
+                else:
+                    M = 0
+                Kx = jax.ops.index_update(Kx, ind, M)
+        return Kx
+
+    def Kdiag(self, X, Y=None):
+        m = self.output_dim
+        Kx = np.kron(self.kx.Kdiag(X, Y), np.ones((m,)))
+        Kt = [k.Kdiag(X, Y) for k in self.kt]
+        Kt = np.vstack(Kt).T.flatten()
+        K = Kx*Kt
+        return K
 
 
 class Lik(nn.Module):
@@ -508,9 +555,9 @@ class SVGP(nn.Module, GPModel):
                              (self.n_inducing, self.d))
         self.q = VariationalMultivariateNormal(self.n_inducing)
 
-    def get_init_params(self, key):
+    def get_init_params(self, key, n_tasks=1):
         Xs = np.ones((1, self.Xu_initial.shape[-1]))
-        ys = np.ones((1,))
+        ys = np.ones((1, n_tasks))
         params = self.init(key, (Xs, ys), method=self.mll)
         return params
 
@@ -713,9 +760,9 @@ class BijSoftplusFillTril(object):
 
 
 def softplus_inv(y):
-    """ y -> log(exp(y)-1)
-                log(1-exp(-y))+log(exp(y))
-                log(1-exp(-y))+y
+    """ y > log(exp(y)-1)
+            log(1-exp(-y))+log(exp(y))
+            log(1-exp(-y))+y
     """
     return np.log(-np.expm1(-y)) + y
 

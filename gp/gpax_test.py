@@ -105,7 +105,7 @@ class TestKernel(unittest.TestCase):
             key = jax.random.PRNGKey(0)
             X = random.normal(key, (n,d))
             k = CovICM(kx_cls=CovSE,
-                    kt_kwargs={'output_dim': T, 'rank': 1})
+                       kt_kwargs={'output_dim': T, 'rank': 1})
             params = k.init(key, X)
             k = k.bind(params)
             K = k(X)
@@ -116,6 +116,55 @@ class TestKernel(unittest.TestCase):
 
             self.assertTrue(test_output_dim)
             self.assertTrue(test_diag_entries)
+
+    def test_CovICMLearnable(self):
+
+        key = jax.random.PRNGKey(0)
+        m = 3
+        n = 5
+        X = random.normal(key, (n,5))
+        k = CovICMLearnable(output_dim=m)
+        k = k.bind(k.init(key, X))
+        K = k(X)
+        Kdiag = k(X, full_cov=False)
+
+        lhs = np.kron(k.kx(X), np.ones((m,m)))
+        rhs = []
+        for i in range(m):
+            Eii = np.zeros((m,m))
+            ind = (np.array([i]), np.array([i]))
+            v = np.array([1.])
+            Eii = jax.ops.index_update(Eii, ind, v)
+            Kti = np.kron(k.kt[i](X), Eii)
+            rhs.append(Kti)
+        rhs = np.sum(np.stack(rhs), axis=0)
+        Ktrue = lhs*rhs
+
+        test_K = np.allclose(Ktrue, K)
+        test_Kdiag = np.allclose(np.diag(Ktrue), Kdiag)
+
+        self.assertTrue(test_K)
+        self.assertTrue(test_Kdiag)
+
+    def test_CovICMLearnableMeshgrid(self):
+        # row, col
+        i,j = 1,0
+        m = 2
+        n = 2
+        A = np.array([[ 0,  1,  2,  3],
+                      [ 4,  5,  6,  7],
+                      [ 8,  9, 10, 11],
+                      [12, 13, 14, 15]],)
+        ind = np.arange(m*n, step=m)
+        ind = tuple(x.T for x in np.meshgrid(ind, ind))
+        ind = (ind[0]+i, ind[1]+j)
+        v = np.array([1,2,3,4]).reshape(2,2)*1000
+        A = jax.ops.index_update(A, ind, v)
+        Atrue = np.array([[   0,    1,    2,    3],
+                          [1000,    5, 2000,    7],
+                          [   8,    9,   10,   11],
+                          [3000,   13, 4000,   15]])
+        self.assertTrue(np.allclose(Atrue, A))
 
 
 
@@ -133,34 +182,34 @@ class TestKL(unittest.TestCase):
 
         import tensorflow_probability as tfp
 
-        for i, m in enumerate([30,50]):
-            μ0,Σ0 = rand_μΣ(random.PRNGKey(i), m)
-            μ1,Σ1 = rand_μΣ(random.PRNGKey(i*2), m)
-            μ1 = np.zeros((m,))
-            L0 = linalg.cholesky(Σ0)
-            L1 = linalg.cholesky(Σ1)
+        i, m = 0, 50
+        μ0,Σ0 = rand_μΣ(random.PRNGKey(i), m)
+        μ1,Σ1 = rand_μΣ(random.PRNGKey(i*2), m)
+        μ1 = np.zeros((m,))
+        L0 = linalg.cholesky(Σ0)
+        L1 = linalg.cholesky(Σ1)
 
-            kl1 = kl_mvn(μ0, Σ0, μ1, Σ1)
-            kl2 = kl_mvn_tril(μ0, L0, μ1, L1)
-            kl3 = kl_mvn_tril_zero_mean_prior(μ0, L0, L1)
-            kl4 = torch.distributions.kl_divergence(
-                torch.distributions.MultivariateNormal(
-                    loc=torch.tensor(onp.array(μ0)),
-                    scale_tril=torch.tensor(onp.array(L0))),
-                torch.distributions.MultivariateNormal(
-                    loc=torch.tensor(onp.array(μ1)),
-                    scale_tril=torch.tensor(onp.array(L1)))).mean().item()
-            kl5 = tfp.distributions.kl_divergence(
-                tfp.distributions.MultivariateNormalTriL(
-                    loc=μ0, scale_tril=L0),
-                tfp.distributions.MultivariateNormalTriL(
-                    loc=μ1, scale_tril=L1)).numpy()
+        kl1 = kl_mvn(μ0, Σ0, μ1, Σ1)
+        kl2 = kl_mvn_tril(μ0, L0, μ1, L1)
+        kl3 = kl_mvn_tril_zero_mean_prior(μ0, L0, L1)
+        kl4 = torch.distributions.kl_divergence(
+            torch.distributions.MultivariateNormal(
+                loc=torch.tensor(onp.array(μ0)),
+                scale_tril=torch.tensor(onp.array(L0))),
+            torch.distributions.MultivariateNormal(
+                loc=torch.tensor(onp.array(μ1)),
+                scale_tril=torch.tensor(onp.array(L1)))).mean().item()
+        kl5 = tfp.distributions.kl_divergence(
+            tfp.distributions.MultivariateNormalTriL(
+                loc=μ0, scale_tril=L0),
+            tfp.distributions.MultivariateNormalTriL(
+                loc=μ1, scale_tril=L1)).numpy()
 
-            if not np.isnan(kl1):
-                self.assertTrue(np.allclose(kl1, kl2, rtol=1e-3))
-            self.assertTrue(np.allclose(kl2, kl3))
-            self.assertTrue(np.allclose(kl2, kl4))
-            self.assertTrue(np.allclose(kl2, kl5))
+        if not np.isnan(kl1):
+            self.assertTrue(np.allclose(kl1, kl2, rtol=1e-3))
+        self.assertTrue(np.allclose(kl2, kl3))
+        self.assertTrue(np.allclose(kl2, kl4))
+        self.assertTrue(np.allclose(kl2, kl5))
 
 
 class TestMvnConditional(unittest.TestCase):
