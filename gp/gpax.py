@@ -16,7 +16,6 @@ from flax import linen as nn
 from jaxkern import cov_se, sqdist
 
 
-
 def compose_kernel(k, l, op_reduce):
 
     class KernelComposition(nn.Module):
@@ -107,7 +106,6 @@ class Kernel(nn.Module):
             if cvt and s.size != ℓ.size:
                 raise ValueError(
                     f'ardℓ {ℓ} does not match with active_dims={s}')
-
 
 
 class CovSE(Kernel):
@@ -436,29 +434,28 @@ class VFE(nn.Module, GPModel):
 
 
 class SVGP(nn.Module, GPModel):
-    data: Tuple[np.ndarray, np.ndarray]
-    n_inducing: int
     n_data: int
+    Xu_initial: np.ndarray
 
     def setup(self):
+        self.d = self.Xu_initial.shape[1]
+        self.n_inducing = self.Xu_initial.shape[0]
+
         self.k = CovSE()
         self.lik = LikNormal()
-        X, y = self.data
-        def init_fn(k, s): return X[:self.n_inducing]
-        self.Xu = self.param('Xu', init_fn,
-                             (self.n_inducing, X.shape[-1]))
+        def init_fn(k, s): return self.Xu_initial
+        self.Xu = self.param('Xu', init_fn, (self.n_inducing, self.d))
         self.q = VariationalMultivariateNormal(self.n_inducing)
 
     def get_init_params(self, key):
-        Xs = np.ones((2, self.data[0].shape[-1]))
-        ys = np.ones((2, self.data[1].shape[-1]))
+        Xs = np.ones((1, self.Xu_initial.shape[-1]))
+        ys = np.ones((1, self.Xu_initial.shape[-1]))
         params = self.init(key, (Xs, ys), method=self.mll)
         return params
 
     def mll(self, data):
         X, y = data
         k = self.k
-        m = self.n_inducing
         Xu, μq, Lq = self.Xu, self.q.μ, self.q.L
 
         Kff = k(X, full_cov=False)
@@ -482,7 +479,6 @@ class SVGP(nn.Module, GPModel):
 
     def pred_f(self, Xs, full_cov=True):
         k = self.k
-        m = self.n_inducing
         Xu, μq, Lq = self.Xu, self.q.μ, self.q.L
 
         Kss = k(Xs, full_cov=full_cov)
