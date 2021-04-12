@@ -120,36 +120,41 @@ class TestKernel(unittest.TestCase):
             self.assertTrue(test_diag_entries)
 
     def test_CovICMLearnable(self):
-
+        
         key = jax.random.PRNGKey(0)
         m = 3
-        n = 5
-        X = random.normal(key, (n,5))
-        k = CovICMLearnable(output_dim=m)
-        k = k.bind(k.init(key, X))
-        K = k(X)
-        Kdiag = k(X, full_cov=False)
+        nr = 5
 
-        lhs = np.kron(k.kx(X), np.ones((m,m)))
-        rhs = []
-        for i in range(m):
-            Eii = np.zeros((m,m))
-            ind = (np.array([i]), np.array([i]))
-            v = np.array([1.])
-            Eii = jax.ops.index_update(Eii, ind, v)
-            Kti = np.kron(k.kt[i](X), Eii)
-            rhs.append(Kti)
-        rhs = np.sum(np.stack(rhs), axis=0)
-        Ktrue = lhs*rhs
+        for nc in [nr,10]:
+            X = random.normal(key, (nr,5))
+            Y = random.normal(key, (nc,5))
+            k = CovICMLearnable(output_dim=m)
+            k = k.bind(k.init(key, X))
+            K = k(X, Y)
+            Kdiag = k(X, full_cov=False)
 
-        test_K = np.allclose(Ktrue, K)
-        test_Kdiag = np.allclose(np.diag(Ktrue), Kdiag)
+            lhs = np.kron(k.kx(X, Y), np.ones((m,m)))
+            rhs = []
+            for i in range(m):
+                Eii = np.zeros((m,m))
+                ind = (np.array([i]), np.array([i]))
+                v = np.array([1.])
+                Eii = jax.ops.index_update(Eii, ind, v)
+                Kti = np.kron(k.kt[i](X, Y), Eii)
+                rhs.append(Kti)
+            rhs = np.sum(np.stack(rhs), axis=0)
+            Ktrue = lhs*rhs
 
-        self.assertTrue(test_K)
-        self.assertTrue(test_Kdiag)
+            test_K = np.allclose(Ktrue, K)
+            test_Kdiag = (nr != nc) or np.allclose(np.diag(Ktrue), Kdiag)
+            test_size_K = K.size == (m*nr)*(m*nc)
+
+            self.assertTrue(test_K)
+            self.assertTrue(test_Kdiag)
+            self.assertTrue(test_size_K)
 
     def test_CovICMLearnableMeshgrid(self):
-        # row, col
+        # symmetric A
         i,j = 1,0
         m = 2
         n = 2
@@ -166,6 +171,24 @@ class TestKernel(unittest.TestCase):
                           [1000,    5, 2000,    7],
                           [   8,    9,   10,   11],
                           [3000,   13, 4000,   15]])
+        self.assertTrue(np.allclose(Atrue, A))
+
+        # asymmetric A 
+        i,j = 1,0
+        T = 2
+        n = 3
+        m = 2
+        A = np.arange(24).reshape(4,6)
+        ind = np.meshgrid(np.arange(T*m, step=T),
+                          np.arange(T*n, step=T))
+        ind = tuple(x.T for x in ind)
+        ind = (ind[0]+i, ind[1]+j)
+        v = np.arange(6).reshape(2,3)*1000
+        A = jax.ops.index_update(A, ind, v)
+        Atrue = np.array([[   0,    1,    2,    3,    4,    5],
+                          [   0,    7, 1000,    9, 2000,   11],
+                          [  12,   13,   14,   15,   16,   17],
+                          [3000,   19, 4000,   21, 5000,   23]])
         self.assertTrue(np.allclose(Atrue, A))
 
 

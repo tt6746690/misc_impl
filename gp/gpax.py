@@ -193,6 +193,7 @@ class CovICM(Kernel):
         return np.kron(Kx, np.diag(self.kt.cov()))
 
 
+
 class CovICMLearnable(Kernel):
     """ICM kernel where kt is formed from additional kernels
 
@@ -217,13 +218,15 @@ class CovICMLearnable(Kernel):
     def K(self, X, Y=None):
 
         m = self.output_dim
-        n = len(X)
+        nx = len(X)
+        ny = len(Y) if Y is not None else nx
         Kx = np.kron(self.kx(X, Y, full_cov=True),
                      np.ones((m, m)))
         for i in range(m):
             for j in range(m):
-                ind = np.arange(m*n, step=m)
-                ind = tuple(x.T for x in np.meshgrid(ind, ind))
+                ind = np.meshgrid(np.arange(m*nx, step=m),
+                                  np.arange(m*ny, step=m))
+                ind = tuple(x.T for x in ind)
                 ind = (ind[0]+i, ind[1]+j)
                 if i == j:
                     ktⁱ = self.kt[i](X, Y, full_cov=True)
@@ -559,13 +562,15 @@ class SVGP(nn.Module, GPModel):
         self.q = VariationalMultivariateNormal(self.n_inducing)
 
     def get_init_params(self, key, n_tasks=1):
-        Xs = np.ones((1, self.Xu_initial.shape[-1]))
-        ys = np.ones((1, n_tasks))
+        n = 1
+        Xs = np.ones((n, self.Xu_initial.shape[-1]))
+        ys = np.ones((n, n_tasks))
         params = self.init(key, (Xs, ys), method=self.mll)
         return params
 
     def mll(self, data):
         X, y = data
+        y = y.flatten()
         k = self.k
         Xu, μq, Lq = self.Xu, self.q.μ, self.q.L
 
