@@ -185,11 +185,11 @@ class CovICM(Kernel):
         self.kt = self.kt_cls(**self.kt_kwargs)
 
     def K(self, X, Y=None):
-        Kx = self.kx.K(X, Y)
+        Kx = self.kx(X, Y, full_cov=True)
         return np.kron(Kx, self.kt.cov())
 
     def Kdiag(self, X, Y=None):
-        Kx = self.kx.Kdiag(X, Y)
+        Kx = self.kx(X, Y, full_cov=False)
         return np.kron(Kx, np.diag(self.kt.cov()))
 
 
@@ -215,16 +215,18 @@ class CovICMLearnable(Kernel):
                    for _ in range(self.output_dim)]
 
     def K(self, X, Y=None):
+
         m = self.output_dim
         n = len(X)
-        Kx = np.kron(self.kx.K(X, Y), np.ones((m, m)))
+        Kx = np.kron(self.kx(X, Y, full_cov=True),
+                     np.ones((m, m)))
         for i in range(m):
             for j in range(m):
                 ind = np.arange(m*n, step=m)
                 ind = tuple(x.T for x in np.meshgrid(ind, ind))
                 ind = (ind[0]+i, ind[1]+j)
                 if i == j:
-                    ktⁱ = self.kt[i].K(X, Y)
+                    ktⁱ = self.kt[i](X, Y, full_cov=True)
                     M = Kx[ind]*ktⁱ
                 else:
                     M = 0
@@ -233,8 +235,9 @@ class CovICMLearnable(Kernel):
 
     def Kdiag(self, X, Y=None):
         m = self.output_dim
-        Kx = np.kron(self.kx.Kdiag(X, Y), np.ones((m,)))
-        Kt = [k.Kdiag(X, Y) for k in self.kt]
+        Kx = np.kron(self.kx(X, Y, full_cov=False),
+                     np.ones((m,)))
+        Kt = [k(X, Y, full_cov=False) for k in self.kt]
         Kt = np.vstack(Kt).T.flatten()
         K = Kx*Kt
         return K

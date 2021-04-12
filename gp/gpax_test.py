@@ -1,4 +1,6 @@
 import unittest
+import warnings
+warnings.simplefilter("ignore", DeprecationWarning)
 
 import sys
 sys.path.append('../kernel')
