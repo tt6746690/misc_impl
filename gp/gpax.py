@@ -111,10 +111,13 @@ class Kernel(nn.Module):
 class CovSE(Kernel):
     # #ard lengthscales
     ard_len: int = 1
+    # initialization
+    init_val_l: float = 1.
 
     def setup(self):
         self.ℓ = BijSoftplus.forward(self.param(
-            'ℓ', lambda k, s: BijSoftplus.reverse(1.*np.ones(s, dtype=np.float32)), (self.ard_len,)))
+            'ℓ', lambda k, s: BijSoftplus.reverse(
+                self.init_val_l*np.ones(s, dtype=np.float32)), (self.ard_len,)))
         self.σ2 = BijSoftplus.forward(self.param(
             'σ2', lambda k, s: BijSoftplus.reverse(np.array([1.])), (1,)))
         self.check_ard_dims(self.ℓ)
@@ -130,7 +133,6 @@ class CovSE(Kernel):
     def Kdiag(self, X, Y=None):
         return np.tile(self.σ2, len(X))
 
-
 class CovIndex(Kernel):
     """A kernel applied to indices over a lookup take B
             K[i,j] = B[i,j]
@@ -140,10 +142,11 @@ class CovIndex(Kernel):
     output_dim: int = 1
     # #columns of W
     rank: int = 1
-    W_init_scale: float = .1
+    # initialization
+    init_val_W: float = .1
 
     def setup(self):
-        self.W = self.param('W', lambda k, s: self.W_init_scale*random.normal(k, s),
+        self.W = self.param('W', lambda k, s: self.init_val_W*random.normal(k,s),
                             (self.output_dim, self.rank))
         self.v = BijSoftplus.forward(
             self.param('v', lambda k, s: BijSoftplus.reverse(np.ones(s)),
@@ -165,7 +168,7 @@ class CovIndex(Kernel):
         X = np.asarray(X, np.int32).squeeze()
         return np.take(Bdiag, X)
 
-
+        
 class CovICM(Kernel):
     """Intrinsic Coregionalization Kernel
             k(X,Y) = kx(X,Y) ⊗ B
@@ -397,6 +400,7 @@ class GPR(nn.Module, GPModel):
 
     def mll(self):
         X, y = self.data
+        y = y.flatten()
         k = self.k
         n = len(X)
 
@@ -410,6 +414,7 @@ class GPR(nn.Module, GPModel):
 
     def pred_f(self, Xs, full_cov=True):
         X, y = self.data
+        y = y.flatten()
         k = self.k
         n = len(X)
 
