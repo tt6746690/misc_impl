@@ -983,11 +983,11 @@ def get_data_stream(key, bsz, X, y):
 
 
 def filter_contains(k, v, kwd, b=True):
-    if kwd in k.split('/'):
-        return b
-    else:
-        return not b
+    return b if kwd in k.split('/') else (not b)
 
+def pytree_path_contains_keywords(path, kwds):
+    # Check if any kwds appears in `path` of pytree    
+    return True if any(k in path for k in kwds) else False
 
 def pytree_mutate(tree, kvs):
     """Mutate `tree` with `kvs: {path: value}` """
@@ -1028,15 +1028,38 @@ def flax_create_optimizer(params, optimizer_name, optimizer_kwargs, optimizer_fo
     return flax_get_optimizer(optimizer_name)(**optimizer_kwargs).create(params, optimizer_focus)
 
 
-def flax_create_multioptimizer(params, optimizer_name, optimizer_kwargs):
-    vari_traverse = optim.ModelParamTraversal(
-        lambda k, v: filter_contains(k, v, 'q', True))
-    rest_traverse = optim.ModelParamTraversal(
-        lambda k, v: filter_contains(k, v, 'q', False))
-    vari_opt = flax_get_optimizer(optimizer_name)(optimizer_kwargs)
-    rest_opt = flax_get_optimizer(optimizer_name)(optimizer_kwargs)
-    opt_def = optim.MultiOptimizer((vari_traverse, vari_opt),
-                                   (rest_traverse, rest_opt))
+def flax_create_multioptimizer_3focus(params, optimizer_name, optimizer_kwargs, kwds, kwds_noopt):
+    """3 distjoint set of parameters/traversals
+            0. optimize parameters not mentioned in `kwds` or `kwds_noopt`
+                - optimize using `optimizer_kwargs[0]`
+            1. optimize `kwds` using `optimizer_kwargs[1]`
+            2. optimize `kwds_noopt` using `optimizer_kwargs[2]`
+    """
+    focus0 = optim.ModelParamTraversal(
+        lambda p, v: not pytree_path_contains_keywords(p, kwds+kwds_noopt))
+    focus1 = optim.ModelParamTraversal(
+        lambda p, v: pytree_path_contains_keywords(p, kwds))
+    focus2 = optim.ModelParamTraversal(
+        lambda p, v: pytree_path_contains_keywords(p, kwds_noopt))
+    opt0 = flax_get_optimizer(optimizer_name)(**optimizer_kwargs[0])
+    opt1 = flax_get_optimizer(optimizer_name)(**optimizer_kwargs[1])
+    opt2 = flax_get_optimizer(optimizer_name)(**optimizer_kwargs[2])
+    opt_def = optim.MultiOptimizer((focus0, opt0),
+                                   (focus1, opt1),
+                                   (focus2, opt2))
+    opt = opt_def.create(params)
+    return opt
+
+
+def flax_create_multioptimizer(params, optimizer_name, optimizer_kwargs, kwds):
+    focus0 = optim.ModelParamTraversal(
+        lambda p, v: not pytree_path_contains_keywords(p, kwds))
+    focus1 = optim.ModelParamTraversal(
+        lambda p, v: pytree_path_contains_keywords(p, kwds))
+    opt0 = flax_get_optimizer(optimizer_name)(**optimizer_kwargs[0])
+    opt1 = flax_get_optimizer(optimizer_name)(**optimizer_kwargs[0])
+    opt_def = optim.MultiOptimizer((focus0, opt0),
+                                   (focus1, opt1))
     opt = opt_def.create(params)
     return opt
 
