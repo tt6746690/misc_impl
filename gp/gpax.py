@@ -353,7 +353,10 @@ class LikNormal(Lik):
         E[log(p(y|f))] = Σᵢ E[ -.5log(2πσ²) - (.5/σ²) (yᵢ^2 - 2yᵢfᵢ + fᵢ^2) ]
                        = Σᵢ -.5log(2πσ²) - (.5/σ²) ((yᵢ-μᵢ)^2 + vᵢ)   by E[fᵢ]^2 = μᵢ^2 + vᵢ
         """
-        μf, σ2f = μf.reshape(y.shape), σ2f.reshape(y.shape)
+        # for multiple-output
+        μf = μf.reshape(-1, 1)
+        σ2f = σ2f.reshape(-1, 1)
+        y = y.reshape(-1, 1)
         return np.sum(-.5*np.log(2*np.pi*self.σ2) -
                       (.5/self.σ2)*(np.square((y-μf)) + σ2f))
 
@@ -362,8 +365,10 @@ class LikMultipleNormal(Lik):
     output_dim: int = 1
 
     def setup(self):
-        def init_fn(k, s): return BijSoftplus.reverse(np.repeat(1., self.output_dim))
-        self.σ2 = BijSoftplus.forward(self.param('σ2', init_fn, (self.output_dim,)))
+        def init_fn(k, s): return BijSoftplus.reverse(
+            np.repeat(1., self.output_dim))
+        self.σ2 = BijSoftplus.forward(
+            self.param('σ2', init_fn, (self.output_dim,)))
 
     def σ2s(self, ind):
         ind = np.asarray(ind, np.int32)
@@ -380,6 +385,7 @@ class LikMultipleNormal(Lik):
         return μ, Σ
 
     def variational_log_prob(self, y, μf, σ2f, ind):
+        y = y.reshape(-1, 1)
         ind = ind.reshape(y.shape)
         μf, σ2f = μf.reshape(y.shape), σ2f.reshape(y.shape)
         σ2s = self.σ2s(ind)
@@ -391,8 +397,10 @@ class LikMultipleNormalKron(Lik):
     output_dim: int = 1
 
     def setup(self):
-        def init_fn(k, s): return BijSoftplus.reverse(np.repeat(1., self.output_dim))
-        self.σ2 = BijSoftplus.forward(self.param('σ2', init_fn, (self.output_dim,)))
+        def init_fn(k, s): return BijSoftplus.reverse(
+            np.repeat(1., self.output_dim))
+        self.σ2 = BijSoftplus.forward(
+            self.param('σ2', init_fn, (self.output_dim,)))
 
     def σ2I(self, σ2I_size):
         n = σ2I_size/self.output_dim
@@ -415,6 +423,7 @@ class LikMultipleNormalKron(Lik):
         return μ, Σ
 
     def variational_log_prob(self, y, μf, σ2f):
+        y = y.reshape(-1, 1)
         μf, σ2f = μf.reshape(y.shape), σ2f.reshape(y.shape)
         σ2I = self.σ2I(y.size).reshape(y.shape)
         return np.sum(-.5*np.log(2*np.pi*σ2I) -
@@ -473,9 +482,9 @@ class GPR(nn.Module, GPModel):
         X, y = self.data
         k = self.k
         ns, output_dim = len(Xs), int(y.size/len(X))
-        
-        mf = self.mean_fn(X)
+
         ms = self.mean_fn(Xs)
+        mf = self.mean_fn(X)
 
         Kff = self.pred_cov(k(X), X[:, -1])
         Kfs = k(X, Xs)
@@ -614,7 +623,7 @@ class SVGP(nn.Module, GPModel):
     def setup(self):
         self.d = self.Xu_initial.shape[1]
         self.n_inducing = self.Xu_initial.shape[0]
-
+        self.mean_fn = MeanZero()
         self.k = CovSE()
         self.lik = LikNormal()
         self.Xu = self.param('Xu', lambda k, s: self.Xu_initial,
@@ -630,9 +639,11 @@ class SVGP(nn.Module, GPModel):
 
     def mll(self, data):
         X, y = data
-        y = y.flatten()
         k = self.k
         Xu, μq, Lq = self.Xu, self.q.μ, self.q.L
+
+        mf = self.mean_fn(X)
+        mu = self.mean_fn(Xu)
 
         Kff = k(X, full_cov=False)
         Kuf = k(Xu, X)
@@ -642,13 +653,13 @@ class SVGP(nn.Module, GPModel):
         α = self.n_data/len(X) \
             if self.n_data is not None else 1.
 
-        μqf, σ2qf = mvn_conditional_variational(Kff, Kuf,
-                                                Luu, μq, Lq, full_cov=False)
+        μqf, σ2qf = mvn_conditional_variational(Kff, Kuf, mf,
+                                                Luu, mu, μq, Lq, full_cov=False)
         if isinstance(self.lik, LikMultipleNormal):
             elbo_lik = α*self.lik.variational_log_prob(y, μqf, σ2qf, X[:, -1])
         else:
             elbo_lik = α*self.lik.variational_log_prob(y, μqf, σ2qf)
-        elbo_nkl = -kl_mvn_tril_zero_mean_prior(μq, Lq, Luu)
+        elbo_nkl = -kl_mvn_tril(μq, Lq, mu, Luu)
         elbo = elbo_lik + elbo_nkl
 
         return elbo
@@ -657,13 +668,16 @@ class SVGP(nn.Module, GPModel):
         k = self.k
         Xu, μq, Lq = self.Xu, self.q.μ, self.q.L
 
+        ms = self.mean_fn(Xs)
+        mu = self.mean_fn(Xu)
+
         Kss = k(Xs, full_cov=full_cov)
         Kus = k(Xu, Xs)
         Kuu = k(Xu)
         Luu = cholesky_jitter(Kuu, jitter=5e-5)
 
-        μf, Σf = mvn_conditional_variational(Kss, Kus,
-                                             Luu, μq, Lq, full_cov=full_cov)
+        μf, Σf = mvn_conditional_variational(Kss, Kus, ms,
+                                             Luu, mu, μq, Lq, full_cov=full_cov)
         return μf, Σf
 
 
@@ -680,7 +694,7 @@ class MultivariateNormalTril(object):
         self.d = d
         self.μ = μ
         self.L = L
-        
+
     def log_prob(self, x):
         """x: (n, m) -> (n*m,)"""
         x = x.reshape(self.μ.shape)
@@ -698,7 +712,7 @@ class MultivariateNormalTril(object):
         shape = shape + self.μ.shape
         ϵ = random.normal(key, shape)
         return self.μ.T + np.tensordot(ϵ, self.L, [-1, 1])
-    
+
 
 class MultivariateNormalInducing(object):
     """N(μ, VᵀV + Λ) where V low rank, Λ diagonal
@@ -854,7 +868,7 @@ def diag_indices_kth(n, k):
 
 def mvn_conditional_exact(Kss, Ks, ms,
                           L, m, y, full_cov=False):
-    """Computes p(fs|f) ~ N( ms + Kfs*inv(K)*(y-m),
+    """Computes p(fs|f) ~ N( ms  + Kfs*inv(K)*(y-m),
                              Kss - Ksᵀ*inv(K)*Ks )
         where 
                 p(f,fs) ~ N([m ], [K    Ks ]
@@ -874,30 +888,34 @@ def mvn_conditional_exact(Kss, Ks, ms,
             f'y, mean(X)  does not agree in size '
             f'{y.shape} vs {m.shape}')
     # for multiple-output GP
-    y = y.reshape(-1,1)
-    m = m.reshape(-1,1)
-    
+    y = y.reshape(-1, 1)
+    m = m.reshape(-1, 1)
+    ms = ms.reshape(-1, 1)
+
     α = cho_solve((L, True), (y-m))
     μ = Ks.T@α + ms
     v = solve_triangular(L, Ks, lower=True)
-    
+
     if full_cov:
         Σ = Kss - v.T@v
     else:
         Σ = Kss - np.sum(np.square(v), axis=0)
-    
+
     return μ, Σ
 
 
-def mvn_conditional_variational(Kff, Kuf,
-                                Luu, μq, Lq, full_cov=False):
+def mvn_conditional_variational(Kff, Kuf, mf,
+                                Luu, mu, μq, Lq, full_cov=False):
     """q(f) = \int p(f|u)q(u) du
-            = N(Kfu Kuu^-1 μq,
+            = N(mf  + Kfu Kuu^-1 (μq - mu),
                 Kff - Qff + Kfu Kuu^-1 Σq Kuu^-1 Kuf)
 
-        where q(u)   ~ N(μq, Σq) w/  Σq := Lq@Lq.T
-              p(u)   ~ N(0, Kuu) w/ Kuu := Luu@Luu.T
-              p(f|u) ~ N(0, Kfu Kuu^-1 u, Kff - Qff)
+        where   q(u)   ~ N(μq, Σq) w/  Σq := Lq@Lq.T
+                p(u)   ~ N(0, Kuu) w/ Kuu := Luu@Luu.T
+                p(f|u) ~ N(0, Kfu Kuu^-1 u, Kff - Qff)
+
+                mf = mean_fn(X)
+                mu = mean_fn(Xu)
 
         when `full_cov=True`
             assume `Kff` is also the diagonal
@@ -911,7 +929,12 @@ def mvn_conditional_variational(Kff, Kuf,
         Σf = Kff - \
             np.sum(np.square(α), axis=0) + \
             np.sum(np.square(γ), axis=0)
-    μf = β.T@μq
+    # for multiple-output
+    μq = μq.reshape(-1,1)
+    mu = mu.reshape(-1,1)
+    mf = mf.reshape(-1,1)
+    μf = mf + β.T@(μq-mu)
+
     return μf, Σf
 
 
@@ -949,7 +972,6 @@ def mvn_conditional_sparse(Kss, Kus,
     return μ, Σ
 
 
-
 def rand_μΣ(key, d):
     k1, k2 = random.split(key)
     μ = random.normal(k1, (d,))
@@ -960,6 +982,8 @@ def rand_μΣ(key, d):
 
 def kl_mvn(μ0, Σ0, μ1, Σ1):
     """KL(q||p) where q~N(μ0,Σ0), p~N(μ1,Σ1) """
+    μ0 = μ0.reshape(-1, 1)
+    μ1 = μ1.reshape(-1, 1)
     n = μ0.size
     kl_trace = np.trace(linalg.solve(Σ1, Σ0))
     kl_mahan = np.sum((μ1-μ0).T@linalg.solve(Σ1, (μ1-μ0)))
@@ -971,6 +995,8 @@ def kl_mvn(μ0, Σ0, μ1, Σ1):
 
 def kl_mvn_tril(μ0, L0, μ1, L1):
     """KL(q||p) where q~N(μ0,L0@L0.T), p~N(μ1,L1@L1.T) """
+    μ0 = μ0.reshape(-1, 1)
+    μ1 = μ1.reshape(-1, 1)
     n = μ0.size
     α = solve_triangular(L1, L0, lower=True)
     β = solve_triangular(L1, μ1 - μ0, lower=True)
@@ -985,6 +1011,7 @@ def kl_mvn_tril(μ0, L0, μ1, L1):
 
 def kl_mvn_tril_zero_mean_prior(μ0, L0, L1):
     """KL(q||p) where q~N(μ0,L0@L0.T), p~N(0,L1@L1.T) """
+    μ0 = μ0.reshape(-1, 1)
     n = μ0.size
     α = solve_triangular(L1,  L0, lower=True)
     β = solve_triangular(L1, -μ0, lower=True)

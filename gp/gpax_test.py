@@ -339,11 +339,17 @@ class TestMvnConditional(unittest.TestCase):
 
         from jax.scipy.linalg import solve_triangular
 
-        def mvn_conditional_variational_unstable(Kff, Kuf, Kuu, μq, Σq, full_cov=False):
+        def mvn_conditional_variational_unstable(
+            Kff, Kuf, Kuu, μq, Σq, mf, mu, full_cov=False):
             """ Unstable version of `mvn_conditional_variational` """
+            # for multiple-output
+            μq = μq.reshape(-1,1)
+            mu = mu.reshape(-1,1)
+            mf = mf.reshape(-1,1)
+
             Lq = linalg.cholesky(Σq)
             Luu = linalg.cholesky(Kuu)
-            μf = Kuf.T@linalg.solve(Kuu, μq)
+            μf = mf + Kuf.T@linalg.solve(Kuu, (μq-mu))
             α = solve_triangular(Luu, Kuf, lower=True)
             Qff = α.T@α
             β = linalg.solve(Kuu, Kuf)
@@ -353,20 +359,29 @@ class TestMvnConditional(unittest.TestCase):
                 Σf = np.diag(Kff - Qff + β.T@Σq@β)
             return μf, Σf
 
+        for T in [1,2]:
+            n,m,l = 10,3,5
+            key = random.PRNGKey(0)
+            X, Xu = random.normal(key, (n,2)), random.normal(key, (m,2))
+            k = CovICM(kt_kwargs={'output_dim':T})
+            k = k.bind(k.init(key, X))
+            mean_fn = MeanConstant(init_val_m=.2, output_dim=T)
+            mean_fn = mean_fn.bind(mean_fn.init(key, X))
+            mf, mu = mean_fn(X), mean_fn(Xu)
+            Kff = k(X)
+            Kuf = k(Xu, X)
+            Kuu = k(Xu)+1*np.eye(m*T)
+            μq, Σq = rand_μΣ(key, m*T)
+            Lq = linalg.cholesky(Σq)
+            μf1, Σf1 = mvn_conditional_variational_unstable(
+                Kff, Kuf, Kuu, μq, Σq, mf, mu, full_cov=True)
+            μf2, Σf2 = mvn_conditional_variational(
+                Kff, Kuf, mf, linalg.cholesky(Kuu), mu, μq, Lq, full_cov=True)
+            test_μ_entries = np.allclose(μf1, μf1)
+            test_Σ_entries = np.allclose(Σf1, Σf2, rtol=1e-5, atol=1e-5)
 
-        n,m,l = 100,30,5
-        key = random.PRNGKey(0)
-        X, Xu = random.normal(key, (n,2)), random.normal(key, (m,2))
-        k = CovSE()
-        Kff = k.apply(k.init(key, Xu), X)
-        Kuf = k.apply(k.init(key, Xu), Xu, X)
-        Kuu = k.apply(k.init(key, Xu), Xu)+1*np.eye(m)
-        μq, Σq = rand_μΣ(key, m)
-        Lq = linalg.cholesky(Σq)
-        μf1, Σf1 = mvn_conditional_variational_unstable(Kff, Kuf, Kuu, μq, Σq, full_cov=True)
-        μf2, Σf2 = mvn_conditional_variational(Kff, Kuf, linalg.cholesky(Kuu), μq, Lq, full_cov=True)
-        self.assertTrue(np.allclose(μf1, μf1))
-        self.assertTrue(np.allclose(Σf1, Σf2, rtol=1e-5, atol=1e-5))
+            self.assertTrue(test_μ_entries)
+            self.assertTrue(test_Σ_entries)
 
 
 class TestDistributions(unittest.TestCase):
