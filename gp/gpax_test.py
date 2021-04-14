@@ -11,6 +11,7 @@ import jax
 from jax import numpy as np
 from jax import random
 import jax.numpy.linalg as linalg
+from jax.scipy.linalg import cho_solve, solve_triangular
 
 import torch
 
@@ -23,7 +24,7 @@ class TestJaxUtilities(unittest.TestCase):
     def test_add_to_diagonal(self):
 
         n = 100
-        key = jax.random.PRNGKey(0)
+        key = random.PRNGKey(0)
         A = random.normal(key, (n,n))
         jitter = 10
 
@@ -53,11 +54,33 @@ class TestBijectors(unittest.TestCase):
         self.assertTrue(same_mat)
 
 
+class TestMeanFn(unittest.TestCase):
+
+    def test_MeanConstant(self):
+
+        key = random.PRNGKey(0)
+        n = 3
+        X = np.linspace(0,1,n).reshape(-1,1)
+        c = np.array([0,.5,1])
+        output_dim = 3
+
+        mean_fn = MeanConstant(output_dim=output_dim,
+                            flat=True)
+        params = {'params': {'c': c}}
+        mean_fn = mean_fn.bind(params)
+
+        m = mean_fn(X)
+        mtrue = np.repeat(c.reshape(1,-1),3,axis=0).reshape(n*output_dim,1)
+        test_entries = np.array_equal(m, mtrue)
+
+        self.assertTrue(test_entries)
+
+
 class TestLikelihoods(unittest.TestCase):
 
     def test_LikNormal(self):
 
-        key = jax.random.PRNGKey(0)
+        key = random.PRNGKey(0)
         lik = LikNormal()
         μ = np.ones((10,1)).astype(np.float32)
         Σ = np.eye(10)
@@ -70,7 +93,7 @@ class TestLikelihoods(unittest.TestCase):
     def test_LikMultipleNormalKron(self):
 
         n, T = 10, 2
-        lik = LikMultipleNormalKron(n_σ2=T)
+        lik = LikMultipleNormalKron(output_dim=T)
         lik = lik.bind({'params': {'σ2': np.arange(T)}})
         Σ = np.zeros((n,n))
         Σy = lik.predictive_dist(None, Σ)[1] 
@@ -83,7 +106,7 @@ class TestKernel(unittest.TestCase):
     def test_CovIndex(self):
         for d in [1,3]: # active_dims
             for i in range(2):
-                key = jax.random.PRNGKey(i)
+                key = random.PRNGKey(i)
                 X = random.randint(key, (10,5), 0, 3)
                 Y = random.randint(key, (10,5), 0, 3)
                 k = CovIndex(active_dims=[d], output_dim=4, rank=2)
@@ -104,7 +127,7 @@ class TestKernel(unittest.TestCase):
         for T in [3,5]:
             n, d = 12, 2
 
-            key = jax.random.PRNGKey(0)
+            key = random.PRNGKey(0)
             X = random.normal(key, (n,d))
             k = CovICM(kx_cls=CovSE,
                        kt_kwargs={'output_dim': T, 'rank': 1})
@@ -121,7 +144,7 @@ class TestKernel(unittest.TestCase):
 
     def test_CovICMLearnable(self):
         
-        key = jax.random.PRNGKey(0)
+        key = random.PRNGKey(0)
         m = 3
         nr = 5
 
@@ -193,14 +216,6 @@ class TestKernel(unittest.TestCase):
 
 
 
-
-def rand_μΣ(key, m):
-    μ = random.normal(key, (m,))
-    Σ = random.normal(key, (m, m))
-    Σ = Σ@Σ.T
-    return μ, Σ
-
-
 class TestKL(unittest.TestCase):
 
     def test_kl_mvn(self):
@@ -239,6 +254,87 @@ class TestKL(unittest.TestCase):
 
 class TestMvnConditional(unittest.TestCase):
 
+    def test_mvn_conditional_exact(self):
+
+        n, ns = 5, 3
+        key = random.PRNGKey(0)
+        k1, k2, k3 = random.split(key, 3)
+        X  = random.normal(k1, (n, 3))
+        Xs = random.normal(k2, (ns,3))
+        y  = random.uniform(k3, (n,1))
+
+        k = CovSE()
+        k = k.bind(k.init(key, X))
+        mean_fn = MeanConstant(output_dim=1)
+        mean_fn = mean_fn.bind({'params': {'c': np.array([.2])}})
+
+        Kff = k(X)
+        Kfs = k(X, Xs)
+        Kss = k(Xs, Xs)
+        L = linalg.cholesky(Kff)
+
+        mf = mean_fn(X)
+        ms = mean_fn(Xs)
+
+        α = cho_solve((L, True), (y-mf))
+        μt = Kfs.T@α + ms
+        v = solve_triangular(L, Kfs, lower=True)
+        Σt = Kss - v.T@v
+
+        μ,Σ = mvn_conditional_exact(
+            Kss, Kfs, ms, L, mf, y, full_cov=True)
+        _,Σd = mvn_conditional_exact(
+            np.diag(Kss), Kfs, ms, L, mf, y, full_cov=False)
+
+        test_μ_entries = np.allclose(μt, μ)
+        test_Σ_entries = np.allclose(Σt, Σ)
+        test_Σ_diagonal_entries = np.allclose(np.diag(Σt), Σd)
+
+        self.assertTrue(test_μ_entries)
+        self.assertTrue(test_Σ_entries)
+        self.assertTrue(test_Σ_diagonal_entries)
+
+    def test_mvn_conditional_exact_multipleoutput(self):
+        
+        T = 2
+        n, ns = 5, 3
+        key = random.PRNGKey(0)
+        k1, k2, k3 = random.split(key, 3)
+        X  = random.normal(k1, (n, 3))
+        Xs = random.normal(k2, (ns,3))
+        y  = random.uniform(k3, (n, T))
+
+        k = CovICM(kt_kwargs={'output_dim': T})
+        k = k.bind(k.init(key, X))
+        mean_fn = MeanConstant(output_dim=T)
+        mean_fn = mean_fn.bind({'params': {'c': np.full((T,),.2)}})
+
+        Kff = k(X)
+        Kfs = k(X, Xs)
+        Kss = k(Xs)
+        L = linalg.cholesky(Kff)
+
+        mf = mean_fn(X)
+        ms = mean_fn(Xs)
+
+        α = cho_solve((L, True), (y.reshape(-1,1)-mf))
+        μt = Kfs.T@α + ms
+        v = solve_triangular(L, Kfs, lower=True)
+        Σt = Kss - v.T@v
+
+        μ,Σ = mvn_conditional_exact(
+            Kss, Kfs, ms, L, mf, y, full_cov=True)
+        _,Σd = mvn_conditional_exact(
+            np.diag(Kss), Kfs, ms, L, mf, y, full_cov=False)
+
+        test_μ_entries = np.allclose(μt, μ)
+        test_Σ_entries = np.allclose(Σt, Σ)
+        test_Σ_diagonal_entries = np.allclose(np.diag(Σt), Σd)
+
+        self.assertTrue(test_μ_entries)
+        self.assertTrue(test_Σ_entries)
+        self.assertTrue(test_Σ_diagonal_entries)
+
     def test_mvn_conditional_variational(self):
 
         from jax.scipy.linalg import solve_triangular
@@ -259,7 +355,7 @@ class TestMvnConditional(unittest.TestCase):
 
 
         n,m,l = 100,30,5
-        key = jax.random.PRNGKey(0)
+        key = random.PRNGKey(0)
         X, Xu = random.normal(key, (n,2)), random.normal(key, (m,2))
         k = CovSE()
         Kff = k.apply(k.init(key, Xu), X)
@@ -271,6 +367,35 @@ class TestMvnConditional(unittest.TestCase):
         μf2, Σf2 = mvn_conditional_variational(Kff, Kuf, linalg.cholesky(Kuu), μq, Lq, full_cov=True)
         self.assertTrue(np.allclose(μf1, μf1))
         self.assertTrue(np.allclose(Σf1, Σf2, rtol=1e-5, atol=1e-5))
+
+
+class TestDistributions(unittest.TestCase):
+
+    def test_MultivariateNormalTril(self):
+
+        import tensorflow_probability as tfp
+
+        key = random.PRNGKey(0)
+        n = 10
+        μ, Σ = rand_μΣ(key, n)
+        L = linalg.cholesky(Σ)
+        y = random.uniform(key, (n,))
+
+        p = tfp.distributions.MultivariateNormalTriL(
+            loc=μ, scale_tril=L, validate_args=True)
+        log_prob_true = p.log_prob(y).numpy()
+
+        p = MultivariateNormalTril(μ, L)
+        log_prob = p.log_prob(y)
+        log_prob_unflattened = p.log_prob(y.reshape(-1,2))
+
+        test_log_prob = np.allclose(log_prob_true, log_prob)
+        test_log_prob_unflattened = np.allclose(log_prob_true, log_prob_unflattened)
+
+        self.assertTrue(test_log_prob)
+        self.assertTrue(test_log_prob_unflattened)
+
+
 
 
 

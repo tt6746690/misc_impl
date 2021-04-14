@@ -13,7 +13,35 @@ from flax.core import freeze, unfreeze
 from flax import optim, struct
 from flax import linen as nn
 
-from jaxkern import cov_se, sqdist
+
+class Mean(nn.Module):
+
+    def __call__(self, X):
+        m = self.m(X)
+        return m.reshape(-1, 1) if self.flat else m
+
+
+class MeanZero(Mean):
+    output_dim: int = 1
+    flat: bool = True
+
+    def m(self, X):
+        return np.zeros(X.shape[:-1] + (self.output_dim,))
+
+
+class MeanConstant(Mean):
+    output_dim: int = 1
+    flat: bool = True
+    init_val_m: float = 0.
+
+    def setup(self):
+        self.c = self.param('c', lambda k, s: np.full(s, self.init_val_m),
+                            (self.output_dim,))
+
+    def m(self, X):
+        c = self.c.reshape(1, -1)
+        m = np.tile(c, X.shape[:-1]+(1,))
+        return m
 
 
 def compose_kernel(k, l, op_reduce):
@@ -108,6 +136,34 @@ class Kernel(nn.Module):
                     f'ardℓ {ℓ} does not match with active_dims={s}')
 
 
+def sqdist(X, Y=None):
+    """ Returns D where D_ij = ||X_i - Y_j||^2 if Y is not `None`
+            https://www.robots.ox.ac.uk/~albanie/notes/Euclidean_distance_trick.pdf
+            https://github.com/GPflow/GPflow/gpflow/utilities/ops.py#L84
+        For Y!=None, similar speed to `jit(cdist_sqeuclidean)`
+            jitting does not improve performance
+        For Y==None, 10x faster than jitted `jit(cdist_sqeuclidean)`
+        X   (n, d)
+    """
+    if X.ndim == 1:
+        X = X.reshape(-1, 1)
+    if Y is not None and Y.ndim == 1:
+        Y = Y.reshape(-1, 1)
+
+    if Y is None:
+        D = X@X.T
+        Xsqnorm = np.diag(D).reshape(-1, 1)
+        D = - 2*D + Xsqnorm + Xsqnorm.T
+        D = np.maximum(D, 0)
+    else:
+        Xsqnorm = np.sum(np.square(X), axis=-1).reshape(-1, 1)
+        Ysqnorm = np.sum(np.square(Y), axis=-1).reshape(-1, 1)
+        D = -2*np.tensordot(X, Y, axes=(-1, -1))
+        D += Xsqnorm + Ysqnorm.T
+        D = np.maximum(D, 0)
+    return D
+
+
 class CovSE(Kernel):
     # #ard lengthscales
     ard_len: int = 1
@@ -133,6 +189,7 @@ class CovSE(Kernel):
     def Kdiag(self, X, Y=None):
         return np.tile(self.σ2, len(X))
 
+
 class CovIndex(Kernel):
     """A kernel applied to indices over a lookup take B
             K[i,j] = B[i,j]
@@ -146,7 +203,7 @@ class CovIndex(Kernel):
     init_val_W: float = .1
 
     def setup(self):
-        self.W = self.param('W', lambda k, s: self.init_val_W*random.normal(k,s),
+        self.W = self.param('W', lambda k, s: self.init_val_W*random.normal(k, s),
                             (self.output_dim, self.rank))
         self.v = BijSoftplus.forward(
             self.param('v', lambda k, s: BijSoftplus.reverse(np.ones(s)),
@@ -168,7 +225,7 @@ class CovIndex(Kernel):
         X = np.asarray(X, np.int32).squeeze()
         return np.take(Bdiag, X)
 
-        
+
 class CovICM(Kernel):
     """Intrinsic Coregionalization Kernel
             k(X,Y) = kx(X,Y) ⊗ B
@@ -194,7 +251,6 @@ class CovICM(Kernel):
     def Kdiag(self, X, Y=None):
         Kx = self.kx(X, Y, full_cov=False)
         return np.kron(Kx, np.diag(self.kt.cov()))
-
 
 
 class CovICMLearnable(Kernel):
@@ -303,11 +359,11 @@ class LikNormal(Lik):
 
 
 class LikMultipleNormal(Lik):
-    n_σ2: int = 1
+    output_dim: int = 1
 
     def setup(self):
-        def init_fn(k, s): return BijSoftplus.reverse(np.repeat(1., self.n_σ2))
-        self.σ2 = BijSoftplus.forward(self.param('σ2', init_fn, (self.n_σ2,)))
+        def init_fn(k, s): return BijSoftplus.reverse(np.repeat(1., self.output_dim))
+        self.σ2 = BijSoftplus.forward(self.param('σ2', init_fn, (self.output_dim,)))
 
     def σ2s(self, ind):
         ind = np.asarray(ind, np.int32)
@@ -332,17 +388,17 @@ class LikMultipleNormal(Lik):
 
 
 class LikMultipleNormalKron(Lik):
-    n_σ2: int = 1
+    output_dim: int = 1
 
     def setup(self):
-        def init_fn(k, s): return BijSoftplus.reverse(np.repeat(1., self.n_σ2))
-        self.σ2 = BijSoftplus.forward(self.param('σ2', init_fn, (self.n_σ2,)))
+        def init_fn(k, s): return BijSoftplus.reverse(np.repeat(1., self.output_dim))
+        self.σ2 = BijSoftplus.forward(self.param('σ2', init_fn, (self.output_dim,)))
 
     def σ2I(self, σ2I_size):
-        n = σ2I_size/self.n_σ2
+        n = σ2I_size/self.output_dim
         if not n.is_integer():
             raise ValueError(
-                f'LikMultipleNormalKron.n_σ2={self.n_σ2}'
+                f'LikMultipleNormalKron.output_dim={self.output_dim}'
                 f' not compatible with #data={n}')
         σ2I = np.kron(self.σ2, np.ones(int(n),))
         return σ2I
@@ -382,6 +438,7 @@ class GPR(nn.Module, GPModel):
     data: Tuple[np.ndarray, np.ndarray]
 
     def setup(self):
+        self.mean_fn = MeanZero()
         self.k = CovSE()
         self.lik = LikNormal()
 
@@ -400,36 +457,34 @@ class GPR(nn.Module, GPModel):
 
     def mll(self):
         X, y = self.data
-        y = y.flatten()
         k = self.k
         n = len(X)
 
         K = self.pred_cov(k(X), X[:, -1])
         L = linalg.cholesky(K)
 
-        mlik = MultivariateNormalTril(np.zeros(len(K)), L)
+        m = self.mean_fn(X)
+        mlik = MultivariateNormalTril(m, L)
         mll = mlik.log_prob(y)
 
         return mll
 
     def pred_f(self, Xs, full_cov=True):
         X, y = self.data
-        y = y.flatten()
         k = self.k
-        n = len(X)
+        ns, output_dim = len(Xs), int(y.size/len(X))
+        
+        mf = self.mean_fn(X)
+        ms = self.mean_fn(Xs)
 
-        K = self.pred_cov(k(X), X[:, -1])
-        Ks = k(X, Xs)
-        Kss = k(Xs, Xs)
-        L = linalg.cholesky(K)
-        α = cho_solve((L, True), y)
-        μ = Ks.T@α
-        v = solve_triangular(L, Ks, lower=True)
-        Σ = Kss - v.T@v
+        Kff = self.pred_cov(k(X), X[:, -1])
+        Kfs = k(X, Xs)
+        Kss = k(Xs, full_cov=full_cov)
+        L = linalg.cholesky(Kff)
 
-        if not full_cov:
-            Σ = np.diag(Σ).squeeze()
-
+        μ, Σ = mvn_conditional_exact(Kss, Kfs, ms,
+                                     L, mf, y, full_cov=full_cov)
+        # μ = μ.reshape(ns, output_dim)
         return μ, Σ
 
 
@@ -616,16 +671,23 @@ class MultivariateNormalTril(object):
     """N(μ, LLᵀ) """
 
     def __init__(self, μ, L):
-        self.μ = μ.squeeze()
+        if μ.ndim != 1:
+            μ = μ.flatten()
+        d = μ.size
+        if L.shape != (d, d):
+            raise ValueError(
+                f'L should have dim ({d},{d})')
+        self.d = d
+        self.μ = μ
         self.L = L
-
+        
     def log_prob(self, x):
-        d = self.μ.size
+        """x: (n, m) -> (n*m,)"""
         x = x.reshape(self.μ.shape)
         α = solve_triangular(self.L, (x-self.μ), lower=True)
         mahan = -.5*np.sum(np.square(α))
         lgdet = -np.sum(np.log(np.diag(self.L)))
-        const = -.5*d*np.log(2*np.pi)
+        const = -.5*self.d*np.log(2*np.pi)
         return mahan + const + lgdet
 
     def cov(self):
@@ -636,7 +698,7 @@ class MultivariateNormalTril(object):
         shape = shape + self.μ.shape
         ϵ = random.normal(key, shape)
         return self.μ.T + np.tensordot(ϵ, self.L, [-1, 1])
-
+    
 
 class MultivariateNormalInducing(object):
     """N(μ, VᵀV + Λ) where V low rank, Λ diagonal
@@ -790,6 +852,43 @@ def diag_indices_kth(n, k):
         return rows, cols
 
 
+def mvn_conditional_exact(Kss, Ks, ms,
+                          L, m, y, full_cov=False):
+    """Computes p(fs|f) ~ N( ms + Kfs*inv(K)*(y-m),
+                             Kss - Ksᵀ*inv(K)*Ks )
+        where 
+                p(f,fs) ~ N([m ], [K    Ks ]
+                            [ms], [Ksᵀ  Kss])            
+                K=L@Lᵀ,
+                Ks = k(X,Xs)
+
+        when `full_cov=True`
+            assume `K` is also the diagonal
+    """
+    if Kss.shape[0] != ms.size:
+        raise ValueError(
+            f'k(Xs), mean(Xs) does not agree in size '
+            f'{Kss} vs {ms.shape}')
+    if y.size != m.size:
+        raise ValueError(
+            f'y, mean(X)  does not agree in size '
+            f'{y.shape} vs {m.shape}')
+    # for multiple-output GP
+    y = y.reshape(-1,1)
+    m = m.reshape(-1,1)
+    
+    α = cho_solve((L, True), (y-m))
+    μ = Ks.T@α + ms
+    v = solve_triangular(L, Ks, lower=True)
+    
+    if full_cov:
+        Σ = Kss - v.T@v
+    else:
+        Σ = Kss - np.sum(np.square(v), axis=0)
+    
+    return μ, Σ
+
+
 def mvn_conditional_variational(Kff, Kuf,
                                 Luu, μq, Lq, full_cov=False):
     """q(f) = \int p(f|u)q(u) du
@@ -828,7 +927,7 @@ def mvn_conditional_sparse(Kss, Kus,
         Kuu = Luu*Luuᵀ
 
         when `full_cov=True`
-            assume `Kff` is also the diagonal
+            assume `Kss` is also the diagonal
     """
     Λ = Λ.reshape(-1, 1)
 
@@ -850,12 +949,12 @@ def mvn_conditional_sparse(Kss, Kus,
     return μ, Σ
 
 
-def rand_μΣ(key, m):
+
+def rand_μΣ(key, d):
     k1, k2 = random.split(key)
-    μ = random.normal(k1, (m,))
-    Σ = random.normal(k2, (m, m))
-    Σ = jax.ops.index_update(Σ, np.tril_indices(m), 0)
-    Σ = Σ@Σ.T+0.1*np.eye(m)
+    μ = random.normal(k1, (d,))
+    L = random.normal(k2, (d, d))
+    Σ = L@L.T
     return μ, Σ
 
 
@@ -985,9 +1084,11 @@ def get_data_stream(key, bsz, X, y):
 def filter_contains(k, v, kwd, b=True):
     return b if kwd in k.split('/') else (not b)
 
+
 def pytree_path_contains_keywords(path, kwds):
-    # Check if any kwds appears in `path` of pytree    
+    # Check if any kwds appears in `path` of pytree
     return True if any(k in path for k in kwds) else False
+
 
 def pytree_mutate(tree, kvs):
     """Mutate `tree` with `kvs: {path: value}` """
@@ -1004,18 +1105,23 @@ def pytree_mutate(tree, kvs):
     return tree
 
 
-def pytree_leaves(tree, ks):
-    """Access `tree` leaves using `ks: [path]` """
-
-    leafs = {}
+def pytree_leave(tree, name):
     for k, v in flax.traverse_util.flatten_dict(
             unfreeze(tree)).items():
         path = '/'.join(k)
-        if any([path.endswith(k) for k in ks]):
-            leafs[path] = v
+        if path.endswith(name):
+            return v
 
-    if len(ks) != len(leafs):
-        raise ValueError('Did not find all leafs!')
+
+def pytree_leaves(tree, names):
+    """Access `tree` leaves using `ks: [path]` """
+    leafs = [None for _ in range(len(names))]
+    for k, v in flax.traverse_util.flatten_dict(
+            unfreeze(tree)).items():
+        path = '/'.join(k)
+        for i, name in enumerate(names):
+            if path.endswith(name):
+                leafs[i] = v
     return leafs
 
 
@@ -1096,6 +1202,9 @@ def is_psd(A):
 
 
 def jax_to_cpu(x, i=0):
+    """e.g. over `pytree`, 
+            jax.tree_util.tree_map(jax_to_cpu, params)
+    """
     return device_put(x, jax.devices('cpu')[i])
 
 
