@@ -162,7 +162,7 @@ class TestKernel(unittest.TestCase):
         for nc in [nr,10]:
             X = random.normal(key, (nr,5))
             Y = random.normal(key, (nc,5))
-            k = CovICMLearnable(output_dim=m)
+            k = CovICMLearnable(mode='all',output_dim=m)
             k = k.bind(k.init(key, X))
             K = k(X, Y)
             Kdiag = k(X, full_cov=False)
@@ -170,18 +170,21 @@ class TestKernel(unittest.TestCase):
             lhs = np.kron(k.kx(X, Y), np.ones((m,m)))
             rhs = []
             for i in range(m):
-                Eii = np.zeros((m,m))
-                ind = (np.array([i]), np.array([i]))
-                v = np.array([1.])
-                Eii = jax.ops.index_update(Eii, ind, v)
-                Kti = np.kron(k.kt[i](X, Y), Eii)
-                rhs.append(Kti)
+                for j in range(m):
+                    Eij = np.zeros((m,m))
+                    ind = (np.array([i]), np.array([j]))
+                    v = np.array([1.])
+                    Eij = jax.ops.index_update(Eij, ind, v)
+                    kti = np.ravel_multi_index((i,j), (m,m))
+                    Kti = np.kron(k.kt[kti](X, Y), Eij)
+                    rhs.append(Kti)
             rhs = np.sum(np.stack(rhs), axis=0)
             Ktrue = lhs*rhs
 
             test_K = np.allclose(Ktrue, K)
             test_Kdiag = (nr != nc) or np.allclose(np.diag(Ktrue), Kdiag)
             test_size_K = K.size == (m*nr)*(m*nc)
+
 
             self.assertTrue(test_K)
             self.assertTrue(test_Kdiag)

@@ -229,7 +229,7 @@ class CovIndex(Kernel):
 class CovIndexSpherical(Kernel):
     """A kernela pplied to indices over a lookup table B
             K[i,j] = B[i,j]
-                where   B = s*sᵀ*diag[l]
+                where   B = s*sᵀ + diag[l]
                         s = [1 cosθ0 cosθ1      cosθ3          ]
                             [0 sinθ0 sinθ1cosθ2 sinθ3cosθ4     ]
                             [0 0     sinθ1sinθ2 sinθ3sinθ4cosθ5]
@@ -271,14 +271,12 @@ class CovIndexSpherical(Kernel):
         if d == 4:
             s = np.array([[1, np.cos(θ[0]), np.cos(θ[1]), np.cos(θ[3])],
                           [0, np.sin(θ[0]), np.sin(θ[1])*np.cos(θ[2]),
-                           np.sin(θ[3])*np.cos(θ[4])],
+                                np.sin(θ[3])*np.cos(θ[4])],
                           [0, 0, np.sin(θ[1])*np.sin(θ[2]),
-                           np.sin(θ[3])*np.sin(θ[4])*np.cos(θ[5])],
+                                np.sin(θ[3])*np.sin(θ[4])*np.cos(θ[5])],
                           [0, 0, 0, np.sin(θ[3])*np.sin(θ[4])*np.sin(θ[5])]])
         A = s.T@s
         A = A + np.diag(l)
-        # ind = np.diag_indices(d)
-        # A = jax.ops.index_update(A, ind, A[ind]*l)
         return A
 
     def K(self, X, Y=None):
@@ -322,12 +320,14 @@ class CovICM(Kernel):
         return np.kron(Kx, np.diag(self.kt.cov()))
 
 
+
 class CovICMLearnable(Kernel):
     """ICM kernel where kt is formed from additional kernels
 
         mode: diag
             k(X,Y)= (kˣ(X,Y)⊗I) ◦ (Σᵢ kᵗⁱ(X,Y)⊗diag[eᵢ])
     """
+    # diag, all
     mode: str = 'diag'
     # number of outputs/tasks
     output_dim: int = 1
@@ -337,11 +337,19 @@ class CovICMLearnable(Kernel):
     # task kernel
     kt_cls: Kernel.__class__ = CovSE
     kt_kwargs: dict = field(default_factory=dict)
-
+        
     def setup(self):
+        if self.mode == 'diag':
+            n_kt = self.output_dim
+        elif self.mode == 'all':
+            n_kt = self.output_dim*self.output_dim
+        else:
+            raise ValueError(
+                f'`mode` {self.mode} not allowed')
+            
         self.kx = self.kx_cls(**self.kx_kwargs)
         self.kt = [self.kt_cls(**self.kt_kwargs)
-                   for _ in range(self.output_dim)]
+                   for _ in range(n_kt)]
 
     def K(self, X, Y=None):
 
@@ -356,11 +364,16 @@ class CovICMLearnable(Kernel):
                                   np.arange(m*ny, step=m))
                 ind = tuple(x.T for x in ind)
                 ind = (ind[0]+i, ind[1]+j)
-                if i == j:
-                    ktⁱ = self.kt[i](X, Y, full_cov=True)
+                if self.mode == 'diag':
+                    if i == j:
+                        ktⁱ = self.kt[i](X, Y, full_cov=True)
+                        M = Kx[ind]*ktⁱ
+                    else:
+                        M = 0
+                if self.mode == 'all':
+                    kti = np.ravel_multi_index((i,j), (m,m))
+                    ktⁱ = self.kt[kti](X, Y, full_cov=True)
                     M = Kx[ind]*ktⁱ
-                else:
-                    M = 0
                 Kx = jax.ops.index_update(Kx, ind, M)
         return Kx
 
@@ -368,7 +381,12 @@ class CovICMLearnable(Kernel):
         m = self.output_dim
         Kx = np.kron(self.kx(X, Y, full_cov=False),
                      np.ones((m,)))
-        Kt = [k(X, Y, full_cov=False) for k in self.kt]
+        if self.mode == 'diag':
+            Kt = [k(X, Y, full_cov=False) for k in self.kt]
+        if self.mode == 'all':
+            ind = np.ravel_multi_index(
+                np.tile(np.arange(m), (2,1)),(m,m))
+            Kt = [self.kt[kti](X, Y, full_cov=False) for kti in ind]
         Kt = np.vstack(Kt).T.flatten()
         K = Kx*Kt
         return K
