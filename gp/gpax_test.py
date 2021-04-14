@@ -122,6 +122,17 @@ class TestKernel(unittest.TestCase):
                 self.assertTrue(np.array_equal(K1diag, K2diag))
 
 
+    def test_CovIndexSpherical(self):
+
+        key = random.PRNGKey(0)
+        k = CovIndexSpherical(output_dim=4)
+        X = random.randint(key, (3,1), 0, 3)
+        params = k.init(key, X)
+        k = k.bind(params)
+        B = k.cov()
+        test_diagonal_entries = np.array_equal(np.diag(B), np.full((4,), 1))
+
+
     def test_CovICM(self):
 
         for T in [3,5]:
@@ -335,13 +346,13 @@ class TestMvnConditional(unittest.TestCase):
         self.assertTrue(test_Σ_entries)
         self.assertTrue(test_Σ_diagonal_entries)
 
-    def test_mvn_conditional_variational(self):
+    def test_mvn_marginal_variational(self):
 
         from jax.scipy.linalg import solve_triangular
 
-        def mvn_conditional_variational_unstable(
+        def mvn_marginal_variational_unstable(
             Kff, Kuf, Kuu, μq, Σq, mf, mu, full_cov=False):
-            """ Unstable version of `mvn_conditional_variational` """
+            """ Unstable version of `mvn_marginal_variational` """
             # for multiple-output
             μq = μq.reshape(-1,1)
             mu = mu.reshape(-1,1)
@@ -373,9 +384,9 @@ class TestMvnConditional(unittest.TestCase):
             Kuu = k(Xu)+1*np.eye(m*T)
             μq, Σq = rand_μΣ(key, m*T)
             Lq = linalg.cholesky(Σq)
-            μf1, Σf1 = mvn_conditional_variational_unstable(
+            μf1, Σf1 = mvn_marginal_variational_unstable(
                 Kff, Kuf, Kuu, μq, Σq, mf, mu, full_cov=True)
-            μf2, Σf2 = mvn_conditional_variational(
+            μf2, Σf2 = mvn_marginal_variational(
                 Kff, Kuf, mf, linalg.cholesky(Kuu), mu, μq, Lq, full_cov=True)
             test_μ_entries = np.allclose(μf1, μf1)
             test_Σ_entries = np.allclose(Σf1, Σf2, rtol=1e-5, atol=1e-5)

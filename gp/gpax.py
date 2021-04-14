@@ -191,7 +191,7 @@ class CovSE(Kernel):
 
 
 class CovIndex(Kernel):
-    """A kernel applied to indices over a lookup take B
+    """A kernel applied to indices over a lookup table B
             K[i,j] = B[i,j]
                 where B = WWᵀ + diag[v]
     """
@@ -200,7 +200,7 @@ class CovIndex(Kernel):
     # #columns of W
     rank: int = 1
     # initialization
-    init_val_W: float = .1
+    init_val_W: float = 1.
 
     def setup(self):
         self.W = self.param('W', lambda k, s: self.init_val_W*random.normal(k, s),
@@ -222,6 +222,75 @@ class CovIndex(Kernel):
 
     def Kdiag(self, X, Y=None):
         Bdiag = np.sum(np.square(self.W), axis=1)+self.v
+        X = np.asarray(X, np.int32).squeeze()
+        return np.take(Bdiag, X)
+
+
+class CovIndexSpherical(Kernel):
+    """A kernela pplied to indices over a lookup table B
+            K[i,j] = B[i,j]
+                where   B = s*sᵀ*diag[l]
+                        s = [1 cosθ0 cosθ1      cosθ3          ]
+                            [0 sinθ0 sinθ1cosθ2 sinθ3cosθ4     ]
+                            [0 0     sinθ1sinθ2 sinθ3sinθ4cosθ5]
+                            [0 0     0          sinθ3sinθ4sinθ5]
+                        output_dim = 4
+        Note:
+            Not psd, hard to optimize ...
+    """
+    output_dim: int = 1
+
+    def n_θ(self, n):
+        return int(n*(n-1)/2)
+
+    def setup(self):
+        if self.output_dim not in [1, 2, 3, 4]:
+            raise ValueError(
+                f'CovIndexSpherical not implemented for output_dim={self.output_dim}')
+
+        self.θ = self.param('θ', lambda k, s: random.uniform(k, s, np.float32, 0, np.pi),
+                            (self.n_θ(self.output_dim),))
+        self.l = BijSoftplus.forward(
+            self.param('l', lambda k, s: BijSoftplus.reverse(np.ones(s)),
+                       (self.output_dim,)))
+
+    def cov(self):
+        d = self.output_dim
+        θ = self.θ
+        l = self.l
+
+        if d == 1:
+            s = np.array([[1.]])
+        if d == 2:
+            s = np.array([[1, np.cos(θ[0])],
+                          [0, np.sin(θ[0])]])
+        if d == 3:
+            s = np.array([[1, np.cos(θ[0]), np.cos(θ[1])],
+                          [0, np.sin(θ[0]), np.sin(θ[1])*np.cos(θ[2])],
+                          [0, 0, np.sin(θ[1])*np.sin(θ[2])]])
+        if d == 4:
+            s = np.array([[1, np.cos(θ[0]), np.cos(θ[1]), np.cos(θ[3])],
+                          [0, np.sin(θ[0]), np.sin(θ[1])*np.cos(θ[2]),
+                           np.sin(θ[3])*np.cos(θ[4])],
+                          [0, 0, np.sin(θ[1])*np.sin(θ[2]),
+                           np.sin(θ[3])*np.sin(θ[4])*np.cos(θ[5])],
+                          [0, 0, 0, np.sin(θ[3])*np.sin(θ[4])*np.sin(θ[5])]])
+        A = s.T@s
+        A = A + np.diag(l)
+        # ind = np.diag_indices(d)
+        # A = jax.ops.index_update(A, ind, A[ind]*l)
+        return A
+
+    def K(self, X, Y=None):
+        Y = X if Y is None else Y
+        X = np.asarray(X, np.int32).squeeze()
+        Y = np.asarray(Y, np.int32).squeeze()
+        B = self.cov()
+        K = np.take(np.take(B, Y, axis=1), X, axis=0)
+        return K
+
+    def Kdiag(self, X, Y=None):
+        Bdiag = self.l
         X = np.asarray(X, np.int32).squeeze()
         return np.take(Bdiag, X)
 
@@ -653,8 +722,8 @@ class SVGP(nn.Module, GPModel):
         α = self.n_data/len(X) \
             if self.n_data is not None else 1.
 
-        μqf, σ2qf = mvn_conditional_variational(Kff, Kuf, mf,
-                                                Luu, mu, μq, Lq, full_cov=False)
+        μqf, σ2qf = mvn_marginal_variational(Kff, Kuf, mf,
+                                             Luu, mu, μq, Lq, full_cov=False)
         if isinstance(self.lik, LikMultipleNormal):
             elbo_lik = α*self.lik.variational_log_prob(y, μqf, σ2qf, X[:, -1])
         else:
@@ -676,8 +745,8 @@ class SVGP(nn.Module, GPModel):
         Kuu = k(Xu)
         Luu = cholesky_jitter(Kuu, jitter=5e-5)
 
-        μf, Σf = mvn_conditional_variational(Kss, Kus, ms,
-                                             Luu, mu, μq, Lq, full_cov=full_cov)
+        μf, Σf = mvn_marginal_variational(Kss, Kus, ms,
+                                          Luu, mu, μq, Lq, full_cov=full_cov)
         return μf, Σf
 
 
@@ -904,8 +973,8 @@ def mvn_conditional_exact(Kss, Ks, ms,
     return μ, Σ
 
 
-def mvn_conditional_variational(Kff, Kuf, mf,
-                                Luu, mu, μq, Lq, full_cov=False):
+def mvn_marginal_variational(Kff, Kuf, mf,
+                             Luu, mu, μq, Lq, full_cov=False):
     """q(f) = \int p(f|u)q(u) du
             = N(mf  + Kfu Kuu^-1 (μq - mu),
                 Kff - Qff + Kfu Kuu^-1 Σq Kuu^-1 Kuf)
@@ -930,9 +999,9 @@ def mvn_conditional_variational(Kff, Kuf, mf,
             np.sum(np.square(α), axis=0) + \
             np.sum(np.square(γ), axis=0)
     # for multiple-output
-    μq = μq.reshape(-1,1)
-    mu = mu.reshape(-1,1)
-    mf = mf.reshape(-1,1)
+    μq = μq.reshape(-1, 1)
+    mu = mu.reshape(-1, 1)
+    mf = mf.reshape(-1, 1)
     μf = mf + β.T@(μq-mu)
 
     return μf, Σf
