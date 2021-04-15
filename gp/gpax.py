@@ -93,48 +93,6 @@ def kernel_active_dims_overlap(k1, k2):
         return True, None
 
 
-class Kernel(nn.Module):
-
-    active_dims: Union[slice, list, np.ndarray] = None
-
-    def slice(self, X):
-        if self.active_dims is None:
-            return X
-        else:
-            return X[..., self.active_dims] if X is not None else X
-
-    def K(self, X, Y=None):
-        raise NotImplementedError
-
-    def Kdiag(self, X, Y=None):
-        raise NotImplementedError
-
-    def __call__(self, X, Y=None, full_cov=True):
-        X = self.slice(X)
-        Y = self.slice(Y)
-
-        if full_cov:
-            return self.K(X, Y)
-        else:
-            if Y is not None:
-                raise ValueError('full_cov=True & Y=None not compatible')
-            return self.Kdiag(X, Y)
-
-    def __add__(self, other):
-        return compose_kernel(self, other, np.add)
-
-    def __mul__(self, other):
-        return compose_kernel(self, other, np.multiply)
-
-    def check_ard_dims(self, ℓ):
-        """Verify that ard ℓ size matches with `active_dims` 
-            when `active_dims` is specified, `ard_len>1` """
-        if ℓ.size > 1 and self.active_dims is not None:
-            s, cvt = slice_to_array(self.active_dims)
-            if cvt and s.size != ℓ.size:
-                raise ValueError(
-                    f'ardℓ {ℓ} does not match with active_dims={s}')
-
 
 def sqdist(X, Y=None):
     """ Returns D where D_ij = ||X_i - Y_j||^2 if Y is not `None`
@@ -164,6 +122,56 @@ def sqdist(X, Y=None):
     return D
 
 
+class Kernel(nn.Module):
+
+    active_dims: Union[slice, list, np.ndarray] = None
+
+    def slice(self, X):
+        if self.active_dims is None:
+            return X
+        else:
+            return X[..., self.active_dims] if X is not None else X
+
+    def K(self, X, Y=None):
+        raise NotImplementedError
+
+    def Kdiag(self, X, Y=None):
+        raise NotImplementedError
+
+    def apply_mapping(self, X):
+        if X is not None and hasattr(self, 'g'):
+            return self.g(X)
+        else:
+            return X
+
+    def __call__(self, X, Y=None, full_cov=True):
+        X = self.slice(X)
+        Y = self.slice(Y)
+        X = self.apply_mapping(X)
+        Y = self.apply_mapping(Y)
+        if full_cov:
+            return self.K(X, Y)
+        else:
+            if Y is not None:
+                raise ValueError('full_cov=True & Y=None not compatible')
+            return self.Kdiag(X, Y)
+
+    def __add__(self, other):
+        return compose_kernel(self, other, np.add)
+
+    def __mul__(self, other):
+        return compose_kernel(self, other, np.multiply)
+
+    def check_ard_dims(self, ℓ):
+        """Verify that ard ℓ size matches with `active_dims` 
+            when `active_dims` is specified, `ard_len>1` """
+        if ℓ.size > 1 and self.active_dims is not None:
+            s, cvt = slice_to_array(self.active_dims)
+            if cvt and s.size != ℓ.size:
+                raise ValueError(
+                    f'ardℓ {ℓ} does not match with active_dims={s}')
+
+
 class CovSE(Kernel):
     # #ard lengthscales
     ard_len: int = 1
@@ -171,6 +179,35 @@ class CovSE(Kernel):
     init_val_l: float = 1.
 
     def setup(self):
+        self.ℓ = BijSoftplus.forward(self.param(
+            'ℓ', lambda k, s: BijSoftplus.reverse(
+                self.init_val_l*np.ones(s, dtype=np.float32)), (self.ard_len,)))
+        self.σ2 = BijSoftplus.forward(self.param(
+            'σ2', lambda k, s: BijSoftplus.reverse(np.array([1.])), (1,)))
+        self.check_ard_dims(self.ℓ)
+
+    def scale(self, X):
+        return X/self.ℓ if X is not None else X
+
+    def K(self, X, Y=None):
+        X = self.scale(X)
+        Y = self.scale(Y)
+        return self.σ2*np.exp(-sqdist(X, Y)/2)
+
+    def Kdiag(self, X, Y=None):
+        return np.tile(self.σ2, len(X))
+
+
+class CovSEwithEncoder(Kernel):
+    # #ard lengthscales
+    ard_len: int = 1
+    # initialization
+    init_val_l: float = 1.
+    # encoder
+    g_feature_dims: int = 1
+
+    def setup(self):
+        self.g = nn.Dense(self.g_feature_dims)
         self.ℓ = BijSoftplus.forward(self.param(
             'ℓ', lambda k, s: BijSoftplus.reverse(
                 self.init_val_l*np.ones(s, dtype=np.float32)), (self.ard_len,)))
@@ -271,9 +308,9 @@ class CovIndexSpherical(Kernel):
         if d == 4:
             s = np.array([[1, np.cos(θ[0]), np.cos(θ[1]), np.cos(θ[3])],
                           [0, np.sin(θ[0]), np.sin(θ[1])*np.cos(θ[2]),
-                                np.sin(θ[3])*np.cos(θ[4])],
+                           np.sin(θ[3])*np.cos(θ[4])],
                           [0, 0, np.sin(θ[1])*np.sin(θ[2]),
-                                np.sin(θ[3])*np.sin(θ[4])*np.cos(θ[5])],
+                           np.sin(θ[3])*np.sin(θ[4])*np.cos(θ[5])],
                           [0, 0, 0, np.sin(θ[3])*np.sin(θ[4])*np.sin(θ[5])]])
         A = s.T@s
         A = A + np.diag(l)
@@ -320,7 +357,6 @@ class CovICM(Kernel):
         return np.kron(Kx, np.diag(self.kt.cov()))
 
 
-
 class CovICMLearnable(Kernel):
     """ICM kernel where kt is formed from additional kernels
 
@@ -337,19 +373,21 @@ class CovICMLearnable(Kernel):
     # task kernel
     kt_cls: Kernel.__class__ = CovSE
     kt_kwargs: dict = field(default_factory=dict)
-        
+
     def setup(self):
-        if self.mode == 'diag':
-            n_kt = self.output_dim
-        elif self.mode == 'all':
-            n_kt = self.output_dim*self.output_dim
-        else:
+        if self.mode not in ['diag', 'all']:
             raise ValueError(
                 f'`mode` {self.mode} not allowed')
-            
         self.kx = self.kx_cls(**self.kx_kwargs)
         self.kt = [self.kt_cls(**self.kt_kwargs)
-                   for _ in range(n_kt)]
+                   for _ in range(self.n_kt())]
+
+    def n_kt(self):
+        if self.mode == 'diag':
+            n_kt = self.output_dim
+        if self.mode == 'all':
+            n_kt = self.output_dim*self.output_dim
+        return n_kt
 
     def K(self, X, Y=None):
 
@@ -371,7 +409,7 @@ class CovICMLearnable(Kernel):
                     else:
                         M = 0
                 if self.mode == 'all':
-                    kti = np.ravel_multi_index((i,j), (m,m))
+                    kti = i*m+j
                     ktⁱ = self.kt[kti](X, Y, full_cov=True)
                     M = Kx[ind]*ktⁱ
                 Kx = jax.ops.index_update(Kx, ind, M)
@@ -384,8 +422,7 @@ class CovICMLearnable(Kernel):
         if self.mode == 'diag':
             Kt = [k(X, Y, full_cov=False) for k in self.kt]
         if self.mode == 'all':
-            ind = np.ravel_multi_index(
-                np.tile(np.arange(m), (2,1)),(m,m))
+            ind = [i*m+i for i in range(m)]
             Kt = [self.kt[kti](X, Y, full_cov=False) for kti in ind]
         Kt = np.vstack(Kt).T.flatten()
         K = Kx*Kt

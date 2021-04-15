@@ -19,6 +19,24 @@ from gpax import *
 from jaxkern import *
 
 
+class TestNumpyBehavior(unittest.TestCase):
+
+    def test_ravel_multi_index(self):
+        m, n = 4,5
+        for i in range(m):
+            for j in range(n):
+                a = np.ravel_multi_index((i,j), (m,n))
+                b = i*n+j
+                test_same = a == b
+                self.assertTrue(test_same)
+
+        indtrue = np.ravel_multi_index(
+            np.tile(np.arange(m), (2,1)),(m,m))
+        ind = [i*m+i for i in range(m)]
+        test_diagonal_indices = np.array_equal(indtrue, ind)
+        self.assertTrue(test_diagonal_indices)
+
+
 class TestJaxUtilities(unittest.TestCase):
 
     def test_add_to_diagonal(self):
@@ -227,6 +245,7 @@ class TestKernel(unittest.TestCase):
                           [  12,   13,   14,   15,   16,   17],
                           [3000,   19, 4000,   21, 5000,   23]])
         self.assertTrue(np.allclose(Atrue, A))
+
 
 
 
