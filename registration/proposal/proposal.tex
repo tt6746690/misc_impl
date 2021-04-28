@@ -1,0 +1,54 @@
+\documentclass[11pt]{article}
+\input{../../preamble_local.tex}
+\addbibresource{registration}
+\addbibresource{optimal_transport}
+
+\title{Project Proposal}
+\author{Peiqi Wang (921301558)}
+
+\begin{document}
+
+\maketitle
+
+
+I am planning to implement diffeomorphic registration with optimal transport cost \cite{feydyOptimalTransportDiffeomorphic2017a} and possibly extend it to probabilistic settings, referencing \cite{wassermannProbabilisticDiffeomorphicRegistration2014}.
+
+Large deformation metric mapping is a registration algorithm that handles large deformation of objects and ensures the transformations are smooth and invertible \cite{begComputingLargeDeformation2005}. It solves for a time-varying velocity vector field $v_t: \Omega \to \R^n$ for $t\in [0,1]$ dictating the dynamic of a time-varying transformation $\phi_t:\Omega\to\Omega$, 
+\begin{align}
+    \frac{d}{dt} \phi_t = v_t(\phi_t)
+    \quad\quad
+    \phi_0 = \text{Id}
+\end{align}
+where $\Omega$ is ambient space, e.g. $\R^2$ when registering 2d images. The desired transformation is the end point of the above ODE problem, $\varphi = \phi_1 = \phi_0 + \int_0^1 v_t(\phi_t) \, dt$. It has been shown that if the velocities are sufficiently smooth, then $\varphi$ is a diffeomorphic map. Assume that $\mu = \sum_{i\in I} p_i \delta_{x_i}, \nu = \sum_{j\in J}q_j \delta_j$ is some discrete representation of shape $X,Y$. We are interested in finding a diffeomorphic transformation $\varphi$ s.t. the pushforward $\varphi_{\#}\mu$ is similar to the target $\nu$, captured by the following energy
+\begin{align}
+    \sE(\varphi)
+        = \sR(\varphi) + \sL(\varphi_{\#}\mu, \nu)
+\end{align}
+where $\sR$ regularizes $\varphi$ be smooth and that $\sL$ is a data fidelity term. \cite{feydyOptimalTransportDiffeomorphic2017a} proposes to use a regularized unbalanced optimal transport cost between two discrete measures, i.e. $\sL := W_{\epsilon,\rho}$ where
+\begin{align}
+    W_{\epsilon,\rho}(\mu, \nu)
+        = \min_{\gamma \in \R_+^{I\times J}} \sum_{i,j} c(x_i,x_j)\gamma_{i,j} - \epsilon H(\gamma) + \rho \text{KL}(\gamma \mathbf{1} \mid p) + \rho \text{KL}(\gamma^T \mathbf{1} \mid q)
+\end{align}
+\cite{feydyOptimalTransportDiffeomorphic2017a} then went on to compute $W_{\epsilon,\rho}$ with generalized Sinkhorn algorithm, and supply the gradient $\nabla W_{\epsilon,\rho}$ with respect to a discrete parameterization of $\varphi_{\#}\mu$ to minimize the energy $\sE$.
+
+One possible extension is to extend lddmm+ot to the Bayesian setup. \cite{wassermannProbabilisticDiffeomorphicRegistration2014} uses variational method to compute an approximate posterior distribution $q(\varphi)$ that is close to the true posterior,
+\begin{align}
+    \text{KL}(q(\varphi) \Vert p(\varphi \mid X,Y) )
+        = \text{KL}(q(\varphi) \Vert p(\varphi)) - \langle \log p(X,Y\mid \varphi) \rangle_{q} + \log p(X,Y)
+\end{align}
+where $\varphi$ is assumed to be a Gaussian process $p(\varphi) = \sG\sP( \mu_{\varphi}, k_{\varphi} )$. The paper made some derivations and proposed to minimize a lower bound of the form
+\begin{align}
+    \sE'(\varphi) 
+        = \sR(\varphi) + \langle \sL(\varphi_{\#}\mu, \nu) \rangle_{q(\varphi)}
+\end{align}
+We can think of the second term as measuring the average data fidelity of a discrete random variable $\mu$ transformed by a random mapping $\varphi \sim q$ to another discrete random variable $\nu$. In case $\sL=W_{\epsilon,\rho}$, the question is if there is some simplification of the second term when we are taking expectation with respect to $q(\varphi)$ and/or if semi-discrete transport distance can be used instead somehow. I probably also need to parameterize velocity/transformation instead of optimizing for free variables of the pushforward $\varphi_{\#}\mu$ directly as \cite{feydyOptimalTransportDiffeomorphic2017a} did.
+
+
+
+\newpage
+\printbibliography 
+
+
+
+
+\end{document}

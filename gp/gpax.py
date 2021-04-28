@@ -330,6 +330,31 @@ class CovIndexSpherical(Kernel):
         return np.take(Bdiag, X)
 
 
+class CovProduct(Kernel):
+    """Hadamard product of two kernel matrices
+            K = K0∘K1
+    """
+    # k0 & k1
+    k0_cls: Kernel.__class__ = CovSE
+    k0_kwargs: dict = field(default_factory=dict)
+    k1_cls: Kernel.__class__ = CovSE
+    k1_kwargs: dict = field(default_factory=dict)
+    
+    def setup(self):
+        self.k0 = self.k0_cls(**self.k0_kwargs)
+        self.k1 = self.k1_cls(**self.k1_kwargs)
+        
+    def K(self, X, Y=None):
+        K0 = self.k0(X, Y, full_cov=True)
+        K1 = self.k1(X, Y, full_cov=True)
+        return K0*K1
+    
+    def Kdiag(self, X, Y=None):
+        K0diag = self.k0(X, Y, full_cov=False)
+        K1diag = self.k1(X, Y, full_cov=False)
+        return K0diag*K1diag
+
+
 class CovICM(Kernel):
     """Intrinsic Coregionalization Kernel
             k(X,Y) = kx(X,Y) ⊗ B
@@ -532,7 +557,7 @@ class LikMultipleNormalKron(Lik):
             raise ValueError(
                 f'LikMultipleNormalKron.output_dim={self.output_dim}'
                 f' not compatible with #data={n}')
-        σ2I = np.kron(self.σ2, np.ones(int(n),))
+        σ2I = np.kron(np.ones(int(n),), self.σ2)
         return σ2I
 
     def predictive_dist(self, μ, Σ, full_cov=True):

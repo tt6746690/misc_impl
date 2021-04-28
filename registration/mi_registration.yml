@@ -1,0 +1,12 @@
+name: mi_registration
+channels:
+    - pytorch
+    - conda-forge
+dependencies:
+    - python=3.7
+    - pytorch::pytorch
+    - pytorch::torchvision
+    # - cudatoolkit=11 # no linux only 
+    - jupyter
+    - nb_conda
+

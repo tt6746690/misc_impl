@@ -1,0 +1,14 @@
+# 
+scipy
+scikit-learn
+scikit-image
+numpy
+tqdm
+pandas
+matplotlib
+jax
+jaxlib
+flax
+tabulate
+pytest
+PyVTK
