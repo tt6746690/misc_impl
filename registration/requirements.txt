@@ -12,3 +12,4 @@ flax
 tabulate
 pytest
 PyVTK
+POT

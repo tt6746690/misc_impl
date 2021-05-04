@@ -5,6 +5,7 @@ warnings.simplefilter("ignore", DeprecationWarning)
 import sys
 sys.path.append('../kernel')
 
+from functools import partial
 import numpy as onp
 
 import jax
@@ -158,8 +159,8 @@ class TestKernel(unittest.TestCase):
 
             key = random.PRNGKey(0)
             X = random.normal(key, (n,d))
-            k = CovICM(kx_cls=CovSE,
-                       kt_kwargs={'output_dim': T, 'rank': 1})
+            kt_cls = partial(CovIndex, output_dim=T, rank=1)
+            k = CovICM(kt_cls=kt_cls)
             params = k.init(key, X)
             k = k.bind(params)
             K = k(X)
@@ -337,7 +338,8 @@ class TestMvnConditional(unittest.TestCase):
         Xs = random.normal(k2, (ns,3))
         y  = random.uniform(k3, (n, T))
 
-        k = CovICM(kt_kwargs={'output_dim': T})
+        kt_cls = partial(CovIndex, output_dim=T)
+        k = CovICM(kt_cls=kt_cls)
         k = k.bind(k.init(key, X))
         mean_fn = MeanConstant(output_dim=T)
         mean_fn = mean_fn.bind({'params': {'c': np.full((T,),.2)}})
@@ -396,7 +398,8 @@ class TestMvnConditional(unittest.TestCase):
             n,m,l = 10,3,5
             key = random.PRNGKey(0)
             X, Xu = random.normal(key, (n,2)), random.normal(key, (m,2))
-            k = CovICM(kt_kwargs={'output_dim':T})
+            kt_cls = partial(CovIndex, output_dim=T)
+            k = CovICM(kt_cls=kt_cls)
             k = k.bind(k.init(key, X))
             mean_fn = MeanConstant(init_val_m=.2, output_dim=T)
             mean_fn = mean_fn.bind(mean_fn.init(key, X))

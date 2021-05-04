@@ -1,5 +1,6 @@
 import math
 from typing import Any, Callable, Sequence, Optional, Tuple, Union, List
+from functools import partial
 from dataclasses import dataclass, field
 
 import jax
@@ -198,16 +199,17 @@ class CovSE(Kernel):
         return np.tile(self.σ2, len(X))
 
 
+
 class CovSEwithEncoder(Kernel):
     # #ard lengthscales
     ard_len: int = 1
     # initialization
     init_val_l: float = 1.
     # encoder
-    g_feature_dims: int = 1
+    g_cls: Callable = partial(nn.Dense, n_features=1)
 
     def setup(self):
-        self.g = nn.Dense(self.g_feature_dims)
+        self.g = self.g_cls()
         self.ℓ = BijSoftplus.forward(self.param(
             'ℓ', lambda k, s: BijSoftplus.reverse(
                 self.init_val_l*np.ones(s, dtype=np.float32)), (self.ard_len,)))
@@ -335,14 +337,12 @@ class CovProduct(Kernel):
             K = K0∘K1
     """
     # k0 & k1
-    k0_cls: Kernel.__class__ = CovSE
-    k0_kwargs: dict = field(default_factory=dict)
-    k1_cls: Kernel.__class__ = CovSE
-    k1_kwargs: dict = field(default_factory=dict)
+    k0_cls: Callable = CovSE
+    k1_cls: Callable = CovSE
     
     def setup(self):
-        self.k0 = self.k0_cls(**self.k0_kwargs)
-        self.k1 = self.k1_cls(**self.k1_kwargs)
+        self.k0 = self.k0_cls()
+        self.k1 = self.k1_cls()
         
     def K(self, X, Y=None):
         K0 = self.k0(X, Y, full_cov=True)
@@ -363,15 +363,13 @@ class CovICM(Kernel):
     https://homepages.inf.ed.ac.uk/ckiw/postscript/multitaskGP_v22.pdf
     """
     # data kernel
-    kx_cls: Kernel.__class__ = CovSE
-    kx_kwargs: dict = field(default_factory=dict)
+    kx_cls: Callable = CovSE
     # task kernel
-    kt_cls: Kernel.__class__ = CovIndex
-    kt_kwargs: dict = field(default_factory=dict)
+    kt_cls: Callable = CovIndex
 
     def setup(self):
-        self.kx = self.kx_cls(**self.kx_kwargs)
-        self.kt = self.kt_cls(**self.kt_kwargs)
+        self.kx = self.kx_cls()
+        self.kt = self.kt_cls()
 
     def K(self, X, Y=None):
         Kx = self.kx(X, Y, full_cov=True)
@@ -393,19 +391,16 @@ class CovICMLearnable(Kernel):
     # number of outputs/tasks
     output_dim: int = 1
     # data kernel
-    kx_cls: Kernel.__class__ = CovSE
-    kx_kwargs: dict = field(default_factory=dict)
+    kx_cls: Callable = CovSE
     # task kernel
-    kt_cls: Kernel.__class__ = CovSE
-    kt_kwargs: dict = field(default_factory=dict)
+    kt_cls: Callable = CovSE
 
     def setup(self):
         if self.mode not in ['diag', 'all']:
             raise ValueError(
                 f'`mode` {self.mode} not allowed')
-        self.kx = self.kx_cls(**self.kx_kwargs)
-        self.kt = [self.kt_cls(**self.kt_kwargs)
-                   for _ in range(self.n_kt())]
+        self.kx = self.kx_cls()
+        self.kt = [self.kt_cls() for _ in range(self.n_kt())]
 
     def n_kt(self):
         if self.mode == 'diag':
@@ -592,13 +587,17 @@ class GPModel(object):
         return μy, σ2y
 
 
+
 class GPR(nn.Module, GPModel):
+    mean_fn_cls: Callable
+    k_cls: Callable
+    lik_cls: Callable
     data: Tuple[np.ndarray, np.ndarray]
 
     def setup(self):
-        self.mean_fn = MeanZero()
-        self.k = CovSE()
-        self.lik = LikNormal()
+        self.mean_fn = self.mean_fn_cls()
+        self.k = self.k_cls()
+        self.lik = self.lik_cls()
 
     def get_init_params(self, key):
         Xs = np.zeros((1, self.data[0].shape[-1]))
@@ -765,24 +764,34 @@ class VFE(nn.Module, GPModel):
         return μ, Σ
 
 
+
 class SVGP(nn.Module, GPModel):
+    mean_fn_cls: Callable
+    k_cls: Callable
+    lik_cls: Callable
     n_data: int
+    output_dim: int
     Xu_initial: np.ndarray
 
     def setup(self):
         self.d = self.Xu_initial.shape[1]
         self.n_inducing = self.Xu_initial.shape[0]
-        self.mean_fn = MeanZero()
-        self.k = CovSE()
-        self.lik = LikNormal()
+        self.mean_fn = self.mean_fn_cls()
+        self.k = self.k_cls()
+        self.lik = self.lik_cls()
         self.Xu = self.param('Xu', lambda k, s: self.Xu_initial,
                              (self.n_inducing, self.d))
-        self.q = VariationalMultivariateNormal(self.n_inducing)
 
-    def get_init_params(self, key, n_tasks=1):
+        # len(Xu)=100, then 400 outputs ...
+        # In https://arxiv.org/pdf/1705.09862.pdf
+        #     variational mvn also parameterized by some kronecker structure !
+        # For now just assume its a large mvn where Σ models both input&output
+        self.q = VariationalMultivariateNormal(self.output_dim*self.n_inducing)
+
+    def get_init_params(self, key):
         n = 1
         Xs = np.ones((n, self.Xu_initial.shape[-1]))
-        ys = np.ones((n, n_tasks))
+        ys = np.ones((n, self.output_dim))
         params = self.init(key, (Xs, ys), method=self.mll)
         return params
 
@@ -1173,6 +1182,28 @@ def kl_mvn_tril_zero_mean_prior(μ0, L0, L1):
     return kl
 
 
+class CNN(nn.Module):
+
+    @nn.compact
+    def __call__(self, x):
+        conv = partial(nn.Conv, kernel_size=(4,4), strides=(2,2))
+        assert(x.shape[1] == 224 and x.shape[2] == 224)
+        x = x.reshape(-1, 224, 224, 1)
+        # (1, 224, 224, 1)
+        x = conv(features=16)(x)
+        x = nn.relu(x)
+        x = conv(features=32)(x)
+        x = nn.relu(x)
+        x = conv(features=64)(x)
+        x = nn.relu(x)
+        x = conv(features=128)(x)
+        x = nn.relu(x)
+        # (1, 14, 14, 128)
+        x = np.mean(x, axis=(1, 2))
+        # (1, 128)
+        return x
+
+
 def cholesky_jitter(K, jitter=1e-5):
     L = linalg.cholesky(jax_add_to_diagonal(K, jitter))
     return L
@@ -1300,6 +1331,8 @@ def pytree_leaves(tree, names):
                 leafs[i] = v
     return leafs
 
+def pytree_check_device(tree):
+    return jax.tree_util.tree_map(lambda x: x.device_buffer.device(), tree)
 
 def flax_get_optimizer(optimizer_name):
     optimizer_cls = getattr(optim, optimizer_name)
