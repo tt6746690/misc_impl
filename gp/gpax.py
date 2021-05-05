@@ -178,6 +178,8 @@ class CovSE(Kernel):
     ard_len: int = 1
     # initialization
     init_val_l: float = 1.
+    # no scaling 
+    output_scaling: bool = True
 
     def setup(self):
         self.ℓ = BijSoftplus.forward(self.param(
@@ -193,11 +195,16 @@ class CovSE(Kernel):
     def K(self, X, Y=None):
         X = self.scale(X)
         Y = self.scale(Y)
-        return self.σ2*np.exp(-sqdist(X, Y)/2)
+        if self.output_scaling:
+            return self.σ2*np.exp(-sqdist(X, Y)/2)
+        else:
+            return np.exp(-sqdist(X, Y)/2)
 
     def Kdiag(self, X, Y=None):
-        return np.tile(self.σ2, len(X))
-
+        if self.output_scaling:
+            return np.tile(self.σ2, len(X))
+        else:
+            return np.tile(np.array([1.]), len(X))
 
 
 class CovSEwithEncoder(Kernel):
@@ -331,6 +338,34 @@ class CovIndexSpherical(Kernel):
         X = np.asarray(X, np.int32).squeeze()
         return np.take(Bdiag, X)
 
+
+class CovAdd1(Kernel):
+    """Order 1 additive kernel
+            k(x,y) = Σᵢ kᵢ(xᵢ,yᵢ)
+    """
+    # base kernel
+    k_cls: Callable = partial(CovSE, output_scaling=False)
+
+    def setup(self):
+        s, cvt = slice_to_array(self.active_dims)
+        if not cvt:
+            raise ValueError(
+                "CovAdditive1.active_dims must be convertible to array")
+        # `active_dims` for children kernel should start from 0
+        #     since `__call__` has inputs that are pre-sliced
+        self.ks = [self.k_cls(active_dims=[d]) for d in range(len(s))]
+        
+    def K(self, X, Y=None):
+        K = None
+        for i, k in enumerate(self.ks):
+            Ki = k(X, Y, full_cov=True)
+            K = Ki if (K is None) else jax.ops.index_update(K, jax.ops.index[:,:], K+Ki)
+        return K
+    
+    def Kdiag(self, X, Y=None):
+        Ks = [k(X, Y, full_cov=False) for k in self.ks]
+        return np.sum(np.stack(Ks), axis=0)
+        
 
 class CovProduct(Kernel):
     """Hadamard product of two kernel matrices
@@ -1331,8 +1366,10 @@ def pytree_leaves(tree, names):
                 leafs[i] = v
     return leafs
 
+
 def pytree_check_device(tree):
     return jax.tree_util.tree_map(lambda x: x.device_buffer.device(), tree)
+
 
 def flax_get_optimizer(optimizer_name):
     optimizer_cls = getattr(optim, optimizer_name)
