@@ -16,21 +16,16 @@ def sinkhorn_normalized(x, y, epsilon, n, niter):
     return 2 * Wxy - Wxx - Wyy
 
 
-def sinkhorn_loss(x, y, epsilon, n, niter):
+def sinkhorn_loss(mu, nu, C, epsilon, n, niter):
     """
     Given two emprical measures with n points each with locations x and y
     outputs an approximation of the OT cost with regularization parameter epsilon
     niter is the max. number of steps in sinkhorn loop
     """
 
-    # The Sinkhorn algorithm takes as input three variables :
-    C = Variable(cost_matrix(x, y))  # Wasserstein cost function
-
     # both marginals are fixed with equal weights
     # mu = Variable(1. / n * torch.cuda.FloatTensor(n).fill_(1), requires_grad=False)
     # nu = Variable(1. / n * torch.cuda.FloatTensor(n).fill_(1), requires_grad=False)
-    mu = Variable(1. / n * torch.FloatTensor(n).fill_(1), requires_grad=False)
-    nu = Variable(1. / n * torch.FloatTensor(n).fill_(1), requires_grad=False)
 
     # Parameters of the Sinkhorn algorithm.
     rho = 1  # (.5) **2          # unbalanced transport
@@ -73,6 +68,8 @@ def sinkhorn_loss(x, y, epsilon, n, niter):
     cost = torch.sum(pi * C)  # Sinkhorn cost
 
     return pi, cost
+
+
 
 
 def cost_matrix(x, y, p=2):

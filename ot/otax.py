@@ -1,8 +1,8 @@
-
 from functools import partial
 
 import jax
 import jax.numpy as np
+from jax.scipy.special import logsumexp
 
 
 @partial(jax.jit, static_argnums=(4,))
@@ -12,34 +12,45 @@ def sinkhorn_knopp(a, b, C, ϵ, n_iters):
         Reference
             - https://arxiv.org/pdf/1306.0895.pdf
     """
-    if (np.sum(a) != 1) or (np.sum(b) != 1):
-        raise ValueError('α, β must lie in simplex')
 
     n, m = C.shape
     a = np.reshape(a, (n, -1))
     b = np.reshape(b, (m, -1))
-    u = np.ones((n,1))/n
-    v = np.ones((m,1))/m
     K = np.exp(-C/ϵ)
 
-    for it in range(n_iters):
-        u = a/(K@v)
+    def body_fn(i, val):
+        u, v = val
+        u = a/(K  @v)
         v = b/(K.T@u)
+        return u, v
+    
+    init_val = (np.ones((n,1))/n, np.ones((m,1))/m)
+    u, v = jax.lax.fori_loop(0, n_iters, body_fn, init_val)
 
     P = u*K*v.flatten()
-    cost = np.sum(P*C)
 
-    return u,v,cost,P
+    return P
 
 
-def lse(x, axis=None, keepdims=False):
-    """y = c + logΣᵢexp(xᵢ-c) where c = max(x) 
-        Reference
-            - https://github.com/scipy/scipy/blob/v1.6.3/scipy/special/_logsumexp.py#L7-L127
-    """
-    c = np.amax(x, axis=axis, keepdims=True)
-    y = np.log(np.sum(np.exp(x - c), axis=axis, keepdims=keepdims))
-    if not keepdims: c = np.squeeze(c, axis=axis)
-    y += c
-    return y
+@partial(jax.jit, static_argnums=(3,4,))
+def sinkhorn_log_stabilized(a, b, C, ϵ, n_iters):
 
+    n, m = C.shape
+    a = a.flatten()
+    b = b.flatten()
+
+    def S(f, g):
+        """ Sᵢⱼ = Cᵢⱼ - fᵢ - gⱼ """
+        return (C - np.expand_dims(f, 1) - np.expand_dims(g, 0))
+    
+    def body_fn(i, val):
+        f, g = val
+        f = -ϵ*logsumexp(-S(f,g)/ϵ, axis=1) + f + ϵ*np.log(a)
+        g = -ϵ*logsumexp(-S(f,g)/ϵ, axis=0) + g + ϵ*np.log(b)
+        return f, g
+    
+    init_val = (np.ones((n,))/n, np.ones((m,))/m)
+    f, g = jax.lax.fori_loop(0, n_iters, body_fn, init_val)
+
+    P = np.exp(-S(f, g)/ϵ)
+    return P

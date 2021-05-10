@@ -24,7 +24,7 @@ from otax import *
 
 n = 100
 
-x = np.arange(n)
+x = np.arange(n, dtype=np.float32)
 a = np.asarray(make_1D_gauss(n, m=20, s=5)+make_1D_gauss(n,m=50,s=10))
 b = np.asarray(make_1D_gauss(n, m=60, s=10))
 a = a/np.sum(a)
@@ -48,11 +48,11 @@ ax.set_title('histograms')
 ax.legend(fontsize=20)
 
 
-for i, ϵ in enumerate([.1,.03,.01]):
+for i, ϵ in enumerate([.1,.01,.001]):
     ax = axs[i+1]
-    _,_,cost,P = sinkhorn_knopp(a, b, C, ϵ, 100)
+    P = sinkhorn_log_stabilized(a, b, C, ϵ, 100)
     ax.imshow(P)
-    ax.set_title('P ($\epsilon$'+f'={ϵ})')
+    ax.set_title('$\epsilon$'+f'={ϵ}, C={np.sum(P*C):.3f}')
     
 
 fig.tight_layout()
