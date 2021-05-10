@@ -122,6 +122,20 @@ class TestLikelihoods(unittest.TestCase):
 
 class TestKernel(unittest.TestCase):
 
+    def test_CovLin(self):
+        key = random.PRNGKey(0)
+        X = random.normal(key, (3,10))
+        Y = random.normal(key, (3,10))+2
+
+        k = CovLin(ard_len=1)
+        k = k.bind(k.init(key, X))
+
+        diagK = np.diag(k(X))
+        Kdiag = k(X, full_cov=False)
+        Kdiag_agrees = np.allclose(diagK, Kdiag)
+        self.assertTrue(Kdiag_agrees)
+
+
     def test_CovIndex(self):
         for d in [1,3]: # active_dims
             for i in range(2):

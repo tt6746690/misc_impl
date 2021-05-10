@@ -173,6 +173,26 @@ class Kernel(nn.Module):
                     f'ardℓ {ℓ} does not match with active_dims={s}')
 
 
+class CovLin(Kernel):
+    """Linear kernel k(x,y) = σ2xy"""
+    # #ard σ2
+    ard_len: int = 1
+    
+    def setup(self):
+        self.σ2 = BijSoftplus.forward(self.param(
+            'σ2', lambda k, s: BijSoftplus.reverse(
+                1.*np.ones(s, dtype=np.float32)), (self.ard_len,)))
+        self.check_ard_dims(self.σ2)
+        
+    def K(self, X, Y=None):
+        if Y is None:
+            Y = X
+        return (X*self.σ2)@Y.T
+    
+    def Kdiag(self, X, Y=None):
+        return np.sum(np.square(X)*self.σ2, axis=1)
+
+
 class CovSE(Kernel):
     # #ard lengthscales
     ard_len: int = 1
