@@ -1,0 +1,89 @@
+\documentclass[11pt]{article}
+\input{../../preamble_local.tex}
+\addbibresource{optimal_transport}
+
+\begin{document}
+
+\section{Optimal Transport}
+
+The following summarizes some chapters of computational optimal transport book \cite{peyreComputationalOptimalTransport2020}.
+
+\subsection{Monge's and Kantorovich's formulation}
+
+Given $a,b \in \triangle^{n-1}$, where $\triangle^{n-1}$ is unit simplex. $\alpha = \sum_{i=1}^n a_i \delta_{x_i}, \beta = \sum_{j=1}^m b_j \delta_{y_i}$ are discrete measures. The optimal transport problem tries to find a map that associate each point $x_i$ to a single point $y_j$ such that masses are preserved. This corresponds to classical Monge's formulation of optimal transport
+\begin{align}
+    \min_{T:\sX\to\sY}\,
+        &\sum_{i=1}^n c(x_i, T(x_i)) \\
+    \text{s.t.}\,
+        &T_{\#}\alpha = \beta
+\end{align}
+where $c:\sX\times\sY \to\R$ is cost defined over support of measures, and that the constraints is simply that $T$ is constrained to be a pushforward from $\alpha$ to $\beta$. The problem with Monge's formulation is that the problem is combinatorial and nonconvex, so hard to solve. Kantorovich relax the deterministic nature of transport map, allowing mass at each source point split and be dispatched to multiple target points. This information is encoded in $P\in\R^{n\times m}_+$, where $P_{ij}$ describes amount of mass flowing from $x_i$ to $y_j$. The Kantorovich formulation of optimal transport for discrete measures is then
+\begin{align}
+    \min_{P\in\R^{n\times m}_+}\,
+        &\inner{C}{P} \\
+    \text{s.t.}\,
+        &P1_m = a,\, P^T1_n = b
+\end{align}
+where the constraints specifies the set of admissible transport map to be a coupling of marginals $\alpha,\beta$ and $C\in\R^{n\times m}$ is the cost matrix, i.e. $C_{ij} = c(x_i,y_j)$. The optimization problem is a linear program and hence can be easily solved using simplex algorithm. In addition, we can instead solve the dual problem, and because of zero duality gap, equivalently solves the primal problem,
+\begin{align}
+    \max_{f,g\in\R^n\times\R^m}\,
+        &\inner{f}{a} + \inner{g}{b} \\
+    \text{s.t.}\,
+        &f_i+g_j \leq C_{ij} \quad \forall i,j
+\end{align}
+where $f,g$ are called dual potential.
+
+\subsection{Entropic Regularization}
+
+Regularizing the original optimal transport problem brings computational and statistical benefits. In particular, the optimization problem can now be solved with fast matrix scaling algorithms that scales with strength of regularization. In addition, the sample efficiency for regularized problem is also superior. The entropy of coupling between two 1 dimensional discrete measure is given by
+\begin{align}
+    H(P)
+        = -\sum_{i,j} P_{ij}(\log(P_{ij})-1)
+        = - \inner{P}{\log P} + 1^TP1
+\end{align}
+where taking logarithm and subtraction are elementwise operations. The entropic regularized problem
+\begin{align}
+    \min_{P\in\R^{n\times m}_+:P1_m=a,P^T1_n=b}\,
+        &\inner{P}{C} + \epsilon H(P)
+\end{align}
+We can interpret primal objective as the information projection of the Gibbs kernel $K\in\R^{n\times m}$ where $K_{ij}=e^{\frac{C_{ij}}{\epsilon}}$ onto the admissible couplings $U(a,b)=\pc{P\in\R^{n\times m}_+\mid P1_m=a,\, P^T1_n=b}$.
+\begin{align}
+    \inner{P}{C} - \epsilon\inner{P}{\log P)} + \epsilon 1^T P 1
+        = \epsilon \inner{P}{\log\left(P \oslash e^{-C/\epsilon} \right)} - \epsilon 1^TP1 + \epsilon 1^TK1
+        = \epsilon \text{KL}(P\Vert K)
+\end{align}
+We can solve regularized optimal transport problem with Sinkhorn algorithm \cite{cuturiSinkhornDistancesLightspeed2013}. The basic idea is to write the 1st order optimality condition for the primal variables for the Lagrangian,
+\begin{align}
+    \sL(P,f,g)
+        &= \inner{P}{C} - \epsilon H(P) - \inner{f}{P1_m-a}- \inner{g}{P^T1_n-b} \\
+    \frac{\partial \sL(P,f,g)}{\partial P_{ij}}
+        &= C_{ij} + \epsilon \log(P_{ij}) - f_i - g_j = 0
+        \quad\Rightarrow\quad
+        P_{ij} = e^{(-C_{ij}+f_i+g_j)/\epsilon}
+\end{align}
+Note optimal $P$ can be written as scaling of Gibbs kernel row-wise by $u=\log(f)$ and column-wise by $v=\log(g)$, i.e. $P=\diag(u)K \diag(v)$. Substitute expression for $P$ into marginal constraints, get $a = \diag{u} K \diag{v} 1_m = u\odot (Kv)$ and $b = v\odot (K^T u)$. The Sinkhorn's algorithm updates $u,v$ alternatingly
+\begin{align}
+    u^{\ell+1} 
+        \rightarrow a \oslash (Kv^{\ell}) 
+    \quad\quad
+    v^{\ell+1}
+        \rightarrow b \oslash (K^Tu^{\ell+1})
+\end{align}
+Each iteration of the algorithm uses $\sO(nm)$ computation for matrix-vector products and can be accelerated to $\sO(n\log n)$ using convolution if suppport is over gridded space. See Figure (\ref{fig:plt_sinkhorn_vary_epsilon}) to visualize effect of varying the regularization strength.
+
+\begin{center} 
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{assets/plt_sinkhorn_vary_epsilon} 
+    \caption{Entropic regularized optimal transport wrt 1d histograms}
+    \label{fig:plt_sinkhorn_vary_epsilon}
+\end{figure}
+\end{center} 
+ 
+
+\newpage
+\printbibliography 
+
+
+
+
+\end{document}
