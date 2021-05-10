@@ -72,7 +72,7 @@ def sinkhorn_loss(x, y, epsilon, n, niter):
     pi = torch.exp(M(U, V))  # Transport plan pi = diag(a)*K*diag(b)
     cost = torch.sum(pi * C)  # Sinkhorn cost
 
-    return cost
+    return pi, cost
 
 
 def cost_matrix(x, y, p=2):

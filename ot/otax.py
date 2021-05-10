@@ -12,6 +12,9 @@ def sinkhorn_knopp(a, b, C, ϵ, n_iters):
         Reference
             - https://arxiv.org/pdf/1306.0895.pdf
     """
+    if (np.sum(a) != 1) or (np.sum(b) != 1):
+        raise ValueError('α, β must lie in simplex')
+
     n, m = C.shape
     a = np.reshape(a, (n, -1))
     b = np.reshape(b, (m, -1))
@@ -27,3 +30,16 @@ def sinkhorn_knopp(a, b, C, ϵ, n_iters):
     cost = np.sum(P*C)
 
     return u,v,cost,P
+
+
+def lse(x, axis=None, keepdims=False):
+    """y = c + logΣᵢexp(xᵢ-c) where c = max(x) 
+        Reference
+            - https://github.com/scipy/scipy/blob/v1.6.3/scipy/special/_logsumexp.py#L7-L127
+    """
+    c = np.amax(x, axis=axis, keepdims=True)
+    y = np.log(np.sum(np.exp(x - c), axis=axis, keepdims=keepdims))
+    if not keepdims: c = np.squeeze(c, axis=axis)
+    y += c
+    return y
+

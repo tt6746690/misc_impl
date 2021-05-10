@@ -12,24 +12,18 @@ The following summarizes some chapters of computational optimal transport book \
 
 Given $a,b \in \triangle^{n-1}$, where $\triangle^{n-1}$ is unit simplex. $\alpha = \sum_{i=1}^n a_i \delta_{x_i}, \beta = \sum_{j=1}^m b_j \delta_{y_i}$ are discrete measures. The optimal transport problem tries to find a map that associate each point $x_i$ to a single point $y_j$ such that masses are preserved. This corresponds to classical Monge's formulation of optimal transport
 \begin{align}
-    \min_{T:\sX\to\sY}\,
-        &\sum_{i=1}^n c(x_i, T(x_i)) \\
-    \text{s.t.}\,
-        &T_{\#}\alpha = \beta
+    \min_{T:\sX\to\sY: T_{\#}\alpha = \beta}\,
+        &\sum_{i=1}^n c(x_i, T(x_i))
 \end{align}
 where $c:\sX\times\sY \to\R$ is cost defined over support of measures, and that the constraints is simply that $T$ is constrained to be a pushforward from $\alpha$ to $\beta$. The problem with Monge's formulation is that the problem is combinatorial and nonconvex, so hard to solve. Kantorovich relax the deterministic nature of transport map, allowing mass at each source point split and be dispatched to multiple target points. This information is encoded in $P\in\R^{n\times m}_+$, where $P_{ij}$ describes amount of mass flowing from $x_i$ to $y_j$. The Kantorovich formulation of optimal transport for discrete measures is then
 \begin{align}
-    \min_{P\in\R^{n\times m}_+}\,
-        &\inner{C}{P} \\
-    \text{s.t.}\,
-        &P1_m = a,\, P^T1_n = b
+    \min_{P\in\R^{n\times m}_+: P1_m = a,\, P^T1_n = b}\,
+        &\inner{C}{P}
 \end{align}
 where the constraints specifies the set of admissible transport map to be a coupling of marginals $\alpha,\beta$ and $C\in\R^{n\times m}$ is the cost matrix, i.e. $C_{ij} = c(x_i,y_j)$. The optimization problem is a linear program and hence can be easily solved using simplex algorithm. In addition, we can instead solve the dual problem, and because of zero duality gap, equivalently solves the primal problem,
 \begin{align}
-    \max_{f,g\in\R^n\times\R^m}\,
-        &\inner{f}{a} + \inner{g}{b} \\
-    \text{s.t.}\,
-        &f_i+g_j \leq C_{ij} \quad \forall i,j
+    \max_{f,g\in\R^n\times\R^m: f_i+g_j \leq C_{ij}}\,
+        &\inner{f}{a} + \inner{g}{b} 
 \end{align}
 where $f,g$ are called dual potential.
 
@@ -45,6 +39,7 @@ where taking logarithm and subtraction are elementwise operations. The entropic 
 \begin{align}
     \min_{P\in\R^{n\times m}_+:P1_m=a,P^T1_n=b}\,
         &\inner{P}{C} + \epsilon H(P)
+    \label{eq:opt_entropic_regularized_ot}
 \end{align}
 We can interpret primal objective as the information projection of the Gibbs kernel $K\in\R^{n\times m}$ where $K_{ij}=e^{\frac{C_{ij}}{\epsilon}}$ onto the admissible couplings $U(a,b)=\pc{P\in\R^{n\times m}_+\mid P1_m=a,\, P^T1_n=b}$.
 \begin{align}
@@ -61,13 +56,13 @@ We can solve regularized optimal transport problem with Sinkhorn algorithm \cite
         \quad\Rightarrow\quad
         P_{ij} = e^{(-C_{ij}+f_i+g_j)/\epsilon}
 \end{align}
-Note optimal $P$ can be written as scaling of Gibbs kernel row-wise by $u=\log(f)$ and column-wise by $v=\log(g)$, i.e. $P=\diag(u)K \diag(v)$. Substitute expression for $P$ into marginal constraints, get $a = \diag{u} K \diag{v} 1_m = u\odot (Kv)$ and $b = v\odot (K^T u)$. The Sinkhorn's algorithm updates $u,v$ alternatingly
+Note optimal $P$ can be written as scaling of Gibbs kernel row-wise by $u=\log(f)$ and column-wise by $v=\log(g)$, i.e. $P=\diag(u)K \diag(v)$. Substitute expression for $P$ into marginal constraints, get $a = \diag(u) K \diag(v) 1_m = u\odot (Kv)$ and $b = v\odot (K^T u)$. The Sinkhorn's algorithm updates $u,v$ alternatingly
 \begin{align}
-    u^{\ell+1} 
-        \rightarrow a \oslash (Kv^{\ell}) 
+    u^{(\ell+1)} 
+        \leftarrow a \oslash (Kv^{(\ell)}) 
     \quad\quad
-    v^{\ell+1}
-        \rightarrow b \oslash (K^Tu^{\ell+1})
+    v^{(\ell+1)}
+        \leftarrow b \oslash (K^Tu^{(\ell+1)})
 \end{align}
 Each iteration of the algorithm uses $\sO(nm)$ computation for matrix-vector products and can be accelerated to $\sO(n\log n)$ using convolution if suppport is over gridded space. See Figure (\ref{fig:plt_sinkhorn_vary_epsilon}) to visualize effect of varying the regularization strength.
 
@@ -78,6 +73,29 @@ Each iteration of the algorithm uses $\sO(nm)$ computation for matrix-vector pro
     \label{fig:plt_sinkhorn_vary_epsilon}
 \end{figure}
 \end{center} 
+
+Sinkhorn's iteration can be numerically unstable as $\epsilon\to 0$ due to small values in $K$, resulting in null values during division by zero. One solution is to perform computation of $u,v$ in the log-domain. This is equivalent to block coordinate ascent on the dual of entropic regularized optimal transport problem (\ref{eq:opt_entropic_regularized_ot}),
+\begin{align}
+    \max_{f,g\in\R^{n\times m}} \inner{f}{a} + \inner{g}{b} - \epsilon\inner{e^{f/\epsilon}}{Ke^{g/\epsilon}}
+\end{align}
+Then $0 = \partial L_{\text{dual}}(f,g)/\partial f = a - e^{f/\epsilon} \odot (Ke^{g/\epsilon})$ implies $f = \epsilon \log(a) - \epsilon \log(Ke^{g/\epsilon})$ and similarly for $g$. So,
+\begin{align}
+    f^{(\ell+1)}
+        \leftarrow \epsilon \log(a) - \epsilon\log(Ke^{g^{(\ell)}/\epsilon})
+    \quad\quad
+    g^{(\ell+1)}
+        \leftarrow \epsilon \log(b) - \epsilon\log(Ke^{f^{(\ell+1)}/\epsilon})
+    \label{eq:sinkhorn_dual_ascent}
+\end{align}
+This is equivalent to Sinkhorn's iteration in log domain. Additionally, we can define a numerically stable softmin operator based on log-sum-exp, $\text{softmin}_{\epsilon}(z) = - \epsilon \log \sum_{i} e^{-z_i/\epsilon} = -\epsilon \text{LSE}(-z/\epsilon)$. Note $f_i = \epsilon \log a_i - \epsilon \log \sum_j e^{-(C_{ij}-g_j)/\epsilon} =\text{softmin}_{\epsilon}(C_{ij}-f_i-g_j) + f_i +  \epsilon \log a_i$. Therefore, (\ref{eq:sinkhorn_dual_ascent}) can be equivalently written as,
+\begin{align}
+    f^{(\ell+1)}
+        &\leftarrow \text{softmin}_{\epsilon} (S(f^{(\ell)}, g^{(\ell)})) + f^{(\ell)} + \epsilon \log(a) \\ 
+    g^{(\ell+1)}
+        &\leftarrow \text{softmin}_{\epsilon} (S(f^{(\ell+1)}, g^{(\ell)})) + g^{(\ell)} + \epsilon \log(b)
+    \label{eq:sinkhorn_dual_ascent2}
+\end{align}
+where $S(f,g)_{ij} = C_{ij}-f_i-g_j$.
  
 
 \newpage
