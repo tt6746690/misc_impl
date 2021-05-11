@@ -34,7 +34,7 @@ def sinkhorn_knopp(a, b, C, ϵ, ρ, n_iters):
 
 
 def sinkhorn_log_stabilized(a, b, C, ϵ, ρ, n_iters):
-    """ Sinkhorn iteration for (unbalanced) transport in log domain
+    """ Sinkhorn iteration for entropic regularized transport in log domain
 
         Reference
             - Stabilized Sparse Scaling Algorithms for Entropic Regularized OT
@@ -42,8 +42,10 @@ def sinkhorn_log_stabilized(a, b, C, ϵ, ρ, n_iters):
             - Learning with Wasserstein Loss
                 https://arxiv.org/pdf/1506.05439.pdf
 
+        ϵ   Coefficient to entropy term,
+            Smaller values of ϵ yield sparser transport plan and slower convergence
         ρ   Coefficient to soft marginal regularization term,
-            Use ρ = 1e5 balanced optimal transport
+            Use a large ρ, e.g. ρ = 1e5, for balanced optimal transport
     """
 
     n, m = C.shape

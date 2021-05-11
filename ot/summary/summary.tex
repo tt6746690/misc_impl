@@ -4,11 +4,9 @@
 
 \begin{document}
 
-\section{Optimal Transport}
-
 The following summarizes some chapters of computational optimal transport book \cite{peyreComputationalOptimalTransport2020}.
 
-\subsection{Monge's and Kantorovich's formulation}
+\section{Monge's and Kantorovich's formulation}
 
 Given $a,b \in \triangle^{n-1}$, where $\triangle^{n-1}$ is unit simplex. $\alpha = \sum_{i=1}^n a_i \delta_{x_i}, \beta = \sum_{j=1}^m b_j \delta_{y_i}$ are discrete measures. The optimal transport problem tries to find a map that associate each point $x_i$ to a single point $y_j$ such that masses are preserved. This corresponds to classical Monge's formulation of optimal transport
 \begin{align}
@@ -27,7 +25,7 @@ where the constraints specifies the set of admissible transport map to be a coup
 \end{align}
 where $f,g$ are called dual potential.
 
-\subsection{Entropic Regularization}
+\section{Entropic Regularization}
 
 Regularizing the original optimal transport problem brings computational and statistical benefits. In particular, the optimization problem can now be solved with fast matrix scaling algorithms that scales with strength of regularization. In addition, the sample efficiency for regularized problem is also superior. The entropy of coupling between two 1 dimensional discrete measure is given by
 \begin{align}
@@ -47,6 +45,9 @@ We can interpret primal objective as the information projection of the Gibbs ker
         = \epsilon \inner{P}{\log\left(P \oslash e^{-C/\epsilon} \right)} - \epsilon 1^TP1 + \epsilon 1^TK1
         = \epsilon \text{KL}(P\Vert K)
 \end{align}
+
+\subsection{Sinkhorn's Algorithm}
+
 We can solve regularized optimal transport problem with Sinkhorn algorithm \cite{cuturiSinkhornDistancesLightspeed2013}. The basic idea is to write the 1st order optimality condition for the primal variables for the Lagrangian,
 \begin{align}
     \sL(P,f,g)
@@ -73,6 +74,8 @@ Each iteration of the algorithm uses $\sO(nm)$ computation for matrix-vector pro
     \label{fig:plt_sinkhorn_vary_epsilon}
 \end{figure}
 \end{center} 
+
+\subsection{Log-domain Stabilization}
 
 Sinkhorn's iteration can be numerically unstable as $\epsilon\to 0$ due zeros in $K$, resulting in null values during division by zero. One solution is to perform computation of $u,v$ in the log-domain \cite{chizatScalingAlgorithmsUnbalanced2017, schmitzerStabilizedSparseScaling2019}. This is equivalent to block coordinate ascent on the dual of entropic regularized optimal transport problem (\ref{eq:opt_entropic_regularized_ot}),
 \begin{align}
@@ -104,11 +107,17 @@ where $S(f,g)_{ij} = C_{ij}-f_i-g_j$. Figure (\ref{fig:plt_sinkhorn_vary_epsilon
     \label{fig:plt_gradientflow1d}
 \end{figure}
 \end{center} 
+
+
+\subsection{Minimum Kantorovich Estimator}
+
+
+
  
 
-\subsection{Unbalanced Transport}
+\section{Unbalanced Transport}
 
-We can extend optimal transport to general measures by enforcing soft constraints on the coupling \cite{chizatScalingAlgorithmsUnbalanced2017},
+Previously, optimal transprot problem requires $\alpha,\beta$ to have equal mass. This becomes a problem in applications when either the measures are noisy or when preservation of mass is not desirable. We can relax hard marginal constraints with soft penalty that measures deviation from exact coupling using some divergence, e.g. KL-divergence \cite{chizatScalingAlgorithmsUnbalanced2017},
 \begin{align}
     \min_{P\in\R^{n\times m}_+}\, 
         \inner{P}{C} + \epsilon H(P) + \rho \text{KL}(P1_m \Vert a) + \rho \text{KL}(P^T 1_m \Vert b)
