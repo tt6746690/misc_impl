@@ -51,12 +51,12 @@ We can solve regularized optimal transport problem with Sinkhorn algorithm \cite
 \begin{align}
     \sL(P,f,g)
         &= \inner{P}{C} - \epsilon H(P) - \inner{f}{P1_m-a}- \inner{g}{P^T1_n-b} \\
-    \frac{\partial \sL(P,f,g)}{\partial P_{ij}}
+    \partial \sL(P,f,g)/\partial P_{ij}
         &= C_{ij} + \epsilon \log(P_{ij}) - f_i - g_j = 0
         \quad\Rightarrow\quad
         P_{ij} = e^{(-C_{ij}+f_i+g_j)/\epsilon}
 \end{align}
-Note optimal $P$ can be written as scaling of Gibbs kernel row-wise by $u=\log(f)$ and column-wise by $v=\log(g)$, i.e. $P=\diag(u)K \diag(v)$. Substitute expression for $P$ into marginal constraints, get $a = \diag(u) K \diag(v) 1_m = u\odot (Kv)$ and $b = v\odot (K^T u)$. The Sinkhorn's algorithm updates $u,v$ alternatingly
+Note optimal $P$ can be written as scaling of Gibbs kernel row-wise by $u=e^{f/\epsilon}$ and column-wise by $v=e^{g/\epsilon}$, i.e. $P=\diag(u)K \diag(v)$. Substitute expression for $P$ into marginal constraints, get $a = \diag(u) K \diag(v) 1_m = u\odot (Kv)$ and $b = v\odot (K^T u)$. The Sinkhorn's algorithm updates $u,v$ alternatingly
 \begin{align}
     u^{(\ell+1)} 
         \leftarrow a \oslash (Kv^{(\ell)}) 
@@ -74,7 +74,7 @@ Each iteration of the algorithm uses $\sO(nm)$ computation for matrix-vector pro
 \end{figure}
 \end{center} 
 
-Sinkhorn's iteration can be numerically unstable as $\epsilon\to 0$ due to small values in $K$, resulting in null values during division by zero. One solution is to perform computation of $u,v$ in the log-domain. This is equivalent to block coordinate ascent on the dual of entropic regularized optimal transport problem (\ref{eq:opt_entropic_regularized_ot}),
+Sinkhorn's iteration can be numerically unstable as $\epsilon\to 0$ due zeros in $K$, resulting in null values during division by zero. One solution is to perform computation of $u,v$ in the log-domain \cite{chizatScalingAlgorithmsUnbalanced2017, schmitzerStabilizedSparseScaling2019}. This is equivalent to block coordinate ascent on the dual of entropic regularized optimal transport problem (\ref{eq:opt_entropic_regularized_ot}),
 \begin{align}
     \max_{f,g\in\R^{n\times m}} \inner{f}{a} + \inner{g}{b} - \epsilon\inner{e^{f/\epsilon}}{Ke^{g/\epsilon}}
 \end{align}
@@ -95,8 +95,24 @@ This is equivalent to Sinkhorn's iteration in log domain. Additionally, we can d
         &\leftarrow \text{softmin}_{\epsilon} (S(f^{(\ell+1)}, g^{(\ell)})) + g^{(\ell)} + \epsilon \log(b)
     \label{eq:sinkhorn_dual_ascent2}
 \end{align}
-where $S(f,g)_{ij} = C_{ij}-f_i-g_j$.
+where $S(f,g)_{ij} = C_{ij}-f_i-g_j$. Figure (\ref{fig:plt_sinkhorn_vary_epsilon}) is computed using log domain stabilization, where choice of $\epsilon=.001$ would yield null values without log domain stabilization.
  
+
+\subsection{Unbalanced Transport}
+
+We can extend optimal transport to general measures by enforcing soft constraints on the coupling \cite{chizatScalingAlgorithmsUnbalanced2017},
+\begin{align}
+    \min_{P\in\R^{n\times m}_+}\, 
+        \inner{P}{C} + \epsilon H(P) + \rho \text{KL}(P1_m \Vert a) + \rho \text{KL}(P^T 1_m \Vert b)
+\end{align}
+Similar to balanced case, we can show that optimal coupling is again a scaling of $K$, i.e. $P = \diag(u) K \diag(v)$ where $u = (a \oslash (Kv))^{\lambda}$ and $v = (b \oslash (K^T u))^{\lambda}$ where $\lambda = \frac{\rho}{\rho + \epsilon}$ \cite{frognerLearningWassersteinLoss2015}. We can derive a similar Sinkhorn iteration in the log domain for unbalanced case.
+
+
+
+
+
+
+
 
 \newpage
 \printbibliography 

@@ -23,15 +23,19 @@ from otax import *
 # https://pythonot.github.io/auto_examples/plot_OT_1D.html
 
 n = 100
+loss = 'sinkhorn' # [sinkhorn_divergence, sinkhorn]
 
 x = np.arange(n, dtype=np.float32)
-a = np.asarray(make_1D_gauss(n, m=20, s=5)+make_1D_gauss(n,m=50,s=10))
-b = np.asarray(make_1D_gauss(n, m=60, s=10))
-a = a/np.sum(a)
+a = np.asarray(make_1D_gauss(n, m=20, s=5)+make_1D_gauss(n,m=50,s=10))*1.2
+b = np.asarray(make_1D_gauss(n, m=60, s=10))*.05
 b = b/np.sum(b)
 
-C = sqdist(x)
-C = C / C.max()
+def c(x, y):
+    C = sqdist(x, y)
+    C = C / C.max()
+    return C
+
+C = c(x, x)
 
 
 ## Plotting
@@ -50,11 +54,18 @@ ax.legend(fontsize=20)
 
 for i, ϵ in enumerate([.1,.01,.001]):
     ax = axs[i+1]
-    P = sinkhorn_log_stabilized(a, b, C, ϵ, 100)
+    if loss == 'sinkhorn_divergence':
+        sink = partial(sinkhorn_log_stabilized, ϵ=ϵ, ρ=100, n_iters=100)
+        sinkdiv = jax.jit(sinkhorn_divergence, static_argnums=(4, 5,))
+        P, Lab = sinkdiv(a, b, x, x, c, sink)
+    else:
+        sink = partial(sinkhorn_log_stabilized, ϵ=ϵ, ρ=100, n_iters=100)
+        P, Lab = sink(a, b, C)
     ax.imshow(P)
-    ax.set_title('$\epsilon$'+f'={ϵ}, C={np.sum(P*C):.3f}')
+    ax.set_title('$\epsilon$'+f'={ϵ}, C={Lab:.3f}')
     
 
 fig.tight_layout()
 plt_savefig(fig, 'summary/assets/plt_sinkhorn_vary_epsilon.png')
     
+

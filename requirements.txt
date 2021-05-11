@@ -16,3 +16,5 @@ tabulate
 pytest
 cython
 POT
+geomloss
+pykeops
