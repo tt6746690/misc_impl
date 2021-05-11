@@ -97,6 +97,14 @@ This is equivalent to Sinkhorn's iteration in log domain. Additionally, we can d
 \end{align}
 where $S(f,g)_{ij} = C_{ij}-f_i-g_j$. Figure (\ref{fig:plt_sinkhorn_vary_epsilon}) is computed using log domain stabilization, where choice of $\epsilon=.001$ would yield null values without log domain stabilization.
  
+\begin{center} 
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{assets/plt_gradientflow1d} 
+    \caption{Gradient flow of Sinkhorn divergence wrt support $x$}
+    \label{fig:plt_gradientflow1d}
+\end{figure}
+\end{center} 
+ 
 
 \subsection{Unbalanced Transport}
 

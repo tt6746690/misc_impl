@@ -9,7 +9,8 @@ def sinkhorn_knopp(a, b, C, ϵ, ρ, n_iters):
     """Matrix scaling for entropic regularized optimal transport
 
         Reference
-            - https://arxiv.org/pdf/1306.0895.pdf
+            - Sinkhorn Distances: Lightspeed Computations of Optimal Transport Distances
+                https://arxiv.org/pdf/1306.0895.pdf
     """
 
     n, m = C.shape
@@ -36,9 +37,13 @@ def sinkhorn_log_stabilized(a, b, C, ϵ, ρ, n_iters):
     """ Sinkhorn iteration for (unbalanced) transport in log domain
 
         Reference
-            - https://arxiv.org/pdf/1610.06519.pdf
-            - https://arxiv.org/pdf/1506.05439.pdf
-                Learning with Wasserstein Loss
+            - Stabilized Sparse Scaling Algorithms for Entropic Regularized OT
+                https://arxiv.org/pdf/1610.06519.pdf
+            - Learning with Wasserstein Loss
+                https://arxiv.org/pdf/1506.05439.pdf
+
+        ρ   Coefficient to soft marginal regularization term,
+            Use ρ = 1e5 balanced optimal transport
     """
 
     n, m = C.shape
@@ -73,8 +78,10 @@ def sinkhorn_divergence(a, b, x, y, c, sink):
             - S is differentiabl wrt a,b,x,y !
 
         Reference
-            - https://arxiv.org/pdf/1810.08278.pdf
-            - https://arxiv.org/pdf/1706.00292.pdf
+            - Interpolating between Optimal Transport and MMD using Sinkhorn Divergence
+                https://arxiv.org/pdf/1810.08278.pdf
+            - Learning Generative Models with Sinkhorn Divergences
+                https://arxiv.org/pdf/1706.00292.pdf
     """
     Pxy, Lxy = sink(a, b, c(x, y))
     Pxx, Lxx = sink(a, a, c(x, x))
