@@ -13,3 +13,5 @@ tabulate
 pytest
 PyVTK
 POT
+geomloss
+pykeops
