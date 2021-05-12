@@ -27,22 +27,25 @@ where $f,g$ are called dual potential.
 
 \section{Entropic Regularization}
 
-Regularizing the original optimal transport problem brings computational and statistical benefits. In particular, the optimization problem can now be solved with fast matrix scaling algorithms that scales with strength of regularization. In addition, the sample efficiency for regularized problem is also superior. The entropy of coupling between two 1 dimensional discrete measure is given by
+Regularizing the original optimal transport problem brings computational and statistical benefits. In particular, the optimization problem can now be solved with fast matrix scaling algorithms that scales with strength of regularization. In addition, the sample efficiency for regularized problem is also superior. The entropy and KL divergence of coupling between two discrete measure is given by
 \begin{align}
     H(P)
-        = -\sum_{i,j} P_{ij}(\log(P_{ij})-1)
-        = - \inner{P}{\log P} + 1^TP1
+        &= -\sum_{i,j} P_{ij}(\log(P_{ij})-1)
+        = - \inner{P}{\log P} + 1^TP1 \\
+    \text{KL}(P\Vert K)
+        &= \sum_{i,j} P_{ij} \log \frac{P_{ij}}{K_{ij}} - P_{ij} + K_{ij}
+        = \inner{P}{\log(P\oslash K)} + 1^T(K-P)1
 \end{align}
 where taking logarithm and subtraction are elementwise operations. The entropic regularized problem
 \begin{align}
     \min_{P\in\R^{n\times m}_+:P1_m=a,P^T1_n=b}\,
-        &\inner{P}{C} + \epsilon H(P)
+        &\inner{P}{C} - \epsilon H(P)
     \label{eq:opt_entropic_regularized_ot}
 \end{align}
 We can interpret primal objective as the information projection of the Gibbs kernel $K\in\R^{n\times m}$ where $K_{ij}=e^{\frac{C_{ij}}{\epsilon}}$ onto the admissible couplings $U(a,b)=\pc{P\in\R^{n\times m}_+\mid P1_m=a,\, P^T1_n=b}$.
 \begin{align}
-    \inner{P}{C} - \epsilon\inner{P}{\log P)} + \epsilon 1^T P 1
-        = \epsilon \inner{P}{\log\left(P \oslash e^{-C/\epsilon} \right)} - \epsilon 1^TP1 + \epsilon 1^TK1
+    \inner{P}{C} + \epsilon\inner{P}{\log P} - \epsilon 1^T P 1
+        = \epsilon \inner{P}{\log\left(P \oslash e^{-C/\epsilon} \right)} - \epsilon 1^TP1 + \epsilon 1^Te^{-C/\epsilon}1
         = \epsilon \text{KL}(P\Vert K)
 \end{align}
 
@@ -118,7 +121,7 @@ where $S(f,g)_{ij} = C_{ij}-f_i-g_j$. Figure (\ref{fig:plt_sinkhorn_vary_epsilon
 Previously, optimal transprot problem requires $\alpha,\beta$ to have equal mass. This becomes a problem in applications when either the measures are noisy or when preservation of mass is not desirable. We can relax hard marginal constraints with soft penalty that measures deviation from exact coupling using some divergence, e.g. KL-divergence \cite{chizatScalingAlgorithmsUnbalanced2017},
 \begin{align}
     \min_{P\in\R^{n\times m}_+}\, 
-        \inner{P}{C} + \epsilon H(P) + \rho \text{KL}(P1_m \Vert a) + \rho \text{KL}(P^T 1_m \Vert b)
+        \inner{P}{C} - \epsilon H(P) + \rho \text{KL}(P1_m \Vert a) + \rho \text{KL}(P^T 1_m \Vert b)
 \end{align}
 Similar to balanced case, we can show that optimal coupling is again a scaling of $K$, i.e. $P = \diag(u) K \diag(v)$ where $u = (a \oslash (Kv))^{\lambda}$ and $v = (b \oslash (K^T u))^{\lambda}$ where $\lambda = \frac{\rho}{\rho + \epsilon}$ \cite{frognerLearningWassersteinLoss2015}. We can derive a similar Sinkhorn iteration in the log domain for unbalanced case.
 
