@@ -35,4 +35,5 @@ __latexindent_temp.tex
 # external library 
 knockoff/external
 registration/output
+registration/output_*
 

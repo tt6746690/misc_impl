@@ -29,10 +29,14 @@ n = 5
 xlim = (0, 1)
 ylim = (0, 1)
 ℓ = .25
-k = partial(cov_se, ℓ=ℓ)
-euler_steps=20
+euler_steps = 20
 δt = .1
-grid_nlines = 21
+grid_nlines = 11
+
+## partials 
+
+k = partial(cov_se, ℓ=ℓ)
+shooting_step = jax.jit(partial(HamiltonianStep, k=k, δt=δt))
 
 ## Data
 
@@ -44,16 +48,7 @@ q0 = np.array([[.2,.3], [.4,.7], [.5,.65], [.8,.4]])
 p0 = np.array([[.15,.05], [-.05,-.1], [.1,-.1], [0,.15]])
 
 g0, gL = GridData(nlines=grid_nlines)
-
 ## Plotting
-
-@partial(jax.jit, static_argnums=(3,))
-def HamiltonianStep(q,p,g,k):
-    q, p, g = [q + δt*dp_Hqp(q,p,k),
-               p - δt*dq_Hqp(q,p,k),
-               g + δt*k(g,q)@p]
-    return q, p, g
-
 
 fig, axs = plt.subplots(1,4,figsize=(20,5))
 
@@ -79,8 +74,9 @@ for t in range(euler_steps):
         ax.set_ylim(ylim)
         ax.set_xticks([])
         ax.set_yticks([])
+        ax.set_aspect('equal')
     
-    q, p, g = HamiltonianStep(q, p, g, k)
+    q, p, g = shooting_step(q, p, g)
     qs.append(q)
     ps.append(p)
     

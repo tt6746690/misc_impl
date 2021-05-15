@@ -114,6 +114,9 @@ def ShowTransport( Q, Xt, Gamma, ax ) :
 
 def DisplayShoot(Q0, G0, p0, Q1, G1, Xt, info, it, scale_momentum, scale_attach) :
 	"Displays a pyplot Figure and save it."
+	import os
+	os.makedirs('output', exist_ok=True)
+
 	# Figure at "t = 0" : -----------------------------------------------------------------------
 	fig = plt.figure(1, figsize = (10,10), dpi=100); fig.clf(); ax = fig.add_subplot(1, 1, 1)
 	ax.autoscale(tight=True)

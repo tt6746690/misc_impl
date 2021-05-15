@@ -50,6 +50,16 @@ def line_get_segments(X, L):
     return np.array([[X[l[0]], X[l[1]]] for l in L])
 
 
+@jax.jit
+def line_as_measure(X, L):
+    """Repr. curve as sum of delta measures, one for each line segment"""
+    v1 = X[L[:,0]]
+    v2 = X[L[:,1]]
+    x = .5*(v1 + v2)
+    a = np.sqrt(np.sum((v2 - v1)**2, axis=1))
+    return x, a
+
+
 def sqdist(X, Y=None):
     """ Returns D where D_ij = ||X_i - Y_j||^2 if Y is not `None`
             https://www.robots.ox.ac.uk/~albanie/notes/Euclidean_distance_trick.pdf
@@ -95,13 +105,25 @@ def Hqp(q, p, k):
 dq_Hqp = grad(Hqp, argnums=0)
 dp_Hqp = grad(Hqp, argnums=1)
 
-@partial(jax.jit, static_argnums=(3,))
-def HamiltonianShooting(q, p, g, k, euler_steps=10, δt = .1):
-    for t in range(euler_steps):
-        q, p, g = [q + δt*dp_Hqp(q,p,k),
-                   p - δt*dq_Hqp(q,p,k),
-                   g + δt*k(g,q)@p]
-        # note we also use the same kernel to interpolate
-        # momenum across the dimensions of `p`
+
+def HamiltonianStep(q, p, g, k, δt):
+    q, p, g = [q + δt*dp_Hqp(q,p,k),
+               p - δt*dq_Hqp(q,p,k),
+               g + δt*k(g,q)@p]
     return q, p, g
 
+
+def HamiltonianShooting(q, p, g, k, euler_steps, δt):
+    
+    def body_fn(i, val):
+        q, p, g = val
+        # note we also use the same kernel to interpolate
+        # momenum across the dimensions of `p`
+        return (q + δt*dp_Hqp(q,p,k),
+                p - δt*dq_Hqp(q,p,k),
+                g + δt*k(g,q)@p)
+    
+    init_val = (q, p, g)
+    q, p, g = jax.lax.fori_loop(0, euler_steps, body_fn, init_val)
+    
+    return q, p, g
