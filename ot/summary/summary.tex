@@ -42,7 +42,7 @@ where taking logarithm and subtraction are elementwise operations. The entropic 
         &\inner{P}{C} - \epsilon H(P)
     \label{eq:opt_entropic_regularized_ot}
 \end{align}
-We can interpret primal objective as the information projection of the Gibbs kernel $K\in\R^{n\times m}$ where $K_{ij}=e^{\frac{C_{ij}}{\epsilon}}$ onto the admissible couplings $U(a,b)=\pc{P\in\R^{n\times m}_+\mid P1_m=a,\, P^T1_n=b}$.
+We can interpret primal objective as the information projection of the Gibbs kernel $K\in\R^{n\times m}$ where $K_{ij}=e^{-\frac{C_{ij}}{\epsilon}}$ onto the admissible couplings $U(a,b)=\pc{P\in\R^{n\times m}_+\mid P1_m=a,\, P^T1_n=b}$.
 \begin{align}
     \inner{P}{C} + \epsilon\inner{P}{\log P} - \epsilon 1^T P 1
         = \epsilon \inner{P}{\log\left(P \oslash e^{-C/\epsilon} \right)} - \epsilon 1^TP1 + \epsilon 1^Te^{-C/\epsilon}1
