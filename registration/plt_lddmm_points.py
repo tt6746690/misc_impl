@@ -84,8 +84,8 @@ p0 = random.normal(key, (n, 2))*.1
 p0 = np.zeros(X.shape, dtype=np.float32) # zero solution gives smooth momentum !
 
 # uniform measures on point sets
-μ = np.ones((q.shape[0],))
-ν = np.ones((y.shape[0],))
+μ = np.ones((X.shape[0],))
+ν = np.ones((Y.shape[0],))
 
 
 def loss_fn(params, x, μ, y, ν, g, λ_regu):
@@ -154,7 +154,7 @@ for it in range(n_steps):
             
         ax = axs[1,axi]
         plt_shape(ax, info['q1'], Y, info['g1'], gL)
-        plt_vectorfield(ax, gX, k(gX, info['q1'])@info['p1'], scale=10, color='k')
+        plt_vectorfield(ax, info['g1'], k(info['g1'], info['q1'])@info['p1'], scale=10, color='k')
         if it == display_its[0]: ax.set_ylabel('shooting')
         ax.set_title(f't={it}')
         
@@ -162,5 +162,5 @@ for it in range(n_steps):
 
 
 fig.tight_layout()
-plt_savefig(fig, 'summary/assets/plt_shooting.png')
+plt_savefig(fig, 'summary/assets/plt_lddmm_points.png')
 
