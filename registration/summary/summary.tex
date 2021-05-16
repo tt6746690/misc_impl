@@ -30,12 +30,12 @@ Instead of integrating a time-varying velocity fields to get a diffeomorphic tra
             &\quad \varphi = \phi_1 = x + \int_0^1 v_t(\phi_t(x)) \, dt \\
             &\quad \frac{d}{dt}\phi_t(x) = v_t(\phi_t(x)) \quad\quad \phi_0 = \text{Id}
 \end{align}
-For $\int_0^1 \norm{v_t}_V \, dt < \infty$, $\varphi$ is a diffeomorphism. Let $q_t^i = \phi_t(x^i) \in \R^D$ be application of transformation $\phi_t$ to point $x^i$. Denote $q_t = (q_t^1, \cdots, q_t^N) \in \R^{ND}$ as action of $\phi_t$ to a set of points and $K(q_t,q_t) \in \R^{ND\times ND}$ be kernel matrix for velocity vector field at $q_t$ consisting of $N\times N$ blocks of $K(q^i,q^j) \in \R^{D\times D}$. \cite{joshiLandmarkMatchingLarge2000} showed that it suffices to solve for time varying velocity over locations of points along the trajectory,
+For $\int_0^1 \norm{v_t}_V \, dt < \infty$, $\varphi$ is a diffeomorphism. Let $q_t^i = \phi_t(x^i) \in \R^D$ be application of transformation $\phi_t$ to point $x^i$. Denote $q_t = (q_t^1, \cdots, q_t^N) \in \R^{ND}$ as action of $\phi_t$ to a set of points and $K(q_t,q_t) \in \R^{ND\times ND}$ be kernel matrix for velocity vector field at $q_t$ consisting of $N\times N$ blocks of $K(q^i,q^j) \in \R^{D\times D}$. \cite{joshiLandmarkMatchingLarge2000} argues for a Lagrangian view of previous Eulerian problem. Instead of solving for flow velocity $v(x,t)$ for all $x\in\Omega, t\in [0,1]$, it suffices to solve for the flow velocity $\dot{q}_t$ of particles,
 \begin{align}
     \min_{\dot{q}_t:t\in [0,1]}
         &\frac{1}{2} \int_0^1 \inner{\dot{q}_t}{K(q_t,q_t)^{-1}\dot{q}_t} \, dt + \frac{1}{2\sigma^2} \norm{q_1 - y}_{\R^{ND}}^2
 \end{align}
-and that the resulting velocity fields over $\Omega$ can be interpolated from $\dot{q}_t$,
+and that the resulting flow velocity in the Eulerian coordinates $\Omega$ can be interpolated from $\dot{q}_t$,
 \begin{align}
     v_t(x)
         = K(x, q_t) p_t
@@ -43,13 +43,7 @@ and that the resulting velocity fields over $\Omega$ can be interpolated from $\
     p_t
         = K(q_t, q_t)^{-1} \dot{q}_t
 \end{align}
-where $p_t^i \in \R^{D}$ is the momenta associated with point $q_t^i$. As a side note, this interpolation is akin to computing posterior mean of gaussian process regression model with zero additive noise at $x$, $v_t(x) = K(x,q_t) K(q_t,q_t)^{-1} \dot{q}_t$. \cite{millerGeodesicShootingComputational2006} interprets the integrand of regularizer as Hamiltonian 
-\begin{align}
-    \sH(q_t,p_t)
-        = \frac{1}{2} \inner{p_t}{K(q_t,q_t)p_t}
-        = \frac{1}{2} \inner{K(q_t, q_t)^{-1} \dot{q}_t}{\dot{q}_t}
-\end{align}
-and that trajectory of points and momentum $(q_t,p_t)$ of a geodesic, i.e. $\argmin_{q_t} \frac{1}{2}\int_0^1 \inner{K(q_t, q_t)^{-1} \dot{q}_t}{\dot{q}_t} \, dt$, follows a set of geodesic equations with initial condition $q_0 = x, p_0$,
+where $p_t^i \in \R^{D}$ is the momenta associated with point $q_t^i$. As a side note, this interpolation is akin to computing posterior mean of a gaussian process regression of velocity fields, i.e. $v_t(x) = K(x,q_t) K(q_t,q_t)^{-1} \dot{q}_t$. Note the integrand of rkhs norm can be viewed as Lagrangian of of a system of ND particles. \cite{millerGeodesicShootingComputational2006} argues the dynamics of these particles in canonical coordinates $(q_t,p_t)$ follows Hamilton's equations with initial condition $q_0 = x, p_0$,
 \begin{align}
     \dot{q}_t
         = \frac{\partial \sH(q_t,p_t)}{\partial p}
@@ -58,13 +52,13 @@ and that trajectory of points and momentum $(q_t,p_t)$ of a geodesic, i.e. $\arg
         = - \frac{\partial \sH(q_t,p_t)}{\partial q}
     \label{eq:geodesic_equations}
 \end{align}
-The Hamiltonian is preseved by geodesic flow, i.e. $\sH(q_0,p_0) = \sH(q_t,p_t)$ and therefore, $\int_0^1 \sH(q_t,p_t) \, dt = \sH(q_0, p_0) = \frac{1}{2} \inner{ p_0 }{ K(q_0,q_0) p_0 }$. We arrive at a registration problem where we optimize over the initial or \textit{shooting momentum} $p_0$ so that $q_1 := q_1(x,p_0)$ is close in some sense to target $y$,
+and that the Hamiltonian $\sH(q_t,p_t) = \frac{1}{2}\inner{p_t}{K(q_t,q_t)p_t} = \frac{1}{2}\inner{K(q_t,q_t)^{-1}\dot{q}_t}{\dot{q}_t}$ is preseved by the flow, $\sH(q_0,p_0)  = \sH(q_t,p_t)$ for all $t\in [0,1]$ and therefore, $\int_0^1 \sH(q_t,p_t) \, dt = \sH(q_0, p_0) = \frac{1}{2} \inner{ p_0 }{ K(q_0,q_0) p_0 }$. We arrive at a registration problem where we optimize over the initial or \textit{shooting momentum} $p_0$ so that $q_1 := q_1(x,p_0)$ is close in some sense to target $y$,
 \begin{align}
     \min_{p_0\in\R^{ND}} \,
         \frac{1}{2} \inner{ p_0 }{ K(x,x) p_0 } + \frac{1}{2\sigma^2} \norm{q_1 - y}_{\R^{ND}}^2
     \label{eq:optimization_momentum_landmark}
 \end{align}
-Optimization involves a forward integration of $(q_t,p_t)$ via (\ref{eq:geodesic_equations}) to get transformed points $q_1$, compute the gradient of objective (\ref{eq:optimization_momentum_landmark}) with respect to initial momentum, and do gradient update iteratively.
+Optimization involves a forward integration of $(q_t,p_t)$ via (\ref{eq:geodesic_equations}) to get transformed particles $q_1$, compute the gradient of objective (\ref{eq:optimization_momentum_landmark}) with respect to initial momentum, and do gradient update iteratively.
 
 
 \begin{center} 

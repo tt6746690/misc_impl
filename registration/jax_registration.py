@@ -22,6 +22,18 @@ def square(c, r, n):
     y = np.hstack((-r+b, r+b, a, a)) + c[1]
     return np.column_stack((x, y))
 
+    
+def make_two_shapes(shapes, n, center, radius, fill, nlayers):
+    if fill:
+        X = np.vstack((shapes[0](center[0], radius[0]*((i+1)/nlayers), n//nlayers)
+                       for i in range(nlayers)))
+        Y = np.vstack((shapes[1](center[1], radius[1]*((i+1)/nlayers), n//nlayers)
+                       for i in range(nlayers)))
+    else:
+        X = shapes[0](center[0], radius[0], n)
+        Y = shapes[1](center[1], radius[1], n)
+    return X, Y
+
 
 def GridData(nlines=11, xlim=(0,1), ylim=(0,1), nsubticks=4):
     ranges = [ xlim, ylim ]
