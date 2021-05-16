@@ -60,10 +60,8 @@ def plt_vectorfield(ax, X, V, color='b', scale=1, **kwargs):
     ax.quiver(X[:,0], X[:,1], V[:,0], V[:,1], scale=scale, color=color, **kwargs)
 
 
-@jax.jit
 def line_get_segments(X, L):
-    return np.array([[X[l[0]], X[l[1]]] for l in L])
-
+    return np.stack((X[L[:,0]], X[L[:,1]]), axis=1)
 
 @jax.jit
 def line_as_measure(X, L):
