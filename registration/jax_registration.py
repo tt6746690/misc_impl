@@ -8,9 +8,24 @@ import matplotlib.pyplot as plt
 from matplotlib.collections  import LineCollection
 
 
-def GridData(nlines=11, xlim=(0,1), ylim=(0,1)):
+
+def circle(c, r, n):
+    θ = np.linspace(0, 2*np.pi, n)
+    X = np.array(c) + r*np.column_stack((np.cos(θ), np.sin(θ)))
+    return X
+
+
+def square(c, r, n):
+    a = np.linspace(-r,r,n//4)
+    b = np.zeros((n//4,))
+    x = np.hstack((a, a, -r+b, r+b)) + c[0]
+    y = np.hstack((-r+b, r+b, a, a)) + c[1]
+    return np.column_stack((x, y))
+
+
+def GridData(nlines=11, xlim=(0,1), ylim=(0,1), nsubticks=4):
     ranges = [ xlim, ylim ]
-    np_per_lines = (nlines-1) * 4 + 1
+    np_per_lines = (nlines-1) * nsubticks + 1
     x_l = [np.linspace(min_r, max_r, nlines      ) for (min_r,max_r) in ranges]
     x_d = [np.linspace(min_r, max_r, np_per_lines) for (min_r,max_r) in ranges]
 
