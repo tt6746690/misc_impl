@@ -87,6 +87,11 @@ def plt_scaled_colorbar_ax(ax):
     return cax
 
 
+def plt_savefig(fig, save_path):
+    fig.tight_layout()
+    fig.savefig(save_path, bbox_inches='tight', dpi=200)
+
+
 def line_get_segments(X, L):
     return np.stack((X[L[:,0]], X[L[:,1]]), axis=1)
 
@@ -102,14 +107,18 @@ def line_as_measure(X, L):
 
 def line_vertex_area(X, L):
     """Gives vertex weight as average of neighboring edges """
-    v1 = X[L[:,0]]
-    v2 = X[L[:,1]]
-    a = np.sqrt(np.sum((v2-v1)**2, axis=1))
-
+    a = line_edge_area(X, L)
     _, ind0 = np.unique(L[:,0], return_index=True)
     _, ind1 = np.unique(L[:,1], return_index=True)
     ind = np.column_stack((ind0,ind1))
     a = np.sum(a[ind], axis=1) / 2
+    return a
+
+
+def line_edge_area(X, L):
+    v1 = X[L[:,0]]
+    v2 = X[L[:,1]]
+    a = np.sqrt(np.sum((v2-v1)**2, axis=1))
     return a
 
 
@@ -224,3 +233,21 @@ def v2p(k, x, v):
 def p2v(k, x, p, xs):
     """Computes q̇ = K(xs, x) p """
     return k(xs, x)@p
+
+
+def mvn_zmtril_log_prob(L, x):
+    """Computes log probability for N(0,LLᵀ)"""
+    α = solve_triangular(L, x.reshape(L.shape[1],-1), lower=True)
+    mahan = -.5*np.sum(np.square(α))
+    lgdet = -np.sum(np.log(np.diag(L)))
+    const = -.5*L.shape[0]*np.log(2*np.pi)
+    return mahan + const + lgdet
+
+
+def mvn_linear(A, m, v):
+    """Computes y = Ax ~ M(Aμ, A*diag[v]*A.T)
+            where x~N(m,diag[v])
+    """
+    μ = A@m
+    Σ = A@np.diag(v.flatten())@A.T
+    return μ, Σ
