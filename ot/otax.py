@@ -4,6 +4,9 @@ import jax
 import jax.numpy as np
 from jax.scipy.special import logsumexp
 
+import matplotlib.pyplot as plt
+from matplotlib.collections import LineCollection
+
 
 def sinkhorn_knopp(a, b, C, ϵ, ρ, n_iters):
     """Matrix scaling for entropic regularized optimal transport
@@ -89,3 +92,15 @@ def sinkhorn_divergence(a, b, x, y, c, sink):
     Pxx, Lxx = sink(a, a, c(x, x))
     Pyy, Lyy = sink(b, b, c(y, y))
     return Pxy, Lxy - .5*(Lxx + Lyy)
+
+
+def plt_transport_plan(ax, π, x, y, thresh=.001, scale=5):
+    π = jax.ops.index_update(π, jax.ops.index[np.abs(π)<thresh], 0)
+    ind = np.nonzero(π)
+    T = np.column_stack(ind)
+    width = π[ind]
+    width = scale*(width - np.min(width))/(np.max(width)-np.min(width))
+    segs = np.stack((x[T[:,0]], y[T[:,1]]), axis=1)
+    ax.add_collection(LineCollection(
+        segs, color=plt.cm.get_cmap('Pastel1')(3), linewidths=width,
+        linestyle='solid', zorder=0))

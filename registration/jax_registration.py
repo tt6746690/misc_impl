@@ -3,10 +3,14 @@ from functools import partial
 import jax
 from jax import grad
 import jax.numpy as np
+from jax.scipy.linalg import cho_solve, solve_triangular
 
 import matplotlib.pyplot as plt
 from matplotlib.collections  import LineCollection
 
+
+import sys; sys.path.append('../gp')
+from gpax import cholesky_jitter
 
 
 def circle(c, r, n):
@@ -71,6 +75,17 @@ def plt_grid(ax, X, L, color='lightgrey'):
 def plt_vectorfield(ax, X, V, color='b', scale=1, **kwargs):
     ax.quiver(X[:,0], X[:,1], V[:,0], V[:,1], scale=scale, color=color, **kwargs)
 
+    
+def plt_points(ax, X, **kwargs):
+    ax.scatter(X[:,0], X[:,1], **kwargs)
+    
+def plt_scaled_colorbar_ax(ax):
+    """ `fig.colorbar(im, cax=plt_scaled_colobar_ax(ax))` """
+    from mpl_toolkits.axes_grid1 import make_axes_locatable
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.1)
+    return cax
+
 
 def line_get_segments(X, L):
     return np.stack((X[L[:,0]], X[L[:,1]]), axis=1)
@@ -120,11 +135,28 @@ def cov_se(X, Y=None, σ2=1., ℓ=1.):
     return σ2*np.exp(-sqdist(X, Y)/2)
 
 
-def Hqp(q, p, k):
-    """Note we use the same kernel for d = 1,...,D
-            i.e. k(qᵢ,qᵢ) I_D \in \R^DxD
+def Hqv(q, v, k):
+    """Computes Hamiltonian 
+            H(q,p) = q̇ᵀ*inv(K)*q̇ = q̇ᵀ*inv(LLᵀ)*q̇ 
+                   = αᵀα for α = L\q̇
+            
+        Assumes q̇ same kernel across d=1,2,...,D
     """
-    H = k(q,q)*(p@p.T)
+    K = k(X)
+    L = cholesky_jitter(K, jitter=5e-5)
+    α = solve_triangular(L, v, lower=True)
+    return .5*np.sum(np.square(α))
+
+
+def Hqp(q, p, k):
+    """ Computes Hamiltonian
+            H(q,p)  = pᵀ*K*p
+                    = .5 vec(p)*(I⊗K(q,q))*vec(p)   (*)
+                    = .5*Σᵢⱼ k(qᵢ,qⱼ) pᵢᵀpⱼ
+
+        (*) Assumes q̇ same kernel across d=1,2,...,D
+    """
+    H = k(q)*(p@p.T)
     return .5 * np.sum(H)
 
 dq_Hqp = grad(Hqp, argnums=0)
@@ -138,7 +170,8 @@ def HamiltonianStep(q, p, g, k, δt):
     return q, p, g
 
 
-def HamiltonianShooting(q, p, g, k, euler_steps, δt):
+
+def HamiltonianCarrying(q, p, g, k, euler_steps, δt):
     
     def body_fn(i, val):
         q, p, g = val
@@ -152,3 +185,29 @@ def HamiltonianShooting(q, p, g, k, euler_steps, δt):
     q, p, g = jax.lax.fori_loop(0, euler_steps, body_fn, init_val)
     
     return q, p, g
+
+def HamiltonianShooting(q, p, k, euler_steps, δt):
+    
+    def body_fn(i, val):
+        q, p = val
+        return (q + δt*dp_Hqp(q,p,k),
+                p - δt*dq_Hqp(q,p,k))
+    
+    init_val = (q, p)
+    q, p = jax.lax.fori_loop(0, euler_steps, body_fn, init_val)
+    
+    return q, p
+
+
+def v2p(k, x, v):
+    """Computes p = K(x,x)^-1 q̇ = inv(LLᵀ) q̇ = Lᵀ\(L\q̇) """
+    K = k(x)
+    L = cholesky_jitter(K, jitter=5e-5)
+    α = solve_triangular(L, v,   lower=True)
+    p = solve_triangular(L.T, α, lower=False)
+    return p
+
+
+def p2v(k, x, p, xs):
+    """Computes q̇ = K(xs, x) p """
+    return k(xs, x)@p

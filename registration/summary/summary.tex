@@ -43,7 +43,7 @@ and that the resulting flow velocity in the Eulerian coordinates $\Omega$ can be
     p_t
         = K(q_t, q_t)^{-1} \dot{q}_t
 \end{align}
-where $p_t^i \in \R^{D}$ is the momenta associated with point $q_t^i$. As a side note, this interpolation is akin to computing posterior mean of a gaussian process regression of velocity fields, i.e. $v_t(x) = K(x,q_t) K(q_t,q_t)^{-1} \dot{q}_t$. Note the integrand of rkhs norm can be viewed as Lagrangian of of a system of ND particles. \cite{millerGeodesicShootingComputational2006} argues the dynamics of these particles in canonical coordinates $(q_t,p_t)$ follows Hamilton's equations with initial condition $q_0 = x, p_0$,
+where $p_t^i \in \R^{D}$ is the momenta associated with point $q_t^i$. As a side note, this interpolation is akin to computing posterior mean of a gaussian process regression of velocity fields, i.e. $v_t(x) = K(x,q_t) K(q_t,q_t)^{-1} \dot{q}_t$. Note the integrand of rkhs norm can be viewed as Lagrangian of of a system of ND particles. \cite{millerGeodesicShootingComputational2006} argues the dynamics of these particles in canonical coordinates $(q_t,p_t)$ follows the Geodesic equations with initial condition $q_0 = x, p_0$,
 \begin{align}
     \dot{q}_t
         = \frac{\partial \sH(q_t,p_t)}{\partial p}
@@ -68,11 +68,23 @@ Optimization involves a forward integration of $(q_t,p_t)$ via (\ref{eq:geodesic
     \label{fig:plt_shooting}
 \end{figure} 
 \end{center} 
+
+
+\begin{center} 
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{assets/plt_lddmm_points_moons_training}
+    \caption{Training dynamics of usage of optimal transport cost for registering points}
+    \label{fig:plt_lddmm_points_training}
+\end{figure}
+\end{center} 
+
+
  
 \begin{center} 
 \begin{figure}[h!]
-    \includegraphics[width=\textwidth]{assets/plt_lddmm_points_False_summary} 
-    \includegraphics[width=\textwidth]{assets/plt_lddmm_points_True_summary} 
+    \includegraphics[width=\textwidth]{assets/plt_lddmm_points_shapes} 
+    \includegraphics[width=\textwidth]{assets/plt_lddmm_points_moons} 
+    \includegraphics[width=\textwidth]{assets/plt_lddmm_points_circles} 
     \caption{lddmm with geodesic shooting and entropic regularized unbalanced optimal transport distance as matching loss. Points are encoded as sum of deltas with uniform weights. Shooting's kernel is a sum of radial basis kernel with $\ell \in \pc{.025,.15,.3}$ so as to be able to distinguish points both close and far away. }
     \label{fig:plt_lddmm_points}
 \end{figure}
