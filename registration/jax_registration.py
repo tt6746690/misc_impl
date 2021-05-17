@@ -100,6 +100,19 @@ def line_as_measure(X, L):
     return x, a
 
 
+def line_vertex_area(X, L):
+    """Gives vertex weight as average of neighboring edges """
+    v1 = X[L[:,0]]
+    v2 = X[L[:,1]]
+    a = np.sqrt(np.sum((v2-v1)**2, axis=1))
+
+    _, ind0 = np.unique(L[:,0], return_index=True)
+    _, ind1 = np.unique(L[:,1], return_index=True)
+    ind = np.column_stack((ind0,ind1))
+    a = np.sum(a[ind], axis=1) / 2
+    return a
+
+
 def sqdist(X, Y=None):
     """ Returns D where D_ij = ||X_i - Y_j||^2 if Y is not `None`
             https://www.robots.ox.ac.uk/~albanie/notes/Euclidean_distance_trick.pdf
