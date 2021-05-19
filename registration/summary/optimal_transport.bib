@@ -3,94 +3,224 @@
 	title = {Adaptive color transfer with relaxed optimal transport},
 	doi = {10.1109/ICIP.2014.7025983},
 	abstract = {This paper studies the problem of color transfer between images using optimal transport techniques. While being a generic framework to handle statistics properly, it is also known to be sensitive to noise and outliers, and is not suitable for direct application to images without additional postprocessing regularization to remove artifacts. To tackle these issues, we propose to directly deal with the regularity of the transport map and the spatial consistency of the reconstruction. Our approach is based on the relaxed and regularized discrete optimal transport method of [1]. We extend this work by (i) modeling the spatial distribution of colors within the image domain and (ii) tuning automatically the relaxation parameters. Experiments on real images demonstrate the capacity of our model to adapt itself to the considered data.},
-	eventtitle = {2014 {IEEE} International Conference on Image Processing ({ICIP})},
-	pages = {4852--4856},
-	booktitle = {2014 {IEEE} International Conference on Image Processing ({ICIP})},
+	booktitle = {2014 {IEEE} {International} {Conference} on {Image} {Processing} ({ICIP})},
 	author = {Rabin, J. and Ferradans, S. and Papadakis, N.},
-	date = {2014-10},
+	month = oct,
+	year = {2014},
 	keywords = {tbr},
+	pages = {4852--4856},
 	file = {Rabin et al_2014_Adaptive color transfer with relaxed optimal transport.pdf:/Users/wpq/Dropbox (MIT)/zotero/Rabin et al_2014_Adaptive color transfer with relaxed optimal transport.pdf:application/pdf}
 }
 
 @article{ozairWassersteinDependencyMeasure2019,
-	title = {Wasserstein Dependency Measure for Representation Learning},
+	title = {Wasserstein {Dependency} {Measure} for {Representation} {Learning}},
 	url = {http://arxiv.org/abs/1903.11780},
-	abstract = {Mutual information maximization has emerged as a powerful learning objective for unsupervised representation learning obtaining state-of-the-art performance in applications such as object recognition, speech recognition, and reinforcement learning. However, such approaches are fundamentally limited since a tight lower bound of mutual information requires sample size exponential in the mutual information. This limits the applicability of these approaches for prediction tasks with high mutual information, such as in video understanding or reinforcement learning. In these settings, such techniques are prone to overfit, both in theory and in practice, and capture only a few of the relevant factors of variation. This leads to incomplete representations that are not optimal for downstream tasks. In this work, we empirically demonstrate that mutual information-based representation learning approaches do fail to learn complete representations on a number of designed and real-world tasks. To mitigate these problems we introduce the Wasserstein dependency measure, which learns more complete representations by using the Wasserstein distance instead of the {KL} divergence in the mutual information estimator. We show that a practical approximation to this theoretically motivated solution, constructed using Lipschitz constraint techniques from the {GAN} literature, achieves substantially improved results on tasks where incomplete representations are a major challenge.},
-	journaltitle = {{arXiv}:1903.11780 [cs, stat]},
-	author = {Ozair, Sherjil and Lynch, Corey and Bengio, Yoshua and Oord, Aaron van den and Levine, Sergey and Sermanet, Pierre},
+	abstract = {Mutual information maximization has emerged as a powerful learning objective for unsupervised representation learning obtaining state-of-the-art performance in applications such as object recognition, speech recognition, and reinforcement learning. However, such approaches are fundamentally limited since a tight lower bound of mutual information requires sample size exponential in the mutual information. This limits the applicability of these approaches for prediction tasks with high mutual information, such as in video understanding or reinforcement learning. In these settings, such techniques are prone to overfit, both in theory and in practice, and capture only a few of the relevant factors of variation. This leads to incomplete representations that are not optimal for downstream tasks. In this work, we empirically demonstrate that mutual information-based representation learning approaches do fail to learn complete representations on a number of designed and real-world tasks. To mitigate these problems we introduce the Wasserstein dependency measure, which learns more complete representations by using the Wasserstein distance instead of the KL divergence in the mutual information estimator. We show that a practical approximation to this theoretically motivated solution, constructed using Lipschitz constraint techniques from the GAN literature, achieves substantially improved results on tasks where incomplete representations are a major challenge.},
 	urldate = {2020-06-23},
-	date = {2019-03-27},
-	eprinttype = {arxiv},
-	eprint = {1903.11780},
+	journal = {arXiv:1903.11780 [cs, stat]},
+	author = {Ozair, Sherjil and Lynch, Corey and Bengio, Yoshua and Oord, Aaron van den and Levine, Sergey and Sermanet, Pierre},
+	month = mar,
+	year = {2019},
+	note = {arXiv: 1903.11780},
 	keywords = {read},
+	annote = {alternative measure over mutual information [Neurips 2019]
+
+mutual information maximization needs large samples (exponentially many) to get good bound,
+
+leads to overfitting, results in incomplete representation, not optimal for downstream task
+
+
+use Wasserstein distance instead of KL divergence in mutual information estimation
+
+ 
+ 
+introduction 
+
+wasserstein dependency measure
+
+replace KL in mutual information with wasserstein distance
+
+
+wasserstein predictive coding
+
+CPC objective siimlar to dual formulation of wassersetin dependency measure...
+derive a lower bound on CPC / wasserstein dependency measure: simply adds 1-lipschitz function constraints on CPC objective
+
+
+},
 	file = {Ozair et al_2019_Wasserstein Dependency Measure for Representation Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Ozair et al_2019_Wasserstein Dependency Measure for Representation Learning.pdf:application/pdf}
 }
 
 @article{feydyInterpolatingOptimalTransport2018,
-	title = {Interpolating between Optimal Transport and {MMD} using Sinkhorn Divergences},
+	title = {Interpolating between {Optimal} {Transport} and {MMD} using {Sinkhorn} {Divergences}},
 	url = {http://arxiv.org/abs/1810.08278},
-	abstract = {Comparing probability distributions is a fundamental problem in data sciences. Simple norms and divergences such as the total variation and the relative entropy only compare densities in a point-wise manner and fail to capture the geometric nature of the problem. In sharp contrast, Maximum Mean Discrepancies ({MMD}) and Optimal Transport distances ({OT}) are two classes of distances between measures that take into account the geometry of the underlying space and metrize the convergence in law. This paper studies the Sinkhorn divergences, a family of geometric divergences that interpolates between {MMD} and {OT}. Relying on a new notion of geometric entropy, we provide theoretical guarantees for these divergences: positivity, convexity and metrization of the convergence in law. On the practical side, we detail a numerical scheme that enables the large scale application of these divergences for machine learning: on the {GPU}, gradients of the Sinkhorn loss can be computed for batches of a million samples.},
-	journaltitle = {{arXiv}:1810.08278 [math, stat]},
-	author = {Feydy, Jean and Séjourné, Thibault and Vialard, François-Xavier and Amari, Shun-ichi and Trouvé, Alain and Peyré, Gabriel},
+	abstract = {Comparing probability distributions is a fundamental problem in data sciences. Simple norms and divergences such as the total variation and the relative entropy only compare densities in a point-wise manner and fail to capture the geometric nature of the problem. In sharp contrast, Maximum Mean Discrepancies (MMD) and Optimal Transport distances (OT) are two classes of distances between measures that take into account the geometry of the underlying space and metrize the convergence in law. This paper studies the Sinkhorn divergences, a family of geometric divergences that interpolates between MMD and OT. Relying on a new notion of geometric entropy, we provide theoretical guarantees for these divergences: positivity, convexity and metrization of the convergence in law. On the practical side, we detail a numerical scheme that enables the large scale application of these divergences for machine learning: on the GPU, gradients of the Sinkhorn loss can be computed for batches of a million samples.},
 	urldate = {2020-10-14},
-	date = {2018-10-18},
-	eprinttype = {arxiv},
-	eprint = {1810.08278},
+	journal = {arXiv:1810.08278 [math, stat]},
+	author = {Feydy, Jean and Séjourné, Thibault and Vialard, François-Xavier and Amari, Shun-ichi and Trouvé, Alain and Peyré, Gabriel},
+	month = oct,
+	year = {2018},
+	note = {arXiv: 1810.08278},
 	keywords = {read},
+	annote = {Sinkhorn divergence [AISTATS 2019]
+
+interpolates between Wasserstein and MMD and fixes entropic bias (bias shrinks towards barycenter)
+
+video
+
+https://www.youtube.com/watch?v=ecbbuGTj3DI\&ab\_channel=CentreInternationaldeRencontresMath\%C3\%A9matiques
+
+pretty helpful actually !
+
+
+
+ 
+introduction 
+
+why interpolate between OT loss and MMD ?
+
+OT respects distance in support while MMD is scales better. can you get the best of both worlds.
+
+
+why sinkhorn divergence
+
+the added auto-correlation term corrects for bias induced by the entropy term .. (without auto-correlation term gradient has shrunk-ed support)
+
+
+sinkhorn mapping
+
+T: {\textbackslash}alpha, f -{\textgreater} y{\textgreater}softmin\_x (C-f)
+
+
+gradient property
+
+gradient of regularized OT loss wrt input measures can be computed via softmin of C-transform of dual potential !
+
+
+computation
+
+working with dual problem, memory footprint same as input measures / sampeld values .
+logsumexp operation on dual potential ... needs more reading on that
+
+
+},
 	file = {Feydy et al_2018_Interpolating between Optimal Transport and MMD using Sinkhorn Divergences.pdf:/Users/wpq/Dropbox (MIT)/zotero/Feydy et al_2018_Interpolating between Optimal Transport and MMD using Sinkhorn Divergences.pdf:application/pdf}
 }
 
 @article{janatiSpatioTemporalAlignmentsOptimal2020,
-	title = {Spatio-Temporal Alignments: Optimal transport through space and time},
-	abstract = {Comparing data deﬁned over space and time is notoriously hard. It involves quantifying both spatial and temporal variability while taking into account the chronological structure of the data. Dynamic Time Warping ({DTW}) computes a minimal cost alignment between time series that preserves the chronological order but is inherently blind to spatiotemporal shifts. In this paper, we propose Spatio-Temporal Alignments ({STA}), a new diﬀerentiable formulation of {DTW} that captures spatial and temporal variability. Spatial diﬀerences between time samples are captured using regularized Optimal transport. While temporal alignment cost exploits a smooth variant of {DTW} called soft-{DTW}. We show how smoothing {DTW} leads to alignment costs that increase quadratically with time shifts. The costs are expressed using an unbalanced Wasserstein distance to cope with observations that are not probabilities. Experiments on handwritten letters and brain imaging data conﬁrm our theoretical ﬁndings and illustrate the eﬀectiveness of {STA} as a dissimilarity for spatio-temporal data.},
-	pages = {9},
+	title = {Spatio-{Temporal} {Alignments}: {Optimal} transport through space and time},
+	abstract = {Comparing data deﬁned over space and time is notoriously hard. It involves quantifying both spatial and temporal variability while taking into account the chronological structure of the data. Dynamic Time Warping (DTW) computes a minimal cost alignment between time series that preserves the chronological order but is inherently blind to spatiotemporal shifts. In this paper, we propose Spatio-Temporal Alignments (STA), a new diﬀerentiable formulation of DTW that captures spatial and temporal variability. Spatial diﬀerences between time samples are captured using regularized Optimal transport. While temporal alignment cost exploits a smooth variant of DTW called soft-DTW. We show how smoothing DTW leads to alignment costs that increase quadratically with time shifts. The costs are expressed using an unbalanced Wasserstein distance to cope with observations that are not probabilities. Experiments on handwritten letters and brain imaging data conﬁrm our theoretical ﬁndings and illustrate the eﬀectiveness of STA as a dissimilarity for spatio-temporal data.},
+	language = {en},
 	author = {Janati, Hicham and Cuturi, Marco and Gramfort, Alexandre},
-	date = {2020},
-	langid = {english},
+	year = {2020},
 	keywords = {tbr},
+	pages = {9},
 	file = {Janati et al_2020_Spatio-Temporal Alignments - Optimal transport through space and time.pdf:/Users/wpq/Dropbox (MIT)/zotero/Janati et al_2020_Spatio-Temporal Alignments - Optimal transport through space and time.pdf:application/pdf}
 }
 
 @article{cuturiSinkhornDistancesLightspeed2013,
-	title = {Sinkhorn Distances: Lightspeed Computation of Optimal Transportation Distances},
+	title = {Sinkhorn {Distances}: {Lightspeed} {Computation} of {Optimal} {Transportation} {Distances}},
+	shorttitle = {Sinkhorn {Distances}},
 	url = {http://arxiv.org/abs/1306.0895},
-	shorttitle = {Sinkhorn Distances},
-	abstract = {Optimal transportation distances are a fundamental family of parameterized distances for histograms. Despite their appealing theoretical properties, excellent performance in retrieval tasks and intuitive formulation, their computation involves the resolution of a linear program whose cost is prohibitive whenever the histograms' dimension exceeds a few hundreds. We propose in this work a new family of optimal transportation distances that look at transportation problems from a maximum-entropy perspective. We smooth the classical optimal transportation problem with an entropic regularization term, and show that the resulting optimum is also a distance which can be computed through Sinkhorn-Knopp's matrix scaling algorithm at a speed that is several orders of magnitude faster than that of transportation solvers. We also report improved performance over classical optimal transportation distances on the {MNIST} benchmark problem.},
-	journaltitle = {{arXiv}:1306.0895 [stat]},
-	author = {Cuturi, Marco},
+	abstract = {Optimal transportation distances are a fundamental family of parameterized distances for histograms. Despite their appealing theoretical properties, excellent performance in retrieval tasks and intuitive formulation, their computation involves the resolution of a linear program whose cost is prohibitive whenever the histograms' dimension exceeds a few hundreds. We propose in this work a new family of optimal transportation distances that look at transportation problems from a maximum-entropy perspective. We smooth the classical optimal transportation problem with an entropic regularization term, and show that the resulting optimum is also a distance which can be computed through Sinkhorn-Knopp's matrix scaling algorithm at a speed that is several orders of magnitude faster than that of transportation solvers. We also report improved performance over classical optimal transportation distances on the MNIST benchmark problem.},
 	urldate = {2020-10-14},
-	date = {2013-06-04},
-	eprinttype = {arxiv},
-	eprint = {1306.0895},
+	journal = {arXiv:1306.0895 [stat]},
+	author = {Cuturi, Marco},
+	month = jun,
+	year = {2013},
+	note = {arXiv: 1306.0895},
 	keywords = {good, read},
+	annote = {entropic regularized OT and Sinkhorn-Knopp
+ 
+introduction 
+
+this paper
+
+fast computational methods to solve entropy regularized OT algorithm with Sinkhorn Knopp matrix scaling algorithm
+easily parallelized via GPU
+Sinkhorn distances 
+
+optimal value of entropy regularized OT problem
+
+
+key point is in ML ... work on lots of histograms and want to compute pairwise distance between all of them with the same algorithm with essentially the same complexity
+
+
+entropic regularization
+
+considers not the entire doubly stochastic matrix of size nxm as feasible set, but a parameterized restricted set of joint probability matrices.
+
+\{P doubly stochastic and KL( P{\textbar}{\textbar}a{\textbackslash}otimes b ) {\textless}= alpha \}
+the new feasible set is centered at product distribution of a, b ... wrt KL distance.
+
+
+
+
+Sinkhorn Knopp algorithm
+
+matrix scaling by iterating over u,v ...
+
+
+experiments
+
+SVM classification where kenrel e{\textasciicircum}(-d/t) where d is distance between 20x20 mnist images (converted to histograms)
+
+d could be helinger, X2, TV, euclidean (gaussian kernel), EMD, and Sinkhorn!
+
+
+need to tune the weight to entropy term in Sinkhorn distance ...
+
+
+},
 	file = {Cuturi_2013_Sinkhorn Distances - Lightspeed Computation of Optimal Transportation Distances.pdf:/Users/wpq/Dropbox (MIT)/zotero/Cuturi_2013_Sinkhorn Distances - Lightspeed Computation of Optimal Transportation Distances.pdf:application/pdf}
 }
 
 @article{frognerLearningWassersteinLoss2015,
-	title = {Learning with a Wasserstein Loss},
+	title = {Learning with a {Wasserstein} {Loss}},
 	url = {http://arxiv.org/abs/1506.05439},
 	abstract = {Learning to predict multi-label outputs is challenging, but in many problems there is a natural metric on the outputs that can be used to improve predictions. In this paper we develop a loss function for multi-label learning, based on the Wasserstein distance. The Wasserstein distance provides a natural notion of dissimilarity for probability measures. Although optimizing with respect to the exact Wasserstein distance is costly, recent work has described a regularized approximation that is efficiently computed. We describe an efficient learning algorithm based on this regularization, as well as a novel extension of the Wasserstein distance from probability measures to unnormalized measures. We also describe a statistical learning bound for the loss. The Wasserstein loss can encourage smoothness of the predictions with respect to a chosen metric on the output space. We demonstrate this property on a real-data tag prediction problem, using the Yahoo Flickr Creative Commons dataset, outperforming a baseline that doesn't use the metric.},
-	journaltitle = {{arXiv}:1506.05439 [cs, stat]},
-	author = {Frogner, Charlie and Zhang, Chiyuan and Mobahi, Hossein and Araya-Polo, Mauricio and Poggio, Tomaso},
 	urldate = {2020-10-16},
-	date = {2015-12-29},
-	eprinttype = {arxiv},
-	eprint = {1506.05439},
+	journal = {arXiv:1506.05439 [cs, stat]},
+	author = {Frogner, Charlie and Zhang, Chiyuan and Mobahi, Hossein and Araya-Polo, Mauricio and Poggio, Tomaso},
+	month = dec,
+	year = {2015},
+	note = {arXiv: 1506.05439},
 	keywords = {read},
+	annote = {[Neurips 2015]
+
+use unbalanced Sinkhorn distance as loss between model prediction and label for supervised learning
+
+ 
+me
+
+its really cool.. dual objective the primal variable is linear wrt the dual variable ... so optimal dual is a subgradient of the loss wrt the first primal variable !
+seems a really straightforward implementation of unbalanced transport by replacing hard constraints on marignals on two soft KL terms in objective.
+
+ 
+introduction 
+
+motivation
+
+want loss which respects metric of y ... Wasserstein distance can explore this ...
+needs to handle unbalanced h(x) and y for multilabel classification, since there could be {\textgreater}1 labels with 1.
+
+
+},
 	file = {Frogner et al_2015_Learning with a Wasserstein Loss.pdf:/Users/wpq/Dropbox (MIT)/zotero/Frogner et al_2015_Learning with a Wasserstein Loss2.pdf:application/pdf}
 }
 
 @article{chizatFasterWassersteinDistance2020,
-	title = {Faster Wasserstein Distance Estimation with the Sinkhorn Divergence},
+	title = {Faster {Wasserstein} {Distance} {Estimation} with the {Sinkhorn} {Divergence}},
 	url = {http://arxiv.org/abs/2006.08172},
 	abstract = {The squared Wasserstein distance is a natural quantity to compare probability distributions in a non-parametric setting. This quantity is usually estimated with the plug-in estimator, defined via a discrete optimal transport problem. It can be solved to \${\textbackslash}epsilon\$-accuracy by adding an entropic regularization of order \${\textbackslash}epsilon\$ and using for instance Sinkhorn's algorithm. In this work, we propose instead to estimate it with the Sinkhorn divergence, which is also built on entropic regularization but includes debiasing terms. We show that, for smooth densities, this estimator has a comparable sample complexity but allows higher regularization levels, of order \${\textbackslash}epsilon{\textasciicircum}\{1/2\}\$ , which leads to improved computational complexity bounds and a strong speedup in practice. Our theoretical analysis covers the case of both randomly sampled densities and deterministic discretizations on uniform grids. We also propose and analyze an estimator based on Richardson extrapolation of the Sinkhorn divergence which enjoys improved statistical and computational efficiency guarantees, under a condition on the regularity of the approximation error, which is in particular satisfied for Gaussian densities. We finally demonstrate the efficiency of the proposed estimators with numerical experiments.},
-	journaltitle = {{arXiv}:2006.08172 [math, stat]},
-	author = {Chizat, Lenaic and Roussillon, Pierre and Léger, Flavien and Vialard, François-Xavier and Peyré, Gabriel},
 	urldate = {2020-10-18},
-	date = {2020-06-15},
-	eprinttype = {arxiv},
-	eprint = {2006.08172},
+	journal = {arXiv:2006.08172 [math, stat]},
+	author = {Chizat, Lenaic and Roussillon, Pierre and Léger, Flavien and Vialard, François-Xavier and Peyré, Gabriel},
+	month = jun,
+	year = {2020},
+	note = {arXiv: 2006.08172},
 	keywords = {tbr},
+	annote = {faster OT estimate with Sinkhorn Divergence [Neurips 2020]},
 	file = {Chizat et al_2020_Faster Wasserstein Distance Estimation with the Sinkhorn Divergence.pdf:/Users/wpq/Dropbox (MIT)/zotero/Chizat et al_2020_Faster Wasserstein Distance Estimation with the Sinkhorn Divergence.pdf:application/pdf}
 }
 
@@ -100,78 +230,222 @@
 	issn = {1553-7358},
 	url = {https://dx.plos.org/10.1371/journal.pcbi.1007828},
 	doi = {10.1371/journal.pcbi.1007828},
-	pages = {e1007828},
+	language = {en},
 	number = {4},
-	journaltitle = {{PLOS} Computational Biology},
-	shortjournal = {{PLoS} Comput Biol},
+	urldate = {2020-10-22},
+	journal = {PLOS Computational Biology},
 	author = {Yang, Karren Dai and Damodaran, Karthik and Venkatachalapathy, Saradha and Soylemezoglu, Ali C. and Shivashankar, G. V. and Uhler, Caroline},
 	editor = {Ma, Jian},
-	urldate = {2020-10-22},
-	date = {2020-04-28},
-	langid = {english},
+	month = apr,
+	year = {2020},
 	keywords = {read},
+	pages = {e1007828},
+	annote = {ImageAEOT [Plos CompBio]
+ 
+me
+
+modeling disease progression 
+
+ 
+ 
+introduction 
+
+problem
+
+lineage tracing: identify all ancestors and descendents of a given cell.
+want to use lineage tracing to identify features/biomarkers underlying the biological process
+
+
+dataset
+
+time-labeled datasets, not paired, i.e. taken at different stage of cell's development life, but not identical cell
+
+e.g. fibroblast -{\textgreater} cancer
+
+
+
+
+this paper
+
+generates artificial linage of cell based on population characteristics.
+
+
+formulation
+
+indicate probability that each pair of cell belong to the same lineage
+
+
+
+method
+
+discrete OT
+
+regularized OT with Sinkhorn algorithm
+
+
+dimensionality reduction
+
+learn distance between cells from data using a VAE, basically l2 distance in latent space
+
+
+interpretation
+
+linear interpolation in latent space
+use decoder to visualize trajectory
+
+
+regularizer for training VAE
+
+have cell type data for data at later time points. ideally, feature space should capture differences between cell types in later time points
+want latent embedding be predictive of cell type labels ...
+
+
+application
+
+reconstruction \& visualization of pseudo-lineages in biological system
+
+
+},
 	file = {Yang et al_2020_Predicting cell lineages using autoencoders and optimal transport.pdf:/Users/wpq/Dropbox (MIT)/zotero/Yang et al_2020_Predicting cell lineages using autoencoders and optimal transport.pdf:application/pdf}
 }
 
 @article{janatiMultisubjectMEGEEG2019,
 	title = {Multi-subject {MEG}/{EEG} source imaging with sparse multi-task regression},
 	url = {http://arxiv.org/abs/1910.01914},
-	abstract = {Magnetoencephalography and electroencephalography (M/{EEG}) are non-invasive modalities that measure the weak electromagnetic fields generated by neural activity. Estimating the location and magnitude of the current sources that generated these electromagnetic fields is a challenging ill-posed regression problem known as {\textbackslash}emph\{source imaging\}. When considering a group study, a common approach consists in carrying out the regression tasks independently for each subject. An alternative is to jointly localize sources for all subjects taken together, while enforcing some similarity between them. By pooling all measurements in a single multi-task regression, one makes the problem better posed, offering the ability to identify more sources and with greater precision. The Minimum Wasserstein Estimates ({MWE}) promotes focal activations that do not perfectly overlap for all subjects, thanks to a regularizer based on Optimal Transport ({OT}) metrics. {MWE} promotes spatial proximity on the cortical mantel while coping with the varying noise levels across subjects. On realistic simulations, {MWE} decreases the localization error by up to 4 mm per source compared to individual solutions. Experiments on the Cam-{CAN} dataset show a considerable improvement in spatial specificity in population imaging. Our analysis of a multimodal dataset shows how multi-subject source localization closes the gap between {MEG} and {fMRI} for brain mapping.},
-	journaltitle = {{arXiv}:1910.01914 [cs, q-bio, stat]},
-	author = {Janati, Hicham and Bazeille, Thomas and Thirion, Bertrand and Cuturi, Marco and Gramfort, Alexandre},
+	abstract = {Magnetoencephalography and electroencephalography (M/EEG) are non-invasive modalities that measure the weak electromagnetic fields generated by neural activity. Estimating the location and magnitude of the current sources that generated these electromagnetic fields is a challenging ill-posed regression problem known as {\textbackslash}emph\{source imaging\}. When considering a group study, a common approach consists in carrying out the regression tasks independently for each subject. An alternative is to jointly localize sources for all subjects taken together, while enforcing some similarity between them. By pooling all measurements in a single multi-task regression, one makes the problem better posed, offering the ability to identify more sources and with greater precision. The Minimum Wasserstein Estimates (MWE) promotes focal activations that do not perfectly overlap for all subjects, thanks to a regularizer based on Optimal Transport (OT) metrics. MWE promotes spatial proximity on the cortical mantel while coping with the varying noise levels across subjects. On realistic simulations, MWE decreases the localization error by up to 4 mm per source compared to individual solutions. Experiments on the Cam-CAN dataset show a considerable improvement in spatial specificity in population imaging. Our analysis of a multimodal dataset shows how multi-subject source localization closes the gap between MEG and fMRI for brain mapping.},
 	urldate = {2020-10-22},
-	date = {2019-10-14},
-	eprinttype = {arxiv},
-	eprint = {1910.01914},
+	journal = {arXiv:1910.01914 [cs, q-bio, stat]},
+	author = {Janati, Hicham and Bazeille, Thomas and Thirion, Bertrand and Cuturi, Marco and Gramfort, Alexandre},
+	month = oct,
+	year = {2019},
+	note = {arXiv: 1910.01914},
 	keywords = {tbr},
+	annote = {Comment: version 2. arXiv admin note: text overlap with arXiv:1902.04812},
 	file = {Janati et al_2019_Multi-subject MEG-EEG source imaging with sparse multi-task regression.pdf:/Users/wpq/Dropbox (MIT)/zotero/Janati et al_2019_Multi-subject MEG-EEG source imaging with sparse multi-task regression.pdf:application/pdf}
 }
 
 @article{yangScalableUnbalancedOptimal2019,
-	title = {Scalable Unbalanced Optimal Transport Using Generative Adversarial Networks},
-	abstract = {Generative adversarial networks ({GANs}) are an expressive class of neural generative models with tremendous success in modeling high-dimensional continuous measures. In this paper, we present a scalable method for unbalanced optimal transport ({OT}) based on the generativeadversarial framework. We formulate unbalanced {OT} as a problem of simultaneously learning a transport map and a scaling factor that push a source measure to a target measure in a cost-optimal manner. We provide theoretical justiﬁcation for this formulation, showing that it is closely related to an existing static formulation by Liero et al. (2018). We then propose an algorithm for solving this problem based on stochastic alternating gradient updates, similar in practice to {GANs}, and perform numerical experiments demonstrating how this methodology can be applied to population modeling.},
-	pages = {20},
+	title = {Scalable {Unbalanced} {Optimal} {Transport} {Using} {Generative} {Adversarial} {Networks}},
+	abstract = {Generative adversarial networks (GANs) are an expressive class of neural generative models with tremendous success in modeling high-dimensional continuous measures. In this paper, we present a scalable method for unbalanced optimal transport (OT) based on the generativeadversarial framework. We formulate unbalanced OT as a problem of simultaneously learning a transport map and a scaling factor that push a source measure to a target measure in a cost-optimal manner. We provide theoretical justiﬁcation for this formulation, showing that it is closely related to an existing static formulation by Liero et al. (2018). We then propose an algorithm for solving this problem based on stochastic alternating gradient updates, similar in practice to GANs, and perform numerical experiments demonstrating how this methodology can be applied to population modeling.},
+	language = {en},
 	author = {Yang, Karren D and Uhler, Caroline},
-	date = {2019},
-	langid = {english},
+	year = {2019},
 	keywords = {tbr},
+	pages = {20},
 	file = {Yang_Uhler_2019_Scalable Unbalanced Optimal Transport Using Generative Adversarial Networks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Yang_Uhler_2019_Scalable Unbalanced Optimal Transport Using Generative Adversarial Networks2.pdf:application/pdf}
 }
 
 @article{genevayLearningGenerativeModels2018,
-	title = {Learning Generative Models with Sinkhorn Divergences},
-	pages = {10},
+	title = {Learning {Generative} {Models} with {Sinkhorn} {Divergences}},
+	language = {en},
 	author = {Genevay, Aude and Peyré, Gabriel and Cuturi, Marco},
-	date = {2018},
-	langid = {english},
+	year = {2018},
 	keywords = {read},
+	pages = {10},
+	annote = {Generative Modeling w/ Sinkhorn Div [AISTATS 2018]
+
+sinkhornautodiff! differentiate through the sinkhorn distance
+
+me
+
+i would think only using optimal transport plan will be better than using all intermediate trnasport plans ... hmm
+
+ 
+introduction 
+
+motivation 
+
+OT can compare measures with non-overlapping supports !
+
+
+this paper
+
+primal way to compute gradient of OT loss is numerically stable ... since no need to differentiate the dual solution of OT subproblem.
+
+compare with OT-GAN ... does not backprop errors just use an estimate of optimal transport matrix to compute an upper bound on sinkhorn divergence
+
+
+
+
+minimum kantorovich estimator
+
+density fitting
+
+some generaive model x = g(z) and observation y ... want to match g(X) and Y
+
+
+different distance between measures
+
+MLE, MMD, OT, entropic regularized OT
+
+
+
+
+sinkhorn autodiff
+
+differentiate via dual
+
+needs to approximate the non-discrete dual potential ... e.g. stochastic optimization for large scale OT
+integrate over Z only
+hard to compute .. very unstable
+
+
+differetiate via primal
+
+integrate over ZxY
+
+
+steps
+
+use minibatches and compute L steps of sinkhorn now computes OT between 2 discrete measures
+use OT using sinkhorn which is differentiable
+
+
+minimax to learn cost ...
+
+
+},
 	file = {Genevay et al_2018_Learning Generative Models with Sinkhorn Divergences.pdf:/Users/wpq/Dropbox (MIT)/zotero/Genevay et al_2018_Learning Generative Models with Sinkhorn Divergences.pdf:application/pdf}
 }
 
 @article{audeStochasticOptimizationLargescale2016,
-	title = {Stochastic Optimization for Large-scale Optimal Transport},
+	title = {Stochastic {Optimization} for {Large}-scale {Optimal} {Transport}},
 	url = {http://arxiv.org/abs/1605.08527},
-	abstract = {Optimal transport ({OT}) defines a powerful framework to compare probability distributions in a geometrically faithful way. However, the practical impact of {OT} is still limited because of its computational burden. We propose a new class of stochastic optimization algorithms to cope with large-scale problems routinely encountered in machine learning applications. These methods are able to manipulate arbitrary distributions (either discrete or continuous) by simply requiring to be able to draw samples from them, which is the typical setup in high-dimensional learning problems. This alleviates the need to discretize these densities, while giving access to provably convergent methods that output the correct distance without discretization error. These algorithms rely on two main ideas: (a) the dual {OT} problem can be re-cast as the maximization of an expectation ; (b) entropic regularization of the primal {OT} problem results in a smooth dual optimization optimization which can be addressed with algorithms that have a provably faster convergence. We instantiate these ideas in three different setups: (i) when comparing a discrete distribution to another, we show that incremental stochastic optimization schemes can beat Sinkhorn's algorithm, the current state-of-the-art finite dimensional {OT} solver; (ii) when comparing a discrete distribution to a continuous density, a semi-discrete reformulation of the dual program is amenable to averaged stochastic gradient descent, leading to better performance than approximately solving the problem by discretization ; (iii) when dealing with two continuous densities, we propose a stochastic gradient descent over a reproducing kernel Hilbert space ({RKHS}). This is currently the only known method to solve this problem, apart from computing {OT} on finite samples. We backup these claims on a set of discrete, semi-discrete and continuous benchmark problems.},
-	journaltitle = {{arXiv}:1605.08527 [cs, math]},
-	author = {Aude, Genevay and Cuturi, Marco and Peyré, Gabriel and Bach, Francis},
+	abstract = {Optimal transport (OT) defines a powerful framework to compare probability distributions in a geometrically faithful way. However, the practical impact of OT is still limited because of its computational burden. We propose a new class of stochastic optimization algorithms to cope with large-scale problems routinely encountered in machine learning applications. These methods are able to manipulate arbitrary distributions (either discrete or continuous) by simply requiring to be able to draw samples from them, which is the typical setup in high-dimensional learning problems. This alleviates the need to discretize these densities, while giving access to provably convergent methods that output the correct distance without discretization error. These algorithms rely on two main ideas: (a) the dual OT problem can be re-cast as the maximization of an expectation ; (b) entropic regularization of the primal OT problem results in a smooth dual optimization optimization which can be addressed with algorithms that have a provably faster convergence. We instantiate these ideas in three different setups: (i) when comparing a discrete distribution to another, we show that incremental stochastic optimization schemes can beat Sinkhorn's algorithm, the current state-of-the-art finite dimensional OT solver; (ii) when comparing a discrete distribution to a continuous density, a semi-discrete reformulation of the dual program is amenable to averaged stochastic gradient descent, leading to better performance than approximately solving the problem by discretization ; (iii) when dealing with two continuous densities, we propose a stochastic gradient descent over a reproducing kernel Hilbert space (RKHS). This is currently the only known method to solve this problem, apart from computing OT on finite samples. We backup these claims on a set of discrete, semi-discrete and continuous benchmark problems.},
 	urldate = {2020-11-10},
-	date = {2016-05-27},
-	eprinttype = {arxiv},
-	eprint = {1605.08527},
+	journal = {arXiv:1605.08527 [cs, math]},
+	author = {Aude, Genevay and Cuturi, Marco and Peyré, Gabriel and Bach, Francis},
+	month = may,
+	year = {2016},
+	note = {arXiv: 1605.08527},
 	keywords = {good, tbr},
+	annote = {SGD for large-scasle OT [Neurips 2016]
+
+semidiscrete OT solver!
+also defines sinkhorn divergence (debiased OT)
+
+ 
+introduction 
+
+semidiscrete OT
+
+solved via averaged SGD ... better than sampling the continuous density to solve a discrete OT problem.
+
+
+},
 	file = {Aude et al_2016_Stochastic Optimization for Large-scale Optimal Transport.pdf:/Users/wpq/Dropbox (MIT)/zotero/Aude et al_2016_Stochastic Optimization for Large-scale Optimal Transport.pdf:application/pdf}
 }
 
 @article{mrouehWassersteinStyleTransfer2019,
-	title = {Wasserstein Style Transfer},
+	title = {Wasserstein {Style} {Transfer}},
 	url = {http://arxiv.org/abs/1905.12828},
-	abstract = {We propose Gaussian optimal transport for Image style transfer in an Encoder/Decoder framework. Optimal transport for Gaussian measures has closed forms Monge mappings from source to target distributions. Moreover interpolates between a content and a style image can be seen as geodesics in the Wasserstein Geometry. Using this insight, we show how to mix different target styles , using Wasserstein barycenter of Gaussian measures. Since Gaussians are closed under Wasserstein barycenter, this allows us a simple style transfer and style mixing and interpolation. Moreover we show how mixing different styles can be achieved using other geodesic metrics between gaussians such as the Fisher Rao metric, while the transport of the content to the new interpolate style is still performed with Gaussian {OT} maps. Our simple methodology allows to generate new stylized content interpolating between many artistic styles. The metric used in the interpolation results in different stylizations.},
-	journaltitle = {{arXiv}:1905.12828 [cs, stat]},
-	author = {Mroueh, Youssef},
+	abstract = {We propose Gaussian optimal transport for Image style transfer in an Encoder/Decoder framework. Optimal transport for Gaussian measures has closed forms Monge mappings from source to target distributions. Moreover interpolates between a content and a style image can be seen as geodesics in the Wasserstein Geometry. Using this insight, we show how to mix different target styles , using Wasserstein barycenter of Gaussian measures. Since Gaussians are closed under Wasserstein barycenter, this allows us a simple style transfer and style mixing and interpolation. Moreover we show how mixing different styles can be achieved using other geodesic metrics between gaussians such as the Fisher Rao metric, while the transport of the content to the new interpolate style is still performed with Gaussian OT maps. Our simple methodology allows to generate new stylized content interpolating between many artistic styles. The metric used in the interpolation results in different stylizations.},
 	urldate = {2020-11-10},
-	date = {2019-05-29},
-	eprinttype = {arxiv},
-	eprint = {1905.12828},
+	journal = {arXiv:1905.12828 [cs, stat]},
+	author = {Mroueh, Youssef},
+	month = may,
+	year = {2019},
+	note = {arXiv: 1905.12828},
 	keywords = {tbr},
 	file = {Mroueh_2019_Wasserstein Style Transfer.pdf:/Users/wpq/Dropbox (MIT)/zotero/Mroueh_2019_Wasserstein Style Transfer.pdf:application/pdf}
 }
@@ -182,157 +456,480 @@
 	issn = {0730-0301, 1557-7368},
 	url = {https://dl.acm.org/doi/10.1145/3306346.3323005},
 	doi = {10.1145/3306346.3323005},
-	abstract = {We propose an algorithm that interpolates between vector and frame fields on triangulated surfaces, designed to complement field design methods in geometry processing and simulation. Our algorithm is based on a polar construction, leveraging a conservation law from the Hopf-Poincaré theorem to match singular points using ideas from optimal transport; the remaining detail of the field is interpolated using straightforward machinery. Our model is designed with topology in mind, sliding singular points along the surface rather than having them appear and disappear, and it caters to all surface topologies, including boundary and generator loops. {CCS} Concepts: • Computing methodologies → Shape analysis; • Mathematics of computing → Interpolation.},
-	pages = {1--13},
+	abstract = {We propose an algorithm that interpolates between vector and frame fields on triangulated surfaces, designed to complement field design methods in geometry processing and simulation. Our algorithm is based on a polar construction, leveraging a conservation law from the Hopf-Poincaré theorem to match singular points using ideas from optimal transport; the remaining detail of the field is interpolated using straightforward machinery. Our model is designed with topology in mind, sliding singular points along the surface rather than having them appear and disappear, and it caters to all surface topologies, including boundary and generator loops. CCS Concepts: • Computing methodologies → Shape analysis; • Mathematics of computing → Interpolation.},
+	language = {en},
 	number = {4},
-	journaltitle = {{ACM} Transactions on Graphics},
-	shortjournal = {{ACM} Trans. Graph.},
-	author = {Solomon, Justin and Vaxman, Amir},
 	urldate = {2020-11-10},
-	date = {2019-07-12},
-	langid = {english},
+	journal = {ACM Transactions on Graphics},
+	author = {Solomon, Justin and Vaxman, Amir},
+	month = jul,
+	year = {2019},
 	keywords = {tbr},
+	pages = {1--13},
+	annote = {OT on directional fields},
 	file = {Solomon_Vaxman_2019_Optimal transport-based polar interpolation of directional fields.pdf:/Users/wpq/Dropbox (MIT)/zotero/Solomon_Vaxman_2019_Optimal transport-based polar interpolation of directional fields.pdf:application/pdf}
 }
 
 @article{papadakisOptimalTransportProximal2014,
-	title = {Optimal Transport with Proximal Splitting},
+	title = {Optimal {Transport} with {Proximal} {Splitting}},
 	volume = {7},
 	issn = {1936-4954},
 	url = {http://arxiv.org/abs/1304.5784},
 	doi = {10.1137/130920058},
 	abstract = {This article reviews the use of first order convex optimization schemes to solve the discretized dynamic optimal transport problem, initially proposed by Benamou and Brenier. We develop a staggered grid discretization that is well adapted to the computation of the \$L{\textasciicircum}2\$ optimal transport geodesic between distributions defined on a uniform spatial grid. We show how proximal splitting schemes can be used to solve the resulting large scale convex optimization problem. A specific instantiation of this method on a centered grid corresponds to the initial algorithm developed by Benamou and Brenier. We also show how more general cost functions can be taken into account and how to extend the method to perform optimal transport on a Riemannian manifold.},
-	pages = {212--238},
 	number = {1},
-	journaltitle = {{SIAM} Journal on Imaging Sciences},
-	shortjournal = {{SIAM} J. Imaging Sci.},
-	author = {Papadakis, Nicolas and Peyré, Gabriel and Oudet, Edouard},
 	urldate = {2020-12-21},
-	date = {2014-01},
-	eprinttype = {arxiv},
-	eprint = {1304.5784},
+	journal = {SIAM Journal on Imaging Sciences},
+	author = {Papadakis, Nicolas and Peyré, Gabriel and Oudet, Edouard},
+	month = jan,
+	year = {2014},
+	note = {arXiv: 1304.5784},
 	keywords = {tbr},
+	pages = {212--238},
+	annote = {[SIAM 2013]},
 	file = {Papadakis et al_2014_Optimal Transport with Proximal Splitting.pdf:/Users/wpq/Dropbox (MIT)/zotero/Papadakis et al_2014_Optimal Transport with Proximal Splitting.pdf:application/pdf}
 }
 
 @article{lavenantDynamicalOptimalTransport2019,
-	title = {Dynamical Optimal Transport on Discrete Surfaces},
+	title = {Dynamical {Optimal} {Transport} on {Discrete} {Surfaces}},
 	volume = {37},
 	issn = {0730-0301, 1557-7368},
 	url = {http://arxiv.org/abs/1809.07083},
 	doi = {10.1145/3272127.3275064},
 	abstract = {We propose a technique for interpolating between probability distributions on discrete surfaces, based on the theory of optimal transport. Unlike previous attempts that use linear programming, our method is based on a dynamical formulation of quadratic optimal transport proposed for flat domains by Benamou and Brenier [2000], adapted to discrete surfaces. Our structure-preserving construction yields a Riemannian metric on the (finite-dimensional) space of probability distributions on a discrete surface, which translates the so-called Otto calculus to discrete language. From a practical perspective, our technique provides a smooth interpolation between distributions on discrete surfaces with less diffusion than state-of-the-art algorithms involving entropic regularization. Beyond interpolation, we show how our discrete notion of optimal transport extends to other tasks, such as distribution-valued Dirichlet problems and time integration of gradient flows.},
-	pages = {1--16},
 	number = {6},
-	journaltitle = {{ACM} Transactions on Graphics},
-	shortjournal = {{ACM} Trans. Graph.},
-	author = {Lavenant, Hugo and Claici, Sebastian and Chien, Edward and Solomon, Justin},
 	urldate = {2020-12-21},
-	date = {2019-01-10},
-	eprinttype = {arxiv},
-	eprint = {1809.07083},
+	journal = {ACM Transactions on Graphics},
+	author = {Lavenant, Hugo and Claici, Sebastian and Chien, Edward and Solomon, Justin},
+	month = jan,
+	year = {2019},
+	note = {arXiv: 1809.07083},
 	keywords = {tbr},
+	pages = {1--16},
+	annote = {dynamic/eulerian OT on surface [Siggraph 2019]
+ },
 	file = {Lavenant et al_2019_Dynamical Optimal Transport on Discrete Surfaces.pdf:/Users/wpq/Dropbox (MIT)/zotero/Lavenant et al_2019_Dynamical Optimal Transport on Discrete Surfaces.pdf:application/pdf}
 }
 
 @article{alvarez-melisOptimalTransportGlobal2019,
-	title = {Towards Optimal Transport with Global Invariances},
+	title = {Towards {Optimal} {Transport} with {Global} {Invariances}},
 	url = {http://arxiv.org/abs/1806.09277},
 	abstract = {Many problems in machine learning involve calculating correspondences between sets of objects, such as point clouds or images. Discrete optimal transport provides a natural and successful approach to such tasks whenever the two sets of objects can be represented in the same space, or at least distances between them can be directly evaluated. Unfortunately neither requirement is likely to hold when object representations are learned from data. Indeed, automatically derived representations such as word embeddings are typically fixed only up to some global transformations, for example, reflection or rotation. As a result, pairwise distances across two such instances are ill-defined without specifying their relative transformation. In this work, we propose a general framework for optimal transport in the presence of latent global transformations. We cast the problem as a joint optimization over transport couplings and transformations chosen from a flexible class of invariances, propose algorithms to solve it, and show promising results in various tasks, including a popular unsupervised word translation benchmark.},
-	journaltitle = {{arXiv}:1806.09277 [cs, stat]},
-	author = {Alvarez-Melis, David and Jegelka, Stefanie and Jaakkola, Tommi S.},
 	urldate = {2021-02-10},
-	date = {2019-02-26},
-	eprinttype = {arxiv},
-	eprint = {1806.09277},
+	journal = {arXiv:1806.09277 [cs, stat]},
+	author = {Alvarez-Melis, David and Jegelka, Stefanie and Jaakkola, Tommi S.},
+	month = feb,
+	year = {2019},
+	note = {arXiv: 1806.09277},
 	keywords = {read},
+	annote = {OT with invariance [AISTATS 2019]
+
+discretee OT with global invariance
+optimize for transport mapping and transformation ... to align 2 embedding spaces
+
+ 
+introduction 
+
+assumption
+
+unsupervised, i.e. no pairing
+2 embedding space un-unregistered
+
+
+ goal
+
+say have two embedding space (e,g, word embedding of english and word embedding of spanish), they are equivalent up to some rotation (since max likelihood etc. cannot distinguish rotated space). how to align the two embedding spaces such that you can compute meaningful distance between embedding two instances of these two embeddings (e.g. woman with homme)
+
+
+probem
+
+OT assumes P,Q supported on same set. but this is not so true for word embeddings
+unsupervised. no pairing
+
+
+objective
+
+optimize for both transport plan and embedding.
+not jointly but concave in optimization variables if hold other fixed
+
+Frank-Wolfe type algo
+
+
+
+
+},
 	file = {Alvarez-Melis et al_2019_Towards Optimal Transport with Global Invariances.pdf:/Users/wpq/Dropbox (MIT)/zotero/Alvarez-Melis et al_2019_Towards Optimal Transport with Global Invariances.pdf:application/pdf}
 }
 
 @inproceedings{alvarez-melisGromovWassersteinAlignmentWord2018,
-	location = {Brussels, Belgium},
-	title = {Gromov-Wasserstein Alignment of Word Embedding Spaces},
+	address = {Brussels, Belgium},
+	title = {Gromov-{Wasserstein} {Alignment} of {Word} {Embedding} {Spaces}},
 	url = {https://www.aclweb.org/anthology/D18-1214},
 	doi = {10.18653/v1/D18-1214},
-	abstract = {Cross-lingual or cross-domain correspondences play key roles in tasks ranging from machine translation to transfer learning. Recently, purely unsupervised methods operating on monolingual embeddings have become effective alignment tools. Current state-of-the-art methods, however, involve multiple steps, including heuristic post-hoc refinement strategies. In this paper, we cast the correspondence problem directly as an optimal transport ({OT}) problem, building on the idea that word embeddings arise from metric recovery algorithms. Indeed, we exploit the Gromov-Wasserstein distance that measures how similarities between pairs of words relate across languages. We show that our {OT} objective can be estimated efficiently, requires little or no tuning, and results in performance comparable with the state-of-the-art in various unsupervised word translation tasks.},
-	eventtitle = {{EMNLP} 2018},
-	pages = {1881--1890},
-	booktitle = {Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing},
+	abstract = {Cross-lingual or cross-domain correspondences play key roles in tasks ranging from machine translation to transfer learning. Recently, purely unsupervised methods operating on monolingual embeddings have become effective alignment tools. Current state-of-the-art methods, however, involve multiple steps, including heuristic post-hoc refinement strategies. In this paper, we cast the correspondence problem directly as an optimal transport (OT) problem, building on the idea that word embeddings arise from metric recovery algorithms. Indeed, we exploit the Gromov-Wasserstein distance that measures how similarities between pairs of words relate across languages. We show that our OT objective can be estimated efficiently, requires little or no tuning, and results in performance comparable with the state-of-the-art in various unsupervised word translation tasks.},
+	urldate = {2021-02-10},
+	booktitle = {Proceedings of the 2018 {Conference} on {Empirical} {Methods} in {Natural} {Language} {Processing}},
 	publisher = {Association for Computational Linguistics},
 	author = {Alvarez-Melis, David and Jaakkola, Tommi},
-	urldate = {2021-02-10},
-	date = {2018-10},
+	month = oct,
+	year = {2018},
 	keywords = {tbr},
+	pages = {1881--1890},
 	file = {Alvarez-Melis_Jaakkola_2018_Gromov-Wasserstein Alignment of Word Embedding Spaces.pdf:/Users/wpq/Dropbox (MIT)/zotero/Alvarez-Melis_Jaakkola_2018_Gromov-Wasserstein Alignment of Word Embedding Spaces.pdf:application/pdf}
 }
 
 @article{feydyGeometricDataAnalysis2020,
 	title = {Geometric data analysis, beyond convolutions},
-	pages = {259},
+	language = {en},
 	author = {Feydy, Jean},
-	date = {2020},
-	langid = {english},
-	keywords = {good, tbr},
+	year = {2020},
+	keywords = {good, read},
+	pages = {259},
+	annote = {Jean Feydy thesis !
+
+lddmm+ot
+lddmm hamiltonian interpretation
+keops
+medical motivations
+
+ 
+me
+
+plotting dual potential as wavefront for 2d pointsets seem to be pretty illustrative
+kernel truncation ... now impl as clustering ... can we optimize the location similar to how inducing variables are optimized instead of fixed !
+future directions
+
+defining relevant, affordable topology aware metrics on space of measures is major problem in medical imaging !
+adaptive shape metrics .. e.g. region specific kernel parameter etc. probably where learning+data comes in
+5.3.2 talks about enforcing axioms on target geometry ... cycle consistency for metric/cometric .... ways to enforce axioms (functional maps ? )
+registration how to bridge gap between elastic registration and registration by deforming ambient space ? do both ?
+
+
+coding
+
+eulerian/lagrangian barycenter for 2d densities sounds pretty interesting !
+geodesic shooting of triangles as experiments ...
+
+
+another motivation for OT+uncertainty ... barycenter can be unreliable if shapes differ too much from each other.
+
+get per-sample uncertainty map to atlas
+
+
+reading
+
+geodesics as hamiltonian flow ...
+
+
+
+registering point sets (73-138)
+
+connection to gradient flow pretty interesting. hausdoff divergence low quality gradient .. .
+intuition about why affine iterative registration never break things apart
+
+heavy regularization on permissible transformation ! as long as gradient points toward correct direction, OK
+
+
+kernel norm intuition
+
+induce pointwise, eulerian geometry on space of measures.
+
+
+use kernel for point sets
+
+want pointy ( preserve high-freq content ) and wide support (allow samples to interact to each other at long range )
+interpolation betweern deltas modifies weight ... does not leverage metric structure of the feature space X !
+
+problem with using kernel norm for point sets (geometry) due to vanishing gradients .. .
+
+rbf is very bad in this sense
+
+
+want heavy tail, not too smooth kernel !
+
+
+limitation
+
+rely on pointwise fadings ... instead of geometry defomrations ...
+
+
+
+
+OT
+
+sorting ! lifting of distance on feature space ... !
+differentiable a.e. (can recover primal plan a.e. using c transform from 2N dual variables)
+OT induce particle-based geoemtry on space of measures
+gradient flow using OT
+
+gradient decays as points matches .. combine this to get good gradient ?
+
+
+good geometric intuition by aggressive update to dual variables (without regularization) got stuck in local min
+
+where eps-scaling come from
+
+
+vouch for KL instead of entropy H ... dual agrees for discrete/continuous measures
+entropic bias
+
+sinkhorn divergence really comes from trying to register point clouds using OT ...
+
+
+unbalanced OT
+
+has the dual problem eqn
+
+
+multiscale
+
+try to make dual update balanced
+
+
+kernel truncation
+
+dual potential are smooth ... so can be described with coarse samples ! and sinkhorn loop are much faster on subsampled encodings (clustering etc.)
+
+
+has gradient (bypass backprop) through sinkhorn loop !
+argues nystrom+sinkhorn assumes too much blurring ... not usable for geometric applications
+OT does not preserve topology of data ... introducing elastic deformation !
+
+
+
+encoding shapes as measures (138-154)
+
+registration
+
+generalize particle-flow problem. loss which has knowledge of geometry of input induce clearer gradients !
+lddmm-ot motivation
+
+might tear apart features of shape. diffreg prevents template from breaking down to pieces
+
+
+barycenter
+
+eulerian: optimize weight
+
+is convext wrt to weight ...
+
+
+lagrangian: optimize location x
+
+faster
+not convex wrt location ! stuck in local min
+
+
+
+
+
+
+
+geometry on space of anatomical shapes (155-178)
+
+motivates thin plate spline from rkhs norm of displacement vector field !
+
+can be seen as optimizing for momenta ... where v = K * m
+
+
+categorization of large deformation
+
+SVF, LDDMM references !
+
+
+riemanian metric on space of shapes
+
+g: (x,v) -{\textgreater} g\_x v metric
+
+graph laplacian for mesh enforce elasticity. good for graphics application where Lap is defined ... requires clean segmentation, pointwise correspondence etc.
+extrinsic metric that penalize deformation of ambient space ... {\textbar}{\textbar}v{\textbar}{\textbar}\_g  = min\_v {\textbar}{\textbar}v{\textbar}{\textbar}\_k where k is some psd kernel enforcing smoothness. ... e.g. g = (I-{\textbackslash}alpha Lap){\textasciicircum}2 or simply K{\textasciicircum}-1 where k is kernel cometric
+
+for noisy data good. also invariant to permutation (applied to source/target)
+rbf kernel favors contriction-dilation dynamics .... similar to branched OT ! prevents lddmm from producing reliable extrapolations ...
+
+
+
+
+geodesic interpolation problem
+
+min length(x) ... x0=A0, x1=A1
+
+
+mean curvature flow optimize for time-varying location simultaneously to minimize length of geodesic
+geodesic shooting as optimizing initial momentum so that solution of geodesic equation is close to target
+
+continuous generalization of linear spline model !
+
+
+
+
+
+ 
+ },
 	file = {Feydy_2020_Geometric data analysis, beyond convolutions.pdf:/Users/wpq/Dropbox (MIT)/zotero/Feydy_2020_Geometric data analysis, beyond convolutions.pdf:application/pdf}
 }
 
 @article{peyreComputationalOptimalTransport2020,
-	title = {Computational Optimal Transport},
+	title = {Computational {Optimal} {Transport}},
 	url = {http://arxiv.org/abs/1803.00567},
-	abstract = {Optimal transport ({OT}) theory can be informally described using the words of the French mathematician Gaspard Monge (1746-1818): A worker with a shovel in hand has to move a large pile of sand lying on a construction site. The goal of the worker is to erect with all that sand a target pile with a prescribed shape (for example, that of a giant sand castle). Naturally, the worker wishes to minimize her total effort, quantified for instance as the total distance or time spent carrying shovelfuls of sand. Mathematicians interested in {OT} cast that problem as that of comparing two probability distributions, two different piles of sand of the same volume. They consider all of the many possible ways to morph, transport or reshape the first pile into the second, and associate a "global" cost to every such transport, using the "local" consideration of how much it costs to move a grain of sand from one place to another. Recent years have witnessed the spread of {OT} in several fields, thanks to the emergence of approximate solvers that can scale to sizes and dimensions that are relevant to data sciences. Thanks to this newfound scalability, {OT} is being increasingly used to unlock various problems in imaging sciences (such as color or texture processing), computer vision and graphics (for shape manipulation) or machine learning (for regression, classification and density fitting). This short book reviews {OT} with a bias toward numerical methods and their applications in data sciences, and sheds lights on the theoretical properties of {OT} that make it particularly useful for some of these applications.},
-	journaltitle = {{arXiv}:1803.00567 [stat]},
-	author = {Peyré, Gabriel and Cuturi, Marco},
+	abstract = {Optimal transport (OT) theory can be informally described using the words of the French mathematician Gaspard Monge (1746-1818): A worker with a shovel in hand has to move a large pile of sand lying on a construction site. The goal of the worker is to erect with all that sand a target pile with a prescribed shape (for example, that of a giant sand castle). Naturally, the worker wishes to minimize her total effort, quantified for instance as the total distance or time spent carrying shovelfuls of sand. Mathematicians interested in OT cast that problem as that of comparing two probability distributions, two different piles of sand of the same volume. They consider all of the many possible ways to morph, transport or reshape the first pile into the second, and associate a "global" cost to every such transport, using the "local" consideration of how much it costs to move a grain of sand from one place to another. Recent years have witnessed the spread of OT in several fields, thanks to the emergence of approximate solvers that can scale to sizes and dimensions that are relevant to data sciences. Thanks to this newfound scalability, OT is being increasingly used to unlock various problems in imaging sciences (such as color or texture processing), computer vision and graphics (for shape manipulation) or machine learning (for regression, classification and density fitting). This short book reviews OT with a bias toward numerical methods and their applications in data sciences, and sheds lights on the theoretical properties of OT that make it particularly useful for some of these applications.},
 	urldate = {2021-03-05},
-	date = {2020-03-18},
-	eprinttype = {arxiv},
-	eprint = {1803.00567},
+	journal = {arXiv:1803.00567 [stat]},
+	author = {Peyré, Gabriel and Cuturi, Marco},
+	month = mar,
+	year = {2020},
+	note = {arXiv: 1803.00567},
 	keywords = {good, read},
+	annote = {Gabriel Peyre, Marco Cuturi
+ 
+semidiscrete transport
+
+can have stochastic optimization
+},
 	file = {Peyre_Cuturi_2020_Computational Optimal Transport.pdf:/Users/wpq/Dropbox (MIT)/zotero/Peyre_Cuturi_2020_Computational Optimal Transport.pdf:application/pdf}
 }
 
 @article{mallastoBayesianInferenceOptimal2020,
-	title = {Bayesian Inference for Optimal Transport with Stochastic Cost},
+	title = {Bayesian {Inference} for {Optimal} {Transport} with {Stochastic} {Cost}},
 	url = {http://arxiv.org/abs/2010.09327},
-	abstract = {In machine learning and computer vision, optimal transport has had significant success in learning generative models and defining metric distances between structured and stochastic data objects, that can be cast as probability measures. The key element of optimal transport is the so called lifting of an {\textbackslash}emph\{exact\} cost (distance) function, defined on the sample space, to a cost (distance) between probability measures over the sample space. However, in many real life applications the cost is {\textbackslash}emph\{stochastic\}: e.g., the unpredictable traffic flow affects the cost of transportation between a factory and an outlet. To take this stochasticity into account, we introduce a Bayesian framework for inferring the optimal transport plan distribution induced by the stochastic cost, allowing for a principled way to include prior information and to model the induced stochasticity on the transport plans. Additionally, we tailor an {HMC} method to sample from the resulting transport plan posterior distribution.},
-	journaltitle = {{arXiv}:2010.09327 [cs, stat]},
-	author = {Mallasto, Anton and Heinonen, Markus and Kaski, Samuel},
+	abstract = {In machine learning and computer vision, optimal transport has had significant success in learning generative models and defining metric distances between structured and stochastic data objects, that can be cast as probability measures. The key element of optimal transport is the so called lifting of an {\textbackslash}emph\{exact\} cost (distance) function, defined on the sample space, to a cost (distance) between probability measures over the sample space. However, in many real life applications the cost is {\textbackslash}emph\{stochastic\}: e.g., the unpredictable traffic flow affects the cost of transportation between a factory and an outlet. To take this stochasticity into account, we introduce a Bayesian framework for inferring the optimal transport plan distribution induced by the stochastic cost, allowing for a principled way to include prior information and to model the induced stochasticity on the transport plans. Additionally, we tailor an HMC method to sample from the resulting transport plan posterior distribution.},
 	urldate = {2021-03-12},
-	date = {2020-10-19},
-	eprinttype = {arxiv},
-	eprint = {2010.09327},
+	journal = {arXiv:2010.09327 [cs, stat]},
+	author = {Mallasto, Anton and Heinonen, Markus and Kaski, Samuel},
+	month = oct,
+	year = {2020},
+	note = {arXiv: 2010.09327},
 	keywords = {tbr},
+	annote = {BayesOT
+
+entropy regularized OT as MAP estimate of BayesOT of OT with a stochastic cost (the cost matrix is a random matrix)
+
+ 
+introduction 
+
+OT with stochastic cost
+
+random cost matrix
+
+{\textbackslash}sim Prob(C)
+matching measures of input/outputs
+inherent stochasticity of the cost
+
+
+stochasticity of random cost matrix propagates to transport plan, now a random variable as well!
+
+
+},
 	file = {Mallasto et al_2020_Bayesian Inference for Optimal Transport with Stochastic Cost.pdf:/Users/wpq/Dropbox (MIT)/zotero/Mallasto et al_2020_Bayesian Inference for Optimal Transport with Stochastic Cost.pdf:application/pdf}
 }
 
 @article{solomonOptimalTransportDiscrete2018,
-	title = {Optimal Transport on Discrete Domains},
+	title = {Optimal {Transport} on {Discrete} {Domains}},
 	url = {http://arxiv.org/abs/1801.07745},
-	abstract = {Inspired by the matching of supply to demand in logistical problems, the optimal transport (or Monge--Kantorovich) problem involves the matching of probability distributions defined over a geometric domain such as a surface or manifold. In its most obvious discretization, optimal transport becomes a large-scale linear program, which typically is infeasible to solve efficiently on triangle meshes, graphs, point clouds, and other domains encountered in graphics and machine learning. Recent breakthroughs in numerical optimal transport, however, enable scalability to orders-of-magnitude larger problems, solvable in a fraction of a second. Here, we discuss advances in numerical optimal transport that leverage understanding of both discrete and smooth aspects of the problem. State-of-the-art techniques in discrete optimal transport combine insight from partial differential equations ({PDE}) with convex analysis to reformulate, discretize, and optimize transportation problems. The end result is a set of theoretically-justified models suitable for domains with thousands or millions of vertices. Since numerical optimal transport is a relatively new discipline, special emphasis is placed on identifying and explaining open problems in need of mathematical insight and additional research.},
-	journaltitle = {{arXiv}:1801.07745 [cs, math]},
-	author = {Solomon, Justin},
+	abstract = {Inspired by the matching of supply to demand in logistical problems, the optimal transport (or Monge--Kantorovich) problem involves the matching of probability distributions defined over a geometric domain such as a surface or manifold. In its most obvious discretization, optimal transport becomes a large-scale linear program, which typically is infeasible to solve efficiently on triangle meshes, graphs, point clouds, and other domains encountered in graphics and machine learning. Recent breakthroughs in numerical optimal transport, however, enable scalability to orders-of-magnitude larger problems, solvable in a fraction of a second. Here, we discuss advances in numerical optimal transport that leverage understanding of both discrete and smooth aspects of the problem. State-of-the-art techniques in discrete optimal transport combine insight from partial differential equations (PDE) with convex analysis to reformulate, discretize, and optimize transportation problems. The end result is a set of theoretically-justified models suitable for domains with thousands or millions of vertices. Since numerical optimal transport is a relatively new discipline, special emphasis is placed on identifying and explaining open problems in need of mathematical insight and additional research.},
 	urldate = {2021-03-13},
-	date = {2018-05-01},
-	eprinttype = {arxiv},
-	eprint = {1801.07745},
+	journal = {arXiv:1801.07745 [cs, math]},
+	author = {Solomon, Justin},
+	month = may,
+	year = {2018},
+	note = {arXiv: 1801.07745},
 	keywords = {good, read},
+	annote = {DDG + OT
+ 
+ 
+introduction 
+
+motivation 
+
+DDG represent shape with confidence. real world data full of uncertainty, represent shape with distribution ... using OT might be relevant
+
+
+semidiscrete OT
+
+can still be solved with finite number of parameters ! since no leapfrog happens. can partition space into power cells and search for matching of discrete points to power cells
+
+
+eulerian derivation of OT
+
+seems quite related to the lddmm framework not sure what is the exact connection here
+
+
+
+
+2.4 OT for registration
+
+OT does not penalize mass splitting or making non-elastic deformations ,,,,
+OT for diffeomorphic registration combines elastic deformation with OT
+
+
+4.2 eulerian OT algorithms
+
+good
+
+explicitly coputes time-varying displacement interpolation of a density explaining the transport
+
+
+bad
+
+needs to solve difficult boundary value PDE problem
+
+
+tutorial for implementation of dynamic OT https://www.numerical-tours.com/matlab/optimaltransp\_2\_benamou\_brenier/
+
+
+4.3 semidiscrete transport
+
+good tutorial https://arxiv.org/pdf/1710.02634.pdf
+
+
+ 5 beyond transport
+
+unbalanced OT
+
+extension of dynamical transport to handle unbalancing!
+
+
+quadratic assignments !
+
+Gromov-Wasserstein distance
+
+
+matrix fields and vector measures
+
+DTI imaging as pds matrix ... align multiple images by performing OT between psd matrix
+2d DTI with OT https://arxiv.org/pdf/1712.10279.pdf
+
+
+
+
+},
 	file = {Solomon_2018_Optimal Transport on Discrete Domains.pdf:/Users/wpq/Dropbox (MIT)/zotero/Solomon_2018_Optimal Transport on Discrete Domains.pdf:application/pdf}
 }
 
 @article{benamouComputationalFluidMechanics2000,
-	title = {A computational fluid mechanics solution to the Monge-Kantorovich mass transfer problem},
+	title = {A computational fluid mechanics solution to the {Monge}-{Kantorovich} mass transfer problem},
 	volume = {84},
 	issn = {0945-3245},
 	url = {https://doi.org/10.1007/s002110050002},
 	doi = {10.1007/s002110050002},
-	pages = {375--393},
+	language = {en},
 	number = {3},
-	journaltitle = {Numerische Mathematik},
-	shortjournal = {Numer. Math.},
-	author = {Benamou, Jean-David and Brenier, Yann},
 	urldate = {2021-03-13},
-	date = {2000-01-01},
-	langid = {english},
+	journal = {Numerische Mathematik},
+	author = {Benamou, Jean-David and Brenier, Yann},
+	month = jan,
+	year = {2000},
 	keywords = {good, tbr},
+	pages = {375--393},
+	annote = {dynamic OT numerical
+
+numerical tour tutorial
+
+tutorial https://www.numerical-tours.com/matlab/optimaltransp\_2\_benamou\_brenier/
+code https://github.com/gpeyre/numerical-tours/blob/master/matlab/m\_files/optimaltransp\_2\_benamou\_brenier.m
+
+
+},
 	file = {Benamou_Brenier_2000_A computational fluid mechanics solution to the Monge-Kantorovich mass transfer problem.pdf:/Users/wpq/Dropbox (MIT)/zotero/Benamou_Brenier_2000_A computational fluid mechanics solution to the Monge-Kantorovich mass transfer problem.pdf:application/pdf}
 }
 
@@ -340,41 +937,52 @@
 	title = {Notions of optimal transport theory and how to implement them on a computer},
 	url = {http://arxiv.org/abs/1710.02634},
 	abstract = {This article gives an introduction to optimal transport, a mathematical theory that makes it possible to measure distances between functions (or distances between more general objects), to interpolate between objects or to enforce mass/volume conservation in certain computational physics simulations. Optimal transport is a rich scientific domain, with active research communities, both on its theoretical aspects and on more applicative considerations, such as geometry processing and machine learning. This article aims at explaining the main principles behind the theory of optimal transport, introduce the different involved notions, and more importantly, how they relate, to let the reader grasp an intuition of the elegant theory that structures them. Then we will consider a specific setting, called semi-discrete, where a continuous function is transported to a discrete sum of Dirac masses. Studying this specific setting naturally leads to an efficient computational algorithm, that uses classical notions of computational geometry, such as a generalization of Voronoi diagrams called Laguerre diagrams.},
-	journaltitle = {{arXiv}:1710.02634 [math]},
-	author = {Levy, Bruno and Schwindt, Erica},
 	urldate = {2021-03-13},
-	date = {2017-10-07},
-	eprinttype = {arxiv},
-	eprint = {1710.02634},
+	journal = {arXiv:1710.02634 [math]},
+	author = {Levy, Bruno and Schwindt, Erica},
+	month = oct,
+	year = {2017},
+	note = {arXiv: 1710.02634},
 	keywords = {good, tbr},
+	annote = {tutorial on OT implementation
+
+impl on semidescrete OT! exposition pretty clear on semidiscrete OT
+
+ 
+ },
 	file = {Levy_Schwindt_2017_Notions of optimal transport theory and how to implement them on a computer.pdf:/Users/wpq/Dropbox (MIT)/zotero/Levy_Schwindt_2017_Notions of optimal transport theory and how to implement them on a computer.pdf:application/pdf}
 }
 
 @inproceedings{ningMatrixvaluedMongeKantorovichOptimal2013,
-	title = {Matrix-valued Monge-Kantorovich optimal mass transport},
+	title = {Matrix-valued {Monge}-{Kantorovich} optimal mass transport},
 	doi = {10.1109/CDC.2013.6760486},
 	abstract = {We formulate an optimal transport problem for matrix-valued density functions. This is pertinent in the spectral analysis of multivariable time-series. The “mass” represents energy at various frequencies whereas, in addition to a usual transportation cost across frequencies, a cost of rotation is also taken into account. We show that it is natural to seek the transportation plan in the tensor product of the spaces for the two matrix-valued marginals. In contrast to the classical Monge-Kantorovich setting, the transportation plan is no longer supported on a thin zero-measure set.},
-	eventtitle = {52nd {IEEE} Conference on Decision and Control},
-	pages = {3906--3911},
-	booktitle = {52nd {IEEE} Conference on Decision and Control},
+	booktitle = {52nd {IEEE} {Conference} on {Decision} and {Control}},
 	author = {Ning, L. and Georgiou, T. T. and Tannenbaum, A.},
-	date = {2013-12},
-	note = {{ISSN}: 0191-2216},
+	month = dec,
+	year = {2013},
+	note = {ISSN: 0191-2216},
 	keywords = {tbr},
+	pages = {3906--3911},
+	annote = {matrix-valued OT [IEEE CDC 2013]},
 	file = {Ning et al_2013_Matrix-valued Monge-Kantorovich optimal mass transport.pdf:/Users/wpq/Dropbox (MIT)/zotero/Ning et al_2013_Matrix-valued Monge-Kantorovich optimal mass transport.pdf:application/pdf}
 }
 
 @article{weberRobustLargeMarginLearning2020,
-	title = {Robust Large-Margin Learning in Hyperbolic Space},
+	title = {Robust {Large}-{Margin} {Learning} in {Hyperbolic} {Space}},
 	url = {http://arxiv.org/abs/2004.05465},
 	abstract = {Recently, there has been a surge of interest in representation learning in hyperbolic spaces, driven by their ability to represent hierarchical data with significantly fewer dimensions than standard Euclidean spaces. However, the viability and benefits of hyperbolic spaces for downstream machine learning tasks have received less attention. In this paper, we present, to our knowledge, the first theoretical guarantees for learning a classifier in hyperbolic rather than Euclidean space. Specifically, we consider the problem of learning a large-margin classifier for data possessing a hierarchical structure. Our first contribution is a hyperbolic perceptron algorithm, which provably converges to a separating hyperplane. We then provide an algorithm to efficiently learn a large-margin hyperplane, relying on the careful injection of adversarial examples. Finally, we prove that for hierarchical data that embeds well into hyperbolic space, the low embedding dimension ensures superior guarantees when learning the classifier directly in hyperbolic space.},
-	journaltitle = {{arXiv}:2004.05465 [cs, stat]},
-	author = {Weber, Melanie and Zaheer, Manzil and Rawat, Ankit Singh and Menon, Aditya and Kumar, Sanjiv},
 	urldate = {2021-03-14},
-	date = {2020-11-03},
-	eprinttype = {arxiv},
-	eprint = {2004.05465},
+	journal = {arXiv:2004.05465 [cs, stat]},
+	author = {Weber, Melanie and Zaheer, Manzil and Rawat, Ankit Singh and Menon, Aditya and Kumar, Sanjiv},
+	month = nov,
+	year = {2020},
+	note = {arXiv: 2004.05465},
 	keywords = {tbr},
+	annote = {[NeurIPS 2020]
+
+robust SVM in hyperbolic space
+},
 	file = {Weber et al_2020_Robust Large-Margin Learning in Hyperbolic Space.pdf:/Users/wpq/Dropbox (MIT)/zotero/Weber et al_2020_Robust Large-Margin Learning in Hyperbolic Space.pdf:application/pdf}
 }
 
@@ -385,98 +993,111 @@
 	url = {http://www.esaim-m2an.org/10.1051/m2an/2015025},
 	doi = {10.1051/m2an/2015025},
 	abstract = {Benamou and Brenier formulation of Monge transportation problem [4] has proven to be of great interest in image processing to compute warpings and distances between pair of images [2]. One requirement for the algorithm to work is to interpolate densities of same mass. In most applications to image interpolation, this is a serious limitation. Existing approaches [3, 15, 16] to overcome this caveat are reviewed, and discussed. Due to the mix between transport and L2 interpolation, these models can produce instantaneous motion at ﬁnite range. In this paper we propose new methods, parameter-free, for interpolating unbalanced densities. One of our motivations is the application to interpolation of growing tumor images.},
-	pages = {1717--1744},
+	language = {en},
 	number = {6},
-	journaltitle = {{ESAIM}: Mathematical Modelling and Numerical Analysis},
-	shortjournal = {{ESAIM}: M2AN},
-	author = {Lombardi, Damiano and Maitre, Emmanuel},
 	urldate = {2021-03-14},
-	date = {2015-11},
-	langid = {english},
+	journal = {ESAIM: Mathematical Modelling and Numerical Analysis},
+	author = {Lombardi, Damiano and Maitre, Emmanuel},
+	month = nov,
+	year = {2015},
 	keywords = {tbr},
+	pages = {1717--1744},
+	annote = {eulerian model for unbalanced OT},
 	file = {Lombardi and Maitre - 2015 - Eulerian models and algorithms for unbalanced opti.pdf:/Users/wpq/Zotero/storage/MIPYIFXJ/Lombardi and Maitre - 2015 - Eulerian models and algorithms for unbalanced opti.pdf:application/pdf}
 }
 
-@thesis{genevayEntropyRegularizedOptimalTransport2019,
-	title = {Entropy-Regularized Optimal Transport for Machine Learning},
-	url = {https://tel.archives-ouvertes.fr/tel-02319318},
-	abstract = {This thesis proposes theoretical and numerical contributions to use Entropy-regularized Optimal Transport ({EOT}) for machine learning. We introduce Sinkhorn Divergences ({SD}), a class of discrepancies between probability measures based on {EOT} which interpolates between two other well-known discrepancies: Optimal Transport ({OT}) and Maximum Mean Discrepancies ({MMD}). We develop an efficient numerical method to use {SD} for density fitting tasks, showing that a suitable choice of regularization can improve performance over existing methods. We derive a sample complexity theorem for {SD} which proves that choosing a large enough regularization parameter allows to break the curse of dimensionality from {OT}, and recover asymptotic rates similar to {MMD}. We propose and analyze stochastic optimization solvers for {EOT}, which yield online methods that can cope with arbitrary measures and are well suited to large scale problems, contrarily to existing discrete batch solvers.},
-	institution = {{PSL} University},
+@phdthesis{genevayEntropyRegularizedOptimalTransport2019,
 	type = {phdthesis},
-	author = {Genevay, Aude},
+	title = {Entropy-{Regularized} {Optimal} {Transport} for {Machine} {Learning}},
+	url = {https://tel.archives-ouvertes.fr/tel-02319318},
+	abstract = {This thesis proposes theoretical and numerical contributions to use Entropy-regularized Optimal Transport (EOT) for machine learning. We introduce Sinkhorn Divergences (SD), a class of discrepancies between probability measures based on EOT which interpolates between two other well-known discrepancies: Optimal Transport (OT) and Maximum Mean Discrepancies (MMD). We develop an efficient numerical method to use SD for density fitting tasks, showing that a suitable choice of regularization can improve performance over existing methods. We derive a sample complexity theorem for SD which proves that choosing a large enough regularization parameter allows to break the curse of dimensionality from OT, and recover asymptotic rates similar to MMD. We propose and analyze stochastic optimization solvers for EOT, which yield online methods that can cope with arbitrary measures and are well suited to large scale problems, contrarily to existing discrete batch solvers.},
+	language = {en},
 	urldate = {2021-03-16},
-	date = {2019-03-13},
-	langid = {english},
+	school = {PSL University},
+	author = {Genevay, Aude},
+	month = mar,
+	year = {2019},
 	keywords = {good, tbr},
+	annote = {Aude Genevay PhD thesis [2019]
+
+entropy regularized OT
+also SGD for semi-discrete OT
+},
 	file = {Genevay_2019_Entropy-Regularized Optimal Transport for Machine Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Genevay_2019_Entropy-Regularized Optimal Transport for Machine Learning.pdf:application/pdf}
 }
 
 @article{degoesOptimalTransportApproach2011,
-	title = {An Optimal Transport Approach to Robust Reconstruction and Simplification of 2D Shapes},
+	title = {An {Optimal} {Transport} {Approach} to {Robust} {Reconstruction} and {Simplification} of {2D} {Shapes}},
 	volume = {30},
 	issn = {01677055},
 	url = {http://doi.wiley.com/10.1111/j.1467-8659.2011.02033.x},
 	doi = {10.1111/j.1467-8659.2011.02033.x},
 	abstract = {We propose a robust 2D shape reconstruction and simpliﬁcation algorithm which takes as input a defect-laden point set with noise and outliers. We introduce an optimal-transport driven approach where the input point set, considered as a sum of Dirac measures, is approximated by a simplicial complex considered as a sum of uniform measures on 0- and 1-simplices. A ﬁne-to-coarse scheme is devised to construct the resulting simplicial complex through greedy decimation of a Delaunay triangulation of the input point set. Our method performs well on a variety of examples ranging from line drawings to grayscale images, with or without noise, features, and boundaries.},
-	pages = {1593--1602},
+	language = {en},
 	number = {5},
-	journaltitle = {Computer Graphics Forum},
-	author = {de Goes, Fernando and Cohen-Steiner, David and Alliez, Pierre and Desbrun, Mathieu},
 	urldate = {2021-03-17},
-	date = {2011-08},
-	langid = {english},
+	journal = {Computer Graphics Forum},
+	author = {de Goes, Fernando and Cohen-Steiner, David and Alliez, Pierre and Desbrun, Mathieu},
+	month = aug,
+	year = {2011},
 	keywords = {tbr},
+	pages = {1593--1602},
+	annote = {semidiscrete OT for denoising shape},
 	file = {de Goes et al. - 2011 - An Optimal Transport Approach to Robust Reconstruc.pdf:/Users/wpq/Zotero/storage/RE4KDE7A/de Goes et al. - 2011 - An Optimal Transport Approach to Robust Reconstruc.pdf:application/pdf}
 }
 
-@thesis{claiciStructureSimplificationTransportation2020,
-	title = {Structure as simplification : transportation tools for understanding data},
-	rights = {{MIT} theses may be protected by copyright. Please reuse {MIT} thesis content according to the {MIT} Libraries Permissions Policy, which is available through the {URL} provided.},
-	url = {https://dspace.mit.edu/handle/1721.1/127014},
-	shorttitle = {Structure as simplification},
-	abstract = {The typical machine learning algorithms looks for a pattern in data, and makes an assumption that the signal to noise ratio of the pattern is high. This approach depends strongly on the quality of the datasets these algorithms operate on, and many complex algorithms fail in spectacular fashion on simple tasks by overfitting noise or outlier examples. These algorithms have training procedures that scale poorly in the size of the dataset, and their out-puts are difficult to intepret. This thesis proposes solutions to both problems by leveraging the theory of optimal transport and proposing efficient algorithms to solve problems in: (1) quantization, with extensions to the Wasserstein barycenter problem, and a link to the classical coreset problem; (2) natural language processing where the hierarchical structure of text allows us to compare documents efficiently;(3) Bayesian inference where we can impose a hierarchy on the label switching problem to resolve ambiguities.},
-	institution = {Massachusetts Institute of Technology},
+@phdthesis{claiciStructureSimplificationTransportation2020,
 	type = {Thesis},
-	author = {Claici, Sebastian},
+	title = {Structure as simplification : transportation tools for understanding data},
+	copyright = {MIT theses may be protected by copyright. Please reuse MIT thesis content according to the MIT Libraries Permissions Policy, which is available through the URL provided.},
+	shorttitle = {Structure as simplification},
+	url = {https://dspace.mit.edu/handle/1721.1/127014},
+	abstract = {The typical machine learning algorithms looks for a pattern in data, and makes an assumption that the signal to noise ratio of the pattern is high. This approach depends strongly on the quality of the datasets these algorithms operate on, and many complex algorithms fail in spectacular fashion on simple tasks by overfitting noise or outlier examples. These algorithms have training procedures that scale poorly in the size of the dataset, and their out-puts are difficult to intepret. This thesis proposes solutions to both problems by leveraging the theory of optimal transport and proposing efficient algorithms to solve problems in: (1) quantization, with extensions to the Wasserstein barycenter problem, and a link to the classical coreset problem; (2) natural language processing where the hierarchical structure of text allows us to compare documents efficiently;(3) Bayesian inference where we can impose a hierarchy on the label switching problem to resolve ambiguities.},
+	language = {eng},
 	urldate = {2021-03-17},
-	date = {2020},
+	school = {Massachusetts Institute of Technology},
+	author = {Claici, Sebastian},
+	year = {2020},
 	note = {Accepted: 2020-09-03T17:41:55Z
-{ISBN}: 9781191624381
+ISBN: 9781191624381
 Journal Abbreviation: Transportation tools for understanding data},
 	keywords = {tbr},
+	annote = {Sebastian Claici PhD thesis [2020]},
 	file = {Claici_2020_Structure as simplification - transportation tools for understanding data.pdf:/Users/wpq/Dropbox (MIT)/zotero/Claici_2020_Structure as simplification - transportation tools for understanding data.pdf:application/pdf}
 }
 
 @article{digneFeaturePreservingSurfaceReconstruction2014,
-	title = {Feature-Preserving Surface Reconstruction and Simplification from Defect-Laden Point Sets},
+	title = {Feature-{Preserving} {Surface} {Reconstruction} and {Simplification} from {Defect}-{Laden} {Point} {Sets}},
 	volume = {48},
 	issn = {1573-7683},
 	url = {https://doi.org/10.1007/s10851-013-0414-y},
 	doi = {10.1007/s10851-013-0414-y},
 	abstract = {We introduce a robust and feature-capturing surface reconstruction and simplification method that turns an input point set into a low triangle-count simplicial complex. Our approach starts with a (possibly non-manifold) simplicial complex filtered from a 3D Delaunay triangulation of the input points. This initial approximation is iteratively simplified based on an error metric that measures, through optimal transport, the distance between the input points and the current simplicial complex—both seen as mass distributions. Our approach is shown to exhibit both robustness to noise and outliers, as well as preservation of sharp features and boundaries. Our new feature-sensitive metric between point sets and triangle meshes can also be used as a post-processing tool that, from the smooth output of a reconstruction method, recovers sharp features and boundaries present in the initial point set.},
-	pages = {369--382},
+	language = {en},
 	number = {2},
-	journaltitle = {Journal of Mathematical Imaging and Vision},
-	shortjournal = {J Math Imaging Vis},
-	author = {Digne, Julie and Cohen-Steiner, David and Alliez, Pierre and de Goes, Fernando and Desbrun, Mathieu},
 	urldate = {2021-03-17},
-	date = {2014-02-01},
-	langid = {english},
+	journal = {Journal of Mathematical Imaging and Vision},
+	author = {Digne, Julie and Cohen-Steiner, David and Alliez, Pierre and de Goes, Fernando and Desbrun, Mathieu},
+	month = feb,
+	year = {2014},
 	keywords = {tbr},
+	pages = {369--382},
+	annote = {OT for point -{\textgreater} simplex},
 	file = {Digne et al_2014_Feature-Preserving Surface Reconstruction and Simplification from Defect-Laden Point Sets.pdf:/Users/wpq/Dropbox (MIT)/zotero/Digne et al_2014_Feature-Preserving Surface Reconstruction and Simplification from Defect-Laden Point Sets.pdf:application/pdf}
 }
 
 @article{chenGradualSemidiscreteApproach2019,
-	title = {A gradual, semi-discrete approach to generative network training via explicit Wasserstein minimization},
+	title = {A gradual, semi-discrete approach to generative network training via explicit {Wasserstein} minimization},
 	url = {http://arxiv.org/abs/1906.03471},
-	abstract = {This paper provides a simple procedure to fit generative networks to target distributions, with the goal of a small Wasserstein distance (or other optimal transport costs). The approach is based on two principles: (a) if the source randomness of the network is a continuous distribution (the "semi-discrete" setting), then the Wasserstein distance is realized by a deterministic optimal transport mapping; (b) given an optimal transport mapping between a generator network and a target distribution, the Wasserstein distance may be decreased via a regression between the generated data and the mapped target points. The procedure here therefore alternates these two steps, forming an optimal transport and regressing against it, gradually adjusting the generator network towards the target distribution. Mathematically, this approach is shown to minimize the Wasserstein distance to both the empirical target distribution, and also its underlying population counterpart. Empirically, good performance is demonstrated on the training and testing sets of the {MNIST} and Thin-8 data. The paper closes with a discussion of the unsuitability of the Wasserstein distance for certain tasks, as has been identified in prior work [Arora et al., 2017, Huang et al., 2017].},
-	journaltitle = {{arXiv}:1906.03471 [cs, stat]},
-	author = {Chen, Yucheng and Telgarsky, Matus and Zhang, Chao and Bailey, Bolton and Hsu, Daniel and Peng, Jian},
+	abstract = {This paper provides a simple procedure to fit generative networks to target distributions, with the goal of a small Wasserstein distance (or other optimal transport costs). The approach is based on two principles: (a) if the source randomness of the network is a continuous distribution (the "semi-discrete" setting), then the Wasserstein distance is realized by a deterministic optimal transport mapping; (b) given an optimal transport mapping between a generator network and a target distribution, the Wasserstein distance may be decreased via a regression between the generated data and the mapped target points. The procedure here therefore alternates these two steps, forming an optimal transport and regressing against it, gradually adjusting the generator network towards the target distribution. Mathematically, this approach is shown to minimize the Wasserstein distance to both the empirical target distribution, and also its underlying population counterpart. Empirically, good performance is demonstrated on the training and testing sets of the MNIST and Thin-8 data. The paper closes with a discussion of the unsuitability of the Wasserstein distance for certain tasks, as has been identified in prior work [Arora et al., 2017, Huang et al., 2017].},
 	urldate = {2021-04-01},
-	date = {2019-06-11},
-	eprinttype = {arxiv},
-	eprint = {1906.03471},
+	journal = {arXiv:1906.03471 [cs, stat]},
+	author = {Chen, Yucheng and Telgarsky, Matus and Zhang, Chao and Bailey, Bolton and Hsu, Daniel and Peng, Jian},
+	month = jun,
+	year = {2019},
+	note = {arXiv: 1906.03471},
 	keywords = {tbr},
+	annote = {Comment: Appears in ICML 2019},
 	file = {Chen et al_2019_A gradual, semi-discrete approach to generative network training via explicit Wasserstein minimization.pdf:/Users/wpq/Dropbox (MIT)/zotero/Chen et al_2019_A gradual, semi-discrete approach to generative network training via explicit Wasserstein minimization.pdf:application/pdf}
 }
 
@@ -484,84 +1105,98 @@ Journal Abbreviation: Transportation tools for understanding data},
 	title = {Convolutional wasserstein distances: efficient optimal transportation on geometric domains},
 	volume = {34},
 	issn = {0730-0301},
+	shorttitle = {Convolutional wasserstein distances},
 	url = {https://doi.org/10.1145/2766963},
 	doi = {10.1145/2766963},
-	shorttitle = {Convolutional wasserstein distances},
 	abstract = {This paper introduces a new class of algorithms for optimization problems involving optimal transportation over geometric domains. Our main contribution is to show that optimal transportation can be made tractable over large domains used in graphics, such as images and triangle meshes, improving performance by orders of magnitude compared to previous work. To this end, we approximate optimal transportation distances using entropic regularization. The resulting objective contains a geodesic distance-based kernel that can be approximated with the heat kernel. This approach leads to simple iterative numerical schemes with linear convergence, in which each iteration only requires Gaussian convolution or the solution of a sparse, pre-factored linear system. We demonstrate the versatility and efficiency of our method on tasks including reflectance interpolation, color transfer, and geometry processing.},
-	pages = {66:1--66:11},
 	number = {4},
-	journaltitle = {{ACM} Transactions on Graphics},
-	shortjournal = {{ACM} Trans. Graph.},
-	author = {Solomon, Justin and de Goes, Fernando and Peyré, Gabriel and Cuturi, Marco and Butscher, Adrian and Nguyen, Andy and Du, Tao and Guibas, Leonidas},
 	urldate = {2021-04-27},
-	date = {2015-07-27},
+	journal = {ACM Transactions on Graphics},
+	author = {Solomon, Justin and de Goes, Fernando and Peyré, Gabriel and Cuturi, Marco and Butscher, Adrian and Nguyen, Andy and Du, Tao and Guibas, Leonidas},
+	month = jul,
+	year = {2015},
 	keywords = {read},
+	pages = {66:1--66:11},
+	annote = {entropy reg OT + heat method  [SIGGRAPH 2015]
+
+convolution vector product in Sinkhorn approximated with small time diffusion (linear in storage and time) on geometric domains.
+},
 	file = {Solomon et al_2015_Convolutional wasserstein distances - efficient optimal transportation on geometric domains.pdf:/Users/wpq/Dropbox (MIT)/zotero/Solomon et al_2015_Convolutional wasserstein distances - efficient optimal transportation on geometric domains.pdf:application/pdf}
 }
 
 @article{chizatScalingAlgorithmsUnbalanced2017,
-	title = {Scaling Algorithms for Unbalanced Transport Problems},
+	title = {Scaling {Algorithms} for {Unbalanced} {Transport} {Problems}},
 	url = {http://arxiv.org/abs/1607.05816},
 	abstract = {This article introduces a new class of fast algorithms to approximate variational problems involving unbalanced optimal transport. While classical optimal transport considers only normalized probability distributions, it is important for many applications to be able to compute some sort of relaxed transportation between arbitrary positive measures. A generic class of such "unbalanced" optimal transport problems has been recently proposed by several authors. In this paper, we show how to extend the, now classical, entropic regularization scheme to these unbalanced problems. This gives rise to fast, highly parallelizable algorithms that operate by performing only diagonal scaling (i.e. pointwise multiplications) of the transportation couplings. They are generalizations of the celebrated Sinkhorn algorithm. We show how these methods can be used to solve unbalanced transport, unbalanced gradient flows, and to compute unbalanced barycenters. We showcase applications to 2-D shape modification, color transfer, and growth models.},
-	journaltitle = {{arXiv}:1607.05816 [math]},
-	author = {Chizat, Lenaic and Peyré, Gabriel and Schmitzer, Bernhard and Vialard, François-Xavier},
 	urldate = {2021-04-27},
-	date = {2017-05-22},
-	eprinttype = {arxiv},
-	eprint = {1607.05816},
+	journal = {arXiv:1607.05816 [math]},
+	author = {Chizat, Lenaic and Peyré, Gabriel and Schmitzer, Bernhard and Vialard, François-Xavier},
+	month = may,
+	year = {2017},
+	note = {arXiv: 1607.05816},
 	keywords = {tbr},
+	annote = {unbalanced OT algorithm!
+
+includes log-domain trick for stability. specifically the proxdiv operation ...
+},
 	file = {Chizat et al_2017_Scaling Algorithms for Unbalanced Transport Problems.pdf:/Users/wpq/Dropbox (MIT)/zotero/Chizat et al_2017_Scaling Algorithms for Unbalanced Transport Problems.pdf:application/pdf}
 }
 
 @article{schmitzerStabilizedSparseScaling2019,
-	title = {Stabilized Sparse Scaling Algorithms for Entropy Regularized Transport Problems},
+	title = {Stabilized {Sparse} {Scaling} {Algorithms} for {Entropy} {Regularized} {Transport} {Problems}},
 	url = {http://arxiv.org/abs/1610.06519},
 	abstract = {Scaling algorithms for entropic transport-type problems have become a very popular numerical method, encompassing Wasserstein barycenters, multi-marginal problems, gradient flows and unbalanced transport. However, a standard implementation of the scaling algorithm has several numerical limitations: the scaling factors diverge and convergence becomes impractically slow as the entropy regularization approaches zero. Moreover, handling the dense kernel matrix becomes unfeasible for large problems. To address this, we combine several modifications: A log-domain stabilized formulation, the well-known epsilon-scaling heuristic, an adaptive truncation of the kernel and a coarse-to-fine scheme. This permits the solution of larger problems with smaller regularization and negligible truncation error. A new convergence analysis of the Sinkhorn algorithm is developed, working towards a better understanding of epsilon-scaling. Numerical examples illustrate efficiency and versatility of the modified algorithm.},
-	journaltitle = {{arXiv}:1610.06519 [cs, math]},
-	author = {Schmitzer, Bernhard},
 	urldate = {2021-04-27},
-	date = {2019-02-11},
-	eprinttype = {arxiv},
-	eprint = {1610.06519},
+	journal = {arXiv:1610.06519 [cs, math]},
+	author = {Schmitzer, Bernhard},
+	month = feb,
+	year = {2019},
+	note = {arXiv: 1610.06519},
 	keywords = {tbr},
+	annote = {kernel truncation [SIAM Scientific Computing 2019]
+
+stable version of entropy regularized OT
+},
 	file = {Schmitzer_2019_Stabilized Sparse Scaling Algorithms for Entropy Regularized Transport Problems.pdf:/Users/wpq/Dropbox (MIT)/zotero/Schmitzer_2019_Stabilized Sparse Scaling Algorithms for Entropy Regularized Transport Problems.pdf:application/pdf}
 }
 
 @article{rubnerEarthMoverDistance2000,
-	title = {The Earth Mover's Distance as a Metric for Image Retrieval},
+	title = {The {Earth} {Mover}'s {Distance} as a {Metric} for {Image} {Retrieval}},
 	volume = {40},
 	issn = {1573-1405},
 	url = {https://doi.org/10.1023/A:1026543900054},
 	doi = {10.1023/A:1026543900054},
-	abstract = {We investigate the properties of a metric between two distributions, the Earth Mover's Distance ({EMD}), for content-based image retrieval. The {EMD} is based on the minimal cost that must be paid to transform one distribution into the other, in a precise sense, and was first proposed for certain vision problems by Peleg, Werman, and Rom. For image retrieval, we combine this idea with a representation scheme for distributions that is based on vector quantization. This combination leads to an image comparison framework that often accounts for perceptual similarity better than other previously proposed methods. The {EMD} is based on a solution to the transportation problem from linear optimization, for which efficient algorithms are available, and also allows naturally for partial matching. It is more robust than histogram matching techniques, in that it can operate on variable-length representations of the distributions that avoid quantization and other binning problems typical of histograms. When used to compare distributions with the same overall mass, the {EMD} is a true metric. In this paper we focus on applications to color and texture, and we compare the retrieval performance of the {EMD} with that of other distances.},
-	pages = {99--121},
+	abstract = {We investigate the properties of a metric between two distributions, the Earth Mover's Distance (EMD), for content-based image retrieval. The EMD is based on the minimal cost that must be paid to transform one distribution into the other, in a precise sense, and was first proposed for certain vision problems by Peleg, Werman, and Rom. For image retrieval, we combine this idea with a representation scheme for distributions that is based on vector quantization. This combination leads to an image comparison framework that often accounts for perceptual similarity better than other previously proposed methods. The EMD is based on a solution to the transportation problem from linear optimization, for which efficient algorithms are available, and also allows naturally for partial matching. It is more robust than histogram matching techniques, in that it can operate on variable-length representations of the distributions that avoid quantization and other binning problems typical of histograms. When used to compare distributions with the same overall mass, the EMD is a true metric. In this paper we focus on applications to color and texture, and we compare the retrieval performance of the EMD with that of other distances.},
+	language = {en},
 	number = {2},
-	journaltitle = {International Journal of Computer Vision},
-	shortjournal = {International Journal of Computer Vision},
-	author = {Rubner, Yossi and Tomasi, Carlo and Guibas, Leonidas J.},
 	urldate = {2021-05-01},
-	date = {2000-11-01},
-	langid = {english},
+	journal = {International Journal of Computer Vision},
+	author = {Rubner, Yossi and Tomasi, Carlo and Guibas, Leonidas J.},
+	month = nov,
+	year = {2000},
 	keywords = {tbr},
+	pages = {99--121},
+	annote = {emd for bad-of-features},
 	file = {Rubner et al_2000_The Earth Mover's Distance as a Metric for Image Retrieval.pdf:/Users/wpq/Dropbox (MIT)/zotero/Rubner et al_2000_The Earth Mover's Distance as a Metric for Image Retrieval.pdf:application/pdf}
 }
 
 @article{cuturiSemidualRegularizedOptimal2018,
-	title = {Semidual Regularized Optimal Transport},
+	title = {Semidual {Regularized} {Optimal} {Transport}},
 	volume = {60},
 	issn = {0036-1445, 1095-7200},
 	url = {https://epubs.siam.org/doi/10.1137/18M1208654},
 	doi = {10.1137/18M1208654},
-	abstract = {Variational problems that involve Wasserstein distances and more generally optimal transport ({OT}) theory are playing an increasingly important role in data sciences. Such problems can be used to form an examplar measure out of various probability measures, as in the Wasserstein barycenter problem, or to carry out parametric inference and density ﬁtting, where the loss is measured in terms of an optimal transport cost to the measure of observations. Despite being conceptually simple, such problems are computationally challenging because they involve minimizing over quantities (Wasserstein distances) that are themselves hard to compute. Entropic regularization has recently emerged as an eﬃcient tool to approximate the solution of such variational Wasserstein problems. In this paper, we give a thorough duality tour of these regularization techniques. In particular, we show how important concepts from classical {OT} such as c-transforms and semi-discrete approaches translate into similar ideas in a regularized setting. These dual formulations lead to smooth variational problems, which can be solved using smooth, diﬀerentiable and convex optimization problems that are simpler to implement and numerically more stable that their un-regularized counterparts. We illustrate the versatility of this approach by applying it to the computation of Wasserstein barycenters and gradient ﬂows of spatial regularization functionals.},
-	pages = {941--965},
+	abstract = {Variational problems that involve Wasserstein distances and more generally optimal transport (OT) theory are playing an increasingly important role in data sciences. Such problems can be used to form an examplar measure out of various probability measures, as in the Wasserstein barycenter problem, or to carry out parametric inference and density ﬁtting, where the loss is measured in terms of an optimal transport cost to the measure of observations. Despite being conceptually simple, such problems are computationally challenging because they involve minimizing over quantities (Wasserstein distances) that are themselves hard to compute. Entropic regularization has recently emerged as an eﬃcient tool to approximate the solution of such variational Wasserstein problems. In this paper, we give a thorough duality tour of these regularization techniques. In particular, we show how important concepts from classical OT such as c-transforms and semi-discrete approaches translate into similar ideas in a regularized setting. These dual formulations lead to smooth variational problems, which can be solved using smooth, diﬀerentiable and convex optimization problems that are simpler to implement and numerically more stable that their un-regularized counterparts. We illustrate the versatility of this approach by applying it to the computation of Wasserstein barycenters and gradient ﬂows of spatial regularization functionals.},
+	language = {en},
 	number = {4},
-	journaltitle = {{SIAM} Review},
-	shortjournal = {{SIAM} Rev.},
-	author = {Cuturi, Marco and Peyré, Gabriel},
 	urldate = {2021-05-02},
-	date = {2018-01},
-	langid = {english},
+	journal = {SIAM Review},
+	author = {Cuturi, Marco and Peyré, Gabriel},
+	month = jan,
+	year = {2018},
 	keywords = {good, tbr},
+	pages = {941--965},
+	annote = {semidual for semi-discrete entropic OT},
 	file = {Cuturi and Peyré - 2018 - Semidual Regularized Optimal Transport.pdf:/Users/wpq/Zotero/storage/54GHEVNG/Cuturi and Peyré - 2018 - Semidual Regularized Optimal Transport.pdf:application/pdf}
 }
 
@@ -571,70 +1206,136 @@ Journal Abbreviation: Transportation tools for understanding data},
 	url = {https://hal.archives-ouvertes.fr/hal-00604684},
 	doi = {10.1111/j.1467-8659.2011.02032.x},
 	abstract = {In this paper, we propose an improvement of an algorithm of Aurenhammer, Hoffmann and Aronov to find a least square matching between a probability density and finite set of sites with mass constraints, in the Euclidean plane. Our algorithm exploits the multiscale nature of this optimal transport problem. We iteratively simplify the target using Lloyd's algorithm, and use the solution of the simplified problem as a rough initial solution to the more complex one. This approach allows for fast estimation of distances between measures related to optimal transport (known as Earth-mover or Wasserstein distances). We also discuss the implementation of these algorithms, and compare the original one to its multiscale counterpart.},
-	pages = {1584},
+	language = {en},
 	number = {5},
-	journaltitle = {Computer Graphics Forum},
-	author = {Mérigot, Quentin},
 	urldate = {2021-05-02},
-	date = {2011-08-04},
-	langid = {english},
+	journal = {Computer Graphics Forum},
+	author = {Mérigot, Quentin},
+	month = aug,
+	year = {2011},
 	keywords = {tbr},
+	pages = {1584},
+	annote = {semidiscrete OT + multiscale OT},
 	file = {Merigot_2011_A multiscale approach to optimal transport.pdf:/Users/wpq/Dropbox (MIT)/zotero/Merigot_2011_A multiscale approach to optimal transport.pdf:application/pdf}
 }
 
 @article{sejourneSinkhornDivergencesUnbalanced2021,
-	title = {Sinkhorn Divergences for Unbalanced Optimal Transport},
+	title = {Sinkhorn {Divergences} for {Unbalanced} {Optimal} {Transport}},
 	url = {http://arxiv.org/abs/1910.12958},
 	abstract = {Optimal transport induces the Earth Mover's (Wasserstein) distance between probability distributions, a geometric divergence that is relevant to a wide range of problems. Over the last decade, two relaxations of optimal transport have been studied in depth: unbalanced transport, which is robust to the presence of outliers and can be used when distributions don't have the same total mass; entropy-regularized transport, which is robust to sampling noise and lends itself to fast computations using the Sinkhorn algorithm. This paper combines both lines of work to put robust optimal transport on solid ground. Our main contribution is a generalization of the Sinkhorn algorithm to unbalanced transport: our method alternates between the standard Sinkhorn updates and the pointwise application of a contractive function. This implies that entropic transport solvers on grid images, point clouds and sampled distributions can all be modified easily to support unbalanced transport, with a proof of linear convergence that holds in all settings. We then show how to use this method to define pseudo-distances on the full space of positive measures that satisfy key geometric axioms: (unbalanced) Sinkhorn divergences are differentiable, positive, definite, convex, statistically robust and avoid any "entropic bias" towards a shrinkage of the measures' supports.},
-	journaltitle = {{arXiv}:1910.12958 [cs, math, stat]},
-	author = {Séjourné, Thibault and Feydy, Jean and Vialard, François-Xavier and Trouvé, Alain and Peyré, Gabriel},
 	urldate = {2021-05-02},
-	date = {2021-03-19},
-	eprinttype = {arxiv},
-	eprint = {1910.12958},
+	journal = {arXiv:1910.12958 [cs, math, stat]},
+	author = {Séjourné, Thibault and Feydy, Jean and Vialard, François-Xavier and Trouvé, Alain and Peyré, Gabriel},
+	month = mar,
+	year = {2021},
+	note = {arXiv: 1910.12958},
 	keywords = {tbr},
+	annote = {Sinkhorn divergence with unbalanced OT},
 	file = {Sejourne et al_2021_Sinkhorn Divergences for Unbalanced Optimal Transport.pdf:/Users/wpq/Dropbox (MIT)/zotero/Sejourne et al_2021_Sinkhorn Divergences for Unbalanced Optimal Transport.pdf:application/pdf}
 }
 
 @unpublished{feydyGlobalDivergencesMeasures2018,
-	title = {Global divergences between measures: from Hausdorff distance to Optimal Transport},
-	url = {https://hal.archives-ouvertes.fr/hal-01827184},
+	title = {Global divergences between measures: from {Hausdorff} distance to {Optimal} {Transport}},
 	shorttitle = {Global divergences between measures},
+	url = {https://hal.archives-ouvertes.fr/hal-01827184},
 	abstract = {The data fidelity term is a key component of shape registration pipelines: computed at every step, its gradient is the vector field that drives a deformed model towards its target. Unfortunately, most classical formulas are at most semi-local: their gradients saturate and stop being informative above some given distance, with appalling consequences on the robustness of shape analysis pipelines.
 
-In this paper, we build on recent theoretical advances on "Sinkhorn entropies and divergences" to present a unified view of three fidelities between measures that alleviate this problem: the Energy Distance from statistics; the (weighted) Hausdorff distance from computer graphics; the Wasserstein distance from Optimal Transport theory. The ε-Hausdorff and ε-Sinkhorn divergences are positive fidelities that interpolate between these three quantities, and we implement them through efficient, freely available {GPU} routines. They should allow the shape analyst to handle large deformations without hassle.},
-	author = {Feydy, Jean and Trouvé, Alain},
+In this paper, we build on recent theoretical advances on "Sinkhorn entropies and divergences" to present a unified view of three fidelities between measures that alleviate this problem: the Energy Distance from statistics; the (weighted) Hausdorff distance from computer graphics; the Wasserstein distance from Optimal Transport theory. The ε-Hausdorff and ε-Sinkhorn divergences are positive fidelities that interpolate between these three quantities, and we implement them through efficient, freely available GPU routines. They should allow the shape analyst to handle large deformations without hassle.},
 	urldate = {2021-05-02},
-	date = {2018-08},
+	author = {Feydy, Jean and Trouvé, Alain},
+	month = aug,
+	year = {2018},
 	keywords = {tbr},
+	annote = {[MICCAI 2018 workshop]},
 	file = {Feydy_Trouve_2018_Global divergences between measures - from Hausdorff distance to Optimal Transport.pdf:/Users/wpq/Dropbox (MIT)/zotero/Feydy_Trouve_2018_Global divergences between measures - from Hausdorff distance to Optimal Transport.pdf:application/pdf}
 }
 
 @article{cuturiFastComputationWasserstein2014,
-	title = {Fast Computation of Wasserstein Barycenters},
+	title = {Fast {Computation} of {Wasserstein} {Barycenters}},
 	url = {http://arxiv.org/abs/1310.4375},
 	abstract = {We present new algorithms to compute the mean of a set of empirical probability measures under the optimal transport metric. This mean, known as the Wasserstein barycenter, is the measure that minimizes the sum of its Wasserstein distances to each element in that set. We propose two original algorithms to compute Wasserstein barycenters that build upon the subgradient method. A direct implementation of these algorithms is, however, too costly because it would require the repeated resolution of large primal and dual optimal transport problems to compute subgradients. Extending the work of Cuturi (2013), we propose to smooth the Wasserstein distance used in the definition of Wasserstein barycenters with an entropic regularizer and recover in doing so a strictly convex objective whose gradients can be computed for a considerably cheaper computational cost using matrix scaling algorithms. We use these algorithms to visualize a large family of images and to solve a constrained clustering problem.},
-	journaltitle = {{arXiv}:1310.4375 [stat]},
-	author = {Cuturi, Marco and Doucet, Arnaud},
 	urldate = {2021-05-02},
-	date = {2014-06-17},
-	eprinttype = {arxiv},
-	eprint = {1310.4375},
+	journal = {arXiv:1310.4375 [stat]},
+	author = {Cuturi, Marco and Doucet, Arnaud},
+	month = jun,
+	year = {2014},
+	note = {arXiv: 1310.4375},
 	keywords = {tbr},
+	annote = {[ICML 2014]
+
+some results on differentiability of OT distance wrt input location/measure
+},
 	file = {Cuturi_Doucet_2014_Fast Computation of Wasserstein Barycenters.pdf:/Users/wpq/Dropbox (MIT)/zotero/Cuturi_Doucet_2014_Fast Computation of Wasserstein Barycenters.pdf:application/pdf}
 }
 
 @article{claiciStochasticWassersteinBarycenters2018a,
-	title = {Stochastic Wasserstein Barycenters},
+	title = {Stochastic {Wasserstein} {Barycenters}},
 	url = {http://arxiv.org/abs/1802.05757},
 	abstract = {We present a stochastic algorithm to compute the barycenter of a set of probability distributions under the Wasserstein metric from optimal transport. Unlike previous approaches, our method extends to continuous input distributions and allows the support of the barycenter to be adjusted in each iteration. We tackle the problem without regularization, allowing us to recover a sharp output whose support is contained within the support of the true barycenter. We give examples where our algorithm recovers a more meaningful barycenter than previous work. Our method is versatile and can be extended to applications such as generating super samples from a given distribution and recovering blue noise approximations.},
-	journaltitle = {{arXiv}:1802.05757 [cs, math, stat]},
-	author = {Claici, Sebastian and Chien, Edward and Solomon, Justin},
 	urldate = {2021-05-03},
-	date = {2018-06-06},
-	eprinttype = {arxiv},
-	eprint = {1802.05757},
+	journal = {arXiv:1802.05757 [cs, math, stat]},
+	author = {Claici, Sebastian and Chien, Edward and Solomon, Justin},
+	month = jun,
+	year = {2018},
+	note = {arXiv: 1802.05757},
 	keywords = {read},
+	annote = {[ICML 2018]
+
+use semidiscrete transport to compute barycenter (without entropic regularization) ... derivations on weights
+
+ 
+introduction 
+
+problem
+
+compute wasserstein barycenter of several continuous measure using only samples from input distributions
+
+
+this paper
+
+not entropic regularized ... much sharper results on barycenters
+
+
+formulation of barycenter problem
+
+minimize wasserstein distance of a set of m discrete points X (as barycenters) to m continuous measures {\textbackslash}mu\_i
+
+basically m semidiscrete problem
+
+
+
+
+steps
+
+estimate gradient of objective wrt
+
+m set of dual potential
+support pt of discrete measure
+assumes can sample from {\textbackslash}mu\_i ... estimate gradient by MC integration
+
+
+fix X, optimize potential phi using SGD
+
+phi concave ... do gradient ascent
+
+
+fix phi, fix point iteration on X
+
+intuitively similar to kmeans, ... snaps points to center of local cell
+
+
+
+
+experiments
+
+K {\textbackslash}in [16k, 256k]
+
+samples for MC .. huge ...
+
+
+
+
+},
 	file = {Claici et al_2018_Stochastic Wasserstein Barycenters.pdf:/Users/wpq/Dropbox (MIT)/zotero/Claici et al_2018_Stochastic Wasserstein Barycenters2.pdf:application/pdf}
 }
 
@@ -645,28 +1346,131 @@ In this paper, we build on recent theoretical advances on "Sinkhorn entropies an
 	url = {https://dl.acm.org/doi/10.1145/2366145.2366190},
 	doi = {10.1145/2366145.2366190},
 	abstract = {We present a fast, scalable algorithm to generate high-quality blue noise point distributions of arbitrary density functions. At its core is a novel formulation of the recently-introduced concept of capacityconstrained Voronoi tessellation as an optimal transport problem. This insight leads to a continuous formulation able to enforce the capacity constraints exactly, unlike previous work. We exploit the variational nature of this formulation to design an efﬁcient optimization technique of point distributions via constrained minimization in the space of power diagrams. Our mathematical, algorithmic, and practical contributions lead to high-quality blue noise point sets with improved spectral and spatial properties.},
-	pages = {1--11},
+	language = {en},
 	number = {6},
-	journaltitle = {{ACM} Transactions on Graphics},
-	shortjournal = {{ACM} Trans. Graph.},
-	author = {de Goes, Fernando and Breeden, Katherine and Ostromoukhov, Victor and Desbrun, Mathieu},
 	urldate = {2021-05-03},
-	date = {2012-11},
-	langid = {english},
+	journal = {ACM Transactions on Graphics},
+	author = {de Goes, Fernando and Breeden, Katherine and Ostromoukhov, Victor and Desbrun, Mathieu},
+	month = nov,
+	year = {2012},
 	keywords = {tbr},
+	pages = {1--11},
+	annote = {blue noise w semidiscrete transport [SIGGRAPH 2012]},
 	file = {de Goes et al. - 2012 - Blue noise through optimal transport.pdf:/Users/wpq/Zotero/storage/ZYTJAAWR/de Goes et al. - 2012 - Blue noise through optimal transport.pdf:application/pdf}
 }
 
 @article{seguyLargeScaleOptimalTransport2018,
-	title = {Large-Scale Optimal Transport and Mapping Estimation},
+	title = {Large-{Scale} {Optimal} {Transport} and {Mapping} {Estimation}},
 	url = {http://arxiv.org/abs/1711.02283},
-	abstract = {This paper presents a novel two-step approach for the fundamental problem of learning an optimal map from one distribution to another. First, we learn an optimal transport ({OT}) plan, which can be thought as a one-to-many map between the two distributions. To that end, we propose a stochastic dual approach of regularized {OT}, and show empirically that it scales better than a recent related approach when the amount of samples is very large. Second, we estimate a {\textbackslash}textit\{Monge map\} as a deep neural network learned by approximating the barycentric projection of the previously-obtained {OT} plan. This parameterization allows generalization of the mapping outside the support of the input measure. We prove two theoretical stability results of regularized {OT} which show that our estimations converge to the {OT} plan and Monge map between the underlying continuous measures. We showcase our proposed approach on two applications: domain adaptation and generative modeling.},
-	journaltitle = {{arXiv}:1711.02283 [stat]},
-	author = {Seguy, Vivien and Damodaran, Bharath Bhushan and Flamary, Rémi and Courty, Nicolas and Rolet, Antoine and Blondel, Mathieu},
+	abstract = {This paper presents a novel two-step approach for the fundamental problem of learning an optimal map from one distribution to another. First, we learn an optimal transport (OT) plan, which can be thought as a one-to-many map between the two distributions. To that end, we propose a stochastic dual approach of regularized OT, and show empirically that it scales better than a recent related approach when the amount of samples is very large. Second, we estimate a {\textbackslash}textit\{Monge map\} as a deep neural network learned by approximating the barycentric projection of the previously-obtained OT plan. This parameterization allows generalization of the mapping outside the support of the input measure. We prove two theoretical stability results of regularized OT which show that our estimations converge to the OT plan and Monge map between the underlying continuous measures. We showcase our proposed approach on two applications: domain adaptation and generative modeling.},
 	urldate = {2021-05-07},
-	date = {2018-02-25},
-	eprinttype = {arxiv},
-	eprint = {1711.02283},
+	journal = {arXiv:1711.02283 [stat]},
+	author = {Seguy, Vivien and Damodaran, Bharath Bhushan and Flamary, Rémi and Courty, Nicolas and Rolet, Antoine and Blondel, Mathieu},
+	month = feb,
+	year = {2018},
+	note = {arXiv: 1711.02283},
 	keywords = {tbr},
+	annote = {neural nets for OT [ICLR 2018]},
 	file = {Seguy et al_2018_Large-Scale Optimal Transport and Mapping Estimation.pdf:/Users/wpq/Dropbox (MIT)/zotero/Seguy et al_2018_Large-Scale Optimal Transport and Mapping Estimation.pdf:application/pdf}
+}
+
+@article{santambrogioEuclideanMetricWasserstein2016,
+	title = {\{ {Euclidean}, {Metric}, and {Wasserstein} \} {Gradient} {Flows}: an overview},
+	shorttitle = {\{ {Euclidean}, {Metric}, and {Wasserstein} \} {Gradient} {Flows}},
+	url = {https://arxiv.org/abs/1609.03890v1},
+	abstract = {This is an expository paper on the theory of gradient flows, and in particular of those PDEs which can be interpreted as gradient flows for the Wasserstein metric on the space of probability measures (a distance induced by optimal transport). The starting point is the Euclidean theory, and then its generalization to metric spaces, according to the work of Ambrosio, Gigli and Savar\{{\textbackslash}'e\}. Then comes an independent exposition of the Wasserstein theory, with a short introduction to the optimal transport tools that are needed and to the notion of geodesic convexity, followed by a precise desciption of the Jordan-Kinderleher-Otto scheme, with proof of convergence in the easiest case: the linear Fokker-Planck equation. A discussion of other gradient flows PDEs and of numerical methods based on these ideas is also provided. The paper ends with a new, theoretical, development, due to Ambrosio, Gigli, Savar\{{\textbackslash}'e\}, Kuwada and Ohta: the study of the heat flow in metric measure spaces.},
+	language = {en},
+	urldate = {2021-05-11},
+	author = {Santambrogio, Filippo},
+	month = sep,
+	year = {2016},
+	keywords = {tbr},
+	annote = {wasserstein gradient flow},
+	file = {Santambrogio_2016_ Euclidean, Metric, and Wasserstein Gradient Flows - an overview.pdf:/Users/wpq/Dropbox (MIT)/zotero/Santambrogio_2016_ Euclidean, Metric, and Wasserstein Gradient Flows - an overview.pdf:application/pdf}
+}
+
+@article{chizatUnbalancedOptimalTransport2018,
+	title = {Unbalanced {Optimal} {Transport}: {Models}, {Numerical} {Methods}, {Applications}},
+	language = {en},
+	author = {Chizat, Lenaïc},
+	year = {2018},
+	keywords = {tbr},
+	pages = {237},
+	annote = {Chizat PhD thesis [2018]
+
+unbalanced transport
+},
+	file = {Chizat - Unbalanced Optimal Transport Models, Numerical Me.pdf:/Users/wpq/Zotero/storage/DDTRWVSG/Chizat - Unbalanced Optimal Transport Models, Numerical Me.pdf:application/pdf}
+}
+
+@article{peyreQuantumOptimalTransport2017,
+	title = {Quantum {Optimal} {Transport} for {Tensor} {Field} {Processing}},
+	url = {http://arxiv.org/abs/1612.08731},
+	abstract = {This article introduces a new notion of optimal transport (OT) between tensor fields, which are measures whose values are positive semidefinite (PSD) matrices. This "quantum" formulation of OT (Q-OT) corresponds to a relaxed version of the classical Kantorovich transport problem, where the fidelity between the input PSD-valued measures is captured using the geometry of the Von-Neumann quantum entropy. We propose a quantum-entropic regularization of the resulting convex optimization problem, which can be solved efficiently using an iterative scaling algorithm. This method is a generalization of the celebrated Sinkhorn algorithm to the quantum setting of PSD matrices. We extend this formulation and the quantum Sinkhorn algorithm to compute barycenters within a collection of input tensor fields. We illustrate the usefulness of the proposed approach on applications to procedural noise generation, anisotropic meshing, diffusion tensor imaging and spectral texture synthesis.},
+	urldate = {2021-05-11},
+	journal = {arXiv:1612.08731 [cs]},
+	author = {Peyré, Gabriel and Chizat, Lenaïc and Vialard, François-Xavier and Solomon, Justin},
+	month = jul,
+	year = {2017},
+	note = {arXiv: 1612.08731},
+	keywords = {tbr},
+	annote = {quantum OT
+
+has some example on DTI ..
+},
+	file = {Peyre et al_2017_Quantum Optimal Transport for Tensor Field Processing.pdf:/Users/wpq/Dropbox (MIT)/zotero/Peyre et al_2017_Quantum Optimal Transport for Tensor Field Processing.pdf:application/pdf}
+}
+
+@article{altschulerNearlinearTimeApproximation2018,
+	title = {Near-linear time approximation algorithms for optimal transport via {Sinkhorn} iteration},
+	url = {http://arxiv.org/abs/1705.09634},
+	abstract = {Computing optimal transport distances such as the earth mover's distance is a fundamental problem in machine learning, statistics, and computer vision. Despite the recent introduction of several algorithms with good empirical performance, it is unknown whether general optimal transport distances can be approximated in near-linear time. This paper demonstrates that this ambitious goal is in fact achieved by Cuturi's Sinkhorn Distances. This result relies on a new analysis of Sinkhorn iteration, which also directly suggests a new greedy coordinate descent algorithm, Greenkhorn, with the same theoretical guarantees. Numerical simulations illustrate that Greenkhorn significantly outperforms the classical Sinkhorn algorithm in practice.},
+	urldate = {2021-05-13},
+	journal = {arXiv:1705.09634 [cs, stat]},
+	author = {Altschuler, Jason and Weed, Jonathan and Rigollet, Philippe},
+	month = feb,
+	year = {2018},
+	note = {arXiv: 1705.09634},
+	keywords = {tbr},
+	annote = {GreenHorn [Neurips 2017]
+
+better sinkhorn with coordinate ascent on dual ... update only 1 row/col of Gibbs kernel matrix instead of all rows/cols.
+},
+	file = {Altschuler et al_2018_Near-linear time approximation algorithms for optimal transport via Sinkhorn iteration.pdf:/Users/wpq/Dropbox (MIT)/zotero/Altschuler et al_2018_Near-linear time approximation algorithms for optimal transport via Sinkhorn iteration.pdf:application/pdf}
+}
+
+@book{santambrogioOptimalTransportApplied2015,
+	address = {Cham},
+	series = {Progress in {Nonlinear} {Differential} {Equations} and {Their} {Applications}},
+	title = {Optimal {Transport} for {Applied} {Mathematicians}},
+	volume = {87},
+	isbn = {978-3-319-20827-5 978-3-319-20828-2},
+	url = {http://link.springer.com/10.1007/978-3-319-20828-2},
+	language = {en},
+	urldate = {2021-05-14},
+	publisher = {Springer International Publishing},
+	author = {Santambrogio, Filippo},
+	year = {2015},
+	doi = {10.1007/978-3-319-20828-2},
+	keywords = {tbr},
+	annote = {OT for applied mathematician
+
+focus on PDE flow ! dynamic formulations etc.
+},
+	file = {Santambrogio - 2015 - Optimal Transport for Applied Mathematicians.pdf:/Users/wpq/Zotero/storage/KLKCM3MF/Santambrogio - 2015 - Optimal Transport for Applied Mathematicians.pdf:application/pdf}
+}
+
+@article{altschulerMassivelyScalableSinkhorn2019,
+	title = {Massively scalable {Sinkhorn} distances via the {Nystr}{\textbackslash}"om method},
+	url = {http://arxiv.org/abs/1812.05189},
+	abstract = {The Sinkhorn "distance", a variant of the Wasserstein distance with entropic regularization, is an increasingly popular tool in machine learning and statistical inference. However, the time and memory requirements of standard algorithms for computing this distance grow quadratically with the size of the data, making them prohibitively expensive on massive data sets. In this work, we show that this challenge is surprisingly easy to circumvent: combining two simple techniques---the Nystr{\textbackslash}"om method and Sinkhorn scaling---provably yields an accurate approximation of the Sinkhorn distance with significantly lower time and memory requirements than other approaches. We prove our results via new, explicit analyses of the Nystr{\textbackslash}"om method and of the stability properties of Sinkhorn scaling. We validate our claims experimentally by showing that our approach easily computes Sinkhorn distances on data sets hundreds of times larger than can be handled by other techniques.},
+	urldate = {2021-05-14},
+	journal = {arXiv:1812.05189 [cs, math, stat]},
+	author = {Altschuler, Jason and Bach, Francis and Rudi, Alessandro and Niles-Weed, Jonathan},
+	month = oct,
+	year = {2019},
+	note = {arXiv: 1812.05189},
+	keywords = {tbr},
+	annote = {Nystrom + OT [Neurips 2019]},
+	file = {Altschuler et al_2019_Massively scalable Sinkhorn distances via the Nystr-om method.pdf:/Users/wpq/Dropbox (MIT)/zotero/Altschuler et al_2019_Massively scalable Sinkhorn distances via the Nystr-om method.pdf:application/pdf}
 }

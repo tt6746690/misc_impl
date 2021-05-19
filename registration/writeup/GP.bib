@@ -1,0 +1,2974 @@
+
+@article{wilsonStochasticVariationalDeep2016,
+	title = {Stochastic {Variational} {Deep} {Kernel} {Learning}},
+	url = {https://arxiv.org/abs/1611.00336v2},
+	abstract = {Deep kernel learning combines the non-parametric flexibility of kernel
+methods with the inductive biases of deep learning architectures. We propose a
+novel deep kernel learning model and stochastic variational inference procedure
+which generalizes deep kernel learning approaches to enable classification,
+multi-task learning, additive covariance structures, and stochastic gradient
+training. Specifically, we apply additive base kernels to subsets of output
+features from deep neural architectures, and jointly learn the parameters of
+the base kernels and deep network through a Gaussian process marginal
+likelihood objective. Within this framework, we derive an efficient form of
+stochastic variational inference which leverages local kernel interpolation,
+inducing points, and structure exploiting algebra. We show improved performance
+over stand alone deep networks, SVMs, and state of the art scalable Gaussian
+processes on several classification benchmarks, including an airline delay
+dataset containing 6 million training points, CIFAR, and ImageNet.},
+	language = {en},
+	urldate = {2020-12-28},
+	author = {Wilson, Andrew Gordon and Hu, Zhiting and Salakhutdinov, Ruslan and Xing, Eric P.},
+	month = nov,
+	year = {2016},
+	keywords = {read},
+	annote = {SV-DKL [Neurips 2016]
+
+has experiments on multitask and scales to imagenet, also device a way to do classification using GP
+
+ 
+introduction 
+
+a wholistic review on fast training of GP
+
+randomized
+low rank
+structure-exploiting
+variational
+
+non-conjugate
+
+sampling https://papers.nips.cc/paper/2015/file/3b3dbaf68507998acd6a5a5254ab2d76-Paper.pdf
+
+
+
+
+
+
+SVDKL ingredients
+
+additive GP
+u inducing variables is multidimensional
+
+u parameterized by LLT mvn
+
+
+
+
+},
+	file = {Wilson et al_2016_Stochastic Variational Deep Kernel Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Wilson et al_2016_Stochastic Variational Deep Kernel Learning.pdf:application/pdf}
+}
+
+@article{bonillaMultitaskGaussianProcess2008,
+	title = {Multi-task {Gaussian} {Process} {Prediction}},
+	abstract = {In this paper we investigate multi-task learning in the context of Gaussian Processes (GP). We propose a model that learns a shared covariance function on input-dependent features and a “free-form” covariance matrix over tasks. This allows for good ﬂexibility when modelling inter-task dependencies while avoiding the need for large amounts of data for training. We show that under the assumption of noise-free observations and a block design, predictions for a given task only depend on its target values and therefore a cancellation of inter-task transfer occurs. We evaluate the beneﬁts of our model on two practical applications: a compiler performance prediction problem and an exam score prediction task. Additionally, we make use of GP approximations and properties of our model in order to provide scalability to large data sets.},
+	language = {en},
+	author = {Bonilla, Edwin V and Chai, Kian Ming A and Williams, Christopher K I},
+	year = {2008},
+	keywords = {good, read},
+	pages = {8},
+	annote = {MTL using GP [Neurips 2008]
+
+assumes noise free ... might be able to generalize this method to handle noisy labels
+matlab code: https://github.com/ebonilla/mtgp 
+
+ 
+slides http://gpss.cc/bark08/slides/3\%20williams.pdf
+
+gradient based method to train hyperparameters ... K{\textasciicircum}f = LL{\textasciicircum}T guaranteed to be psd.
+
+code
+
+gpytorch https://github.com/cornellius-gp/gpytorch/blob/master/examples/05\_Deep\_Gaussian\_Processes/DGP\_Multitask\_Regression.ipynb
+
+ 
+related paper
+
+the paper that derives EM procedure for estimating parameters ofLinear Coregionalization Model: LCM https://www.stat.purdue.edu/{\textasciitilde}zhanghao/Paper/LCM.pdf
+
+ 
+me
+
+one problem needs all task outputs for all datapoints ... not the case in may case .. multilabel-ed instead  of completely labeled
+
+might not be that big  of a problem ... if just do batch update that maximize conditional covariance aka data term of log  marginal likelihood ..
+actually GP does handle missing values ... just use observed X and corresponding value of Y for some tasks...
+
+
+does it make sense to denote some kind of directionality in terms of what variable can affect what else variables by enforcing some constraints on the task kernel matrix ...
+
+links to causality
+like changes to value in child of a node has no influence on the parent value ...
+
+
+how does this paper relate to the task descriptor paper ?
+
+in task descriptor K{\textasciicircum}f = k{\textasciicircum}f(tl,tk) ... a kernel function over descriptors. its a full covariance matrix ! and induces correlation between tasks.
+
+
+
+ 
+introduction 
+
+motivation 
+
+sharing information maybe detrimental. how to transfer information between tasks well
+
+
+this paper
+
+learns inter-task dependencies solely on task identities and observed data for each task
+MTL in the case of small data regime pools data and so model parameter can be estimated more confidently
+
+estimate a common covariance function
+
+
+
+
+the model
+
+place GP prior over task functions to induce correlation between tasks
+
+key idea is observation for one task influences function values for other tasks .... this connection linked by the task kernel matrix
+
+
+
+
+},
+	file = {Bonilla et al_2008_Multi-task Gaussian Process Prediction.pdf:/Users/wpq/Dropbox (MIT)/zotero/Bonilla et al_2008_Multi-task Gaussian Process Prediction.pdf:application/pdf}
+}
+
+@article{snelsonVariableNoiseDimensionality2012,
+	title = {Variable noise and dimensionality reduction for sparse {Gaussian} processes},
+	abstract = {The sparse pseudo-input Gaussian process (SPGP) is a new approximation method for speeding up GP regression in the case of a large number of data points N . The approximation is controlled by the gradient optimization of a small set of M ‘pseudoinputs’, thereby reducing complexity from O(N 3) to O(M 2N ). One limitation of the SPGP is that this optimization space becomes impractically big for high dimensional data sets. This paper addresses this limitation by performing automatic dimensionality reduction. A projection of the input space to a low dimensional space is learned in a supervised manner, alongside the pseudoinputs, which now live in this reduced space. The paper also investigates the suitability of the SPGP for modeling data with inputdependent noise. A further extension of the model is made to make it even more powerful in this regard – we learn an uncertainty parameter for each pseudo-input. The combination of sparsity, reduced dimension, and input-dependent noise makes it possible to apply GPs to much larger and more complex data sets than was previously practical. We demonstrate the beneﬁts of these methods on several synthetic and real world problems.},
+	language = {en},
+	author = {Snelson, Edward and Ghahramani, Zoubin},
+	year = {2012},
+	keywords = {tbr},
+	pages = {8},
+	annote = {[UAI 2012]
+
+talks about dimensionality reduction to enforce lowrank-ness of kernels and connection to PCA+GP
+},
+	file = {Snelson_Ghahramani_2012_Variable noise and dimensionality reduction for sparse Gaussian processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Snelson_Ghahramani_2012_Variable noise and dimensionality reduction for sparse Gaussian processes.pdf:application/pdf}
+}
+
+@article{wilsonCopulaProcesses2010,
+	title = {Copula {Processes}},
+	abstract = {We deﬁne a copula process which describes the dependencies between arbitrarily many random variables independently of their marginal distributions. As an example, we develop a stochastic volatility model, Gaussian Copula Process Volatility (GCPV), to predict the latent standard deviations of a sequence of random variables. To make predictions we use Bayesian inference, with the Laplace approximation, and with Markov chain Monte Carlo as an alternative. We ﬁnd our model can outperform GARCH on simulated and ﬁnancial data. And unlike GARCH, GCPV can easily handle missing data, incorporate covariates other than time, and model a rich class of covariance structures.},
+	language = {en},
+	author = {Wilson, Andrew and Ghahramani, Zoubin},
+	year = {2010},
+	keywords = {tbr},
+	pages = {9},
+	annote = {[Neurips 2010]
+
+use GP for econometrics
+kernel choice matters immensely for performance
+
+ 
+me
+
+wilson from this project is motivated to automate kernel selection
+},
+	file = {Wilson and Ghahramani - Copula Processes.pdf:/Users/wpq/Zotero/storage/XNKS4LDR/Wilson and Ghahramani - Copula Processes.pdf:application/pdf}
+}
+
+@article{wilsonGaussianProcessRegression2012,
+	title = {Gaussian {Process} {Regression} {Networks}},
+	abstract = {We introduce a new regression framework, Gaussian process regression networks (GPRN), which combines the structural properties of Bayesian neural networks with the nonparametric ﬂexibility of Gaussian processes. GPRN accommodates input (predictor) dependent signal and noise correlations between multiple output (response) variables, input dependent length-scales and amplitudes, and heavy-tailed predictive distributions. We derive both elliptical slice sampling and variational Bayes inference procedures for GPRN. We apply GPRN as a multiple output regression and multivariate volatility model, demonstrating substantially improved performance over eight popular multiple output (multi-task) Gaussian process models and three multivariate volatility models on real datasets, including a 1000 dimensional gene expression dataset.},
+	language = {en},
+	author = {Wilson, Andrew Gordon and Knowles, David A and Ghahramani, Zoubin},
+	year = {2012},
+	keywords = {read},
+	pages = {8},
+	annote = {GPRN [ICML 2012]
+
+tries to use deep network where weights are GPs ...
+use GP for multitask
+
+ 
+me
+
+mtgp is multiple output with fixed signal correlation. GPRN is multiple output model with input dependent signal correlation.
+
+this is actually what im doing ... but instead of relying on inputs ... rely on bottleneck of findings/diseases
+also this paper use independent/different GP to model latent function and use 1 shared kenrel to model mixing matrix .. im doing the contrary .. shared kernel over outputs and different kernels to multiplex the weights.
+
+
+GPRN is really a multitask model ... but it still maximizes likelihood of full data ... so not doing asymmetric MTL. but  can really say that a benefit of amtgp is input adaptive signal (maybe add noise as well!)
+
+ 
+introduction 
+
+motivating example
+
+predict cadmium concentration in region of swiss jura... by multitask make use of correlated heavy metal measurements to enhance prediction !
+if knows how signal correlation change with geographical location ideal!
+
+
+history 
+
+neural networks use adaptive basis functions to model correlation between outputs.
+GP as mere smoothing machines... in infinite limit of basis functions, correlation between outputs vanishes
+multitask learning
+
+
+goal
+
+GP for input dependent signal-and-noise correlations between multiple response variables
+
+
+GPN
+
+dim-q latent functions f(x) mixed via an input dependent linear operator W(x) to generate observed variables y(x)
+signal/noise correlation adaptive due to W(x) ... different locations yield different mixing effect  of latent f.
+
+W(x) each entry is a GP over x. sharing the same lengthscale
+
+
+training W(x) needs to condition on D=\{X,Y\} ... so predictive distribution depends on both X and Y!
+prior over u = (f, W) ...
+sample from posterior using variational bayes (VB) and/or elliptical slice sampling (ESS) ....
+
+full bayes treatment of parameters ... instead of empirical bayes
+
+
+
+
+},
+	file = {Wilson et al_2012_Gaussian Process Regression Networks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Wilson et al_2012_Gaussian Process Regression Networks.pdf:application/pdf}
+}
+
+@article{wilsonGeneralisedWishartProcesses2011,
+	title = {Generalised {Wishart} {Processes}},
+	abstract = {We introduce a new stochastic process called the generalised Wishart process (GWP). It is a collection of positive semi-deﬁnite random matrices indexed by any arbitrary input variable. We use this process as a prior over dynamic (e.g. time varying) covariance matrices Σ(t). The GWP captures a diverse class of covariance dynamics, naturally handles missing data, scales nicely with dimension, has easily interpretable parameters, and can use input variables that include covariates other than time. We describe how to construct the GWP, introduce general procedures for inference and prediction, and show that it outperforms its main competitor, multivariate GARCH, even on ﬁnancial data that especially suits GARCH.},
+	language = {en},
+	author = {Wilson, Andrew Gordon and Ghahramani, Zoubin},
+	year = {2011},
+	keywords = {tbr},
+	pages = {9},
+	annote = {Inverse Wishart Process [UAI 2011]
+ 
+Andrew Wilson's talk on repr learning with GP
+
+motivation 
+
+want to do bayesian nonparametrics, but want additional flexibility... need to introduce a process that models distribution of pd kernels
+
+
+inverse Wishart process
+
+can model any pd kernel
+think of kernel as an infinite dimensional cov matrix
+every covariance matrix is a marginal distribution over this infinite dimensional matrix
+can specify mean kernel we want
+hierarchical modeling of kernel distribution
+can analytically marginalize the distribution and predictive distribution
+
+
+results
+
+predictive distribution is student-t where predictive mean equal to what we would get using GP with mean kernel...
+
+IWP is too flexible . challenging to say anything about the covariance function of a stochastic process from a single draw if no assumptions are made
+why want stationary kernels, a good inductive bias.
+
+
+marginal predictive distribution is same as we get for some other generative model
+
+
+
+ },
+	file = {Wilson and Ghahramani - Generalised Wishart Processes.pdf:/Users/wpq/Zotero/storage/RYSG5673/Wilson and Ghahramani - Generalised Wishart Processes.pdf:application/pdf}
+}
+
+@article{vanderwilkConvolutionalGaussianProcesses2017,
+	title = {Convolutional {Gaussian} {Processes}},
+	url = {http://arxiv.org/abs/1709.01894},
+	abstract = {We present a practical way of introducing convolutional structure into Gaussian processes, making them more suited to high-dimensional inputs like images. The main contribution of our work is the construction of an inter-domain inducing point approximation that is well-tailored to the convolutional kernel. This allows us to gain the generalisation benefit of a convolutional kernel, together with fast but accurate posterior inference. We investigate several variations of the convolutional kernel, and apply it to MNIST and CIFAR-10, which have both been known to be challenging for Gaussian processes. We also show how the marginal likelihood can be used to find an optimal weighting between convolutional and RBF kernels to further improve performance. We hope that this illustration of the usefulness of a marginal likelihood will help automate discovering architectures in larger models.},
+	urldate = {2021-01-15},
+	journal = {arXiv:1709.01894 [cs, stat]},
+	author = {van der Wilk, Mark and Rasmussen, Carl Edward and Hensman, James},
+	month = sep,
+	year = {2017},
+	note = {arXiv: 1709.01894},
+	keywords = {read},
+	annote = {ConvAdditive Kernel + Variational GP [Neurips 2017]
+
+inter-domain inducing points
+
+ 
+introduction 
+
+variational GP
+
+scalable \& easy to handle non-Gaussian likelihoods ...
+really clear summary of Titsias 2009's variational bounds
+
+factorized ELBO
+
+
+
+
+inter-domain GP
+
+u is some linear operator of f...
+
+
+},
+	file = {van der Wilk et al_2017_Convolutional Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/van der Wilk et al_2017_Convolutional Gaussian Processes.pdf:application/pdf}
+}
+
+@article{futomaLearningDetectSepsis2017,
+	title = {Learning to {Detect} {Sepsis} with a {Multitask} {Gaussian} {Process} {RNN} {Classifier}},
+	abstract = {We present a scalable end-to-end classiﬁer that uses streaming physiological and medication data to accurately predict the onset of sepsis, a life-threatening complication from infections that has high mortality and morbidity. Our proposed framework models the multivariate trajectories of continuous-valued physiological time series using multitask Gaussian processes, seamlessly accounting for the high uncertainty, frequent missingness, and irregular sampling rates typically associated with real clinical data. The Gaussian process is directly connected to a black-box classiﬁer that predicts whether a patient will become septic, chosen in our case to be a recurrent neural network to account for the extreme variability in the length of patient encounters. We show how to scale the computations associated with the Gaussian process in a manner so that the entire system can be discriminatively trained end-to-end using backpropagation. In a large cohort of heterogeneous inpatient encounters at our university health system we ﬁnd that it outperforms several baselines at predicting sepsis, and yields 19.4\% and 55.5\% improved areas under the Receiver Operating Characteristic and Precision Recall curves as compared to the NEWS score currently used by our hospital.},
+	language = {en},
+	author = {Futoma, Joseph and Hariharan, Sanjay and Heller, Katherine},
+	year = {2017},
+	keywords = {read},
+	pages = {9},
+	annote = {MTL-GP for sepsis detection [ICML 2017]
+ 
+me
+
+why doing interpolation first might  be important. just raw values into RNN does not have information about time ?
+cool thing is a random variable is taken as input to a deep network .... embed in a larger ML system and can still be trained end-to-end......
+
+in fact hyperparameters of MGP is trained end to end ...
+
+
+
+ 
+introduction 
+
+problem 
+
+detect sepsis from irregularly sampled, sparse, ehr time-series
+
+
+idea
+
+transform irregularly spaced inputs to uniform grid with multitask GP. then feed into RNN for binary classification
+
+
+MGP
+
+physiological variable (M)
+
+noise variable specific to these
+
+
+
+
+endtoend optimization
+
+output of MGP is a random variable ...
+so train hyperparameter of MGP and RNN by optimizing for expected loss where expectation wrt latent posterior variables
+
+
+},
+	file = {Futoma et al. - Learning to Detect Sepsis with a Multitask Gaussia.pdf:/Users/wpq/Zotero/storage/AYENSMZR/Futoma et al. - Learning to Detect Sepsis with a Multitask Gaussia.pdf:application/pdf}
+}
+
+@article{snelsonSparseGaussianProcesses2005,
+	title = {Sparse {Gaussian} {Processes} using {Pseudo}-inputs},
+	volume = {18},
+	url = {https://proceedings.neurips.cc/paper/2005/hash/4491777b1aa8b5b32c2e8666dbe1a495-Abstract.html},
+	language = {en},
+	urldate = {2021-02-05},
+	journal = {Advances in Neural Information Processing Systems},
+	author = {Snelson, Edward and Ghahramani, Zoubin},
+	year = {2005},
+	keywords = {read},
+	pages = {1257--1264},
+	annote = {SGPP/FITC  [Neurips 2005]
+
+FITC: fully independent training conditional
+inducing points for GP
+
+me
+
+read this after unifying view 2005 is much easier ...
+
+ 
+introduction 
+
+existing problem 
+
+active set (subset of data) select interferes with kernel hyperparameter learning ... GD based method has hiccups when active set/inducing points are re-selected
+
+
+this paper
+
+location of pseudo-inputs (not constrained to be subset of data) can be found by continuous optimization by maximizing marginal likelihood wrt Xu
+
+but optimizing location pf pseudo-inputs might lead to overfitting
+
+
+
+
+},
+	file = {Snelson_Ghahramani_2005_Sparse Gaussian Processes using Pseudo-inputs.pdf:/Users/wpq/Dropbox (MIT)/zotero/Snelson_Ghahramani_2005_Sparse Gaussian Processes using Pseudo-inputs.pdf:application/pdf}
+}
+
+@article{quinonero-candelaUnifyingViewSparse2005,
+	title = {A {Unifying} {View} of {Sparse} {Approximate} {Gaussian} {Process} {Regression}},
+	volume = {6},
+	issn = {1532-4435},
+	abstract = {We provide a new unifying view, including all existing proper probabilistic sparse approximations for Gaussian process regression. Our approach relies on expressing the effective prior which the methods are using. This allows new insights to be gained, and highlights the relationship between existing methods. It also allows for a clear theoretically justified ranking of the closeness of the known approximations to the corresponding full GPs. Finally we point directly to designs of new better sparse approximations, combining the best of the existing strategies, within attractive computational constraints.},
+	journal = {The Journal of Machine Learning Research},
+	author = {Quiñonero-Candela, Joaquin and Rasmussen, Carl Edward},
+	month = dec,
+	year = {2005},
+	keywords = {good, read},
+	pages = {1939--1959},
+	annote = {sparse GP unifying view [JMLR 2005]
+
+unified view of sparse GP with inducing points ... as different approx strategies to p(f,f*)
+
+ 
+code
+
+FITC
+
+https://swiftnav-albatross.readthedocs.io/en/latest/sparse-gp-details.html
+https://bwengals.github.io/pymc3-fitcvfe-implementation-notes.html
+GPy https://github.com/SheffieldML/GPy/blob/devel/GPy/inference/latent\_function\_inference/fitc.py
+gpflow has some implementation notes ! https://gpflow.readthedocs.io/en/master/notebooks/intro.html
+pyGPs impl https://github.com/marionmari/pyGPs/blob/792f3c6cb9/pyGPs/Core/inf.py\#L387
+julia https://github.com/STOR-i/GaussianProcesses.jl/blob/master/src/sparse/fully\_indep\_train\_conditional.jl
+
+has derivation inline ...
+
+
+
+
+
+ 
+ 
+introduction 
+
+unifying
+
+introduce inducing variables u {\textasciitilde} GP with corresponding inducing inputs X\_u
+
+act as a bottleneck of information between (X,y) and (X*,y*)
+
+
+
+
+assumptions
+
+f {\textbackslash}ind f* {\textbar} u
+different forms of q(f{\textbar}u) \& q(f*{\textbar}u)
+
+
+},
+	file = {Quinonero-Candela_Rasmussen_2005_A Unifying View of Sparse Approximate Gaussian Process Regression.pdf:/Users/wpq/Dropbox (MIT)/zotero/Quinonero-Candela_Rasmussen_2005_A Unifying View of Sparse Approximate Gaussian Process Regression.pdf:application/pdf}
+}
+
+@inproceedings{damianouDeepGaussianProcesses2013,
+	title = {Deep {Gaussian} {Processes}},
+	url = {http://proceedings.mlr.press/v31/damianou13a.html},
+	abstract = {In this paper we introduce deep Gaussian process (GP) models. Deep GPs are a deep belief network based on Gaussian process mappings. The data is modeled as the output of a multivariate GP. The inpu...},
+	language = {en},
+	urldate = {2021-02-05},
+	booktitle = {Artificial {Intelligence} and {Statistics}},
+	publisher = {PMLR},
+	author = {Damianou, Andreas and Lawrence, Neil D.},
+	month = apr,
+	year = {2013},
+	note = {ISSN: 1938-7228},
+	keywords = {tbr},
+	pages = {207--215},
+	annote = {nested layers of GP [ICML 2013]},
+	file = {Damianou_Lawrence_2013_Deep Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Damianou_Lawrence_2013_Deep Gaussian Processes.pdf:application/pdf}
+}
+
+@book{carledwardrasmussenGaussianProcessMachine2006,
+	title = {Gaussian {Process} for {Machine} {Learning}},
+	publisher = {MIT Press},
+	author = {{Carl Edward Rasmussen} and Christopher, Williams},
+	year = {2006},
+	keywords = {read},
+	annote = {GPML
+ 
+ 
+me
+
+mean NLL on test sets as measure 
+
+standardize it by subtracting loss obtained under the trivial model which predicts using a gaussian with mean and variance of training data.
+
+0 - for simple model
+negative for better model .
+
+
+
+
+},
+	file = {Carl Edward Rasmussen_Christopher_2006_Gaussian Process for Machine Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Carl Edward Rasmussen_Christopher_2006_Gaussian Process for Machine Learning.pdf:application/pdf}
+}
+
+@article{hintonUsingDeepBelief2007,
+	title = {Using {Deep} {Belief} {Nets} to {Learn} {Covariance} {Kernels} for {Gaussian} {Processes}},
+	volume = {20},
+	url = {https://papers.nips.cc/paper/2007/hash/4b6538a44a1dfdc2b83477cd76dee98e-Abstract.html},
+	language = {en},
+	urldate = {2021-02-05},
+	journal = {Advances in Neural Information Processing Systems},
+	author = {Hinton, Geoffrey E. and Salakhutdinov, Russ R.},
+	year = {2007},
+	keywords = {read},
+	pages = {1249--1256},
+	annote = {[Neurips 2007]
+
+using deep nets to learn covariance matrix
+apply Gaussian kernel on top features in DBN
+
+ 
+introduction },
+	file = {Hinton_Salakhutdinov_2007_Using Deep Belief Nets to Learn Covariance Kernels for Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Hinton_Salakhutdinov_2007_Using Deep Belief Nets to Learn Covariance Kernels for Gaussian Processes.pdf:application/pdf}
+}
+
+@article{wilsonEfficientlySamplingFunctions2020,
+	title = {Efficiently {Sampling} {Functions} from {Gaussian} {Process} {Posteriors}},
+	url = {http://arxiv.org/abs/2002.09309},
+	abstract = {Gaussian processes are the gold standard for many real-world modeling problems, especially in cases where a model's success hinges upon its ability to faithfully represent predictive uncertainty. These problems typically exist as parts of larger frameworks, wherein quantities of interest are ultimately defined by integrating over posterior distributions. These quantities are frequently intractable, motivating the use of Monte Carlo methods. Despite substantial progress in scaling up Gaussian processes to large training sets, methods for accurately generating draws from their posterior distributions still scale cubically in the number of test locations. We identify a decomposition of Gaussian processes that naturally lends itself to scalable sampling by separating out the prior from the data. Building off of this factorization, we propose an easy-to-use and general-purpose approach for fast posterior sampling, which seamlessly pairs with sparse approximations to afford scalability both during training and at test time. In a series of experiments designed to test competing sampling schemes' statistical properties and practical ramifications, we demonstrate how decoupled sample paths accurately represent Gaussian process posteriors at a fraction of the usual cost.},
+	urldate = {2021-02-12},
+	journal = {arXiv:2002.09309 [cs, stat]},
+	author = {Wilson, James T. and Borovitskiy, Viacheslav and Terenin, Alexander and Mostowsky, Peter and Deisenroth, Marc Peter},
+	month = aug,
+	year = {2020},
+	note = {arXiv: 2002.09309},
+	keywords = {tbr},
+	annote = {fast sampling from GP posterior [ICML 2020 best paper mention]
+ 
+ },
+	file = {Wilson et al_2020_Efficiently Sampling Functions from Gaussian Process Posteriors.pdf:/Users/wpq/Dropbox (MIT)/zotero/Wilson et al_2020_Efficiently Sampling Functions from Gaussian Process Posteriors.pdf:application/pdf}
+}
+
+@article{alaaBayesianInferenceIndividualized2017,
+	title = {Bayesian {Inference} of {Individualized} {Treatment} {Effects} using {Multi}-task {Gaussian} {Processes}},
+	url = {https://arxiv.org/abs/1704.02801v2},
+	abstract = {Predicated on the increasing abundance of electronic health records, we
+investi- gate the problem of inferring individualized treatment effects using
+observational data. Stemming from the potential outcomes model, we propose a
+novel multi- task learning framework in which factual and counterfactual
+outcomes are mod- eled as the outputs of a function in a vector-valued
+reproducing kernel Hilbert space (vvRKHS). We develop a nonparametric Bayesian
+method for learning the treatment effects using a multi-task Gaussian process
+(GP) with a linear coregion- alization kernel as a prior over the vvRKHS. The
+Bayesian approach allows us to compute individualized measures of confidence in
+our estimates via pointwise credible intervals, which are crucial for realizing
+the full potential of precision medicine. The impact of selection bias is
+alleviated via a risk-based empirical Bayes method for adapting the multi-task
+GP prior, which jointly minimizes the empirical error in factual outcomes and
+the uncertainty in (unobserved) counter- factual outcomes. We conduct
+experiments on observational datasets for an inter- ventional social program
+applied to premature infants, and a left ventricular assist device applied to
+cardiac patients wait-listed for a heart transplant. In both experi- ments, we
+show that our method significantly outperforms the state-of-the-art.},
+	language = {en},
+	urldate = {2021-02-16},
+	author = {Alaa, Ahmed M. and van der Schaar, Mihaela},
+	month = apr,
+	year = {2017},
+	keywords = {tbr},
+	annote = {MTL-GP for ITE [Neurips 2016]},
+	file = {Alaa_van der Schaar_2017_Bayesian Inference of Individualized Treatment Effects using Multi-task Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Alaa_van der Schaar_2017_Bayesian Inference of Individualized Treatment Effects using Multi-task Gaussian Processes.pdf:application/pdf}
+}
+
+@article{swerskyMultiTaskBayesianOptimization2013a,
+	title = {Multi-{Task} {Bayesian} {Optimization}},
+	abstract = {Bayesian optimization has recently been proposed as a framework for automatically tuning the hyperparameters of machine learning models and has been shown to yield state-of-the-art performance with impressive ease and efﬁciency. In this paper, we explore whether it is possible to transfer the knowledge gained from previous optimizations to new tasks in order to ﬁnd optimal hyperparameter settings more efﬁciently. Our approach is based on extending multi-task Gaussian processes to the framework of Bayesian optimization. We show that this method signiﬁcantly speeds up the optimization process when compared to the standard single-task approach. We further propose a straightforward extension of our algorithm in order to jointly minimize the average error across multiple tasks and demonstrate how this can be used to greatly speed up k-fold cross-validation. Lastly, we propose an adaptation of a recently developed acquisition function, entropy search, to the cost-sensitive, multi-task setting. We demonstrate the utility of this new acquisition function by leveraging a small dataset to explore hyperparameter settings for a large dataset. Our algorithm dynamically chooses which dataset to query in order to yield the most information per unit cost.},
+	language = {en},
+	author = {Swersky, Kevin and Snoek, Jasper and Adams, Ryan P},
+	year = {2013},
+	note = {tex.ids= swerskyMultiTaskBayesianOptimization2013},
+	keywords = {tbr},
+	pages = {10},
+	annote = {MTL-GP for BO [Neurips 2013]
+ 
+ },
+	annote = {multitask BO [Neurips 2013]},
+	file = {Swersky et al. - Multi-Task Bayesian Optimization.pdf:/Users/wpq/Zotero/storage/UX4D8FQJ/Swersky et al. - Multi-Task Bayesian Optimization.pdf:application/pdf;Swersky et al. - Multi-Task Bayesian Optimization.pdf:/Users/wpq/Zotero/storage/W7DGRVLW/Swersky et al. - Multi-Task Bayesian Optimization.pdf:application/pdf}
+}
+
+@article{alvarezKernelsVectorValuedFunctions2012,
+	title = {Kernels for {Vector}-{Valued} {Functions}: a {Review}},
+	shorttitle = {Kernels for {Vector}-{Valued} {Functions}},
+	url = {http://arxiv.org/abs/1106.6251},
+	abstract = {Kernel methods are among the most popular techniques in machine learning. From a frequentist/discriminative perspective they play a central role in regularization theory as they provide a natural choice for the hypotheses space and the regularization functional through the notion of reproducing kernel Hilbert spaces. From a Bayesian/generative perspective they are the key in the context of Gaussian processes, where the kernel function is also known as the covariance function. Traditionally, kernel methods have been used in supervised learning problem with scalar outputs and indeed there has been a considerable amount of work devoted to designing and learning kernels. More recently there has been an increasing interest in methods that deal with multiple outputs, motivated partly by frameworks like multitask learning. In this paper, we review different methods to design or learn valid kernel functions for multiple outputs, paying particular attention to the connection between probabilistic and functional methods.},
+	urldate = {2021-02-16},
+	journal = {arXiv:1106.6251 [cs, math, stat]},
+	author = {Alvarez, Mauricio A. and Rosasco, Lorenzo and Lawrence, Neil D.},
+	month = apr,
+	year = {2012},
+	note = {arXiv: 1106.6251},
+	keywords = {tbr},
+	annote = {multiple-output GP review [FTML]
+ 
+ },
+	file = {Alvarez et al_2012_Kernels for Vector-Valued Functions - a Review.pdf:/Users/wpq/Dropbox (MIT)/zotero/Alvarez et al_2012_Kernels for Vector-Valued Functions - a Review.pdf:application/pdf}
+}
+
+@inproceedings{bonillaKernelMultitaskLearning2007,
+	title = {Kernel {Multi}-task {Learning} using {Task}-specific {Features}},
+	url = {http://proceedings.mlr.press/v2/bonilla07a.html},
+	abstract = {In this paper we are concerned with multitask learning when task-specific features are available. We describe two ways of achieving this using Gaussian process predictors: in the first method, the ...},
+	language = {en},
+	urldate = {2021-02-16},
+	booktitle = {Artificial {Intelligence} and {Statistics}},
+	publisher = {PMLR},
+	author = {Bonilla, Edwin V. and Agakov, Felix V. and Williams, Christopher K. I.},
+	month = mar,
+	year = {2007},
+	note = {ISSN: 1938-7228},
+	keywords = {good, read},
+	pages = {43--50},
+	annote = {MTL+GP using task descriptors [AISTATS 2007]
+ 
+me
+
+really my methods is just this ...
+
+descripter as side information ...
+
+here task specific information is chosen ... compared to my case where task descripter is selected  via optimization !
+
+
+
+
+also the schematics are really informative
+
+task feature -{\textgreater} slice of X ... subgroup of data with the same task feature as observation for training / learning underlying space
+linear mapping of training y. sort by linear mapping coefficient values. larger the value, more important the training set .... split into tasks.... know how each task contributes !
+actually ... can just sum the linear coefficient in predictive mean corresponding to subpopulation with some sideinfo=1 ...actually cant... the paper uses this to measure intertask transfer
+
+see how affect of ard lengthscale affects this interpretation ... does larger lengthscale means corresponding subpopulation not counted much in final prediction ?
+
+
+
+
+actually the method they compare, parametric GP over task descriptor \& feature \& input are tuned via maximizing marginal likelihood
+parametric GP with task descriptor works better than MTGP in cases `school` dataset ... .or in cases where
+
+there are only few datapoints for a new task (100 samples/task for exam  vs. 8k samples/task for compiler)
+or task descriptor conveys useful information about the task! this is exactly the case ... since can get task descriptor from model trained on a much larger dataset ...
+
+
+
+ 
+introduction 
+
+motivated to have a solution of learning input and output similarity with GP  instead of neural networks
+notations
+
+M: \#tasks
+g: x -{\textgreater} (g1,...,gM)
+
+gi(x) = g(fi, x) ... task specific features mediate multitask model output !
+
+
+z = (x,f)
+
+x: input features
+
+C: code-feature repr
+T: transformation based repr
+
+
+f: task-specific features
+
+{\textbackslash}in R{\textasciicircum}M
+
+
+
+
+n\_r: random selection of 256 training pt
+
+
+how to select task-specific features
+
+find a subset of data/sequences and response corresponding to each task
+8 canonical variables ...
+
+
+datasets
+
+compiler
+
+N = 88214 M=11
+
+N/M = 8000
+
+
+goal:
+
+predict speedup given transformation sequence on 11 C program.
+
+
+input: 13-dim x absence/presence of transformations. 8 canonical transformation sequences as task descriptor
+
+
+exam
+
+N = 15362 M =139
+
+N/M = 110
+
+
+goal:
+
+predict exam score for a student belonging to different schools.
+
+
+input: 4 student depedent (year of exam, gender, ethnic group)
+features, 4 school dependent features (\%student for free school meal, school gender, \% student in VR band 1)
+
+actually the task/school dependent features is a summary (\% present vs whether student has it or not) of statistics on input features at population level
+
+
+
+
+goal of MTGP is to learn multitask relationship without task descriptors
+
+in my case, it is want explicit knowledge of what disease/findings relate the different tasks (confounding etc.)
+
+
+
+
+},
+	file = {Bonilla et al_2007_Kernel Multi-task Learning using Task-specific Features.pdf:/Users/wpq/Dropbox (MIT)/zotero/Bonilla et al_2007_Kernel Multi-task Learning using Task-specific Features.pdf:application/pdf}
+}
+
+@article{zhangMaximumlikelihoodEstimationMultivariate2007,
+	title = {Maximum-likelihood estimation for multivariate spatial linear coregionalization models},
+	volume = {18},
+	issn = {11804009, 1099095X},
+	url = {http://doi.wiley.com/10.1002/env.807},
+	doi = {10.1002/env.807},
+	abstract = {A multivariate spatial linear coregionalization model is considered that incorporates the Mate´rn class of covariograms. An EM algorithm is developed for maximum-likelihood estimation that has a few desirable properties and is capable of handling high-dimensional data. Most estimates in the EM algorithm are updated through closed form expressions and these estimates automatically satisfy necessary constraints. The model and algorithm are illustrated through a real example. Copyright \# 2006 John Wiley \& Sons, Ltd.},
+	language = {en},
+	number = {2},
+	urldate = {2021-02-16},
+	journal = {Environmetrics},
+	author = {Zhang, Hao},
+	month = mar,
+	year = {2007},
+	keywords = {tbr},
+	pages = {125--139},
+	annote = {EM for multitask GP / coregionalization parameter estimation [Environmetrics 2007]
+
+pretty dense ..
+},
+	file = {Zhang_2007_Maximum-likelihood estimation for multivariate spatial linear coregionalization models.pdf:/Users/wpq/Dropbox (MIT)/zotero/Zhang_2007_Maximum-likelihood estimation for multivariate spatial linear coregionalization models.pdf:application/pdf}
+}
+
+@incollection{gerigSpatiallyVaryingRegistration2014,
+	address = {Cham},
+	title = {Spatially {Varying} {Registration} {Using} {Gaussian} {Processes}},
+	volume = {8674},
+	isbn = {978-3-319-10469-0 978-3-319-10470-6},
+	url = {http://link.springer.com/10.1007/978-3-319-10470-6_52},
+	abstract = {In this paper we propose a new approach for spatially-varying registration using Gaussian process priors. The method is based on the idea of spectral tempering, i.e. the spectrum of the Gaussian process is modiﬁed depending on a user deﬁned tempering function. The result is a non-stationary Gaussian process, which induces diﬀerent amount of smoothness in diﬀerent areas. In contrast to most other schemes for spatially-varying registration, our approach does not require any change in the registration algorithm itself, but only aﬀects the prior model. Thus we can obtain spatially-varying versions of any registration method whose deformation prior can be formulated in terms of a Gaussian process. This includes for example most spline-based models, but also statistical shape or deformation models. We present results for the problem of atlas based skull-registration of cone beam CT images. These datasets are diﬃcult to register as they contain a large amount of noise around the teeth. We show that with our method we can become robust against noise, but still obtain accurate correspondence where the data is clean.},
+	language = {en},
+	urldate = {2021-02-18},
+	booktitle = {Medical {Image} {Computing} and {Computer}-{Assisted} {Intervention} – {MICCAI} 2014},
+	publisher = {Springer International Publishing},
+	author = {Gerig, Thomas and Shahim, Kamal and Reyes, Mauricio and Vetter, Thomas and Lüthi, Marcel},
+	editor = {Golland, Polina and Hata, Nobuhiko and Barillot, Christian and Hornegger, Joachim and Howe, Robert},
+	year = {2014},
+	doi = {10.1007/978-3-319-10470-6_52},
+	note = {Series Title: Lecture Notes in Computer Science},
+	keywords = {tbr},
+	pages = {413--420},
+	annote = {model deformation field as GP [MICCAI 2014]
+ 
+me
+
+relationship with region specific LDDMM ?
+},
+	file = {Gerig et al_2014_Spatially Varying Registration Using Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Gerig et al_2014_Spatially Varying Registration Using Gaussian Processes.pdf:application/pdf}
+}
+
+@article{lawrenceProbabilisticNonlinearPrincipal2005,
+	title = {Probabilistic {Non}-linear {Principal} {Component} {Analysis} with {Gaussian} {Process} {Latent} {Variable} {Models}},
+	volume = {6},
+	issn = {1533-7928},
+	url = {http://jmlr.org/papers/v6/lawrence05a.html},
+	number = {60},
+	urldate = {2021-02-19},
+	journal = {Journal of Machine Learning Research},
+	author = {Lawrence, Neil},
+	year = {2005},
+	keywords = {good, read},
+	pages = {1783--1816},
+	annote = {GP-LVM [JMLR 2005]
+
+unifying view on modeling X-{\textgreater}Y as GP and marginalize over random function as objective. Depending on the input space kernel k(X.X') and output space kernel S(Y,Y') recovers kernel PCA, PPCA etc. ... pretty cool!
+slides useful: http://apt.cs.manchester.ac.uk/ftp/pub/ai/neill/gplvm\_07\_02.pdf
+
+ 
+me
+
+pretty cool to think about what happens when both S and K are not dot product kernels. what are the interpretations ... point out to probabilistic MDS
+},
+	file = {Lawrence_2005_Probabilistic Non-linear Principal Component Analysis with Gaussian Process Latent Variable Models.pdf:/Users/wpq/Dropbox (MIT)/zotero/Lawrence_2005_Probabilistic Non-linear Principal Component Analysis with Gaussian Process Latent Variable Models.pdf:application/pdf}
+}
+
+@article{damianouVariationalInferenceLatent2016,
+	title = {Variational {Inference} for {Latent} {Variables} and {Uncertain} {Inputs} in {Gaussian} {Processes}},
+	volume = {17},
+	issn = {1533-7928},
+	url = {http://jmlr.org/papers/v17/damianou16a.html},
+	number = {42},
+	urldate = {2021-02-19},
+	journal = {Journal of Machine Learning Research},
+	author = {Damianou, Andreas C. and Titsias, Michalis K. and Lawrence, Neil D.},
+	year = {2016},
+	keywords = {tbr},
+	pages = {1--62},
+	annote = {[PMLR 2016]
+
+GP-LVM with uncertain inputs
+},
+	file = {Damianou et al_2016_Variational Inference for Latent Variables and Uncertain Inputs in Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Damianou et al_2016_Variational Inference for Latent Variables and Uncertain Inputs in Gaussian Processes.pdf:application/pdf}
+}
+
+@article{damianouSemidescribedSemisupervisedLearning2015,
+	title = {Semi-described and semi-supervised learning with {Gaussian} processes},
+	url = {http://arxiv.org/abs/1509.01168},
+	abstract = {Propagating input uncertainty through non-linear Gaussian process (GP) mappings is intractable. This hinders the task of training GPs using uncertain and partially observed inputs. In this paper we refer to this task as "semi-described learning". We then introduce a GP framework that solves both, the semi-described and the semi-supervised learning problems (where missing values occur in the outputs). Auto-regressive state space simulation is also recognised as a special case of semi-described learning. To achieve our goal we develop variational methods for handling semi-described inputs in GPs, and couple them with algorithms that allow for imputing the missing values while treating the uncertainty in a principled, Bayesian manner. Extensive experiments on simulated and real-world data study the problems of iterative forecasting and regression/classification with missing values. The results suggest that the principled propagation of uncertainty stemming from our framework can significantly improve performance in these tasks.},
+	urldate = {2021-02-19},
+	journal = {arXiv:1509.01168 [cs, math, stat]},
+	author = {Damianou, Andreas and Lawrence, Neil D.},
+	month = sep,
+	year = {2015},
+	note = {arXiv: 1509.01168},
+	keywords = {read},
+	annote = {Semi-described GP [UAI 2015]
+
+Bayesian GPLVM + Variational constraint
+
+me
+
+really good survey on uncertaint input GP!
+read Bayesian GPLVM
+
+ 
+introduction 
+
+categories
+
+semi-supervised
+
+missing output
+
+
+semi-described
+
+missing/uncertain input
+related to data imputation 
+
+
+
+
+related work 
+
+mentioned Osborne 2007 paper for modeling sensor data with missing inputs ... uses correlation between outputs actually ... 
+
+
+application scenarios
+
+forecasting regression (auto-regressive predictions, propagating uncertainty cross predictive sequence)
+
+
+recipe !
+
+approximation to communicate uncertainty between in/out
+
+use VFE based bounds...
++ sample from input space in a principled way (vs. self-training, bootstraping etc)
++ input uncertainty at both train/test time !
+
+
+partial/uncertain observation into variational framework
+
+propose variational constraints which constrains distribution of input space given observed noisy values
+
+
+algorithms for accounting for introduced uncertainty
+
+
+},
+	file = {Damianou_Lawrence_2015_Semi-described and semi-supervised learning with Gaussian processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Damianou_Lawrence_2015_Semi-described and semi-supervised learning with Gaussian processes.pdf:application/pdf}
+}
+
+@article{ghassemiMultivariateTimeseriesModeling2015,
+	title = {A {Multivariate} {Timeseries} {Modeling} {Approach} to {Severity} of {Illness} {Assessment} and {Forecasting} in {ICU} with {Sparse}, {Heterogeneous} {Clinical} {Data}},
+	volume = {2015},
+	issn = {2159-5399},
+	url = {https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4864016/},
+	abstract = {The ability to determine patient acuity (or severity of illness) has immediate practical use for clinicians. We evaluate the use of multivariate timeseries modeling with the multi-task Gaussian process (GP) models using noisy, incomplete, sparse, heterogeneous and unevenly-sampled clinical data, including both physiological signals and clinical notes. The learned multi-task GP (MTGP) hyperparameters are then used to assess and forecast patient acuity. Experiments were conducted with two real clinical data sets acquired from ICU patients: firstly, estimating cerebrovascular pressure reactivity, an important indicator of secondary damage for traumatic brain injury patients, by learning the interactions between intracranial pressure and mean arterial blood pressure signals, and secondly, mortality prediction using clinical progress notes. In both cases, MTGPs provided improved results: an MTGP model provided better results than single-task GP models for signal interpolation and forecasting (0.91 vs 0.69 RMSE), and the use of MTGP hyperparameters obtained improved results when used as additional classification features (0.812 vs 0.788 AUC).},
+	urldate = {2021-02-20},
+	journal = {Proceedings of the ... AAAI Conference on Artificial Intelligence. AAAI Conference on Artificial Intelligence},
+	author = {Ghassemi, Marzyeh and Pimentel, Marco A.F. and Naumann, Tristan and Brennan, Thomas and Clifton, David A. and Szolovits, Peter and Feng, Mengling},
+	month = jan,
+	year = {2015},
+	pmid = {27182460},
+	pmcid = {PMC4864016},
+	keywords = {read},
+	pages = {446--453},
+	annote = {MTGP for disease severity [AAAI 2015]
+
+MTGP from sparse, heterogeneous, clinical data (physiological signals + clinical notes) to predict patient acuity
+
+me
+
+does not focus on one thing  ...
+
+ 
+introduction 
+
+exp1: multiple noisy time-series to acuity
+
+ICP, ABP time series has missing data ... want to use MTGP to do interpolation.
+in training. there is artificial gaps in signal ..... synthetically generated
+
+
+},
+	file = {Ghassemi et al_2015_A Multivariate Timeseries Modeling Approach to Severity of Illness Assessment and Forecasting in ICU with Sparse, Heterogeneous Clinical Data.pdf:/Users/wpq/Dropbox (MIT)/zotero/Ghassemi et al_2015_A Multivariate Timeseries Modeling Approach to Severity of Illness Assessment and Forecasting in ICU with Sparse, Heterogeneous Clinical Data.pdf:application/pdf}
+}
+
+@inproceedings{titsiasVariationalLearningInducing2009,
+	title = {Variational {Learning} of {Inducing} {Variables} in {Sparse} {Gaussian} {Processes}},
+	url = {http://proceedings.mlr.press/v5/titsias09a.html},
+	abstract = {Sparse Gaussian process methods that use inducing variables require the selection of the inducing inputs and the kernel hyperparameters. We introduce a variational formulation for sparse approximat...},
+	language = {en},
+	urldate = {2021-02-21},
+	booktitle = {Artificial {Intelligence} and {Statistics}},
+	publisher = {PMLR},
+	author = {Titsias, Michalis},
+	month = apr,
+	year = {2009},
+	note = {ISSN: 1938-7228},
+	keywords = {good, read},
+	pages = {567--574},
+	annote = {variational inducing point GP [AISTATS 2009]
+
+predictive distribution same as PP
+
+ 
+related 
+
+technical report that summarizes the method very well http://thangbui.github.io/docs/reports/tr\_sparseNonConj.pdf
+
+extension to non-conjugate likelihoods
+factorizes p(y{\textbar}f) for stochastic optimization
+
+
+
+ 
+introduction 
+
+this paper
+
+variational inference interpretation of inducing variables ... inducing inputs as variational parameters. derive ELBO for optimization and closed form solution for variational inducing variables q(f\_m)
+
+
+},
+	file = {Titsias_2009_Variational Learning of Inducing Variables in Sparse Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Titsias_2009_Variational Learning of Inducing Variables in Sparse Gaussian Processes.pdf:application/pdf}
+}
+
+@article{vanderwilkFrameworkInterdomainMultioutput2020,
+	title = {A {Framework} for {Interdomain} and {Multioutput} {Gaussian} {Processes}},
+	url = {http://arxiv.org/abs/2003.01115},
+	abstract = {One obstacle to the use of Gaussian processes (GPs) in large-scale problems, and as a component in deep learning system, is the need for bespoke derivations and implementations for small variations in the model or inference. In order to improve the utility of GPs we need a modular system that allows rapid implementation and testing, as seen in the neural network community. We present a mathematical and software framework for scalable approximate inference in GPs, which combines interdomain approximations and multiple outputs. Our framework, implemented in GPflow, provides a unified interface for many existing multioutput models, as well as more recent convolutional structures. This simplifies the creation of deep models with GPs, and we hope that this work will encourage more interest in this approach.},
+	urldate = {2021-02-21},
+	journal = {arXiv:2003.01115 [cs, stat]},
+	author = {van der Wilk, Mark and Dutordoir, Vincent and John, S. T. and Artemev, Artem and Adam, Vincent and Hensman, James},
+	month = mar,
+	year = {2020},
+	note = {arXiv: 2003.01115},
+	keywords = {tbr},
+	annote = {GPflow multiple output GP doc},
+	file = {van der Wilk et al_2020_A Framework for Interdomain and Multioutput Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/van der Wilk et al_2020_A Framework for Interdomain and Multioutput Gaussian Processes.pdf:application/pdf}
+}
+
+@article{rakitschItAllNoise2013,
+	title = {It is all in the noise: {Efficient} multi-task {Gaussian} process inference with structured residuals},
+	volume = {26},
+	shorttitle = {It is all in the noise},
+	url = {https://proceedings.neurips.cc/paper/2013/hash/59c33016884a62116be975a9bb8257e3-Abstract.html},
+	language = {en},
+	urldate = {2021-02-22},
+	journal = {Advances in Neural Information Processing Systems},
+	author = {Rakitsch, Barbara and Lippert, Christoph and Borgwardt, Karsten and Stegle, Oliver},
+	year = {2013},
+	keywords = {tbr},
+	annote = {MTGP + structured noise [Neurips 2013]},
+	file = {Rakitsch et al_2013_It is all in the noise - Efficient multi-task Gaussian process inference with structured residuals.pdf:/Users/wpq/Dropbox (MIT)/zotero/Rakitsch et al_2013_It is all in the noise - Efficient multi-task Gaussian process inference with structured residuals.pdf:application/pdf}
+}
+
+@article{dallaireApproximateInferenceGaussian2011,
+	series = {Adaptive {Incremental} {Learning} in {Neural} {Networks}},
+	title = {An approximate inference with {Gaussian} process to latent functions from uncertain data},
+	volume = {74},
+	issn = {0925-2312},
+	url = {https://www.sciencedirect.com/science/article/pii/S0925231211000440},
+	doi = {10.1016/j.neucom.2010.09.024},
+	abstract = {Most formulations of supervised learning are often based on the assumption that only the outputs data are uncertain. However, this assumption might be too strong for some learning tasks. This paper investigates the use of Gaussian processes to infer latent functions from a set of uncertain input–output examples. By assuming Gaussian distributions with known variances over the inputs–outputs and using the expectation of the covariance function, it is possible to analytically compute the expected covariance matrix of the data to obtain a posterior distribution over functions. The method is evaluated on a synthetic problem and on a more realistic one, which consist in learning the dynamics of a cart–pole balancing task. The results indicate an improvement of the mean squared error and the likelihood of the posterior Gaussian process when the data uncertainty is significant.},
+	language = {en},
+	number = {11},
+	urldate = {2021-02-23},
+	journal = {Neurocomputing},
+	author = {Dallaire, Patrick and Besse, Camille and Chaib-draa, Brahim},
+	month = may,
+	year = {2011},
+	keywords = {read},
+	pages = {1945--1955},
+	annote = {GP with uncertain inputs [NeuroComp 2011]
+
+idea of expected kernel applicable to uncertain inputs ... analytic for linear/SE. applied to robotics problem.
+},
+	file = {Dallaire et al_2011_An approximate inference with Gaussian process to latent functions from uncertain data.pdf:/Users/wpq/Dropbox (MIT)/zotero/Dallaire et al_2011_An approximate inference with Gaussian process to latent functions from uncertain data.pdf:application/pdf}
+}
+
+@article{girardGaussianProcessPriors2002,
+	title = {Gaussian {Process} {Priors} with {Uncertain} {Inputs} {Application} to {Multiple}-{Step} {Ahead} {Time} {Series} {Forecasting}},
+	language = {en},
+	author = {Girard, Agathe and Rasmussen, Carl Edward and Candela, Joaquin Quiñonero and Murray-Smith, Roderick},
+	year = {2002},
+	keywords = {good, read},
+	pages = {8},
+	annote = {GP + uncertain inputs [Neurips 2002]
+
+for time-series multi-step ahead prediction
+
+ 
+introduction
+
+problem
+
+predict ahead of time problem (either all at once, or iteratively, by conditioning on successive predictions)
+if use GP iteratively condition on point estimates only will ignore accumulating predictive variance ... not conservative enough... so needs propagation of prediction uncertainty by integrating out each state at each step.
+
+
+prediction at a random input
+
+p(f(x*){\textbar}x*) is a complicated function since f is nonlinear ...
+approximate integral (which integrate out x*) by a normal ... and just approximate 1st, 2nd moments is enough.
+
+
+
+ },
+	file = {Girard et al_2002_Gaussian Process Priors with Uncertain Inputs Application to Multiple-Step Ahead Time Series Forecasting.pdf:/Users/wpq/Dropbox (MIT)/zotero/Girard et al_2002_Gaussian Process Priors with Uncertain Inputs Application to Multiple-Step Ahead Time Series Forecasting.pdf:application/pdf}
+}
+
+@article{rasmussenEvaluationGaussianProcess1996,
+	title = {Evaluation of {Gaussian} {Process} and {Other} {Methods} for {Non}-linear {Regression}},
+	abstract = {This thesis develops two Bayesian learning methods relying on Gaussian processes and a rigorous statistical approach for evaluating such methods. In these experimental designs the sources of uncertainty in the estimated generalisation performances due to both variation in training and test sets are accounted for. The framework allows for estimation of generalisation performance as well as statistical tests of signiﬁcance for pairwise comparisons. Two experimental designs are recommended and supported by the DELVE software environment.},
+	language = {en},
+	author = {Rasmussen, Carl Edward},
+	year = {1996},
+	keywords = {tbr},
+	pages = {138},
+	annote = {Rasmussen phd thesis [1996]
+
+briefly about finding hyperparameters, ARD kernel etc ...
+},
+	file = {Rasmussen - EVALUATION OF GAUSSIAN PROCESSES AND OTHER METHODS.pdf:/Users/wpq/Zotero/storage/3FGBC8G9/Rasmussen - EVALUATION OF GAUSSIAN PROCESSES AND OTHER METHODS.pdf:application/pdf}
+}
+
+@inproceedings{titsiasBayesianGaussianProcess2010,
+	title = {Bayesian {Gaussian} {Process} {Latent} {Variable} {Model}},
+	url = {http://proceedings.mlr.press/v9/titsias10a.html},
+	abstract = {We introduce a variational inference framework for training the Gaussian process latent variable model and thus performing Bayesian nonlinear dimensionality reduction. This method allows us to vari...},
+	language = {en},
+	urldate = {2021-02-23},
+	booktitle = {Proceedings of the {Thirteenth} {International} {Conference} on {Artificial} {Intelligence} and {Statistics}},
+	publisher = {JMLR Workshop and Conference Proceedings},
+	author = {Titsias, Michalis and Lawrence, Neil D.},
+	month = mar,
+	year = {2010},
+	note = {ISSN: 1938-7228},
+	keywords = {good, read},
+	pages = {844--851},
+	annote = {GPLVM with VFE bound [AISTATS 2010]
+
+variational inference for training GPLVM or can be seen as VGP that also integrates out input X
+
+ 
+me
+
+computation of variational average of kernel functions ... similar in form to interdomain GP !
+
+ 
+introduction 
+
+GPLVM
+
+multiple output GP with fully hidden inputs. intead of integrating out, then are optimized ...
+apply variational inference to GPLVM
+
+challenge: need to approximately integrate out latent/input variables that appear nonlinearly in inverse kernel matrix of GP model
+solution: inducing variables !
+
+
+setup
+
+Y{\textbar}X = prod\_d p(Yd{\textbar}X) 
+
+factorizes over output
+
+
+ind prior over p(X)
+factorization p(Y{\textbar}X)p(X)
+
+
+optimization
+
+mainly do MAP estimate of X while jointly find hyerparameters
+
+
+
+
+variational approach
+
+q(X) = prod\_n N(x\_n {\textbar} {\textbackslash}mu\_n, S\_n)
+
+factorizes ...
+
+
+ELBO
+
+has integral term wrt q(X) where X is inside inverse of covariance matrix .. hard to compute
+
+
+
+
+inducing variable came to rescue
+
+y,f {\textbar}X
+
+think about univariate case ... since Y{\textbar}X factorizes over multiple outputs
+each of these introduce inducing variables (U, Z)
+
+
+q(f,u) = p(f{\textbar}u, X) q(u)
+
+note Z is not a random variable ! unlike X which is a random variable
+q(u) does not depend on X !
+
+
+lower bound
+
+log p(y{\textbar}X) {\textgreater}= lower bound from 2009 !
+need mean field assumption of q(u) = prod\_m q(u\_m)
+needs to integrate wrt X as well ... use fact q(u) does not depend on X to swap integral order ... then use substitue optimal phi to get lower bound
+needs to compute Psi statistics ... variational average of kernel functions over (X,Z) etc ... which can be computed in close form for CovSE etc.
+
+
+
+
+},
+	file = {Titsias_Lawrence_2010_Bayesian Gaussian Process Latent Variable Model.pdf:/Users/wpq/Dropbox (MIT)/zotero/Titsias_Lawrence_2010_Bayesian Gaussian Process Latent Variable Model.pdf:application/pdf}
+}
+
+@article{mchutchonGaussianProcessTraining2011,
+	title = {Gaussian {Process} {Training} with {Input} {Noise}},
+	abstract = {In standard Gaussian Process regression input locations are assumed to be noise free. We present a simple yet effective GP model for training on input points corrupted by i.i.d. Gaussian noise. To make computations tractable we use a local linear expansion about each input point. This allows the input noise to be recast as output noise proportional to the squared gradient of the GP posterior mean. The input noise variances are inferred from the data as extra hyperparameters. They are trained alongside other hyperparameters by the usual method of maximisation of the marginal likelihood. Training uses an iterative scheme, which alternates between optimising the hyperparameters and calculating the posterior gradient. Analytic predictive moments can then be found for Gaussian distributed test points. We compare our model to others over a range of different regression problems and show that it improves over current methods.},
+	language = {en},
+	author = {Mchutchon, Andrew and Rasmussen, Carl E},
+	year = {2011},
+	keywords = {tbr},
+	pages = {9},
+	annote = {GP with input noise [Neurips 2011]
+
+Taylor expansion recast input noise as output noise ... the input noise is hidden and therefore infered duing training
+},
+	file = {Mchutchon and Rasmussen - Gaussian Process Training with Input Noise.pdf:/Users/wpq/Zotero/storage/63TDYBMP/Mchutchon and Rasmussen - Gaussian Process Training with Input Noise.pdf:application/pdf}
+}
+
+@article{girardLearningGaussianProcess2003,
+	title = {Learning a {Gaussian} {Process} {Model} with {Uncertain} {Inputs}},
+	abstract = {Learning with uncertain inputs is well-known to be a difﬁcult task. In order to achieve this analytically using a Gaussian Process prior model, we expand the original process around the input mean (Delta method), assuming the random input is normally distributed. We thus derive a new process whose covariance function accounts for the randomness of the input. We illustrate the effectiveness of the proposed model on a simple static simulation example and on the modelling of a nonlinear noisy time-series.},
+	language = {en},
+	author = {Girard, Agathe and Murray-Smith, Roderick},
+	year = {2003},
+	keywords = {tbr},
+	pages = {10},
+	annote = {GP+uncertain input report},
+	file = {Girard_Murray-Smith_2003_Learning a Gaussian Process Model with Uncertain Inputs.pdf:/Users/wpq/Dropbox (MIT)/zotero/Girard_Murray-Smith_2003_Learning a Gaussian Process Model with Uncertain Inputs.pdf:application/pdf}
+}
+
+@article{hensmanScalableVariationalGaussian2014,
+	title = {Scalable {Variational} {Gaussian} {Process} {Classification}},
+	url = {http://arxiv.org/abs/1411.2005},
+	abstract = {Gaussian process classification is a popular method with a number of appealing properties. We show how to scale the model within a variational inducing point framework, outperforming the state of the art on benchmark datasets. Importantly, the variational formulation can be exploited to allow classification in problems with millions of data points, as we demonstrate in experiments.},
+	urldate = {2021-02-23},
+	journal = {arXiv:1411.2005 [stat]},
+	author = {Hensman, James and Matthews, Alex and Ghahramani, Zoubin},
+	month = nov,
+	year = {2014},
+	note = {arXiv: 1411.2005},
+	keywords = {good, read},
+	annote = {SVGP for classification [AISTATS 2015]
+
+SVI + non-conjugate likelihood + sparse GP
+more detail in author's phd thesis https://www.repository.cam.ac.uk/bitstream/handle/1810/278022/thesis.pdf?sequence=1\&isAllowed=y
+
+more details on impl of variational covariance matrix = LL{\textasciicircum}T
+how to integrate 1d integral: Gauss-Hermite quadrature!
+pretty insightful discussion of non-conjugate variational GP
+
+multiclass ...
+
+
+
+
+
+ 
+ 
+notes
+
+single VI bound
+
+basically the same as [GP for Big Data] paper's bound ...
+S=LL{\textasciicircum}T parameterization of Gaussian covariance
+use quadrature to compute 1d integral, as well as their derivatives with REINFORCE trick?
+
+
+},
+	file = {Hensman et al_2014_Scalable Variational Gaussian Process Classification.pdf:/Users/wpq/Dropbox (MIT)/zotero/Hensman et al_2014_Scalable Variational Gaussian Process Classification.pdf:application/pdf}
+}
+
+@article{wilsonGaussianProcessKernels2013,
+	title = {Gaussian {Process} {Kernels} for {Pattern} {Discovery} and {Extrapolation}},
+	abstract = {Gaussian processes are rich distributions over functions, which provide a Bayesian nonparametric approach to smoothing and interpolation. We introduce simple closed form kernels that can be used with Gaussian processes to discover patterns and enable extrapolation. These kernels are derived by modelling a spectral density – the Fourier transform of a kernel – with a Gaussian mixture. The proposed kernels support a broad class of stationary covariances, but Gaussian process inference remains simple and analytic. We demonstrate the proposed kernels by discovering patterns and performing long range extrapolation on synthetic examples, as well as atmospheric CO2 trends and airline passenger data. We also show that it is possible to reconstruct several popular standard covariances within our framework.},
+	language = {en},
+	author = {Wilson, Andrew Gordon and Adams, Ryan Prescott},
+	year = {2013},
+	keywords = {read},
+	pages = {9},
+	annote = {SM kernel [ICML 2013]
+
+Spectral Mixture Kernel
+modeling fourier transform of stationary kernel with gaussian mixture ... uses bochner theorem etc.
+models negative covariance as well
+
+ 
+me
+
+andrew wilson
+
+think about kernel estimation from density estimation (of fourier transform of kernel)
+scale-location mixture of gaussian is flexible to model density with analytic inverse fourier transform... so substitute that as spectral density
+
+
+SM kernel
+
+spectral density S(s) = (phi(s)+phi(-s))/2
+
+take fourier transform of S yield SE kernel.
+
+
+now if take phi as mixture of Gaussian, with diagonal covariane,  ... derive analyitic expression for the resulting kernel ... called SM kernel
+
+weight specify relative contribution of mixture component in fourier space
+
+
+
+
+training
+
+nonlinear conjugate gradient
+trainig SM kernel equivalent to MCMC ... https://arxiv.org/pdf/1006.0868.pdf
+
+
+experiments
+
+multiple kernel learning, e.g. mixture of SE kernel -{\textgreater} scale-mixture of gaussian spectral densities...
+
+
+},
+	file = {Wilson_Adams_2013_Gaussian Process Kernels for Pattern Discovery and Extrapolation.pdf:/Users/wpq/Dropbox (MIT)/zotero/Wilson_Adams_2013_Gaussian Process Kernels for Pattern Discovery and Extrapolation3.pdf:application/pdf}
+}
+
+@inproceedings{calandraManifoldGaussianProcesses2016,
+	title = {Manifold {Gaussian} {Processes} for regression},
+	doi = {10.1109/IJCNN.2016.7727626},
+	abstract = {Off-the-shelf Gaussian Process (GP) covariance functions encode smoothness assumptions on the structure of the function to be modeled. To model complex and non-differentiable functions, these smoothness assumptions are often too restrictive. One way to alleviate this limitation is to find a different representation of the data by introducing a feature space. This feature space is often learned in an unsupervised way, which might lead to data representations that are not useful for the overall regression task. In this paper, we propose Manifold Gaussian Processes, a novel supervised method that jointly learns a transformation of the data into a feature space and a GP regression from the feature space to observed space. The Manifold GP is a full GP and allows to learn data representations, which are useful for the overall regression task. As a proof-of-concept, we evaluate our approach on complex non-smooth functions where standard GPs perform poorly, such as step functions and robotics tasks with contacts.},
+	booktitle = {2016 {International} {Joint} {Conference} on {Neural} {Networks} ({IJCNN})},
+	author = {Calandra, R. and Peters, J. and Rasmussen, C. E. and Deisenroth, M. P.},
+	month = jul,
+	year = {2016},
+	note = {ISSN: 2161-4407},
+	keywords = {tbr},
+	pages = {3338--3345},
+	annote = {manifold GPR},
+	file = {Calandra et al_2016_Manifold Gaussian Processes for regression.pdf:/Users/wpq/Dropbox (MIT)/zotero/Calandra et al_2016_Manifold Gaussian Processes for regression.pdf:application/pdf}
+}
+
+@article{wilsonKernelInterpolationScalable2015,
+	title = {Kernel {Interpolation} for {Scalable} {Structured} {Gaussian} {Processes} ({KISS}-{GP})},
+	abstract = {We introduce a new structured kernel interpolation (SKI) framework, which generalises and uniﬁes inducing point methods for scalable Gaussian processes (GPs). SKI methods produce kernel approximations for fast computations through kernel interpolation. The SKI framework clariﬁes how the quality of an inducing point approach depends on the number of inducing (aka interpolation) points, interpolation strategy, and GP covariance kernel. SKI also provides a mechanism to create new scalable kernel methods, through choosing different kernel interpolation strategies. Using SKI, with local cubic kernel interpolation, we introduce KISSGP, which is 1) more scalable than inducing point alternatives, 2) naturally enables Kronecker and Toeplitz algebra for substantial additional gains in scalability, without requiring any grid data, and 3) can be used for fast and expressive kernel learning. KISS-GP costs O(n) time and storage for GP inference. We evaluate KISS-GP for kernel matrix approximation, kernel learning, and natural sound modelling.},
+	language = {en},
+	author = {Wilson, Andrew Gordon and Nickisch, Hannes},
+	year = {2015},
+	keywords = {tbr},
+	pages = {10},
+	annote = {KISS-GP [ICML 2015]},
+	file = {Wilson and Nickisch - Kernel Interpolation for Scalable Structured Gauss.pdf:/Users/wpq/Zotero/storage/DMZHHWTN/Wilson and Nickisch - Kernel Interpolation for Scalable Structured Gauss.pdf:application/pdf}
+}
+
+@article{grochowStyleBasedInverseKinematics2004,
+	title = {Style-{Based} {Inverse} {Kinematics}},
+	abstract = {This paper presents an inverse kinematics system based on a learned model of human poses. Given a set of constraints, our system can produce the most likely pose satisfying those constraints, in realtime. Training the model on different input data leads to different styles of IK. The model is represented as a probability distribution over the space of all possible poses. This means that our IK system can generate any pose, but prefers poses that are most similar to the space of poses in the training data. We represent the probability with a novel model called a Scaled Gaussian Process Latent Variable Model. The parameters of the model are all learned automatically; no manual tuning is required for the learning component of the system. We additionally describe a novel procedure for interpolating between styles.},
+	language = {en},
+	author = {Grochow, Keith and Martin, Steven L and Hertzmann, Aaron and Popovic, Zoran},
+	year = {2004},
+	keywords = {tbr},
+	pages = {10},
+	annote = {GPLVM for learning pose [SIGGRAPH 2004]},
+	file = {Grochow et al_2004_Style-Based Inverse Kinematics.pdf:/Users/wpq/Dropbox (MIT)/zotero/Grochow et al_2004_Style-Based Inverse Kinematics.pdf:application/pdf}
+}
+
+@article{vanderwilkLearningInvariancesUsing2018,
+	title = {Learning {Invariances} using the {Marginal} {Likelihood}},
+	url = {http://arxiv.org/abs/1808.05563},
+	abstract = {Generalising well in supervised learning tasks relies on correctly extrapolating the training data to a large region of the input space. One way to achieve this is to constrain the predictions to be invariant to transformations on the input that are known to be irrelevant (e.g. translation). Commonly, this is done through data augmentation, where the training set is enlarged by applying hand-crafted transformations to the inputs. We argue that invariances should instead be incorporated in the model structure, and learned using the marginal likelihood, which correctly rewards the reduced complexity of invariant models. We demonstrate this for Gaussian process models, due to the ease with which their marginal likelihood can be estimated. Our main contribution is a variational inference scheme for Gaussian processes containing invariances described by a sampling procedure. We learn the sampling procedure by back-propagating through it to maximise the marginal likelihood.},
+	urldate = {2021-02-25},
+	journal = {arXiv:1808.05563 [cs, stat]},
+	author = {van der Wilk, Mark and Bauer, Matthias and John, S. T. and Hensman, James},
+	month = aug,
+	year = {2018},
+	note = {arXiv: 1808.05563},
+	keywords = {tbr},
+	annote = {learning GP invariance [Neurips 2018]
+ },
+	file = {van der Wilk et al_2018_Learning Invariances using the Marginal Likelihood.pdf:/Users/wpq/Dropbox (MIT)/zotero/van der Wilk et al_2018_Learning Invariances using the Marginal Likelihood.pdf:application/pdf}
+}
+
+@article{ustyuzhaninovCompositionalUncertaintyDeep2020,
+	title = {Compositional uncertainty in deep {Gaussian} processes},
+	url = {http://arxiv.org/abs/1909.07698},
+	abstract = {Gaussian processes (GPs) are nonparametric priors over functions. Fitting a GP implies computing a posterior distribution of functions consistent with the observed data. Similarly, deep Gaussian processes (DGPs) should allow us to compute a posterior distribution of compositions of multiple functions giving rise to the observations. However, exact Bayesian inference is intractable for DGPs, motivating the use of various approximations. We show that the application of simplifying mean-field assumptions across the hierarchy leads to the layers of a DGP collapsing to near-deterministic transformations. We argue that such an inference scheme is suboptimal, not taking advantage of the potential of the model to discover the compositional structure in the data. To address this issue, we examine alternative variational inference schemes allowing for dependencies across different layers and discuss their advantages and limitations.},
+	urldate = {2021-02-25},
+	journal = {arXiv:1909.07698 [cs, stat]},
+	author = {Ustyuzhaninov, Ivan and Kazlauskaite, Ieva and Kaiser, Markus and Bodin, Erik and Campbell, Neill D. F. and Ek, Carl Henrik},
+	month = feb,
+	year = {2020},
+	note = {arXiv: 1909.07698},
+	keywords = {tbr},
+	annote = {compositional uncertainty [UAI 2020]},
+	file = {Ustyuzhaninov et al_2020_Compositional uncertainty in deep Gaussian processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Ustyuzhaninov et al_2020_Compositional uncertainty in deep Gaussian processes.pdf:application/pdf}
+}
+
+@article{jankowiakParametricGaussianProcess2020,
+	title = {Parametric {Gaussian} {Process} {Regressors}},
+	url = {http://arxiv.org/abs/1910.07123},
+	abstract = {The combination of inducing point methods with stochastic variational inference has enabled approximate Gaussian Process (GP) inference on large datasets. Unfortunately, the resulting predictive distributions often exhibit substantially underestimated uncertainties. Notably, in the regression case the predictive variance is typically dominated by observation noise, yielding uncertainty estimates that make little use of the input-dependent function uncertainty that makes GP priors attractive. In this work we propose two simple methods for scalable GP regression that address this issue and thus yield substantially improved predictive uncertainties. The first applies variational inference to FITC (Fully Independent Training Conditional; Snelson et.{\textasciitilde}al.{\textasciitilde}2006). The second bypasses posterior approximations and instead directly targets the posterior predictive distribution. In an extensive empirical comparison with a number of alternative methods for scalable GP regression, we find that the resulting predictive distributions exhibit significantly better calibrated uncertainties and higher log likelihoods--often by as much as half a nat per datapoint.},
+	urldate = {2021-02-26},
+	journal = {arXiv:1910.07123 [cs, stat]},
+	author = {Jankowiak, Martin and Pleiss, Geoff and Gardner, Jacob R.},
+	month = dec,
+	year = {2020},
+	note = {arXiv: 1910.07123},
+	keywords = {read},
+	annote = {predictive log likelihood [ICML 2020]
+ 
+introduction 
+
+this paper
+
+variational approximation to the predictive distribution (instead of q(u))
+
+
+},
+	file = {Jankowiak et al_2020_Parametric Gaussian Process Regressors.pdf:/Users/wpq/Dropbox (MIT)/zotero/Jankowiak et al_2020_Parametric Gaussian Process Regressors.pdf:application/pdf}
+}
+
+@inproceedings{miliosDirichletbasedGaussianProcesses2018a,
+	address = {Red Hook, NY, USA},
+	series = {{NIPS}'18},
+	title = {Dirichlet-based {Gaussian} processes for large-scale calibrated classification},
+	abstract = {This paper studies the problem of deriving fast and accurate classification algorithms with uncertainty quantification. Gaussian process classification provides a principled approach, but the corresponding computational burden is hardly sustainable in large-scale problems and devising efficient alternatives is a challenge. In this work, we investigate if and how Gaussian process regression directly applied to classification labels can be used to tackle this question. While in this case training is remarkably faster, predictions need to be calibrated for classification and uncertainty estimation. To this aim, we propose a novel regression approach where the labels are obtained through the interpretation of classification labels as the coefficients of a degenerate Dirichlet distribution. Extensive experimental results show that the proposed approach provides essentially the same accuracy and uncertainty quantification as Gaussian process classification while requiring only a fraction of computational resources.},
+	urldate = {2021-02-25},
+	booktitle = {Proceedings of the 32nd {International} {Conference} on {Neural} {Information} {Processing} {Systems}},
+	publisher = {Curran Associates Inc.},
+	author = {Milios, Dimitrios and Camoriano, Raffaello and Michiardi, Pietro and Rosasco, Lorenzo and Filippone, Maurizio},
+	month = dec,
+	year = {2018},
+	keywords = {read},
+	pages = {6008--6018},
+	annote = {GPD [Neurips 2018]
+
+Dirichlet-based GP Classification GPD
+GPC + uncertainty estimates !
+
+me
+
+still no predictive variance
+after re-reading
+
+the lognormal likelihood has fixed variance ... parameterized by {\textbackslash}alpha\_{\textbackslash}epsilon....
+
+for multiclass problems ... might want different {\textbackslash}alpha\_{\textbackslash}epsilon for different classes ... to signal different difficulties of different classes. 
+
+
+
+
+
+ 
+introduction 
+
+motivation 
+
+GPC is not well calibrated (regressing label) and computationally infeasible for large datasets
+
+
+kernel-based classification
+
+least-squares classification: regress on classification label
+non-conjugacy needs approximation
+
+laplace approximation
+expectation propagation
+
+
+sparse VI
+
+
+this paper
+
+convert C-class classification problem into regression involving C latent processes with gamma likelihoods.
+approximate gamma distributed RV with log-normal ones.
+
+
+},
+	file = {Milios et al_2018_Dirichlet-based Gaussian processes for large-scale calibrated classification.pdf:/Users/wpq/Dropbox (MIT)/zotero/Milios et al_2018_Dirichlet-based Gaussian processes for large-scale calibrated classification.pdf:application/pdf}
+}
+
+@article{kussAssessingApproximateInference2005,
+	title = {Assessing {Approximate} {Inference} for {Binary} {Gaussian} {Process} {Classiﬁcation}},
+	abstract = {Gaussian process priors can be used to deﬁne ﬂexible, probabilistic classiﬁcation models. Unfortunately exact Bayesian inference is analytically intractable and various approximation techniques have been proposed. In this work we review and compare Laplace’s method and Expectation Propagation for approximate Bayesian inference in the binary Gaussian process classiﬁcation model. We present a comprehensive comparison of the approximations, their predictive performance and marginal likelihood estimates to results obtained by MCMC sampling. We explain theoretically and corroborate empirically the advantages of Expectation Propagation compared to Laplace’s method.},
+	language = {en},
+	author = {Kuss, Malte and Rasmussen, Carl Edward},
+	year = {2005},
+	keywords = {tbr},
+	pages = {26},
+	annote = {GP+VI for binary classification [JMLR 2005]
+
+compares Laplace method, EP, MCMC
+},
+	file = {Kuss and Rasmussen - Assessing Approximate Inference for Binary Gaussia.pdf:/Users/wpq/Zotero/storage/9TBH65RB/Kuss and Rasmussen - Assessing Approximate Inference for Binary Gaussia.pdf:application/pdf}
+}
+
+@article{al-shedivatLearningScalableDeep2017,
+	title = {Learning {Scalable} {Deep} {Kernels} with {Recurrent} {Structure}},
+	url = {http://arxiv.org/abs/1610.08936},
+	abstract = {Many applications in speech, robotics, finance, and biology deal with sequential data, where ordering matters and recurrent structures are common. However, this structure cannot be easily captured by standard kernel functions. To model such structure, we propose expressive closed-form kernel functions for Gaussian processes. The resulting model, GP-LSTM, fully encapsulates the inductive biases of long short-term memory (LSTM) recurrent networks, while retaining the non-parametric probabilistic advantages of Gaussian processes. We learn the properties of the proposed kernels by optimizing the Gaussian process marginal likelihood using a new provably convergent semi-stochastic gradient procedure and exploit the structure of these kernels for scalable training and prediction. This approach provides a practical representation for Bayesian LSTMs. We demonstrate state-of-the-art performance on several benchmarks, and thoroughly investigate a consequential autonomous driving application, where the predictive uncertainties provided by GP-LSTM are uniquely valuable.},
+	urldate = {2021-03-07},
+	journal = {arXiv:1610.08936 [cs, stat]},
+	author = {Al-Shedivat, Maruan and Wilson, Andrew Gordon and Saatchi, Yunus and Hu, Zhiting and Xing, Eric P.},
+	month = oct,
+	year = {2017},
+	note = {arXiv: 1610.08936},
+	keywords = {tbr},
+	annote = {GP+LSTM [JMLR 2017]
+ 
+ 
+introduction 
+
+motivation 
+
+sequential prediction problem ... order/recurrent structure mattered
+
+
+motivating application
+
+self-diving car: lane estimation and lead vehicle position prediction ... point estimates + uncertainty
+
+
+goal
+
+sequantial regression with principled uncertainty estimates
+
+
+semi-stochastic alternating GD
+
+fix kernel matrix ... update LSTM weights with minibatch data...
+fix network weights, update kernel hyperparametrs on full data ...
+
+
+},
+	file = {Al-Shedivat et al_2017_Learning Scalable Deep Kernels with Recurrent Structure.pdf:/Users/wpq/Dropbox (MIT)/zotero/Al-Shedivat et al_2017_Learning Scalable Deep Kernels with Recurrent Structure.pdf:application/pdf}
+}
+
+@article{lazaro-gredillaSparseSpectrumGaussian2010,
+	title = {Sparse {Spectrum} {Gaussian} {Process} {Regression}},
+	abstract = {We present a new sparse Gaussian Process (GP) model for regression. The key novel idea is to sparsify the spectral representation of the GP. This leads to a simple, practical algorithm for regression tasks. We compare the achievable trade-offs between predictive accuracy and computational requirements, and show that these are typically superior to existing state-of-the-art sparse approximations. We discuss both the weight space and function space representations, and note that the new construction implies priors over functions which are always stationary, and can approximate any covariance function in this class.},
+	language = {en},
+	author = {Lázaro-Gredilla, Miguel and Quiñonero-Candela, Joaquin and Rasmussen, Carl Edward and Figueiras-Vidal, Aníbal R},
+	year = {2010},
+	keywords = {tbr},
+	pages = {17},
+	annote = {[PMLR 2010]
+
+choose inducing points as FFT[f]. an instance of inter-domain GP
+},
+	file = {Lázaro-Gredilla et al. - Sparse Spectrum Gaussian Process Regression.pdf:/Users/wpq/Zotero/storage/VUSS9FMH/Lázaro-Gredilla et al. - Sparse Spectrum Gaussian Process Regression.pdf:application/pdf}
+}
+
+@article{hensmanGaussianProcessesBig2013,
+	title = {Gaussian {Processes} for {Big} {Data}},
+	url = {http://arxiv.org/abs/1309.6835},
+	abstract = {We introduce stochastic variational inference for Gaussian process models. This enables the application of Gaussian process (GP) models to data sets containing millions of data points. We show how GPs can be vari- ationally decomposed to depend on a set of globally relevant inducing variables which factorize the model in the necessary manner to perform variational inference. Our ap- proach is readily extended to models with non-Gaussian likelihoods and latent variable models based around Gaussian processes. We demonstrate the approach on a simple toy problem and two real world data sets.},
+	urldate = {2021-03-07},
+	journal = {arXiv:1309.6835 [cs, stat]},
+	author = {Hensman, James and Fusi, Nicolo and Lawrence, Neil D.},
+	month = sep,
+	year = {2013},
+	note = {arXiv: 1309.6835},
+	keywords = {good, read},
+	annote = {SVGP [UAI 2013]
+
+SVI applied to variational bound of VGP 2010
+pretty useful derivation of numerically stable bounds https://gpflow.readthedocs.io/en/docupdate/notebooks/SGPR\_notes.html
+
+ 
+code
+
+gpflow https://gpflow.readthedocs.io/en/master/notebooks/theory/SGPR\_notes.html
+
+ 
+introduction 
+
+generative model for inducing point GP
+
+u, f{\textbar}u, y{\textbar}f ...
+variational distribution
+
+q(f,u) = p(f{\textbar}u) q(u) where q(u) {\textasciitilde} N(m, S) is free-form Gaussian
+
+
+KL( p(y{\textbar}u) {\textbar}{\textbar} p(f{\textbar}u,y) )
+
+derived a separable lower bound ...
+
+
+recovers the Titsias bound by marginalize wrt p(u)
+
+
+SVGP
+
+basically take the p(y{\textbar}u) lower bound and take expectation wrt q(u)... the resulting bound is separable wrt data, i.e. \{y\_i\}\_i
+
+
+
+ 
+ },
+	file = {Hensman et al_2013_Gaussian Processes for Big Data.pdf:/Users/wpq/Dropbox (MIT)/zotero/Hensman et al_2013_Gaussian Processes for Big Data.pdf:application/pdf}
+}
+
+@article{buiUnifyingFrameworkGaussian2017,
+	title = {A {Unifying} {Framework} for {Gaussian} {Process} {Pseudo}-{Point} {Approximations} using {Power} {Expectation} {Propagation}},
+	url = {http://arxiv.org/abs/1605.07066},
+	abstract = {Gaussian processes (GPs) are flexible distributions over functions that enable high-level assumptions about unknown functions to be encoded in a parsimonious, flexible and general way. Although elegant, the application of GPs is limited by computational and analytical intractabilities that arise when data are sufficiently numerous or when employing non-Gaussian models. Consequently, a wealth of GP approximation schemes have been developed over the last 15 years to address these key limitations. Many of these schemes employ a small set of pseudo data points to summarise the actual data. In this paper, we develop a new pseudo-point approximation framework using Power Expectation Propagation (Power EP) that unifies a large number of these pseudo-point approximations. Unlike much of the previous venerable work in this area, the new framework is built on standard methods for approximate inference (variational free-energy, EP and Power EP methods) rather than employing approximations to the probabilistic generative model itself. In this way, all of approximation is performed at `inference time' rather than at `modelling time' resolving awkward philosophical and empirical questions that trouble previous approaches. Crucially, we demonstrate that the new framework includes new pseudo-point approximation methods that outperform current approaches on regression and classification tasks.},
+	urldate = {2021-03-07},
+	journal = {arXiv:1605.07066 [cs, stat]},
+	author = {Bui, Thang D. and Yan, Josiah and Turner, Richard E.},
+	month = oct,
+	year = {2017},
+	note = {arXiv: 1605.07066},
+	keywords = {tbr},
+	annote = {Power EP [JMLR 2017]
+
+modern review of approximation schemes. gives a common framework whereby FITC, VFE etc. are special cases
+really good summary of the previous methods !
+
+ 
+me
+
+motivation i think is really simple. VFE recovers DTC. can you derive variational bounds that also recovers FITC/PTC ?
+
+ 
+introduction 
+ },
+	file = {Bui et al_2017_A Unifying Framework for Gaussian Process Pseudo-Point Approximations using Power Expectation Propagation.pdf:/Users/wpq/Dropbox (MIT)/zotero/Bui et al_2017_A Unifying Framework for Gaussian Process Pseudo-Point Approximations using Power Expectation Propagation.pdf:application/pdf}
+}
+
+@article{tranVariationalGaussianProcess2016,
+	title = {The {Variational} {Gaussian} {Process}},
+	url = {http://arxiv.org/abs/1511.06499},
+	abstract = {Variational inference is a powerful tool for approximate inference, and it has been recently applied for representation learning with deep generative models. We develop the variational Gaussian process (VGP), a Bayesian nonparametric variational family, which adapts its shape to match complex posterior distributions. The VGP generates approximate posterior samples by generating latent inputs and warping them through random non-linear mappings; the distribution over random mappings is learned during inference, enabling the transformed outputs to adapt to varying complexity. We prove a universal approximation theorem for the VGP, demonstrating its representative power for learning any model. For inference we present a variational objective inspired by auto-encoders and perform black box inference over a wide class of models. The VGP achieves new state-of-the-art results for unsupervised learning, inferring models such as the deep latent Gaussian model and the recently proposed DRAW.},
+	urldate = {2021-03-07},
+	journal = {arXiv:1511.06499 [cs, stat]},
+	author = {Tran, Dustin and Ranganath, Rajesh and Blei, David M.},
+	month = apr,
+	year = {2016},
+	note = {arXiv: 1511.06499},
+	keywords = {tbr},
+	annote = {VGP [ICLR 2016]
+
+VGP - variational GP
+
+ 
+ },
+	file = {Tran et al_2016_The Variational Gaussian Process.pdf:/Users/wpq/Dropbox (MIT)/zotero/Tran et al_2016_The Variational Gaussian Process.pdf:application/pdf}
+}
+
+@article{leibfriedTutorialSparseGaussian2020,
+	title = {A {Tutorial} on {Sparse} {Gaussian} {Processes} and {Variational} {Inference}},
+	abstract = {Gaussian processes (GPs) provide a mathematically elegant framework for Bayesian inference and they can offer principled uncertainty estimates for a large range of problems. For example, if we consider certain regression problems with Gaussian likelihoods, a GP model enjoys a posterior in closed form. However, identifying the posterior GP scales cubically with the number of training examples and furthermore requires to store all training examples in memory. In order to overcome these practical obstacles, sparse GPs have been proposed that approximate the true posterior GP with a set of pseudo-training examples (a.k.a. inducing inputs or inducing points). Importantly, the number of pseudo-training examples is user-deﬁned and enables control over computational and memory complexity. In the general case, sparse GPs do not enjoy closed-form solutions and one has to resort to approximate inference. In this context, a convenient choice for approximate inference is variational inference (VI), where the problem of Bayesian inference is cast as an optimization problem—namely, to maximize a lower bound of the logarithm of the marginal likelihood. This paves the way for a powerful and versatile framework, where pseudo-training examples are treated as optimization arguments of the approximate posterior that are jointly identiﬁed together with hyperparameters of the generative model (i.e. prior and likelihood) in the course of training. The framework can naturally handle a wide scope of supervised learning problems, ranging from regression with heteroscedastic and non-Gaussian likelihoods to classiﬁcation problems with discrete labels, but also multilabel problems (where the regression or classiﬁcation targets are multidimensional). The purpose of this tutorial is to provide access to the basic matter for readers without prior knowledge in both GPs and VI. It turns out that a proper exposition to the subject enables also convenient access to more recent advances in the ﬁeld of GPs (like importance-weighted VI as well as inderdomain, multioutput and deep GPs) that can serve as an inspiration for exploring new research ideas.},
+	language = {en},
+	author = {Leibfried, Felix and Dutordoir, Vincent and John, ST and Durrande, Nicolas},
+	year = {2020},
+	keywords = {read},
+	pages = {45},
+	annote = {pretty dense ...},
+	file = {Leibfried et al. - A Tutorial on Sparse Gaussian Processes and Variat.pdf:/Users/wpq/Zotero/storage/JDV3DMQS/Leibfried et al. - A Tutorial on Sparse Gaussian Processes and Variat.pdf:application/pdf}
+}
+
+@article{galVariationalInferenceSparse2014,
+	title = {Variational {Inference} in {Sparse} {Gaussian} {Process} {Regression} and {Latent} {Variable} {Models} - a {Gentle} {Tutorial}},
+	url = {http://arxiv.org/abs/1402.1412},
+	abstract = {In this tutorial we explain the inference procedures developed for the sparse Gaussian process (GP) regression and Gaussian process latent variable model (GPLVM). Due to page limit the derivation given in Titsias (2009) and Titsias \& Lawrence (2010) is brief, hence getting a full picture of it requires collecting results from several different sources and a substantial amount of algebra to fill-in the gaps. Our main goal is thus to collect all the results and full derivations into one place to help speed up understanding this work. In doing so we present a re-parametrisation of the inference that allows it to be carried out in parallel. A secondary goal for this document is, therefore, to accompany our paper and open-source implementation of the parallel inference scheme for the models. We hope that this document will bridge the gap between the equations as implemented in code and those published in the original papers, in order to make it easier to extend existing work. We assume prior knowledge of Gaussian processes and variational inference, but we also include references for further reading where appropriate.},
+	urldate = {2021-03-08},
+	journal = {arXiv:1402.1412 [stat]},
+	author = {Gal, Yarin and van der Wilk, Mark},
+	month = sep,
+	year = {2014},
+	note = {arXiv: 1402.1412},
+	keywords = {read},
+	annote = {VGP derivations/tutorials
+
+related blog https://joo.st/blog/variational\_inference\_sgp\_from\_vae.html
+{\textbackslash}
+},
+	file = {Gal_van der Wilk_2014_Variational Inference in Sparse Gaussian Process Regression and Latent Variable Models - a Gentle Tutorial.pdf:/Users/wpq/Dropbox (MIT)/zotero/Gal_van der Wilk_2014_Variational Inference in Sparse Gaussian Process Regression and Latent Variable Models - a Gentle Tutorial.pdf:application/pdf}
+}
+
+@article{titsiasVariationalModelSelection2009,
+	title = {Variational {Model} {Selection} for {Sparse} {Gaussian} {Process} {Regression}},
+	abstract = {Sparse Gaussian process methods that use inducing variables require the selection of the inducing inputs and the kernel hyperparameters. We introduce a variational formulation for sparse approximations that jointly infers the inducing inputs and the kernel hyperparameters by maximizing a lower bound of the true log marginal likelihood. The key property of this formulation is that the inducing inputs are deﬁned to be variational parameters which are selected by minimizing the Kullback-Leibler divergence between the variational distribution and the exact posterior distribution over the latent function values. We apply this technique to regression and we compare it with other approaches in the literature.},
+	language = {en},
+	author = {Titsias, Michalis K},
+	year = {2009},
+	keywords = {read},
+	pages = {20},
+	annote = {details wrt Variational inducing point GP
+
+derivation of lower bound
+comments on how adding jitter can be interpreted as an augmented model where inducing variables are noisy ...
+
+so the term that stabilize kernel matrix inversion can actually be optimized !
+how does this translates to kernel dependency measures where these types of sigmas are quite often used
+
+
+},
+	file = {Titsias_2009_Variational Model Selection for Sparse Gaussian Process Regression.pdf:/Users/wpq/Dropbox (MIT)/zotero/Titsias_2009_Variational Model Selection for Sparse Gaussian Process Regression.pdf:application/pdf}
+}
+
+@article{matthewsSparseVariationalMethods2015,
+	title = {On {Sparse} variational methods and the {Kullback}-{Leibler} divergence between stochastic processes},
+	url = {http://arxiv.org/abs/1504.07027},
+	abstract = {The variational framework for learning inducing variables (Titsias, 2009a) has had a large impact on the Gaussian process literature. The framework may be interpreted as minimizing a rigorously defined Kullback-Leibler divergence between the approximating and posterior processes. To our knowledge this connection has thus far gone unremarked in the literature. In this paper we give a substantial generalization of the literature on this topic. We give a new proof of the result for infinite index sets which allows inducing points that are not data points and likelihoods that depend on all function values. We then discuss augmented index sets and show that, contrary to previous works, marginal consistency of augmentation is not enough to guarantee consistency of variational inference with the original model. We then characterize an extra condition where such a guarantee is obtainable. Finally we show how our framework sheds light on interdomain sparse approximations and sparse approximations for Cox processes.},
+	urldate = {2021-03-09},
+	journal = {arXiv:1504.07027 [stat]},
+	author = {Matthews, Alexander G. de G. and Hensman, James and Turner, Richard E. and Ghahramani, Zoubin},
+	month = dec,
+	year = {2015},
+	note = {arXiv: 1504.07027},
+	keywords = {tbr},
+	annote = {[AISTATS 2016]
+
+VFE where q(f) is over function values rather than introducing inducing variables and factor p(f{\textbar}u)q(u)
+
+ },
+	file = {Matthews et al_2015_On Sparse variational methods and the Kullback-Leibler divergence between stochastic processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Matthews et al_2015_On Sparse variational methods and the Kullback-Leibler divergence between stochastic processes.pdf:application/pdf}
+}
+
+@article{buiSparseApproximationsNonConjugate2014,
+	title = {Sparse {Approximations} for {Non}-{Conjugate} {Gaussian} {Process} {Regression}},
+	url = {https://thangbui.github.io/docs/reports/tr_sparseNonConj.pdf},
+	abstract = {Notes: This report only shows some preliminary work on scaling Gaussian process models that use non-Gaussian likelihoods. As there are recently arxived papers on the similar idea [1, 2], this report will stay as is, please consult the two papers above for a proper discussion and experiments.},
+	language = {en},
+	author = {Bui, Thang and Turner, Richard},
+	year = {2014},
+	keywords = {read},
+	pages = {7},
+	annote = {notes on non-conjugation + variational bounds for sparse GP
+
+has details on KL term of the ELBO to variational sparse GP objective
+really clear on deriving approximate posterior q(f) given variational q(u) ....
+},
+	file = {Bui and Turner - Sparse Approximations for Non-Conjugate Gaussian P.pdf:/Users/wpq/Zotero/storage/HQ3JL6H8/Bui and Turner - Sparse Approximations for Non-Conjugate Gaussian P.pdf:application/pdf}
+}
+
+@article{vanderwilkSparseGaussianProcess2018,
+	title = {Sparse {Gaussian} {Process} {Approximations} and {Applications}},
+	url = {https://markvdw.github.io/vanderwilk-thesis.pdf},
+	language = {en},
+	author = {van der Wilk, Mark},
+	year = {2018},
+	keywords = {read},
+	pages = {188},
+	annote = {Mark van der Wilk PhD thesis [2018]
+
+summary on sparse GP, FITC/VFE derivations
+also a section on derivation of GP with uncertain input that is claimed to be simpler
+},
+	file = {2018_Sparse Gaussian Process Approximations and Applications.pdf:/Users/wpq/Dropbox (MIT)/zotero/2018_Sparse Gaussian Process Approximations and Applications.pdf:application/pdf}
+}
+
+@inproceedings{tranCalibratingDeepConvolutional2019,
+	title = {Calibrating {Deep} {Convolutional} {Gaussian} {Processes}},
+	url = {http://proceedings.mlr.press/v89/tran19a.html},
+	abstract = {The wide adoption of Convolutional Neural Networks CNNs in applications where decision-making under uncertainty is fundamental, has brought a great deal of attention to the ability of these models ...},
+	language = {en},
+	urldate = {2021-03-11},
+	booktitle = {The 22nd {International} {Conference} on {Artificial} {Intelligence} and {Statistics}},
+	publisher = {PMLR},
+	author = {Tran, Gia-Lac and Bonilla, Edwin V. and Cunningham, John and Michiardi, Pietro and Filippone, Maurizio},
+	month = apr,
+	year = {2019},
+	note = {ISSN: 2640-3498},
+	keywords = {tbr},
+	pages = {1554--1563},
+	annote = {calibrating GP+CNN [AISTATS 2019]
+
+me
+
+random fourier feature expansion for deep GP https://github.com/mauriziofilippone/deep\_gp\_random\_features
+
+ 
+me
+
+has some reviews on CNN+GP variants
+this paper
+
+CNN+VP by replace fully connecteed layer with GP approximated via random features, optimized with MonteCarlo Dropout
+well-calibrated, scalable, easy to implement as standard CNN
+
+
+},
+	file = {Tran et al_2019_Calibrating Deep Convolutional Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Tran et al_2019_Calibrating Deep Convolutional Gaussian Processes.pdf:application/pdf}
+}
+
+@article{bradshawAdversarialExamplesUncertainty2017,
+	title = {Adversarial {Examples}, {Uncertainty}, and {Transfer} {Testing} {Robustness} in {Gaussian} {Process} {Hybrid} {Deep} {Networks}},
+	url = {http://arxiv.org/abs/1707.02476},
+	abstract = {Deep neural networks (DNNs) have excellent representative power and are state of the art classifiers on many tasks. However, they often do not capture their own uncertainties well making them less robust in the real world as they overconfidently extrapolate and do not notice domain shift. Gaussian processes (GPs) with RBF kernels on the other hand have better calibrated uncertainties and do not overconfidently extrapolate far from data in their training set. However, GPs have poor representational power and do not perform as well as DNNs on complex domains. In this paper we show that GP hybrid deep networks, GPDNNs, (GPs on top of DNNs and trained end-to-end) inherit the nice properties of both GPs and DNNs and are much more robust to adversarial examples. When extrapolating to adversarial examples and testing in domain shift settings, GPDNNs frequently output high entropy class probabilities corresponding to essentially "don't know". GPDNNs are therefore promising as deep architectures that know when they don't know.},
+	urldate = {2021-03-11},
+	journal = {arXiv:1707.02476 [stat]},
+	author = {Bradshaw, John and Matthews, Alexander G. de G. and Ghahramani, Zoubin},
+	month = jul,
+	year = {2017},
+	note = {arXiv: 1707.02476},
+	keywords = {read},
+	annote = {GPDNN = SVGP + CNN
+ 
+ 
+introduction 
+
+compares with other methods
+
+similar to SVDKL ... GPDNN not limited to additive GP model and can take entire hidden layer as input .... tradeoff is GPDNN scale worse in inducing point numbers ...
+
+
+training tricks
+
+cannot train hybrid network from random initialization ... instead train regular FC/softmax loss (for 200 epochs) then switch to GP top.
+\#inducing points = 100, bsz=128 with adam...
+
+
+
+ },
+	file = {Bradshaw et al_2017_Adversarial Examples, Uncertainty, and Transfer Testing Robustness in Gaussian Process Hybrid Deep Networks.pdf:/Users/wpq/Dropbox (MIT)/zotero/Bradshaw et al_2017_Adversarial Examples, Uncertainty, and Transfer Testing Robustness in Gaussian Process Hybrid Deep Networks.pdf:application/pdf}
+}
+
+@article{oberPromisesPitfallsDeep2021,
+	title = {The {Promises} and {Pitfalls} of {Deep} {Kernel} {Learning}},
+	url = {https://arxiv.org/abs/2102.12108v1},
+	abstract = {Deep kernel learning and related techniques promise to combine the
+representational power of neural networks with the reliable uncertainty
+estimates of Gaussian processes. One crucial aspect of these models is an
+expectation that, because they are treated as Gaussian process models optimized
+using the marginal likelihood, they are protected from overfitting. However, we
+identify pathological behavior, including overfitting, on a simple toy example.
+We explore this pathology, explaining its origins and considering how it
+applies to real datasets. Through careful experimentation on UCI datasets,
+CIFAR-10, and the UTKFace dataset, we find that the overfitting from
+overparameterized deep kernel learning, in which the model is "somewhat
+Bayesian", can in certain scenarios be worse than that from not being Bayesian
+at all. However, we find that a fully Bayesian treatment of deep kernel
+learning can rectify this overfitting and obtain the desired performance
+improvements over standard neural networks and Gaussian processes.},
+	language = {en},
+	urldate = {2021-03-11},
+	author = {Ober, Sebastian W. and Rasmussen, Carl E. and van der Wilk, Mark},
+	month = feb,
+	year = {2021},
+	keywords = {read},
+	annote = { 
+ 
+me
+
+related paper
+
+convergence rate of SVI for GP
+
+https://arxiv.org/pdf/2008.00323.pdf
+nice summary of variational formulation of sparse GP
+
+
+
+
+designing kernels for high-dim spaces e.g. images remain an open problem!
+
+related work
+
+
+
+ 
+introduction 
+
+previous work on DKL
+
+GPDNN = SVI for GP with neural network encoder
+SVDKL: similar, but assumes additive GP model
+
+
+toy dataset
+
+decomposition of marginal likelihood into data fit and complexity term ...
+
+data fit term stops improving at some point during training ... the difference  with using different kernels / architectures from reduction in the complexity term
+a more flexible network will try to make signal variance as small as possible (induce correlation for all inputs) to reduce the complexity term
+
+
+
+
+some results
+
+using marginal likelihood might overfit more for those DKL/SVDK methods ...
+
+
+experiments on large datasets
+
+difficult to train large DKL (resnet backbone) from scratch ... usually use a pretrained model and finetune
+calibration measured using ECE (expected calibration error) proposed in https://arxiv.org/pdf/1706.04599.pdf
+
+
+addressing pathology
+
+full Bayesian approach
+
+Tran et al. 2019 uses MC dropout for approximate Bayesian inference improve calibration
+
+
+
+
+conclusion
+
+DKL has good performance due to stochastic minibatches regularization.
+however, training unstable and prone to overfitting. this is due to flexible/highly parameterized model trying to correlate all data points (by max marginal likelihood)
+fully bayesian approach overcome this problem ... but does not scale to large datasets.
+
+
+},
+	file = {Ober et al_2021_The Promises and Pitfalls of Deep Kernel Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Ober et al_2021_The Promises and Pitfalls of Deep Kernel Learning.pdf:application/pdf}
+}
+
+@article{lalchandApproximateInferenceFully2020,
+	title = {Approximate {Inference} for {Fully} {Bayesian} {Gaussian} {Process} {Regression}},
+	url = {http://arxiv.org/abs/1912.13440},
+	abstract = {Learning in Gaussian Process models occurs through the adaptation of hyperparameters of the mean and the covariance function. The classical approach entails maximizing the marginal likelihood yielding fixed point estimates (an approach called {\textbackslash}textit\{Type II maximum likelihood\} or ML-II). An alternative learning procedure is to infer the posterior over hyperparameters in a hierarchical specification of GPs we call {\textbackslash}textit\{Fully Bayesian Gaussian Process Regression\} (GPR). This work considers two approximation schemes for the intractable hyperparameter posterior: 1) Hamiltonian Monte Carlo (HMC) yielding a sampling-based approximation and 2) Variational Inference (VI) where the posterior over hyperparameters is approximated by a factorized Gaussian (mean-field) or a full-rank Gaussian accounting for correlations between hyperparameters. We analyze the predictive performance for fully Bayesian GPR on a range of benchmark data sets.},
+	urldate = {2021-03-11},
+	journal = {arXiv:1912.13440 [cs, stat]},
+	author = {Lalchand, Vidhi and Rasmussen, Carl Edward},
+	month = apr,
+	year = {2020},
+	note = {arXiv: 1912.13440},
+	keywords = {tbr},
+	annote = {[AABI 2019]
+
+fully Bayesian approach to GP improve predictive uncertainty
+
+ },
+	file = {Lalchand_Rasmussen_2020_Approximate Inference for Fully Bayesian Gaussian Process Regression.pdf:/Users/wpq/Dropbox (MIT)/zotero/Lalchand_Rasmussen_2020_Approximate Inference for Fully Bayesian Gaussian Process Regression.pdf:application/pdf}
+}
+
+@article{gallianiGrayboxInferenceStructured2017,
+	title = {Gray-box inference for structured {Gaussian} process models},
+	language = {en},
+	author = {Galliani, Pietro and Dezfouli, Amir and Bonilla, Edwin V and Quadrianto, Novi},
+	year = {2017},
+	keywords = {tbr},
+	pages = {9},
+	annote = {VI + structured GP [AISTATS 2017]},
+	file = {Galliani et al_2017_Gray-box inference for structured Gaussian process models.pdf:/Users/wpq/Dropbox (MIT)/zotero/Galliani et al_2017_Gray-box inference for structured Gaussian process models.pdf:application/pdf}
+}
+
+@article{bonillaGenericInferenceLatent2018,
+	title = {Generic {Inference} in {Latent} {Gaussian} {Process} {Models}},
+	url = {http://arxiv.org/abs/1609.00577},
+	abstract = {We develop an automated variational method for inference in models with Gaussian process (GP) priors and general likelihoods. The method supports multiple outputs and multiple latent functions and does not require detailed knowledge of the conditional likelihood, only needing its evaluation as a black-box function. Using a mixture of Gaussians as the variational distribution, we show that the evidence lower bound and its gradients can be estimated efficiently using samples from univariate Gaussian distributions. Furthermore, the method is scalable to large datasets which is achieved by using an augmented prior via the inducing-variable approach underpinning most sparse GP approximations, along with parallel computation and stochastic optimization. We evaluate our approach quantitatively and qualitatively with experiments on small datasets, medium-scale datasets and large datasets, showing its competitiveness under different likelihood models and sparsity levels. On the large-scale experiments involving prediction of airline delays and classification of handwritten digits, we show that our method is on par with the state-of-the-art hard-coded approaches for scalable GP regression and classification.},
+	urldate = {2021-03-12},
+	journal = {arXiv:1609.00577 [stat]},
+	author = {Bonilla, Edwin V. and Krauth, Karl and Dezfouli, Amir},
+	month = nov,
+	year = {2018},
+	note = {arXiv: 1609.00577},
+	keywords = {tbr},
+	annote = {
+has (K-1 + {\textbackslash}Gamma){\textasciicircum}-1 as approximate posterior covariance matrix ... this is same as covariance matrix for GP with HSIC regularization, what is the link here!
+},
+	file = {Bonilla et al_2018_Generic Inference in Latent Gaussian Process Models.pdf:/Users/wpq/Dropbox (MIT)/zotero/Bonilla et al_2018_Generic Inference in Latent Gaussian Process Models.pdf:application/pdf}
+}
+
+@article{mallastoLearningUncertainCurves2017,
+	title = {Learning from uncertain curves: {The} 2-{Wasserstein} metric for {Gaussian} processes},
+	abstract = {We introduce a novel framework for statistical analysis of populations of nondegenerate Gaussian processes (GPs), which are natural representations of uncertain curves. This allows inherent variation or uncertainty in function-valued data to be properly incorporated in the population analysis. Using the 2-Wasserstein metric we geometrize the space of GPs with L2 mean and covariance functions over compact index spaces. We prove uniqueness of the barycenter of a population of GPs, as well as convergence of the metric and the barycenter of their ﬁnite-dimensional counterparts. This justiﬁes practical computations. Finally, we demonstrate our framework through experimental validation on GP datasets representing brain connectivity and climate development. A MATLAB library for relevant computations will be published at https://sites.google.com/view/antonmallasto/software.},
+	language = {en},
+	author = {Mallasto, Anton and Feragen, Aasa},
+	year = {2017},
+	keywords = {good, tbr},
+	pages = {11},
+	annote = {OT metric for \{GP\} [Neurips 2017]
+ 
+me
+
+how is barycenter of GPs related to registration where deformation fields are GPs (MAP map of deformation field ? )
+},
+	file = {Mallasto and Feragen - Learning from uncertain curves The 2-Wasserstein .pdf:/Users/wpq/Zotero/storage/5LSXPRIU/Mallasto and Feragen - Learning from uncertain curves The 2-Wasserstein .pdf:application/pdf}
+}
+
+@phdthesis{panosExtremeMultilabelLearning2019,
+	type = {Doctoral},
+	title = {Extreme multi-label learning with {Gaussian} processes},
+	copyright = {open},
+	url = {https://discovery.ucl.ac.uk/id/eprint/10087208/},
+	abstract = {In modern probabilistic machine learning, Gaussian process models have provided both powerful and principled ways to approach a series of challenging problems. Nonetheless, their applicability can be significantly limited by cases where the number of training data points is large, something very typical in many modern machine learning applications. An additional restriction can be imposed when the posterior distribution is intractable due to non-Gaussian likelihoods used. Despite the fact that these two limitations have been efficiently addressed over the last decade, applications of Gaussian process models under extreme regimes where the number of the training data points and the dimensionality of both input and output space is extremely large have not appeared in literature so far. This thesis is focused on this kind of applications of Gaussian processes where supervised tasks such as multi-class and multi-label classification are considered. We start by discussing the main mathematical tools required in order to successfully cope with the large scale of the datasets. Those include a variational inference framework, suitably tailored for Gaussian processes. Furthermore, in our attempt to alleviate the computational burden, we introduce a new parametrization for the variational distribution while a representation trick for reducing storage requirements for large input dimensions is also discussed. A methodology is then presented which is based on this variational inference framework and a computationally efficient bound on the softmax function that allows the use of Gaussian processes for multi-class classification problems that involve arbitrarily large number of classes. A series of experiments test and compare the performance of this methodology with other methods. Finally, we move to the more general multi-label classification task and we develop a method, also relied on the same variational inference framework, which can deal with datasets involving hundreds of thousands data points, input dimensions and labels. The effectiveness of our method is supported by experiments on several real-world multi-label datasets.},
+	language = {eng},
+	urldate = {2021-03-18},
+	school = {UCL (University College London)},
+	author = {Panos, Aristeidis},
+	month = dec,
+	year = {2019},
+	note = {Conference Name: UCL (University College London)
+Meeting Name: UCL (University College London)
+Publication Title: Doctoral thesis, UCL (University College London).},
+	keywords = {read},
+	annote = {Aristeidis Panos PhD thesis [2019]
+
+scalable GPs!
+sparse GP derivations !
+
+ 
+
+sparse variational GP
+
+augmented KL is upper bound of unaugmented ones !
+FP: S=LL{\textasciicircum}T 
+
+
+},
+	file = {Panos_2019_Extreme multi-label learning with Gaussian processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Panos_2019_Extreme multi-label learning with Gaussian processes.pdf:application/pdf}
+}
+
+@article{opperVariationalGaussianApproximation2009a,
+	title = {The variational gaussian approximation revisited},
+	volume = {21},
+	issn = {0899-7667},
+	doi = {10.1162/neco.2008.08-07-592},
+	abstract = {The variational approximation of posterior distributions by multivariate gaussians has been much less popular in the machine learning community compared to the corresponding approximation by factorizing distributions. This is for a good reason: the gaussian approximation is in general plagued by an Omicron(N)(2) number of variational parameters to be optimized, N being the number of random variables. In this letter, we discuss the relationship between the Laplace and the variational approximation, and we show that for models with gaussian priors and factorizing likelihoods, the number of variational parameters is actually Omicron(N). The approach is applied to gaussian process regression with nongaussian likelihoods.},
+	language = {eng},
+	number = {3},
+	journal = {Neural Computation},
+	author = {Opper, Manfred and Archambeau, Cédric},
+	month = mar,
+	year = {2009},
+	pmid = {18785854},
+	keywords = {good, read},
+	pages = {786--792},
+	annote = {VGP [Neuro Comput 2009]
+
+a particular parameterization of covariance matrix ! \#params: O(n{\textasciicircum}2)  -{\textgreater} O(n)
+variational distribution on latent function values directly (instead of introducing inducing points) q(f)
+
+code
+
+https://gpflow.readthedocs.io/en/master/notebooks/theory/vgp\_notes.html
+
+ 
+introduction 
+
+GP prior model in GP
+
+decomposed likelihood + KL
+
+
+
+ 
+ },
+	file = {Opper_Archambeau_2009_The variational gaussian approximation revisited.pdf:/Users/wpq/Dropbox (MIT)/zotero/Opper_Archambeau_2009_The variational gaussian approximation revisited.pdf:application/pdf}
+}
+
+@article{salimbeniNaturalGradientsPractice2018,
+	title = {Natural {Gradients} in {Practice}: {Non}-{Conjugate} {Variational} {Inference} in {Gaussian} {Process} {Models}},
+	shorttitle = {Natural {Gradients} in {Practice}},
+	url = {https://arxiv.org/abs/1803.09151v1},
+	abstract = {The natural gradient method has been used effectively in conjugate Gaussian
+process models, but the non-conjugate case has been largely unexplored. We
+examine how natural gradients can be used in non-conjugate stochastic settings,
+together with hyperparameter learning. We conclude that the natural gradient
+can significantly improve performance in terms of wall-clock time. For
+ill-conditioned posteriors the benefit of the natural gradient method is
+especially pronounced, and we demonstrate a practical setting where ordinary
+gradients are unusable. We show how natural gradients can be computed
+efficiently and automatically in any parameterization, using automatic
+differentiation. Our code is integrated into the GPflow package.},
+	language = {en},
+	urldate = {2021-03-23},
+	author = {Salimbeni, Hugh and Eleftheriadis, Stefanos and Hensman, James},
+	month = mar,
+	year = {2018},
+	keywords = {good, read},
+	annote = {NG for non-conjugate GP [AISTATS 2018]
+
+NG+GD for VGP !
+also discusses parameterization of variational Gaussian
+
+ },
+	file = {Salimbeni et al_2018_Natural Gradients in Practice - Non-Conjugate Variational Inference in Gaussian Process Models.pdf:/Users/wpq/Dropbox (MIT)/zotero/Salimbeni et al_2018_Natural Gradients in Practice - Non-Conjugate Variational Inference in Gaussian Process Models.pdf:application/pdf}
+}
+
+@article{wilsonThoughtsMassivelyScalable2015,
+	title = {Thoughts on {Massively} {Scalable} {Gaussian} {Processes}},
+	abstract = {We introduce a framework and early results for massively scalable Gaussian processes (MSGP), signiﬁcantly extending the KISS-GP approach of Wilson and Nickisch (2015). The MSGP framework enables the use of Gaussian processes (GPs) on billions of datapoints, without requiring distributed inference, or severe assumptions. In particular, MSGP reduces the standard O(n3) complexity of GP learning and inference to O(n), and the standard O(n2) complexity per test point prediction to O(1). MSGP involves 1) decomposing covariance matrices as Kronecker products of Toeplitz matrices approximated by circulant matrices. This multi-level circulant approximation allows one to unify the orthogonal computational beneﬁts of fast Kronecker and Toeplitz approaches, and is signiﬁcantly faster than either approach in isolation; 2) local kernel interpolation and inducing points to allow for arbitrarily located data inputs, and O(1) test time predictions; 3) exploiting block-Toeplitz Toeplitz-block structure (BTTB), which enables fast inference and learning when multidimensional Kronecker structure is not present; and 4) projections of the input space to ﬂexibly model correlated inputs and high dimensional data. The ability to handle many (m ≈ n) inducing points allows for near-exact accuracy and large scale kernel learning.},
+	language = {en},
+	author = {Wilson, Andrew Gordon and Dann, Christoph and Nickisch, Hannes},
+	year = {2015},
+	keywords = {tbr},
+	pages = {25},
+	file = {Wilson et al_2015_Thoughts on Massively Scalable Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Wilson et al_2015_Thoughts on Massively Scalable Gaussian Processes.pdf:application/pdf}
+}
+
+@article{hensmanMCMCVariationallySparse2015,
+	title = {{MCMC} for {Variationally} {Sparse} {Gaussian} {Processes}},
+	abstract = {Gaussian process (GP) models form a core part of probabilistic machine learning. Considerable research eﬀort has been made into attacking three issues with GP models: how to compute eﬃciently when the number of data is large; how to approximate the posterior when the likelihood is not Gaussian and how to estimate covariance function parameter posteriors. This paper simultaneously addresses these, using a variational approximation to the posterior which is sparse in support of the function but otherwise free-form. The result is a Hybrid Monte-Carlo sampling scheme which allows for a non-Gaussian approximation over the function values and covariance parameters simultaneously, with eﬃcient computations based on inducing-point sparse GPs. Code to replicate each experiment in this paper will be available shortly.},
+	language = {en},
+	author = {Hensman, James},
+	year = {2015},
+	keywords = {tbr},
+	pages = {16},
+	annote = {GPMC+robustsoftmax [Neurips 2015]
+
+inducing points directly over images.
+
+ 
+introduction 
+
+robust softmax
+
+the method only works for factorized likelihood .. .
+
+
+mnist experiments
+
+500 inducing points.
+
+
+},
+	file = {Hensman_2015_MCMC for Variationally Sparse Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Hensman_2015_MCMC for Variationally Sparse Gaussian Processes.pdf:application/pdf}
+}
+
+@inproceedings{qiPredictiveAutomaticRelevance2004,
+	address = {Banff, Alberta, Canada},
+	title = {Predictive automatic relevance determination by expectation propagation},
+	url = {http://portal.acm.org/citation.cfm?doid=1015330.1015418},
+	doi = {10.1145/1015330.1015418},
+	abstract = {In many real-world classiﬁcation problems the input contains a large number of potentially irrelevant features. This paper proposes a new Bayesian framework for determining the relevance of input features. This approach extends one of the most successful Bayesian methods for feature selection and sparse learning, known as Automatic Relevance Determination (ARD). ARD ﬁnds the relevance of features by optimizing the model marginal likelihood, also known as the evidence. We show that this can lead to overﬁtting. To address this problem, we propose Predictive ARD based on estimating the predictive performance of the classiﬁer. While the actual leave-one-out predictive performance is generally very costly to compute, the expectation propagation (EP) algorithm proposed by Minka provides an estimate of this predictive performance as a side-eﬀect of its iterations. We exploit this in our algorithm to do feature selection, and to select data points in a sparse Bayesian kernel classiﬁer. Moreover, we provide two other improvements to previous algorithms, by replacing Laplace’s approximation with the generally more accurate EP, and by incorporating the fast optimization algorithm proposed by Faul and Tipping. Our experiments show that our method based on the EP estimate of predictive performance is more accurate on test data than relevance determination by optimizing the evidence.},
+	language = {en},
+	urldate = {2021-03-24},
+	booktitle = {Twenty-first international conference on {Machine} learning  - {ICML} '04},
+	publisher = {ACM Press},
+	author = {Qi, Yuan (Alan) and Minka, Thomas P. and Picard, Rosalind W. and Ghahramani, Zoubin},
+	year = {2004},
+	keywords = {tbr},
+	pages = {85},
+	annote = {ARD might overfit [ICML 2004]},
+	file = {Qi et al. - 2004 - Predictive automatic relevance determination by ex.pdf:/Users/wpq/Zotero/storage/2TPXW4NF/Qi et al. - 2004 - Predictive automatic relevance determination by ex.pdf:application/pdf}
+}
+
+@article{saatciScalableInferenceStructured2011,
+	title = {Scalable {Inference} for {Structured} {Gaussian} {Process} {Models}},
+	language = {en},
+	author = {Saatci, Yunus},
+	year = {2011},
+	keywords = {good, tbr},
+	pages = {184},
+	annote = {
+derivations on kronecker/tensor based acceleration of GP inference/training
+},
+	file = {Saatci - Scalable Inference for Structured Gaussian Process.pdf:/Users/wpq/Zotero/storage/6WLZHNQJ/Saatci - Scalable Inference for Structured Gaussian Process.pdf:application/pdf}
+}
+
+@article{jazbecScalableGaussianProcess2021,
+	title = {Scalable {Gaussian} {Process} {Variational} {Autoencoders}},
+	url = {http://arxiv.org/abs/2010.13472},
+	abstract = {Conventional variational autoencoders fail in modeling correlations between data points due to their use of factorized priors. Amortized Gaussian process inference through GP-VAEs has led to significant improvements in this regard, but is still inhibited by the intrinsic complexity of exact GP inference. We improve the scalability of these methods through principled sparse inference approaches. We propose a new scalable GP-VAE model that outperforms existing approaches in terms of runtime and memory footprint, is easy to implement, and allows for joint end-to-end optimization of all components.},
+	urldate = {2021-03-26},
+	journal = {arXiv:2010.13472 [cs, stat]},
+	author = {Jazbec, Metod and Ashman, Matthew and Fortuin, Vincent and Pearce, Michael and Mandt, Stephan and Rätsch, Gunnar},
+	month = feb,
+	year = {2021},
+	note = {arXiv: 2010.13472},
+	keywords = {read},
+	annote = {Scalable GP-VAE [AISTATS 2021]
+
+https://github.com/ratschlab/SVGP-VAE/blob/main/SVIGP\_Hensman\_model.py
+VAE + Sparse GP
+
+Z {\textasciitilde} GP are L independent GPs
+
+
+
+ 
+me
+
+seems a feasible way to combine deep networks and GP . also has some code on GP-LVM
+also discusses that SVGP variational parameters are global and independent of data. whereas in VAE framework you want amortized inference ... input dependent parametes !
+},
+	file = {Jazbec et al_2021_Scalable Gaussian Process Variational Autoencoders.pdf:/Users/wpq/Dropbox (MIT)/zotero/Jazbec et al_2021_Scalable Gaussian Process Variational Autoencoders.pdf:application/pdf}
+}
+
+@article{desouzaLearningGPLVMArbitrary2020,
+	title = {Learning {GPLVM} with arbitrary kernels using the unscented transformation},
+	url = {http://arxiv.org/abs/1907.01867},
+	abstract = {Gaussian Process Latent Variable Model (GPLVM) is a flexible framework to handle uncertain inputs in Gaussian Processes (GPs) and incorporate GPs as components of larger graphical models. Nonetheless, the standard GPLVM variational inference approach is tractable only for a narrow family of kernel functions. The most popular implementations of GPLVM circumvent this limitation using quadrature methods, which may become a computational bottleneck even for relatively low dimensions. For instance, the widely employed Gauss-Hermite quadrature has exponential complexity on the number of dimensions. In this work, we propose using the unscented transformation instead. Overall, this method presents comparable, if not better, performance than offthe-shelf solutions to GPLVM and its computational complexity scales only linearly on dimension. In contrast to Monte Carlo methods, our approach is deterministic and works well with quasi-Newton methods, such as the Broyden-Fletcher-Goldfarb-Shanno (BFGS) algorithm. We illustrate the applicability of our method with experiments on dimensionality reduction and multistep-ahead prediction with uncertainty propagation.},
+	urldate = {2021-03-26},
+	journal = {arXiv:1907.01867 [cs, stat]},
+	author = {de Souza, Daniel Augusto R. M. A. and Mesquita, Diego and Mattos, César Lincoln C. and Gomes, João Paulo P.},
+	month = nov,
+	year = {2020},
+	note = {arXiv: 1907.01867},
+	keywords = {tbr},
+	annote = {GPLVM + unscented transform [AISTATS 2021]
+
+scales with \#dimensions
+https://github.com/spectraldani/UnscentedGPLVM
+
+adopted from gpflow!
+
+
+},
+	file = {de Souza et al_2020_Learning GPLVM with arbitrary kernels using the unscented transformation.pdf:/Users/wpq/Dropbox (MIT)/zotero/de Souza et al_2020_Learning GPLVM with arbitrary kernels using the unscented transformation.pdf:application/pdf}
+}
+
+@article{maronasTransformingGaussianProcesses2021,
+	title = {Transforming {Gaussian} {Processes} {With} {Normalizing} {Flows}},
+	url = {http://arxiv.org/abs/2011.01596},
+	abstract = {Gaussian Processes (GPs) can be used as flexible, non-parametric function priors. Inspired by the growing body of work on Normalizing Flows, we enlarge this class of priors through a parametric invertible transformation that can be made input-dependent. Doing so also allows us to encode interpretable prior knowledge (e.g., boundedness constraints). We derive a variational approximation to the resulting Bayesian inference problem, which is as fast as stochastic variational GP regression (Hensman et al., 2013; Dezfouli and Bonilla,2015). This makes the model a computationally efficient alternative to other hierarchical extensions of GP priors (Lazaro-Gredilla,2012; Damianou and Lawrence, 2013). The resulting algorithm's computational and inferential performance is excellent, and we demonstrate this on a range of data sets. For example, even with only 5 inducing points and an input-dependent flow, our method is consistently competitive with a standard sparse GP fitted using 100 inducing points.},
+	urldate = {2021-03-26},
+	journal = {arXiv:2011.01596 [cs]},
+	author = {Maroñas, Juan and Hamelijnck, Oliver and Knoblauch, Jeremias and Damoulas, Theodoros},
+	month = feb,
+	year = {2021},
+	note = {arXiv: 2011.01596},
+	keywords = {tbr},
+	annote = {GP+normalizing flow [AISTATS 2021]},
+	file = {Maronas et al_2021_Transforming Gaussian Processes With Normalizing Flows.pdf:/Users/wpq/Dropbox (MIT)/zotero/Maronas et al_2021_Transforming Gaussian Processes With Normalizing Flows.pdf:application/pdf}
+}
+
+@article{rossiSparseGaussianProcesses2021,
+	title = {Sparse {Gaussian} {Processes} {Revisited}: {Bayesian} {Approaches} to {Inducing}-{Variable} {Approximations}},
+	shorttitle = {Sparse {Gaussian} {Processes} {Revisited}},
+	url = {http://arxiv.org/abs/2003.03080},
+	abstract = {Variational inference techniques based on inducing variables provide an elegant framework for scalable posterior estimation in Gaussian process (GP) models. Besides enabling scalability, one of their main advantages over sparse approximations using direct marginal likelihood maximization is that they provide a robust alternative for point estimation of the inducing inputs, i.e. the location of the inducing variables. In this work we challenge the common wisdom that optimizing the inducing inputs in the variational framework yields optimal performance. We show that, by revisiting old model approximations such as the fully-independent training conditionals endowed with powerful sampling-based inference methods, treating both inducing locations and GP hyper-parameters in a Bayesian way can improve performance significantly. Based on stochastic gradient Hamiltonian Monte Carlo, we develop a fully Bayesian approach to scalable GP and deep GP models, and demonstrate its state-of-the-art performance through an extensive experimental campaign across several regression and classification problems.},
+	urldate = {2021-03-26},
+	journal = {arXiv:2003.03080 [cs, stat]},
+	author = {Rossi, Simone and Heinonen, Markus and Bonilla, Edwin V. and Shen, Zheyang and Filippone, Maurizio},
+	month = feb,
+	year = {2021},
+	note = {arXiv: 2003.03080},
+	keywords = {tbr},
+	annote = {BSGP [AISTATS 2021]
+
+fully bayesian (MCMC) sparse GP
+also as SG HMC fordeep models
+},
+	file = {arXiv Fulltext PDF:/Users/wpq/Zotero/storage/DLNCANZD/Rossi et al. - 2021 - Sparse Gaussian Processes Revisited Bayesian Appr.pdf:application/pdf}
+}
+
+@article{wuHierarchicalInducingPoint2021,
+	title = {Hierarchical {Inducing} {Point} {Gaussian} {Process} for {Inter}-domain {Observations}},
+	url = {http://arxiv.org/abs/2103.00393},
+	abstract = {We examine the general problem of inter-domain Gaussian Processes (GPs): problems where the GP realization and the noisy observations of that realization lie on different domains. When the mapping between those domains is linear, such as integration or differentiation, inference is still closed form. However, many of the scaling and approximation techniques that our community has developed do not apply to this setting. In this work, we introduce the hierarchical inducing point GP (HIP-GP), a scalable inter-domain GP inference method that enables us to improve the approximation accuracy by increasing the number of inducing points to the millions. HIP-GP, which relies on inducing points with grid structure and a stationary kernel assumption, is suitable for low-dimensional problems. In developing HIP-GP, we introduce (1) a fast whitening strategy, and (2) a novel preconditioner for conjugate gradients which can be helpful in general GP settings.},
+	urldate = {2021-03-26},
+	journal = {arXiv:2103.00393 [cs, stat]},
+	author = {Wu, Luhuan and Miller, Andrew and Anderson, Lauren and Pleiss, Geoff and Blei, David and Cunningham, John},
+	month = feb,
+	year = {2021},
+	note = {arXiv: 2103.00393},
+	keywords = {tbr},
+	annote = {HIP-GP [AISTATS 2021]
+
+scalable inter-domain GP
+discusses computational tricks
+
+whitening  + structured prior
+
+
+},
+	file = {Wu et al_2021_Hierarchical Inducing Point Gaussian Process for Inter-domain Observations.pdf:/Users/wpq/Dropbox (MIT)/zotero/Wu et al_2021_Hierarchical Inducing Point Gaussian Process for Inter-domain Observations.pdf:application/pdf}
+}
+
+@article{salimbeniDoublyStochasticVariational2017,
+	title = {Doubly {Stochastic} {Variational} {Inference} for {Deep} {Gaussian} {Processes}},
+	url = {http://arxiv.org/abs/1705.08933},
+	abstract = {Gaussian processes (GPs) are a good choice for function approximation as they are flexible, robust to over-fitting, and provide well-calibrated predictive uncertainty. Deep Gaussian processes (DGPs) are multi-layer generalisations of GPs, but inference in these models has proved challenging. Existing approaches to inference in DGP models assume approximate posteriors that force independence between the layers, and do not work well in practice. We present a doubly stochastic variational inference algorithm, which does not force independence between layers. With our method of inference we demonstrate that a DGP model can be used effectively on data ranging in size from hundreds to a billion points. We provide strong empirical evidence that our inference scheme for DGPs works well in practice in both classification and regression.},
+	urldate = {2021-03-26},
+	journal = {arXiv:1705.08933 [stat]},
+	author = {Salimbeni, Hugh and Deisenroth, Marc},
+	month = nov,
+	year = {2017},
+	note = {arXiv: 1705.08933},
+	keywords = {good, read},
+	annote = {doubly stochastic GP [Neurips 2017]
+
+this is actually what i need for treating uncertain inputs ! think about how hierarchical relationship + doubly stochastic GP
+},
+	file = {Salimbeni_Deisenroth_2017_Doubly Stochastic Variational Inference for Deep Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Salimbeni_Deisenroth_2017_Doubly Stochastic Variational Inference for Deep Gaussian Processes.pdf:application/pdf}
+}
+
+@inproceedings{figueiras-vidalInterdomainGaussianProcesses2009a,
+	title = {Inter-domain {Gaussian} processes for sparse inference using inducing features},
+	abstract = {We present a general inference framework for inter-domain Gaussian Processes (GPs) and focus on its usefulness to build sparse GP models. The state-of-the-art sparse GP model introduced by Snelson and Ghahramani in [1] relies on finding a small, representative pseudo data set of m elements (from the same domain as the n available data elements) which is able to explain existing data well, and then uses it to perform inference. This reduces inference and model selection computation time from O(n3) to O(m2n), where m  n. Inter-domain GPs can be used to find a (possibly more compact) representative set of features lying in a different domain, at the same computational cost. Being able to specify a different domain for the representative features allows to incorporate prior knowledge about relevant characteristics of data and detaches the functional form of the covariance and basis functions. We will show how previously existing models fit into this framework and will use it to develop two new sparse GP models. Tests on large, representative regression data sets suggest that significant improvement can be},
+	booktitle = {in {Advances} in {Neural} {Information} {Processing} {Systems}},
+	author = {Figueiras-vidal, Anı́bal R.},
+	year = {2009},
+	keywords = {tbr},
+	pages = {1087--1095},
+	annote = {Inter-domain GP [Neurips 2009]},
+	file = {Figueiras-vidal_2009_Inter-domain Gaussian processes for sparse inference using inducing features.pdf:/Users/wpq/Dropbox (MIT)/zotero/Figueiras-vidal_2009_Inter-domain Gaussian processes for sparse inference using inducing features.pdf:application/pdf}
+}
+
+@article{borovitskiyMatErnGaussian2021,
+	title = {Mat{\textbackslash}'ern {Gaussian} {Processes} on {Graphs}},
+	url = {http://arxiv.org/abs/2010.15538},
+	abstract = {Gaussian processes are a versatile framework for learning unknown functions in a manner that permits one to utilize prior information about their properties. Although many different Gaussian process models are readily available when the input space is Euclidean, the choice is much more limited for Gaussian processes whose input space is an undirected graph. In this work, we leverage the stochastic partial differential equation characterization of Mat{\textbackslash}'ern Gaussian processes - a widely-used model class in the Euclidean setting - to study their analog for undirected graphs. We show that the resulting Gaussian processes inherit various attractive properties of their Euclidean and Riemannian analogs and provide techniques that allow them to be trained using standard methods, such as inducing points. This enables graph Mat{\textbackslash}'ern Gaussian processes to be employed in mini-batch and non-conjugate settings, thereby making them more accessible to practitioners and easier to deploy within larger learning frameworks.},
+	urldate = {2021-04-01},
+	journal = {arXiv:2010.15538 [cs, stat]},
+	author = {Borovitskiy, Viacheslav and Azangulov, Iskander and Terenin, Alexander and Mostowsky, Peter and Deisenroth, Marc Peter and Durrande, Nicolas},
+	month = feb,
+	year = {2021},
+	note = {arXiv: 2010.15538},
+	keywords = {tbr},
+	annote = {[AISTATS 2021]
+ 
+me
+
+connection between laplacian, and GP on graphs.
+connection between co-regionalization models where task kernel corresponds to graph kernel!
+},
+	file = {Borovitskiy et al_2021_Mat-'ern Gaussian Processes on Graphs.pdf:/Users/wpq/Dropbox (MIT)/zotero/Borovitskiy et al_2021_Mat-'ern Gaussian Processes on Graphs.pdf:application/pdf}
+}
+
+@article{osborneGaussianProcessesPrediction2007,
+	title = {Gaussian {Processes} for {Prediction}},
+	abstract = {We propose a powerful prediction algorithm built upon Gaussian processes (GPs). They are particularly useful for their ﬂexibility, facilitating accurate prediction even in the absence of strong physical models.},
+	language = {en},
+	author = {Osborne, Michael},
+	year = {2007},
+	keywords = {read},
+	pages = {69},
+	annote = {
+GP with missing sensor input for weather prediction
+interesting modeling paper using GP ... covariance function that captures correlation between inputs
+
+ 
+me
+
+spherical parameterization makes quite a lot of sense ! should use it !
+
+range in [-1,1] enables negative correlation as well
+the parameters to optimize is quite interpretable ... variance and covariance ...
+
+
+this paper precedes MTGP ... but in essence is doing similar things i think
+also some analysis on interpreting the parameters of kernel matrix !
+
+ 
+introduction
+
+3.4 correlated inputs/outputs
+
+correlation between inputs as w-norm
+
+w = diag[w1,...,wd] equivalent to ARD kernel !
+if w  is not a diagonal matrix ... then correlation between inputs
+
+
+correlation between outputs as outer product of variance of kernel function h{\textasciicircum}Th
+
+same as task similarity matrix !
+h = diag[h1,....ht] gives independent scale for each output. h{\textasciicircum}Th also diagonal !
+if h not just diagonal ... then uses correlation between outputs !
+full covariance as kronecker product of h{\textasciicircum}Th with a single output variable
+
+just h as cholesky factorization of task similarity matrix
+
+
+
+
+correlation of products h{\textasciicircum}Th w{\textasciicircum}Tw not tied to entries of h,w that we optimize as hyperparameters ... not sure what priors to use
+
+proposes to use spherical parameterization
+
+
+kron(fixed kernel for output label, covariance over inputs)
+
+same as MTGP or Co-Kringing
+
+
+
+
+5 weather sensor data
+
+missing data for some time points
+using other tasks helps!
+setup
+
+n = 1,...4 sensors
+t ... time for reading
+K as Hadamard between
+
+Covariance over input time
+
+periodic + disturbance kernel
+
+
+C = diag(l)s{\textasciicircum}Tsdiag(l) as covariance over sensors/labels/tasks
+
+basically the task similarity matrix !
+s{\textasciicircum}Ts models correlation of outputs, diag(l) models lengthscale of outputs !
+
+
+
+
+
+
+
+
+},
+	file = {Osborne_2007_Gaussian Processes for Prediction.pdf:/Users/wpq/Dropbox (MIT)/zotero/Osborne_2007_Gaussian Processes for Prediction.pdf:application/pdf}
+}
+
+@article{daiEfficientModelingLatent2017,
+	title = {Efficient {Modeling} of {Latent} {Information} in {Supervised} {Learning} using {Gaussian} {Processes}},
+	url = {http://arxiv.org/abs/1705.09862},
+	abstract = {Often in machine learning, data are collected as a combination of multiple conditions, e.g., the voice recordings of multiple persons, each labeled with an ID. How could we build a model that captures the latent information related to these conditions and generalize to a new one with few data? We present a new model called Latent Variable Multiple Output Gaussian Processes (LVMOGP) and that allows to jointly model multiple conditions for regression and generalize to a new condition with a few data points at test time. LVMOGP infers the posteriors of Gaussian processes together with a latent space representing the information about different conditions. We derive an efficient variational inference method for LVMOGP, of which the computational complexity is as low as sparse Gaussian processes. We show that LVMOGP significantly outperforms related Gaussian process methods on various tasks with both synthetic and real data.},
+	urldate = {2021-04-06},
+	journal = {arXiv:1705.09862 [cs, stat]},
+	author = {Dai, Zhenwen and Álvarez, Mauricio A. and Lawrence, Neil D.},
+	month = may,
+	year = {2017},
+	note = {arXiv: 1705.09862},
+	keywords = {read},
+	annote = {LVMOGP [Neurips 2018]
+
+LVMOGP: Latent Variable Multiple Output Gaussian Process. extends Bayesian GPLVM for more efficient inference
+slides: http://gpss.cc/gpa17/slides/slides\_present.pdf
+
+me
+
+the argument that one hot encoding does not generalize to new conditions at test time seems like a selling point of using kernel matrix instead of one-hot encoding of task similarity!
+relation to what i m doing
+
+this paper kron(KH,KX) ... there is D = \#conditions/tasks as len(H). wheras my kernel matrix has length N ...
+my project kron(KH,KX)
+
+
+has some reference to replacing task similarity matrix with a kernel matrix. this paper is essentially doing that: replace task lookup table with a kernel martix and latent codes are also optimized in an unsupervised fashion
+this paper solves multitask learning with side information exactly !
+
+difference is the side information is optimized directly
+
+
+the toy example is really an SCM think about it ... where the latent H could well be friction coefficient measurement ... as parent of braking distance in a DAG
+the variational bound with kron structure derivation can be borrowed i think. the lower bound can be written without ever forming the large kron matrix. has yet to extend for minibatching!
+
+ 
+introduction 
+
+problem
+
+data collected from multiple scenarios/conditions. e.g. name of speaker for audio data, specification of used camera for images.
+problem
+
+all variations related to the different scenarios is considered as observation noise. modeling slack.
+independent models of groupings suffer from little training data
+use one-hot encoding of condition... might be too course... kind of deteministic
+
+
+
+
+this paper
+
+consider scenario/condition and enables efficient generalization ... really its multitask learning with highly correlated outputs.
+
+
+toy example
+
+X = initial speed; Y = observed braking distance; h = learnt to be 1/{\textbackslash}mu .. inverse friction coefficient
+labels are highly correlated and would benefit from model that exploits such correlation.
+5 experiments / each of 10 conditions ... car with different initial speed
+Y = f(X,hd) + eps, f{\textasciitilde}GP, h {\textasciitilde} Normal
+
+GT relationship from physics: Y = X**2/(2*{\textbackslash}mu*g) where g is acceleration constant
+{\textbackslash}mu varies cross conditions ... would want hd to capture this and let f model deterministic relationship only, e.g. want f to learn mechanism
+
+
+
+
+assumptions
+
+D conditions, N datapoints
+fully observed D different condition for each (xn, yn)
+yn = (yn1 ... ynD) essentially observation of label under different conditions ... highly correlated multitask
+H = [h1,...hD] latent codes of some fixed dimension ... the latent variables
+
+
+LVMOGP
+
+Y{\textbar}F {\textasciitilde} Normal
+F{\textbar}X,H {\textasciitilde} Normal with Cov = kron(KH,KX)
+
+here Covariance matrix exactly same form as MTGP ... but is actually a valid kernel function instead of a lookup table optimized directly.
+
+
+lower bound
+
+lower bound log p(Y{\textbar}X,H) with 2009 bound !
+
+note the inducing variables also has kronecker factored covariance matrix!
+
+
+marginalize out H as well to get lower bound for log p(Y{\textbar}X)
+end up with the Bayesian GPLVM bound
+
+
+
+
+},
+	file = {Dai et al_2017_Efficient Modeling of Latent Information in Supervised Learning using Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Dai et al_2017_Efficient Modeling of Latent Information in Supervised Learning using Gaussian Processes.pdf:application/pdf}
+}
+
+@article{tehSemiparametricLatentFactor2004,
+	title = {Semiparametric {Latent} {Factor} {Models}},
+	abstract = {We propose a semiparametric model for regression problems involving multiple response variables. The model makes use of a set of Gaussian processes that are linearly mixed to capture dependencies that may exist among the response variables. We propose an efﬁcient approximate inference scheme for this semiparametric model whose complexity is linear in the number of training data points. We present experimental results in the domain of multi-joint robot arm dynamics.},
+	language = {en},
+	author = {Teh, Yee Whye and Seeger, Matthias and Jordan, Michael I},
+	year = {2004},
+	keywords = {tbr},
+	pages = {8},
+	annote = {Semiparametric Factor Model
+
+GP with linear mixing ...
+
+ 
+me
+
+related slides seems to be helpful! http://gpss.cc/gpss17/slides/multipleOutputGPs.pdf
+},
+	file = {Teh et al_2004_Semiparametric Latent Factor Models.pdf:/Users/wpq/Dropbox (MIT)/zotero/Teh et al_2004_Semiparametric Latent Factor Models.pdf:application/pdf}
+}
+
+@article{dutordoirSparseGaussianProcesses2020,
+	title = {Sparse {Gaussian} {Processes} with {Spherical} {Harmonic} {Features}},
+	url = {http://arxiv.org/abs/2006.16649},
+	abstract = {We introduce a new class of inter-domain variational Gaussian processes (GP) where data is mapped onto the unit hypersphere in order to use spherical harmonic representations. Our inference scheme is comparable to variational Fourier features, but it does not suffer from the curse of dimensionality, and leads to diagonal covariance matrices between inducing variables. This enables a speed-up in inference, because it bypasses the need to invert large covariance matrices. Our experiments show that our model is able to fit a regression model for a dataset with 6 million entries two orders of magnitude faster compared to standard sparse GPs, while retaining state of the art accuracy. We also demonstrate competitive performance on classification with non-conjugate likelihoods.},
+	urldate = {2021-04-07},
+	journal = {arXiv:2006.16649 [cs, stat]},
+	author = {Dutordoir, Vincent and Durrande, Nicolas and Hensman, James},
+	month = jun,
+	year = {2020},
+	note = {arXiv: 2006.16649},
+	keywords = {tbr},
+	annote = {GP + Spherical Harmonics Features [ICML 2020]
+
+try to solve problem of inducing location being high-dimensional ... uses interdomain GP
+
+ 
+me
+
+on the line of making inducing points viable for high dimensional inputs... since high-dim ... needs large number of inducing points to cover the input space
+
+VFF as projection of GP onto fourier basis ... inducing variables have global influence on predictions
+similarly for images maybe project to wavelets ?
+
+
+},
+	file = {Dutordoir et al_2020_Sparse Gaussian Processes with Spherical Harmonic Features.pdf:/Users/wpq/Dropbox (MIT)/zotero/Dutordoir et al_2020_Sparse Gaussian Processes with Spherical Harmonic Features.pdf:application/pdf}
+}
+
+@article{remesMutuallyDependentHadamardKernel2017,
+	title = {A {Mutually}-{Dependent} {Hadamard} {Kernel} for {Modelling} {Latent} {Variable} {Couplings}},
+	url = {http://arxiv.org/abs/1702.08402},
+	abstract = {We introduce a novel kernel that models input-dependent couplings across multiple latent processes. The pairwise joint kernel measures covariance along inputs and across different latent signals in a mutually-dependent fashion. A latent correlation Gaussian process (LCGP) model combines these non-stationary latent components into multiple outputs by an input-dependent mixing matrix. Probit classification and support for multiple observation sets are derived by Variational Bayesian inference. Results on several datasets indicate that the LCGP model can recover the correlations between latent signals while simultaneously achieving state-of-the-art performance. We highlight the latent covariances with an EEG classification dataset where latent brain processes and their couplings simultaneously emerge from the model.},
+	urldate = {2021-04-07},
+	journal = {arXiv:1702.08402 [stat]},
+	author = {Remes, Sami and Heinonen, Markus and Kaski, Samuel},
+	month = oct,
+	year = {2017},
+	note = {arXiv: 1702.08402},
+	keywords = {read},
+	annote = {LCGP [ACML 2017]
+
+LCGP: latent correlation GP
+input-dependent coupling across latent processes.
+
+me
+
+the nonstationary gaussian kernel might be useful for replacing current tasks imilarity matrix conditioned on inputs
+motivation for my thing... input dependent correlation between latent signals as a function of findings only.
+
+more interpretable
+findings help with model performance
+
+
+
+ 
+introduction 
+
+related works
+
+SLFM: semiparametric latent factor model. fixed mixing matrix
+GPRN: mixing matrix are input dependent GP s ... adaptively combines signals into outputs along input space
+
+but not interpretable
+
+
+MTGP with kron: input and latent signals are independent. efficient computationally but does not take into account of interactions between tasks and inputs.
+
+
+this paper
+
+extension of GPRN by a non-stationary cross-covariance input dependent kernel
+
+
+setup
+
+kb: determines how mixing of latent signals (tasks) to outputs evolves along input space (inputs)
+
+
+},
+	file = {Remes et al_2017_A Mutually-Dependent Hadamard Kernel for Modelling Latent Variable Couplings.pdf:/Users/wpq/Dropbox (MIT)/zotero/Remes et al_2017_A Mutually-Dependent Hadamard Kernel for Modelling Latent Variable Couplings.pdf:application/pdf}
+}
+
+@article{achituveGPTreeGaussianProcess2021,
+	title = {{GP}-{Tree}: {A} {Gaussian} {Process} {Classifier} for {Few}-{Shot} {Incremental} {Learning}},
+	shorttitle = {{GP}-{Tree}},
+	url = {http://arxiv.org/abs/2102.07868},
+	abstract = {Gaussian processes (GPs) are non-parametric, flexible, models that work well in many tasks. Combining GPs with deep learning methods via deep kernel learning is especially compelling due to the strong expressive power induced by the network. However, inference in GPs, whether with or without deep kernel learning, can be computationally challenging on large datasets. Here, we propose GP-Tree, a novel method for multi-class classification with Gaussian processes and deep kernel learning. We develop a tree-based hierarchical model in which each internal node of the tree fits a GP to the data using the Polya-Gamma augmentation scheme. As a result, our method scales well with both the number of classes and data size. We demonstrate our method effectiveness against other Gaussian process training baselines, and we show how our general GP approach is easily applied to incremental few-shot learning and reaches state-of-the-art performance.},
+	urldate = {2021-04-09},
+	journal = {arXiv:2102.07868 [cs]},
+	author = {Achituve, Idan and Navon, Aviv and Yemini, Yochai and Chechik, Gal and Fetaya, Ethan},
+	month = feb,
+	year = {2021},
+	note = {arXiv: 2102.07868},
+	keywords = {read},
+	annote = {GP-Tree
+
+scaling GP to classification with many classes using Polya-Gamma augmentation. with application to incremental few-shot learning
+
+ 
+introduction 
+
+GP-Tree
+
+tree structured hierarhical classificatoin 
+
+construct a binary tree that partition the dataset.
+partition using clustering of repr. of a class prototype (e.g. mean of repr of all samples belonging to a class)
+
+
+associate each internal node with a binary classification GP model
+p(y=c)
+
+product of likelihood for path from root to class=c.
+likelihood factorizes over nodes!
+
+
+inference
+
+Gibbs for few-shot OK
+VI for each node
+
+inducing points shared by all nodes.
+
+
+
+
+
+
+},
+	file = {Achituve et al_2021_GP-Tree - A Gaussian Process Classifier for Few-Shot Incremental Learning.pdf:/Users/wpq/Dropbox (MIT)/zotero/Achituve et al_2021_GP-Tree - A Gaussian Process Classifier for Few-Shot Incremental Learning.pdf:application/pdf}
+}
+
+@article{polsonBayesianInferenceLogistic2013,
+	title = {Bayesian inference for logistic models using {Polya}-{Gamma} latent variables},
+	url = {http://arxiv.org/abs/1205.0310},
+	abstract = {We propose a new data-augmentation strategy for fully Bayesian inference in models with binomial likelihoods. The approach appeals to a new class of Polya-Gamma distributions, which are constructed in detail. A variety of examples are presented to show the versatility of the method, including logistic regression, negative binomial regression, nonlinear mixed-effects models, and spatial models for count data. In each case, our data-augmentation strategy leads to simple, effective methods for posterior inference that: (1) circumvent the need for analytic approximations, numerical integration, or Metropolis-Hastings; and (2) outperform other known data-augmentation strategies, both in ease of use and in computational efficiency. All methods, including an efficient sampler for the Polya-Gamma distribution, are implemented in the R package BayesLogit. In the technical supplement appended to the end of the paper, we provide further details regarding the generation of Polya-Gamma random variables; the empirical benchmarks reported in the main manuscript; and the extension of the basic data-augmentation framework to contingency tables and multinomial outcomes.},
+	urldate = {2021-04-09},
+	journal = {arXiv:1205.0310 [stat]},
+	author = {Polson, Nicholas G. and Scott, James G. and Windle, Jesse},
+	month = jul,
+	year = {2013},
+	note = {arXiv: 1205.0310},
+	keywords = {good, tbr},
+	annote = {Polya-Gamma Augmentation [JASA 2013]},
+	file = {Polson et al_2013_Bayesian inference for logistic models using Polya-Gamma latent variables.pdf:/Users/wpq/Dropbox (MIT)/zotero/Polson et al_2013_Bayesian inference for logistic models using Polya-Gamma latent variables.pdf:application/pdf}
+}
+
+@article{garneloConditionalNeuralProcesses2018,
+	title = {Conditional {Neural} {Processes}},
+	abstract = {Deep neural networks excel at function approximation, yet they are typically trained from scratch for each new function. On the other hand, Bayesian methods, such as Gaussian Processes (GPs), exploit prior knowledge to quickly infer the shape of a new function at test time. Yet GPs are computationally expensive, and it can be hard to design appropriate priors. In this paper we propose a family of neural models, Conditional Neural Processes (CNPs), that combine the beneﬁts of both. CNPs are inspired by the ﬂexibility of stochastic processes such as GPs, but are structured as neural networks and trained via gradient descent. CNPs make accurate predictions after observing only a handful of training data points, yet scale to complex functions and large datasets. We demonstrate the performance and versatility of the approach on a range of canonical machine learning tasks, including regression, classiﬁcation and image completion.},
+	language = {en},
+	author = {Garnelo, Marta and Rosenbaum, Dan and Maddison, Chris J and Ramalho, Tiago and Saxton, David and Shanahan, Murray and Teh, Yee Whye and Rezende, Danilo J and Eslami, S M Ali},
+	year = {2018},
+	keywords = {tbr},
+	pages = {10},
+	annote = {CNP [ICML 2018]
+
+after-work of doubly stochastic DGP ... conditional neural process
+},
+	file = {Garnelo et al. - Conditional Neural Processes.pdf:/Users/wpq/Zotero/storage/MV2N4SHV/Garnelo et al. - Conditional Neural Processes.pdf:application/pdf}
+}
+
+@article{doerrProbabilisticRecurrentStateSpace2018,
+	title = {Probabilistic {Recurrent} {State}-{Space} {Models}},
+	url = {http://arxiv.org/abs/1801.10395},
+	abstract = {State-space models (SSMs) are a highly expressive model class for learning patterns in time series data and for system identification. Deterministic versions of SSMs (e.g. LSTMs) proved extremely successful in modeling complex time series data. Fully probabilistic SSMs, however, are often found hard to train, even for smaller problems. To overcome this limitation, we propose a novel model formulation and a scalable training algorithm based on doubly stochastic variational inference and Gaussian processes. In contrast to existing work, the proposed variational approximation allows one to fully capture the latent state temporal correlations. These correlations are the key to robust training. The effectiveness of the proposed PR-SSM is evaluated on a set of real-world benchmark datasets in comparison to state-of-the-art probabilistic model learning methods. Scalability and robustness are demonstrated on a high dimensional problem.},
+	urldate = {2021-04-13},
+	journal = {arXiv:1801.10395 [stat]},
+	author = {Doerr, Andreas and Daniel, Christian and Schiegg, Martin and Nguyen-Tuong, Duy and Schaal, Stefan and Toussaint, Marc and Trimpe, Sebastian},
+	month = feb,
+	year = {2018},
+	note = {arXiv: 1801.10395},
+	keywords = {tbr},
+	annote = {Probabilistic SSM
+
+uses doubly stochastic DGP to train fully probabilistic state-space models ...
+},
+	file = {Doerr et al_2018_Probabilistic Recurrent State-Space Models.pdf:/Users/wpq/Dropbox (MIT)/zotero/Doerr et al_2018_Probabilistic Recurrent State-Space Models.pdf:application/pdf}
+}
+
+@article{havasiInferenceDeepGaussian2018,
+	title = {Inference in {Deep} {Gaussian} {Processes} using {Stochastic} {Gradient} {Hamiltonian} {Monte} {Carlo}},
+	url = {http://arxiv.org/abs/1806.05490},
+	abstract = {Deep Gaussian Processes (DGPs) are hierarchical generalizations of Gaussian Processes that combine well calibrated uncertainty estimates with the high flexibility of multilayer models. One of the biggest challenges with these models is that exact inference is intractable. The current state-of-the-art inference method, Variational Inference (VI), employs a Gaussian approximation to the posterior distribution. This can be a potentially poor unimodal approximation of the generally multimodal posterior. In this work, we provide evidence for the non-Gaussian nature of the posterior and we apply the Stochastic Gradient Hamiltonian Monte Carlo method to generate samples. To efficiently optimize the hyperparameters, we introduce the Moving Window MCEM algorithm. This results in significantly better predictions at a lower computational cost than its VI counterpart. Thus our method establishes a new state-of-the-art for inference in DGPs.},
+	urldate = {2021-04-13},
+	journal = {arXiv:1806.05490 [cs, stat]},
+	author = {Havasi, Marton and Hernández-Lobato, José Miguel and Murillo-Fuentes, Juan José},
+	month = nov,
+	year = {2018},
+	note = {arXiv: 1806.05490},
+	keywords = {tbr},
+	annote = {SGHMC for DS-DGP [Neurips 2018]},
+	file = {Havasi et al_2018_Inference in Deep Gaussian Processes using Stochastic Gradient Hamiltonian Monte Carlo.pdf:/Users/wpq/Dropbox (MIT)/zotero/Havasi et al_2018_Inference in Deep Gaussian Processes using Stochastic Gradient Hamiltonian Monte Carlo.pdf:application/pdf}
+}
+
+@article{hegdeDeepLearningDifferential2018,
+	title = {Deep learning with differential {Gaussian} process flows},
+	url = {http://arxiv.org/abs/1810.04066},
+	abstract = {We propose a novel deep learning paradigm of differential flows that learn a stochastic differential equation transformations of inputs prior to a standard classification or regression function. The key property of differential Gaussian processes is the warping of inputs through infinitely deep, but infinitesimal, differential fields, that generalise discrete layers into a dynamical system. We demonstrate state-of-the-art results that exceed the performance of deep Gaussian processes and neural networks},
+	urldate = {2021-04-13},
+	journal = {arXiv:1810.04066 [cs, stat]},
+	author = {Hegde, Pashupati and Heinonen, Markus and Lähdesmäki, Harri and Kaski, Samuel},
+	month = oct,
+	year = {2018},
+	note = {arXiv: 1810.04066},
+	keywords = {tbr},
+	annote = {SDE+DGP ... hmm for registration ?},
+	file = {Hegde et al_2018_Deep learning with differential Gaussian process flows.pdf:/Users/wpq/Dropbox (MIT)/zotero/Hegde et al_2018_Deep learning with differential Gaussian process flows.pdf:application/pdf}
+}
+
+@article{blomqvistDeepConvolutionalGaussian2018,
+	title = {Deep convolutional {Gaussian} processes},
+	url = {http://arxiv.org/abs/1810.03052},
+	abstract = {We propose deep convolutional Gaussian processes, a deep Gaussian process architecture with convolutional structure. The model is a principled Bayesian framework for detecting hierarchical combinations of local features for image classification. We demonstrate greatly improved image classification performance compared to current Gaussian process approaches on the MNIST and CIFAR-10 datasets. In particular, we improve CIFAR-10 accuracy by over 10 percentage points.},
+	urldate = {2021-04-15},
+	journal = {arXiv:1810.03052 [cs, stat]},
+	author = {Blomqvist, Kenneth and Kaski, Samuel and Heinonen, Markus},
+	month = oct,
+	year = {2018},
+	note = {arXiv: 1810.03052},
+	keywords = {tbr},
+	annote = {GP over images,.},
+	file = {Blomqvist et al_2018_Deep convolutional Gaussian processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Blomqvist et al_2018_Deep convolutional Gaussian processes.pdf:application/pdf}
+}
+
+@article{galy-fajouMultiClassGaussianProcess2019,
+	title = {Multi-{Class} {Gaussian} {Process} {Classification} {Made} {Conjugate}: {Efficient} {Inference} via {Data} {Augmentation}},
+	shorttitle = {Multi-{Class} {Gaussian} {Process} {Classification} {Made} {Conjugate}},
+	url = {http://arxiv.org/abs/1905.09670},
+	abstract = {We propose a new scalable multi-class Gaussian process classification approach building on a novel modified softmax likelihood function. The new likelihood has two benefits: it leads to well-calibrated uncertainty estimates and allows for an efficient latent variable augmentation. The augmented model has the advantage that it is conditionally conjugate leading to a fast variational inference method via block coordinate ascent updates. Previous approaches suffered from a trade-off between uncertainty calibration and speed. Our experiments show that our method leads to well-calibrated uncertainty estimates and competitive predictive performance while being up to two orders faster than the state of the art.},
+	language = {en},
+	urldate = {2021-04-16},
+	journal = {arXiv:1905.09670 [cs, stat]},
+	author = {Galy-Fajou, Théo and Wenzel, Florian and Donner, Christian and Opper, Manfred},
+	month = may,
+	year = {2019},
+	note = {arXiv: 1905.09670},
+	keywords = {tbr},
+	annote = {Logistic Softmax [UAI 2019]
+
+multitask classification for GP
+
+ 
+introduction 
+
+preivous work
+
+variational methods
+
+binary case just compute quadrature
+multiclass case: GPs are coupled ...
+
+
+
+
+this paper
+
+logistic softmax = softmax (gradual classification) + fast inference
+model conditionally conjugate
+
+
+
+ },
+	file = {Galy-Fajou et al. - 2019 - Multi-Class Gaussian Process Classification Made C.pdf:/Users/wpq/Zotero/storage/URMSCD86/Galy-Fajou et al. - 2019 - Multi-Class Gaussian Process Classification Made C.pdf:application/pdf}
+}
+
+@article{wenzelEfficientGaussianProcess2018,
+	title = {Efficient {Gaussian} {Process} {Classification} {Using} {Polya}-{Gamma} {Data} {Augmentation}},
+	url = {http://arxiv.org/abs/1802.06383},
+	abstract = {We propose a scalable stochastic variational approach to GP classification building on Polya-Gamma data augmentation and inducing points. Unlike former approaches, we obtain closed-form updates based on natural gradients that lead to efficient optimization. We evaluate the algorithm on real-world datasets containing up to 11 million data points and demonstrate that it is up to two orders of magnitude faster than the state-of-the-art while being competitive in terms of prediction performance.},
+	urldate = {2021-04-16},
+	journal = {arXiv:1802.06383 [cs, stat]},
+	author = {Wenzel, Florian and Galy-Fajou, Theo and Donner, Christan and Kloft, Marius and Opper, Manfred},
+	month = nov,
+	year = {2018},
+	note = {arXiv: 1802.06383},
+	keywords = {tbr},
+	annote = {multiclass GP with polya-Gamma augmentation
+ },
+	file = {Wenzel et al_2018_Efficient Gaussian Process Classification Using Polya-Gamma Data Augmentation.pdf:/Users/wpq/Dropbox (MIT)/zotero/Wenzel et al_2018_Efficient Gaussian Process Classification Using Polya-Gamma Data Augmentation.pdf:application/pdf}
+}
+
+@article{shiSparseOrthogonalVariational2020,
+	title = {Sparse {Orthogonal} {Variational} {Inference} for {Gaussian} {Processes}},
+	url = {http://arxiv.org/abs/1910.10596},
+	abstract = {We introduce a new interpretation of sparse variational approximations for Gaussian processes using inducing points, which can lead to more scalable algorithms than previous methods. It is based on decomposing a Gaussian process as a sum of two independent processes: one spanned by a finite basis of inducing points and the other capturing the remaining variation. We show that this formulation recovers existing approximations and at the same time allows to obtain tighter lower bounds on the marginal likelihood and new stochastic variational inference algorithms. We demonstrate the efficiency of these algorithms in several Gaussian process models ranging from standard regression to multi-class classification using (deep) convolutional Gaussian processes and report state-of-the-art results on CIFAR-10 among purely GP-based models.},
+	urldate = {2021-04-17},
+	journal = {arXiv:1910.10596 [cs, stat]},
+	author = {Shi, Jiaxin and Titsias, Michalis K. and Mnih, Andriy},
+	month = feb,
+	year = {2020},
+	note = {arXiv: 1910.10596},
+	keywords = {tbr},
+	annote = {[AISTATS 2020]
+
+sparse orthogonal VI for GP
+
+reinterpretation of SVGP ... faster !
+
+
+},
+	file = {Shi et al_2020_Sparse Orthogonal Variational Inference for Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Shi et al_2020_Sparse Orthogonal Variational Inference for Gaussian Processes.pdf:application/pdf}
+}
+
+@article{dutordoirBayesianImageClassification2020,
+	title = {Bayesian {Image} {Classiﬁcation} with {Deep} {Convolutional} {Gaussian} {Processes}},
+	abstract = {In decision-making systems, it is important to have classiﬁers that have calibrated uncertainties, with an optimisation objective that can be used for automated model selection and training. Gaussian processes (GPs) provide uncertainty estimates and a marginal likelihood objective, but their weak inductive biases lead to inferior accuracy. This has limited their applicability in certain tasks (e.g. image classiﬁcation). We propose a translationinsensitive convolutional kernel, which relaxes the translation invariance constraint imposed by previous convolutional GPs. We show how we can use the marginal likelihood to learn the degree of insensitivity. We also reformulate GP image-to-image convolutional mappings as multi-output GPs, leading to deep convolutional GPs. We show experimentally that our new kernel improves performance in both single-layer and deep models. We also demonstrate that our fully Bayesian approach improves on dropout-based Bayesian deep learning methods in terms of uncertainty and marginal likelihood estimates.},
+	language = {en},
+	author = {Dutordoir, Vincent and Artemev, Artem and Hensman, James},
+	year = {2020},
+	keywords = {tbr},
+	pages = {10},
+	annote = {Deep CGP for image classification [AISTATS 2020]},
+	file = {Dutordoir et al. - Bayesian Image Classiﬁcation with Deep Convolution.pdf:/Users/wpq/Zotero/storage/437WE6CZ/Dutordoir et al. - Bayesian Image Classiﬁcation with Deep Convolution.pdf:application/pdf}
+}
+
+@article{mallastoProbabilisticRiemannianSubmanifold2019,
+	title = {Probabilistic {Riemannian} submanifold learning with wrapped {Gaussian} process latent variable models},
+	url = {http://arxiv.org/abs/1805.09122},
+	abstract = {Latent variable models (LVMs) learn probabilistic models of data manifolds lying in an {\textbackslash}emph\{ambient\} Euclidean space. In a number of applications, a priori known spatial constraints can shrink the ambient space into a considerably smaller manifold. Additionally, in these applications the Euclidean geometry might induce a suboptimal similarity measure, which could be improved by choosing a different metric. Euclidean models ignore such information and assign probability mass to data points that can never appear as data, and vastly different likelihoods to points that are similar under the desired metric. We propose the wrapped Gaussian process latent variable model (WGPLVM), that extends Gaussian process latent variable models to take values strictly on a given ambient Riemannian manifold, making the model blind to impossible data points. This allows non-linear, probabilistic inference of low-dimensional Riemannian submanifolds from data. Our evaluation on diverse datasets show that we improve performance on several tasks, including encoding, visualization and uncertainty quantification.},
+	urldate = {2021-04-21},
+	journal = {arXiv:1805.09122 [cs, stat]},
+	author = {Mallasto, Anton and Hauberg, Søren and Feragen, Aasa},
+	month = feb,
+	year = {2019},
+	note = {arXiv: 1805.09122},
+	keywords = {tbr},
+	annote = {GP on Riemaniann manifold [AISTATS 2019]},
+	file = {Mallasto et al_2019_Probabilistic Riemannian submanifold learning with wrapped Gaussian process latent variable models.pdf:/Users/wpq/Dropbox (MIT)/zotero/Mallasto et al_2019_Probabilistic Riemannian submanifold learning with wrapped Gaussian process latent variable models.pdf:application/pdf}
+}
+
+@inproceedings{mallastoWrappedGaussianProcess2018,
+	address = {Salt Lake City, UT},
+	title = {Wrapped {Gaussian} {Process} {Regression} on {Riemannian} {Manifolds}},
+	isbn = {978-1-5386-6420-9},
+	url = {https://ieeexplore.ieee.org/document/8578683/},
+	doi = {10.1109/CVPR.2018.00585},
+	abstract = {Gaussian process (GP) regression is a powerful tool in non-parametric regression providing uncertainty estimates. However, it is limited to data in vector spaces. In ﬁelds such as shape analysis and diffusion tensor imaging, the data often lies on a manifold, making GP regression nonviable, as the resulting predictive distribution does not live in the correct geometric space. We tackle the problem by deﬁning wrapped Gaussian processes (WGPs) on Riemannian manifolds, using the probabilistic setting to generalize GP regression to the context of manifold-valued targets. The method is validated empirically on diffusion weighted imaging (DWI) data, directional data on the sphere and in the Kendall shape space, endorsing WGP regression as an efﬁcient and ﬂexible tool for manifold-valued regression.},
+	language = {en},
+	urldate = {2021-04-21},
+	booktitle = {2018 {IEEE}/{CVF} {Conference} on {Computer} {Vision} and {Pattern} {Recognition}},
+	publisher = {IEEE},
+	author = {Mallasto, Anton and Feragen, Aasa},
+	month = jun,
+	year = {2018},
+	keywords = {tbr},
+	pages = {5580--5588},
+	annote = {wrapped GP [CVPR 2018]
+
+GP where output is riemannian
+},
+	file = {Mallasto and Feragen - 2018 - Wrapped Gaussian Process Regression on Riemannian .pdf:/Users/wpq/Zotero/storage/QIXYXCGI/Mallasto and Feragen - 2018 - Wrapped Gaussian Process Regression on Riemannian .pdf:application/pdf}
+}
+
+@article{hernandez-lobatoRobustMultiClassGaussian2011,
+	title = {Robust {Multi}-{Class} {Gaussian} {Process} {Classification}},
+	abstract = {Multi-class Gaussian Process Classiﬁers (MGPCs) are often affected by overﬁtting problems when labeling errors occur far from the decision boundaries. To prevent this, we investigate a robust MGPC (RMGPC) which considers labeling errors independently of their distance to the decision boundaries. Expectation propagation is used for approximate inference. Experiments with several datasets in which noise is injected in the labels illustrate the beneﬁts of RMGPC. This method performs better than other Gaussian process alternatives based on considering latent Gaussian noise or heavy-tailed processes. When no noise is injected in the labels, RMGPC still performs equal or better than the other methods. Finally, we show how RMGPC can be used for successfully identifying data instances which are difﬁcult to classify correctly in practice.},
+	language = {en},
+	author = {Hernández-lobato, Daniel and Hernández-lobato, Jose M and Dupont, Pierre},
+	year = {2011},
+	keywords = {tbr},
+	pages = {9},
+	annote = {[Neurips 2011]},
+	file = {Hernandez-lobato et al_Robust Multi-Class Gaussian Process Classification.pdf:/Users/wpq/Dropbox (MIT)/zotero/Hernandez-lobato et al_Robust Multi-Class Gaussian Process Classification.pdf:application/pdf}
+}
+
+@article{borovitskiyMatErnGaussian2020,
+	title = {Mat{\textbackslash}'ern {Gaussian} processes on {Riemannian} manifolds},
+	url = {http://arxiv.org/abs/2006.10160},
+	abstract = {Gaussian processes are an effective model class for learning unknown functions, particularly in settings where accurately representing predictive uncertainty is of key importance. Motivated by applications in the physical sciences, the widely-used Mat{\textbackslash}'ern class of Gaussian processes has recently been generalized to model functions whose domains are Riemannian manifolds, by re-expressing said processes as solutions of stochastic partial differential equations. In this work, we propose techniques for computing the kernels of these processes on compact Riemannian manifolds via spectral theory of the Laplace-Beltrami operator in a fully constructive manner, thereby allowing them to be trained via standard scalable techniques such as inducing point methods. We also extend the generalization from the Mat{\textbackslash}'ern to the widely-used squared exponential Gaussian process. By allowing Riemannian Mat{\textbackslash}'ern Gaussian processes to be trained using well-understood techniques, our work enables their use in mini-batch, online, and non-conjugate settings, and makes them more accessible to machine learning practitioners.},
+	urldate = {2021-04-23},
+	journal = {arXiv:2006.10160 [cs, stat]},
+	author = {Borovitskiy, Viacheslav and Terenin, Alexander and Mostowsky, Peter and Deisenroth, Marc Peter},
+	month = oct,
+	year = {2020},
+	note = {arXiv: 2006.10160},
+	keywords = {tbr},
+	annote = {[Neurips 2020]
+
+GP where domain is riemannian
+},
+	file = {Borovitskiy et al_2020_Mat-'ern Gaussian processes on Riemannian manifolds.pdf:/Users/wpq/Dropbox (MIT)/zotero/Borovitskiy et al_2020_Mat-'ern Gaussian processes on Riemannian manifolds.pdf:application/pdf}
+}
+
+@article{lebanonInformationDiffusionKernels2002,
+	title = {Information {Diffusion} {Kernels}},
+	abstract = {A new family of kernels for statistical learning is introduced that exploits the geometric structure of statistical models. Based on the heat equation on the Riemannian manifold deﬁned by the Fisher information metric, information diffusion kernels generalize the Gaussian kernel of Euclidean space, and provide a natural way of combining generative statistical modeling with non-parametric discriminative learning. As a special case, the kernels give a new approach to applying kernel-based learning algorithms to discrete data. Bounds on covering numbers for the new kernels are proved using spectral theory in differential geometry, and experimental results are presented for text classiﬁcation.},
+	language = {en},
+	author = {Lebanon, Guy and Lafferty, John D},
+	year = {2002},
+	keywords = {tbr},
+	pages = {8},
+	annote = {[Neurips 2002]
+
+kernel over simplex !
+},
+	file = {Lebanon and Lafferty - Information Diffusion Kernels.pdf:/Users/wpq/Zotero/storage/W35GISFW/Lebanon and Lafferty - Information Diffusion Kernels.pdf:application/pdf}
+}
+
+@article{plateAccuracyInterpretabilityFlexible2000,
+	title = {Accuracy {Versus} {Interpretability} in {Flexible} {Modeling}: {Implementing} a {Tradeoff} {Using} {Gaussian} {Process} {Models}},
+	volume = {26},
+	shorttitle = {Accuracy {Versus} {Interpretability} in {Flexible} {Modeling}},
+	doi = {10.2333/bhmk.26.29},
+	abstract = {One of the widely acknowledged drawbacks of flexible statistical models is that they are often extremely difficult to interpret. However, if flexible models are constrained to be additive they are much easier to interpret, as each input can be considered independently. The problem with additive models is that they cannot provide an accurate model if the phenomenon being modeled is not additive. This paper proposes that a tradeoff between accuracy and additivity can be implemented easily in a particular type of flexible model: a Gaussian process model. One can build a series of Gaussian process models which begin with the completely flexible and are constrained to be more and more additive, and thus interpretable. Observations of how the test error and importance of interactions change as the model becomes more additivegive insightinto the importance and nature of interactions. Models in the series can also be interpreted graphically with a technique for visualizing the effects...},
+	journal = {Behaviormetrika},
+	author = {Plate, Tony},
+	month = aug,
+	year = {2000},
+	keywords = {good, read},
+	annote = {GP + interpretability
+ 
+ 
+ 
+me
+
+additivity
+
+actually current setup of sinfo ... considering 2nd order interaction of image kernel with findings ... maybe should add 1st order output of findings
+
+
+
+ 
+introduction 
+
+motivation
+
+flexible model hard to interpret, if constrained to be additive they are easier to interpret.
+
+lacking interaction makes them easier to interprete, e.g GAM (generalized additive model)
+
+
+
+
+this paper
+
+tradeoff between flexible (not additive) and interpretability
+
+
+covariance matrix back then
+
+linear + SE
+SE + sum of ind. SE over dims
+
+first term models order D interaction
+second term models all order 1 interactions!
+
+
+
+
+additive plots
+
+question: how function varies with each input dimensions.
+
+
+},
+	file = {Plate_2000_Accuracy Versus Interpretability in Flexible Modeling - Implementing a Tradeoff Using Gaussian Process Models.pdf:/Users/wpq/Dropbox (MIT)/zotero/Plate_2000_Accuracy Versus Interpretability in Flexible Modeling - Implementing a Tradeoff Using Gaussian Process Models.pdf:application/pdf}
+}
+
+@article{duvenaudAdditiveGaussianProcesses2011,
+	title = {Additive {Gaussian} {Processes}},
+	volume = {24},
+	url = {https://papers.nips.cc/paper/2011/hash/4c5bde74a8f110656874902f07378009-Abstract.html},
+	language = {en},
+	urldate = {2021-05-05},
+	journal = {Advances in Neural Information Processing Systems},
+	author = {Duvenaud, David K. and Nickisch, Hannes and Rasmussen, Carl},
+	year = {2011},
+	keywords = {tbr},
+	annote = {Additive GP [Neurips 2011]
+ 
+me
+
+plots might be helpful ... 
+
+subtract mean contribution from other dimensions first order terms has been subtracted.
+
+
+},
+	file = {Duvenaud et al_2011_Additive Gaussian Processes.pdf:/Users/wpq/Dropbox (MIT)/zotero/Duvenaud et al_2011_Additive Gaussian Processes.pdf:application/pdf}
+}
