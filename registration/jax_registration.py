@@ -83,13 +83,13 @@ def plt_scaled_colorbar_ax(ax):
     """ `fig.colorbar(im, cax=plt_scaled_colobar_ax(ax))` """
     from mpl_toolkits.axes_grid1 import make_axes_locatable
     divider = make_axes_locatable(ax)
-    cax = divider.append_axes("right", size="5%", pad=0.1)
+    cax = divider.append_axes("right", size="5%", pad=-0.1)
     return cax
 
 
 def plt_savefig(fig, save_path):
     fig.tight_layout()
-    fig.savefig(save_path, bbox_inches='tight', dpi=200)
+    fig.savefig(save_path, bbox_inches='tight', dpi=400)
 
 
 def line_get_segments(X, L):
@@ -164,7 +164,7 @@ def Hqv(q, v, k):
             
         Assumes q̇ same kernel across d=1,2,...,D
     """
-    K = k(X)
+    K = k(q)
     L = cholesky_jitter(K, jitter=5e-5)
     α = solve_triangular(L, v, lower=True)
     return .5*np.sum(np.square(α))
@@ -190,7 +190,6 @@ def HamiltonianStep(q, p, g, k, δt):
                p - δt*dq_Hqp(q,p,k),
                g + δt*k(g,q)@p]
     return q, p, g
-
 
 
 def HamiltonianCarrying(q, p, g, k, euler_steps, δt):
@@ -236,11 +235,26 @@ def p2v(k, x, p, xs):
 
 
 def mvn_zmtril_log_prob(L, x):
-    """Computes log probability for N(0,LLᵀ)"""
+    """Computes log probability for N(0,LLᵀ),
+    
+            Note for multiple `x` (d, m) with shared `L`,
+            computation of `mahan` is correct:
+
+            vec(y)ᵀ(I⊗K)vec(y) = vec(y)(I⊗inv(K))vec(y)
+                   = vec(y)(inv(K)y)
+                   = Σᵢ yᵢ (inv(K)y)ᵢ
+                   = tr( yᵀinv(K)y ) = tr( inv(K)yyᵀ)
+                   = tr( βᵀβ ) where β = (L\y) & K=LLᵀ
+                   = Σᵢ βᵢᵀβᵢ  where β = [β1, β2, ..., βm]
+
+            Also dimension of `x` in this case is d*m
+                x ~ N(vec(x), Im⊗LLᵀ)
+    """
+    d = x.size
     α = solve_triangular(L, x.reshape(L.shape[1],-1), lower=True)
     mahan = -.5*np.sum(np.square(α))
     lgdet = -np.sum(np.log(np.diag(L)))
-    const = -.5*L.shape[0]*np.log(2*np.pi)
+    const = -.5*d*np.log(2*np.pi)
     return mahan + const + lgdet
 
 

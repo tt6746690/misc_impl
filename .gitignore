@@ -27,6 +27,8 @@ logs/
 *.synctex.gz
 *.blg
 *.bcf
+*.lbl
+*.brf
 *.run.xml
 *.bbl
 *-blx.bib
