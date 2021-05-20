@@ -226,7 +226,7 @@ Diffeomorphic registration of shapes with unknown correspondence is an important
 
 % fill the hole: to show reader how/why the paper will fix these problems and deliver us into a better place. don't need a whirlwind summary of technical details, but need reader's convinced to keep reading. 
 
-We propose to extend optimal transport based diffeomorphic registration to probabilistic setting. Our method interprets the diffeomorphic transformation as a random variable, and estimates its parameters using variational inference. In particular, we find diffeomorphic maps that minimize the average Wasserstein distance between shapes. Naturally, the probabilistic formulation provides us with uncertainty estimates of both the transformation as well as the uncertainty of its effect on shapes. Hyperparameters such as the degree of smoothness of the transformation parameterizes the variational distribution, and thus can be optimized. However, the inference procedure requires repeated sampling of valid diffeomorphic transformations to approximate the average cost. To alleviate the computational burden, we explored links to sparse Gaussian Process, specifically interdomain inducing variables, as a way to alleviate this concern \cite{figueiras-vidalInterdomainGaussianProcesses2009a}.
+We propose to extend optimal transport based diffeomorphic registration to probabilistic setting. Our method interprets the diffeomorphic transformation as a random variable, and estimates its parameters using variational inference. In particular, we find diffeomorphic maps that minimize the average optimal transport distance between shapes. Naturally, the probabilistic formulation provides us with uncertainty estimates of both the transformation as well as the uncertainty of its effect on shapes. Hyperparameters such as the degree of smoothness of the transformation parameterizes the variational distribution, and thus can be optimized. However, the inference procedure requires repeated sampling of valid diffeomorphic transformations to approximate the average cost. To alleviate the computational burden, we explored links to sparse Gaussian Process, specifically interdomain inducing variables, as a way to alleviate this concern \cite{figueiras-vidalInterdomainGaussianProcesses2009a}.
 
 
 \section{Related Work}
@@ -242,7 +242,7 @@ The optimal transport problem give rise to a notion of distance between probabil
 
 \subsection{Probabilistic Registration}
 
-Many probabilistic registration methods on image data relie on latent variable framework, where an unknown transformation is applied to the source image to generate the target image, corrupted by iid Gaussian noise. Previous, Monte Carlo methods have been used to estimate transformation parameters \cite{risholmBayesianCharacterizationUncertainty2013,zhangBayesianEstimationRegularization2013}. Although asymptotically exact, sampling methods can be slow for estimating the high dimensional parameters of a diffeomorphism. A few follow ups proposed work-arounds by reducing the number of parameters using factor analysis \cite{risholmBayesianCharacterizationUncertainty2013} or with an economical representation in the Fourier domain \cite{wangRegistrationUncertaintyQuantification2019}. Alternatively, variational inference has been proposed as a more tractable alternative for inference \cite{wassermannProbabilisticDiffeomorphicRegistration2014,dalcaUnsupervisedLearningProbabilistic2019}. Although similar in formulation, we differ from \cite{wassermannProbabilisticDiffeomorphicRegistration2014} as we restrict ourselves to diffeomorphic registration of discrete representation of shapes with unknown correspondence. Theory from geodesic shooting implies that we do not need to model the Eulerian flow as the solution to some stochastic differential equation as proposed in \cite{wassermannProbabilisticDiffeomorphicRegistration2014}. It suffices to model the initial momentum as some Gaussian Process whereby to specify a random diffeomorphic transformations.
+Many probabilistic registration methods on image data rely on latent variable model, where an unknown transformation is applied to the source image to generate the target image, corrupted by some observation noise. Previously, Monte Carlo methods have been used to estimate transformation parameters \cite{risholmBayesianCharacterizationUncertainty2013,zhangBayesianEstimationRegularization2013}. Although asymptotically exact, sampling methods can be slow for estimating the high dimensional parameters of a diffeomorphism. A few follow ups suggests ways to reduce the number of parameters using factor analysis \cite{risholmBayesianCharacterizationUncertainty2013} or with an economical representation in the Fourier domain \cite{wangRegistrationUncertaintyQuantification2019}. Alternatively, variational inference has been proposed as a more tractable alternative for inference \cite{wassermannProbabilisticDiffeomorphicRegistration2014,dalcaUnsupervisedLearningProbabilistic2019}. Although similar in formulation, we differ from \cite{wassermannProbabilisticDiffeomorphicRegistration2014} as we restrict ourselves to diffeomorphic registration of discrete representation of shapes with unknown correspondence. Theory from geodesic shooting implies that we do not need to model the Eulerian flow as the solution to some stochastic differential equation as proposed in \cite{wassermannProbabilisticDiffeomorphicRegistration2014}. It suffices to model the initial momentum as some Gaussian Process whereby to specify a random diffeomorphic transformations.
 
 % Descriptions of and citations to academic research papers and/or existing software products related to your work.  Here is an example of how to cite a paper~\cite{solomon-2016}; see \texttt{6838bibsample.bib} for bibliography entries.
 
@@ -259,7 +259,7 @@ Let $\Omega \subset\R^D$ be a low dimensional ambient space. We consider a repre
 % We follow the usual setup for registering unlabeled point sets using geodesic shooting \cite{vaillantStatisticsDiffeomorphismsTangent2004}. 
 
 
-The goal of diffeomorphic registration of point sets is to transform $x$ via a diffeomorphic mapping $\varphi$ such that the pushforward $\varphi_\sharp \alpha$ is close to $y$ according to some similarity metric $\sL(\varphi_\sharp \alpha, \beta)$. We consider a space of velocity fields $V$ as a RKHS over $\Omega$ characterized by kernel $\overline{k}:\Omega\times\Omega\to\R^{D\times D}$. For purposes of computation, we consider an equivalent scalar-valued kernel $k:\Omega\times[D]\times\Omega\times[D] \to\R$ where $\overline{k}(x,x')_{dd'} = k((x,d),(x',d'))$, inducing an RKHS that is isomorphic to $V$. A diffeomorphism can be constructed via flows , i.e. solutions to an ODE problem $\varphi_t$, $\dot{\varphi}_t = v_t\circ \varphi_t, \varphi_0 = \text{Id}$, of a sufficiently smooth velocity field, i.e. $\int_0^1 \norm{v_t}_V\, dt<\infty$. The large deformation registration problem solves for a time-varying velocity field $v_t\in V$ matching the two shapes,
+The goal of diffeomorphic registration of point sets is to transform $x$ via a diffeomorphic mapping $\varphi$ such that the pushforward $\varphi_\sharp \alpha$ is close to $y$ according to some similarity metric $\sL(\varphi_\sharp \alpha, \beta)$. We consider a space of velocity fields $V$ as a RKHS over $\Omega$ characterized by kernel $\overline{k}:\Omega\times\Omega\to\R^{D\times D}$. For purposes of computation, we consider an equivalent scalar-valued kernel $k:\Omega\times[D]\times\Omega\times[D] \to\R$ where $\overline{k}(x,x')_{dd'} = k((x,d),(x',d'))$, inducing an RKHS that is isomorphic to $V$. A diffeomorphism can be constructed via flows, i.e. solutions to an ODE problem $\varphi_t$ where $\dot{\varphi}_t = v_t\circ \varphi_t, \varphi_0 = \text{Id}$, of a sufficiently smooth velocity field, i.e. $\int_0^1 \norm{v_t}_V\, dt<\infty$. The large deformation registration problem solves for a time-varying velocity field $v_t\in V$ matching the two shapes,
 \begin{align}
     \min_{v_t:t\in [0,1]} \,
         &\frac{1}{2} \int_0^1 \norm{v_t}_V^2 \, dt + \sL(\varphi_\sharp \alpha, \beta)
@@ -290,17 +290,17 @@ where $p_t^i \in \R^{D}$ is the momenta associated with point $q_t^i$. As a side
         = - \frac{\partial \sH(q_t,p_t)}{\partial q}
     \label{eq:geodesic_equations}
 \end{align}
-with initial condition $q_0 := x, p_0 := m$, and that the Hamiltonian 
+with initial condition $q_0 := x, p_0$, and that the Hamiltonian 
 \begin{align}
     \sH(q_t,p_t) = \frac{1}{2}\inner{p_t}{K(q_t,q_t)p_t} = \frac{1}{2}\inner{K(q_t,q_t)^{-1}\dot{q}_t}{\dot{q}_t}  
 \end{align}
-is preseved by the flow, $\sH(q_0,p_0)  = \sH(q_t,p_t)$ for all $t\in [0,1]$ (see Figure~(\ref{fig:plt_shooting})). Therefore, $\int_0^1 \sH(q_t,p_t) \, dt = \sH(q_0, p_0)$. Equvialent to (\ref{eq:optimization_lddmm_landmark_lagrangian}), we optimize over the initial \textit{shooting momentum} $m$,
+is preseved by the flow, $\sH(q_0,p_0)  = \sH(q_t,p_t)$ for all $t\in [0,1]$ (see Figure~(\ref{fig:plt_shooting})). Therefore, $\int_0^1 \sH(q_t,p_t) \, dt = \sH(q_0, p_0)$. Equvialent to (\ref{eq:optimization_lddmm_landmark_lagrangian}), we optimize over the initial \textit{shooting momentum} $p_0$,
 \begin{align}
-    \min_{m\in\R^{ND}} \,
-        \frac{1}{2} \inner{ m }{ K(x,x) m } + \sL(\varphi_\sharp \alpha, \beta)
+    \min_{p_0\in\R^{ND}} \,
+        \frac{1}{2} \inner{ p_0 }{ K(x,x) p_0 } + \sL(\varphi_\sharp \alpha, \beta)
     \label{eq:optimization_lddmm_landmark_momentum}
 \end{align}
-where $\varphi_\sharp\alpha = \sum_{i=1}^N a_i' q_1^i$ and $a_i'$ is the updated weights as a function of updated vertex positions and unchanged topology. Optimization involves a forward integration of $(q_t,p_t)$ via (\ref{eq:geodesic_equations}) to get transformed particles $q_1$, compute the gradient of objective (\ref{eq:optimization_lddmm_landmark_momentum}) with respect to initial momentum, and do gradient update iteratively. 
+where $\varphi_\sharp\alpha = \sum_{i=1}^N a_i' q_1^i$ and $a_i'$ is the updated weights as a function of updated vertex positions and unchanged topology. Important to note is $\varphi_\sharp\alpha$ is a specified entirely by $x,p_0$. Typically, gradient based methods for solving (\ref{eq:optimization_lddmm_landmark_momentum}) involves a forward integration of $(q_t,p_t)$ via (\ref{eq:geodesic_equations}) to obtain the pushforward measuer, compute the gradient of objective (\ref{eq:optimization_lddmm_landmark_momentum}) with respect to initial momentum, and do gradient updates iteratively.
 
 
 \begin{center} 
@@ -315,15 +315,15 @@ where $\varphi_\sharp\alpha = \sum_{i=1}^N a_i' q_1^i$ and $a_i'$ is the updated
 
 \subsection{Unbalanced Regularized Optimal Transport}
 
-Define $c:\Omega^2 \to \R$ be cost of mass transportation. The entropic regularized unbalanced optimal transport problem seeks a soft coupling between measures $\mu,\nu$ supported over $\Omega$ that minimizes expected cost; The optimal value of which defines a measure of similarity between $\mu$ and $\nu$,
+Define $c:\Omega^2 \to \R$ be cost of mass transportation, hereafter we let $c$ be the squared Euclidean distance. The entropic regularized unbalanced optimal transport problem seeks a soft coupling between measures $\mu,\nu$ supported over $\Omega$ that minimizes expected cost; The optimal value of which defines a measure of similarity between $\mu$ and $\nu$,
 \begin{align}
-    W_{\epsilon,\rho}(\mu,\nu)
+    \sW_{\epsilon,\rho}(\mu,\nu)
         := \min_{\pi\in\sP(\Omega^2)}\,
             \iint_{\Omega^2} c(x,y)\, d\pi(x,y) + \epsilon \text{KL}(\pi \Vert \mu\otimes\nu) \\
                 \quad\quad+\rho\left( \text{KL}(P^1_\sharp \pi \Vert \mu) + \text{KL}(P^2_\sharp \pi \Vert \nu) \right)
-    \label{eq:ot_general_measures}
+    \label{eq:ot_wasserstein_regularized_unbalanced}
 \end{align}
-$P^i_\sharp$ is the projection to the $i$-th marginal. The correspondence of the optimal transport plan $\pi$ can be made sharper by using a smaller $\epsilon >0$. If the two shapes vary in scale and size, we can relax the mass conservation constraints by using a smaller $\rho>0$. For discrete measures, generalized Sinkhorn's algorithm provides efficient and stable numerical methods to compute $W_{\epsilon,\rho}(\alpha,\beta)$ \cite{chizatScalingAlgorithmsUnbalanced2017,feydyInterpolatingOptimalTransport2018}. The idea is to do coordinate ascent over the dual variable $u\in\R^N,v\in\R^M$,
+$P^i_\sharp$ is the projection to the $i$-th marginal. The correspondence of the optimal transport plan $\pi$ can be made sharper by using a smaller $\epsilon >0$. If the two shapes vary in scale, we can relax the mass conservation constraints by using a smaller $\rho>0$. For discrete measures, generalized Sinkhorn's algorithm computes $W_{\epsilon,\rho}(\alpha,\beta)$ efficiently and in a numerically stable manner \cite{chizatScalingAlgorithmsUnbalanced2017,feydyInterpolatingOptimalTransport2018}. The idea is to do coordinate ascent over the dual variables $u\in\R^N,v\in\R^M$,
 \begin{align}
     u^{(\ell+1)}
         &\leftarrow \lambda\epsilon \left( \log(a) - \log(Ke^{v^{(\ell)}/\epsilon}) \right) \\
@@ -331,16 +331,77 @@ $P^i_\sharp$ is the projection to the $i$-th marginal. The correspondence of the
         &\leftarrow \lambda\epsilon \left( \log(b) - \log(Ke^{u^{(\ell+1)}/\epsilon}) \right)
     \label{eq:sinkhorn_dual_ascent}
 \end{align}
-where $\lambda = \frac{\rho}{\rho+\epsilon}$. This algorithm, unlike the original matrix scaling algorithm, is numerically stable due to computation in log domain. A remarkable property is that gradients of $W_{\epsilon,\rho}(\alpha,\beta)$ with respect to $x_i,a_i$ is readily computable, prompting easy integration into existing gradient based methods for registration problems \cite{feydyOptimalTransportDiffeomorphic2017a}. 
+where $\lambda = \frac{\rho}{\rho+\epsilon}$ and $K\in\R^{N\times M}$ defined as $\pb{K}_{ij} = e^{-c(x_i,y_j)/\epsilon}$ is the Gibbs kernel. This algorithm, unlike the original matrix scaling algorithm, is numerically stable due to computation in log domain. A desirable property of optimal transport problem is that gradients of $W_{\epsilon,\rho}(\alpha,\beta)$ with respect to $x_i,a_i$ is readily computable, prompting easy integration into existing gradient based methods for registration problems \cite{feydyOptimalTransportDiffeomorphic2017a}. 
 
 
 \section{Approach}\label{sec:approach}
 
-\subsection{Probabilistic Diffeomorphic Registration}
+\subsection{Registration as MAP Inference}
+
+Diffeomorphic registration with geodesic shooting can be treated as a maximum a posteriori problem of initial velocity fields $v$ with a fixed Guassian process prior $v \sim \sG\sP(0,k)$ and a likelihood specified by the data matching term $\sW_{\epsilon,\rho}$,
+\begin{align}
+    P(v\mid x)
+        &\propto \exp(-\frac{1}{2} x^TK(x,x)^{-1}x) \\
+    P(y\mid x, v)
+        &\propto \exp(-\sW_{\epsilon,\rho}(\varphi_\sharp \alpha, \beta))
+    \label{eq:registration_prior_and_likelihood}
+\end{align}
+maximization of log posterior $\max_v \log P(v\mid x,y)$ recovers (\ref{eq:optimization_lddmm_landmark_momentum}). Suppose we obtained the optimal plan $\pi^*$, the likelihood is an isotropic multivariate normal over a weighted combination of $y$ centered at $q_1$ with variance determined by $\pi^*$.
+\begin{align}
+    \sW_{\epsilon,\rho}(\varphi_\sharp\alpha,\beta)
+        &= \sum_{i=1}^N \sum_{j=1}^M \norm{q_1^i - y^j}_2^2 \pi_{ij}^* + \text{const} \\
+        &= \sum_{i=1}^N \frac{1}{\sigma^2_i} \norm{q_1^i - \overline{y}^i}_2^2 + \text{const} \\
+        &= (\overline{y} - q_1)^T \Sigma^{-1} (\overline{y} - q_1) + \text{const}
+\end{align}
+where $\sigma_i^2 = 1/(\sum_{j}\pi_{ij}^*)$, $\Sigma = I_D \otimes \diag(\sigma_1^2,\cdots,\sigma_N^2)$ are variances and $\overline{y}_i = \sum_j \sigma_i \pi_{ij}^* y^j$ is a weighted combination of $y$ with weights summing to 1, which we group together as $\overline{y} = (\overline{y}^1,\cdots,\overline{y}^N) \in \R^{ND}$. Intuitively, $\overline{y}^i$ is matched to $q_1^i$ by the transport plan, albeit at a synthetic location. The likelihood of observing $\overline{y}^i$ is large if it is close to $q_1^i$ in the Euclidean sense and if the total mass coming from $q_1^i$, i.e. $\sum_{j}\pi_{ij}^*$, is small, indicating a larger uncertainty as to where transport plan might assign the point to. Of course, the behavior of the transport plan is affected by $\epsilon,\rho$. Not entirely sure, but this might suggest inclusion of hyperparameters $\epsilon,\rho$ as optimziation variables of the likelihood model, akin to how we might want to optimize for the variance of an iid Gaussian noise model for registering images.
+
+\subsection{Approximate Inference}
+
+Let $y$ be observed variables, initial velocity field $v$ as latent variables. We are interested in the posterior density,
+\begin{align}
+    P(v\mid x, y) \propto P(v\mid x) P(y\mid v,x)
+\end{align}
+where prior and likelihood is as defined in (\ref{eq:registration_prior_and_likelihood}). We define variational distribution over $v$ indirectly using the initial momentum $p_0$.
+\begin{align}
+    Q(p_0)
+        &= \sN(p_0\mid \mu_p, \Sigma_p) \\
+    Q(v\mid x)
+        &= \sN(v\mid K(x,x)\mu_p, K(x,x) \Sigma_p K(x,x)^T)
+\end{align}
+We parameterize the initial momentum instead of velocity because we do not need to invert the kernel matrix $K(x,x)$ whenever we want to generate random diffeomorphic maps at test time. Additionally, this approach works better in practice for the limited experiments we have tried. Here $\pc{\mu_p, \Sigma_d}$ as well as hyperparameter for the kernel $k$ is the set of variational parameters $\theta$. Inference relegates to finding an approximate posterior $Q(v)$ that is close to the true posterior using optimization, $\min_{\theta} \text{KL}(Q(v)\Vert P(v\mid x, y))$. As usually done in variational inference, we optimize the evidence lower bound,
+\begin{align}
+    \min_{\theta}\,
+        \text{KL}(Q(v\mid x)\Vert P(v\mid x)) + \int \sW_{\epsilon,\rho}(\varphi_\sharp\alpha,\beta)\, dQ(p_0)
+    \label{eq:opt_elbo}
+\end{align}
+The first term can be computed in $\sO(N^3)$ time due to need to do Cholesky factorization. The second term is not a semi-discrete problem, but an upper bound of it is,
+\begin{align}
+    \int \sW_{\epsilon,\rho}(\varphi_\sharp\alpha,\beta)\, dQ(p_0)
+        \leq \sW_{\epsilon,\rho}( q_1 ,\beta )
+\end{align}
+if we think of $q_1$ as a deterministic function of $(p_0,\alpha)$ as specified by the Geodesic flow in (\ref{eq:geodesic_equations}), and so is a non-discrete random variable. Note this inequality for unregularized and balanced optimal transport problem, since given fixed $\varphi$, $\int \pi(x,y)\, d\varphi_\sharp\alpha(x) = \int \pi(\varphi(x),y) \, d\alpha(x)$.
+
+
+% can be approximated via Monte Carlo samples, naively doing so requires solving an optimal transport problem many times. To alleviate this problem, we upper bound the expected data matching term with an average cost. 
 
 
 
 
+% $m \sim \sN(\mu,\Sigma)$ parameterized by $\mu\in\R^{ND}, \Sigma = I_D\otimes \diag{d}$,
+
+
+
+
+
+
+% $m\in \sN(\mu,\Sigma)$, 
+
+
+% then diffeomorphic registration problem (\ref{eq:optimization_lddmm_landmark_momentum}) can be viewed as maximum a posteri problem, 
+
+% Diffeomorphic registration can be formulated as maximum a posteriori problem,
+
+ 
 
 
 
@@ -355,6 +416,8 @@ where $\lambda = \frac{\rho}{\rho+\epsilon}$. This algorithm, unlike the origina
 
 Figures/tables illustrating the results of your work, as well as text interpreting these results. \cite{peyreComputationalOptimalTransport2020},
 
+\newpage
+\newpage
 
 \bibliographystyle{eg-alpha-doi}
 \bibliography{optimal_transport,registration,GP}
