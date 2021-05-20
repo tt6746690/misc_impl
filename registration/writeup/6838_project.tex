@@ -233,33 +233,36 @@ We propose to extend optimal transport based diffeomorphic registration to proba
 
 \subsection{Diffeomorphic Registration}
 
-The large deformation registration of landmarks (point sets) and images as a variational problem that solves for a smooth time-varying velocity field that matches the two objects according to some measure of similarity \cite{joshiLandmarkMatchingLarge2000,begComputingLargeDeformation2005}. \cite{millerGeodesicShootingComputational2006,vialardDiffeomorphic3DImage2012} makes connection to optimal control, and showed that large deformation diffeormorphisms obeys conservation of momentum, and that points/images evolve according to a set of Geodesic Equations completely determined by its initial momentum. This observation prompted the development of \textit{geodesic shooting} methods that optimizes for initial momentum for point sets and meshes \cite{vaillantStatisticsDiffeomorphismsTangent2004,allassonniereGeodesicShootingDiffeomorphic2005} and later extended to images \cite{vialardDiffeomorphic3DImage2012}. We relie on geodesic shooting methods in our formulation.
+The large deformation registration of landmarks (point sets) and images as a variational problem that solves for a smooth time-varying velocity field that matches the two objects according to some measure of similarity \cite{joshiLandmarkMatchingLarge2000,begComputingLargeDeformation2005}. \cite{millerGeodesicShootingComputational2006,vialardDiffeomorphic3DImage2012} makes connection to optimal control, and showed that large deformation diffeormorphisms obeys conservation of momentum, and that points/images evolve according to a set of Geodesic Equations completely determined by its initial momentum. This observation prompted the development of geodesic shooting methods that optimizes for initial momentum for point sets and meshes \cite{vaillantStatisticsDiffeomorphismsTangent2004,allassonniereGeodesicShootingDiffeomorphic2005} and later extended to images \cite{vialardDiffeomorphic3DImage2012}. In our formulation, we represent a random diffeomorphic map as a pushforward of initial momentum, parameterized by some easy-to-work-with distribution.
+
+\subsection{Optimal Transport}
+
+The optimal transport problem give rise to a notion of distance between probability distributions. Intuitively, it measures the amount of mass needed to be displaced from one measure to another. Computation of such distance is useful in numerous graphics \cite{degoesOptimalTransportApproach2011,degoesBlueNoiseOptimal2012,solomonConvolutionalWassersteinDistances2015} and learning \cite{frognerLearningWassersteinLoss2015, janatiSpatioTemporalAlignmentsOptimal2020} applications. Developments in numerical methods in computing and differentiating through the optimal transport distance make for easier integration to a larger system \cite{cuturiSinkhornDistancesLightspeed2013,altschulerNearlinearTimeApproximation2018,genevayLearningGenerativeModels2018,schmitzerStabilizedSparseScaling2019}. A series of work \cite{feydyOptimalTransportDiffeomorphic2017a,feydyFastScalableOptimal2019} utilize unbalanced optimal transport distance to register shapes with possibly different mass. The motivation is to combine the elastic properties of diffeomorphic registration beneficial for medical data with a cost that is sensitive to both local and global shape features. We extend their methods to probabilistic settings.
 
 
-\subsection{Registration Uncertainty}
+\subsection{Probabilistic Registration}
 
-
-
-
-
+Many probabilistic registration methods on image data relie on latent variable framework, where an unknown transformation is applied to the source image to generate the target image, corrupted by iid Gaussian noise. Previous, Monte Carlo methods have been used to estimate transformation parameters \cite{risholmBayesianCharacterizationUncertainty2013,zhangBayesianEstimationRegularization2013}. Although asymptotically exact, sampling methods can be slow for estimating the high dimensional parameters of a diffeomorphism. A few follow ups proposed work-arounds by reducing the number of parameters using factor analysis \cite{risholmBayesianCharacterizationUncertainty2013} or with an economical representation in the Fourier domain \cite{wangRegistrationUncertaintyQuantification2019}. Alternatively, variational inference has been proposed as a more tractable alternative for inference \cite{wassermannProbabilisticDiffeomorphicRegistration2014,dalcaUnsupervisedLearningProbabilistic2019}. Although similar in formulation, we differ from \cite{wassermannProbabilisticDiffeomorphicRegistration2014} as we restrict ourselves to diffeomorphic registration of discrete representation of shapes with unknown correspondence. Theory from geodesic shooting implies that we do not need to model the Eulerian flow as the solution to some stochastic differential equation as proposed in \cite{wassermannProbabilisticDiffeomorphicRegistration2014}. It suffices to model the initial momentum as some Gaussian Process whereby to specify a random diffeomorphic transformations.
 
 % Descriptions of and citations to academic research papers and/or existing software products related to your work.  Here is an example of how to cite a paper~\cite{solomon-2016}; see \texttt{6838bibsample.bib} for bibliography entries.
 
 
-\section{Technical Approach}\label{sec:technical_approach}
+\section{Preliminaries}\label{sec:preliminaries}
+
+
+\subsection{Shape as Measures}
+
+Let $\Omega \subset\R^D$ be a low dimensional ambient space. We consider a representation of shapes as discrete measures $\alpha = \sum_{i=1}^N a_i \delta_{x_i}, \beta = \sum_{j=1}^M b_i \delta_{y_j}$ where $a_i,b_j\in\R_+$ encodes some local statistics of shape, e.g. per-vertex length for curves or per-vertex area for surfaces, and $x := (x^1,\cdots,x^n)\subset \R^{N\times D}$, $y := (y^1,\cdots,y^n)\subset\R^{M\times D}$ are source and target points respectively. 
 
 
 \subsection{Diffeomorphic Registration}
 % We follow the usual setup for registering unlabeled point sets using geodesic shooting \cite{vaillantStatisticsDiffeomorphismsTangent2004}. 
 
 
-Let $\Omega \subset\R^D$ be a low dimensional ambient space. Let $x := (x^1,\cdots,x^n)\subset \R^{N\times D}$, $y := (y^1,\cdots,y^n)\subset\Omega^{N\times D}$ be source and target points respectively. The goal of diffeomorphic registration of point sets is to transform $x$ via a diffeomorphic mapping $\varphi$ s.t. $\varphi(x)$ is close to $y$ according to some similarity metric $\sL(\varphi(x),y)$.
-
-
-Let the space of smooth velocity fields $V$ as a rkhs over $\Omega$ characterized by kernel $\overline{k}:\Omega\times\Omega\to\R^{D\times D}$ satisfying vector-valued reproducing property $\inner{\overline{k}(x,\cdot)y}{v}_{V} = \inner{v(x)}{y}_{\R^D}$ for all $y\in\R^D, v\in V$. For our purposes, we consider an equivalent scalar-valued rkhs with kernel $k:\Omega\times[D]\times\Omega\times[D] \to\R$ where $\overline{k}(x,x')_{dd'} = k((x,d),(x',d'))$. A diffeomorphism can be constructed via flows , i.e. solutions to an ODE problem $\varphi_t$, $\dot{\varphi}_t = v_t\circ \varphi_t, \varphi_0 = \text{Id}$, of a sufficiently smooth velocity field, i.e. $\int_0^1 \norm{v_t}_V\, dt<\infty$. The large deformation registration problem solves for a time-varying velocity field $v_t\in V$ matching $x$ to $y$.
+The goal of diffeomorphic registration of point sets is to transform $x$ via a diffeomorphic mapping $\varphi$ such that the pushforward $\varphi_\sharp \alpha$ is close to $y$ according to some similarity metric $\sL(\varphi_\sharp \alpha, \beta)$. We consider a space of velocity fields $V$ as a RKHS over $\Omega$ characterized by kernel $\overline{k}:\Omega\times\Omega\to\R^{D\times D}$. For purposes of computation, we consider an equivalent scalar-valued kernel $k:\Omega\times[D]\times\Omega\times[D] \to\R$ where $\overline{k}(x,x')_{dd'} = k((x,d),(x',d'))$, inducing an RKHS that is isomorphic to $V$. A diffeomorphism can be constructed via flows , i.e. solutions to an ODE problem $\varphi_t$, $\dot{\varphi}_t = v_t\circ \varphi_t, \varphi_0 = \text{Id}$, of a sufficiently smooth velocity field, i.e. $\int_0^1 \norm{v_t}_V\, dt<\infty$. The large deformation registration problem solves for a time-varying velocity field $v_t\in V$ matching the two shapes,
 \begin{align}
     \min_{v_t:t\in [0,1]} \,
-        &\frac{1}{2} \int_0^1 \norm{v_t}_V^2 \, dt + \sL(\varphi(x),y)
+        &\frac{1}{2} \int_0^1 \norm{v_t}_V^2 \, dt + \sL(\varphi_\sharp \alpha, \beta)
 \end{align}
 
 \subsection{Geodesic Shooting}
@@ -267,7 +270,8 @@ Let the space of smooth velocity fields $V$ as a rkhs over $\Omega$ characterize
 Let $q_t^i = \varphi_t(x^i) \in \R^D$ be application of transformation $\varphi_t$ to point $x^i$. Denote $q_t = (q_t^1, \cdots, q_t^N) \in \R^{ND}$ as action of $\varphi_t$ to a set of points and $K(q_t,q_t) \in \R^{ND\times ND}$ be kernel matrix for vectorized velocity vector field at $q_t$. \cite{joshiLandmarkMatchingLarge2000} argues for a Lagrangian view of previous Eulerian problem - it suffices to solve for the flow velocity $\dot{q}_t$ of particles,
 \begin{align}
     \min_{\dot{q}_t:t\in [0,1]}
-        &\frac{1}{2} \int_0^1 \inner{\dot{q}_t}{K(q_t,q_t)^{-1}\dot{q}_t} \, dt + \sL(\varphi(x),y)
+        &\frac{1}{2} \int_0^1 \inner{\dot{q}_t}{K(q_t,q_t)^{-1}\dot{q}_t} \, dt + \sL(\varphi_\sharp \alpha, \beta)
+    \label{eq:optimization_lddmm_landmark_lagrangian}
 \end{align}
 and that the resulting flow velocity in the Eulerian coordinates $\Omega$ can be interpolated from $\dot{q}_t$,
 \begin{align}
@@ -277,7 +281,7 @@ and that the resulting flow velocity in the Eulerian coordinates $\Omega$ can be
     p_t
         = K(q_t, q_t)^{-1} \dot{q}_t
 \end{align}
-where $p_t^i \in \R^{D}$ is the momenta associated with point $q_t^i$. As a side note, this interpolation is akin to computing posterior mean of a gaussian process regression of velocity fields, i.e. $v_t(x) = K(x,q_t) K(q_t,q_t)^{-1} \dot{q}_t$. Note the integrand of rkhs norm can be viewed as Lagrangian of of a system of ND particles. \cite{millerGeodesicShootingComputational2006} argues the dynamics of these particles in canonical coordinates $(q_t,p_t)$ follows the Geodesic equations
+where $p_t^i \in \R^{D}$ is the momenta associated with point $q_t^i$. As a side note, this interpolation is akin to computing posterior mean of a gaussian process regression of velocity fields, i.e. $v_t(x) = K(x,q_t) K(q_t,q_t)^{-1} \dot{q}_t$. Note the integrand of RKHS norm can be viewed as Lagrangian of of a system of ND particles. \cite{millerGeodesicShootingComputational2006} argues the dynamics of these particles in canonical coordinates $(q_t,p_t)$ follows the Geodesic equations
 \begin{align}
     \dot{q}_t
         = \frac{\partial \sH(q_t,p_t)}{\partial p}
@@ -286,17 +290,17 @@ where $p_t^i \in \R^{D}$ is the momenta associated with point $q_t^i$. As a side
         = - \frac{\partial \sH(q_t,p_t)}{\partial q}
     \label{eq:geodesic_equations}
 \end{align}
-with initial condition $q_0 = x, p_0$, and that the Hamiltonian 
+with initial condition $q_0 := x, p_0 := m$, and that the Hamiltonian 
 \begin{align}
     \sH(q_t,p_t) = \frac{1}{2}\inner{p_t}{K(q_t,q_t)p_t} = \frac{1}{2}\inner{K(q_t,q_t)^{-1}\dot{q}_t}{\dot{q}_t}  
 \end{align}
-is preseved by the flow, $\sH(q_0,p_0)  = \sH(q_t,p_t)$ for all $t\in [0,1]$ (see Figure~(\ref{fig:plt_shooting})). Therefore, $\int_0^1 \sH(q_t,p_t) \, dt = \sH(q_0, p_0) = \frac{1}{2} \inner{ p_0 }{ K(q_0,q_0) p_0 }$. We arrive at a registration problem where we optimize over the initial \textit{shooting momentum} $p_0$,
+is preseved by the flow, $\sH(q_0,p_0)  = \sH(q_t,p_t)$ for all $t\in [0,1]$ (see Figure~(\ref{fig:plt_shooting})). Therefore, $\int_0^1 \sH(q_t,p_t) \, dt = \sH(q_0, p_0)$. Equvialent to (\ref{eq:optimization_lddmm_landmark_lagrangian}), we optimize over the initial \textit{shooting momentum} $m$,
 \begin{align}
-    \min_{p_0\in\R^{ND}} \,
-        \frac{1}{2} \inner{ p_0 }{ K(x,x) p_0 } + \sL(\varphi(x),y)
-    \label{eq:optimization_momentum_landmark}
+    \min_{m\in\R^{ND}} \,
+        \frac{1}{2} \inner{ m }{ K(x,x) m } + \sL(\varphi_\sharp \alpha, \beta)
+    \label{eq:optimization_lddmm_landmark_momentum}
 \end{align}
-where $\varphi = q_1 \in \R^{ND}$. Optimization involves a forward integration of $(q_t,p_t)$ via (\ref{eq:geodesic_equations}) to get transformed particles $q_1$, compute the gradient of objective (\ref{eq:optimization_momentum_landmark}) with respect to initial momentum, and do gradient update iteratively. 
+where $\varphi_\sharp\alpha = \sum_{i=1}^N a_i' q_1^i$ and $a_i'$ is the updated weights as a function of updated vertex positions and unchanged topology. Optimization involves a forward integration of $(q_t,p_t)$ via (\ref{eq:geodesic_equations}) to get transformed particles $q_1$, compute the gradient of objective (\ref{eq:optimization_lddmm_landmark_momentum}) with respect to initial momentum, and do gradient update iteratively. 
 
 
 \begin{center} 
@@ -305,115 +309,46 @@ where $\varphi = q_1 \in \R^{ND}$. Optimization involves a forward integration o
     \caption{Geodesic shooting with an Euler integrator with time step of $\delta t = .1$. The velocity field is represented using a radial basis kernel with $\sigma=.25$. We show trajectory of $q_t$ (red dots) with momentum $p_t$ (blue arrow) and interpolated velocity fields at grid points (black). We see Hamiltonian is approximately conserved!}
     \label{fig:plt_shooting}
 \end{figure} 
-\end{center} 
+\end{center}
 
+% $\alpha,\beta$ is not restricted to probability measures 
 
+\subsection{Unbalanced Regularized Optimal Transport}
 
-\subsection{Monge's and Kantorovich's formulation}
-
-Given $a,b \in \triangle^{n-1}$, where $\triangle^{n-1}$ is unit simplex. $\alpha = \sum_{i=1}^n a_i \delta_{x_i}, \beta = \sum_{j=1}^m b_j \delta_{y_i}$ are discrete measures. The optimal transport problem tries to find a map that associate each point $x_i$ to a single point $y_j$ such that masses are preserved. This corresponds to classical Monge's formulation of optimal transport
+Define $c:\Omega^2 \to \R$ be cost of mass transportation. The entropic regularized unbalanced optimal transport problem seeks a soft coupling between measures $\mu,\nu$ supported over $\Omega$ that minimizes expected cost; The optimal value of which defines a measure of similarity between $\mu$ and $\nu$,
 \begin{align}
-    \min_{T:\sX\to\sY: T_{\#}\alpha = \beta}\,
-        &\sum_{i=1}^n c(x_i, T(x_i))
+    W_{\epsilon,\rho}(\mu,\nu)
+        := \min_{\pi\in\sP(\Omega^2)}\,
+            \iint_{\Omega^2} c(x,y)\, d\pi(x,y) + \epsilon \text{KL}(\pi \Vert \mu\otimes\nu) \\
+                \quad\quad+\rho\left( \text{KL}(P^1_\sharp \pi \Vert \mu) + \text{KL}(P^2_\sharp \pi \Vert \nu) \right)
+    \label{eq:ot_general_measures}
 \end{align}
-
-
-
-where $c:\sX\times\sY \to\R$ is cost defined over support of measures, and that the constraints is simply that $T$ is constrained to be a pushforward from $\alpha$ to $\beta$. The problem with Monge's formulation is that the problem is combinatorial and nonconvex, so hard to solve. Kantorovich relax the deterministic nature of transport map, allowing mass at each source point split and be dispatched to multiple target points. This information is encoded in $P\in\R^{n\times m}_+$, where $P_{ij}$ describes amount of mass flowing from $x_i$ to $y_j$. The Kantorovich formulation of optimal transport for discrete measures is then
+$P^i_\sharp$ is the projection to the $i$-th marginal. The correspondence of the optimal transport plan $\pi$ can be made sharper by using a smaller $\epsilon >0$. If the two shapes vary in scale and size, we can relax the mass conservation constraints by using a smaller $\rho>0$. For discrete measures, generalized Sinkhorn's algorithm provides efficient and stable numerical methods to compute $W_{\epsilon,\rho}(\alpha,\beta)$ \cite{chizatScalingAlgorithmsUnbalanced2017,feydyInterpolatingOptimalTransport2018}. The idea is to do coordinate ascent over the dual variable $u\in\R^N,v\in\R^M$,
 \begin{align}
-    \min_{P\in\R^{n\times m}_+: P1_m = a,\, P^T1_n = b}\,
-        &\inner{C}{P}
-\end{align}
-where the constraints specifies the set of admissible transport map to be a coupling of marginals $\alpha,\beta$ and $C\in\R^{n\times m}$ is the cost matrix, i.e. $C_{ij} = c(x_i,y_j)$. The optimization problem is a linear program and hence can be easily solved using simplex algorithm. In addition, we can instead solve the dual problem, and because of zero duality gap, equivalently solves the primal problem,
-\begin{align}
-    \max_{f,g\in\R^n\times\R^m: f_i+g_j \leq C_{ij}}\,
-        &\inner{f}{a} + \inner{g}{b} 
-\end{align}
-where $f,g$ are called dual potential.
-
-\section{Entropic Regularization}
-
-Regularizing the original optimal transport problem brings computational and statistical benefits. In particular, the optimization problem can now be solved with fast matrix scaling algorithms that scales with strength of regularization. In addition, the sample efficiency for regularized problem is also superior. The entropy and KL divergence of coupling between two discrete measure is given by
-\begin{align}
-    H(P)
-        &= -\sum_{i,j} P_{ij}(\log(P_{ij})-1)
-        = - \inner{P}{\log P} + 1^TP1 \\
-    \text{KL}(P\Vert K)
-        &= \sum_{i,j} P_{ij} \log \frac{P_{ij}}{K_{ij}} - P_{ij} + K_{ij}
-        = \inner{P}{\log(P\oslash K)} + 1^T(K-P)1
-\end{align}
-where taking logarithm and subtraction are elementwise operations. The entropic regularized problem
-\begin{align}
-    \min_{P\in\R^{n\times m}_+:P1_m=a,P^T1_n=b}\,
-        &\inner{P}{C} - \epsilon H(P)
-    \label{eq:opt_entropic_regularized_ot}
-\end{align}
-We can interpret primal objective as the information projection of the Gibbs kernel $K\in\R^{n\times m}$ where $K_{ij}=e^{-\frac{C_{ij}}{\epsilon}}$ onto the admissible couplings $U(a,b)=\pc{P\in\R^{n\times m}_+\mid P1_m=a,\, P^T1_n=b}$.
-\begin{align}
-    \inner{P}{C} + \epsilon\inner{P}{\log P} - \epsilon 1^T P 1
-        = \epsilon \inner{P}{\log\left(P \oslash e^{-C/\epsilon} \right)} - \epsilon 1^TP1 + \epsilon 1^Te^{-C/\epsilon}1
-        = \epsilon \text{KL}(P\Vert K)
-\end{align}
-
-\subsection{Sinkhorn's Algorithm}
-
-We can solve regularized optimal transport problem with Sinkhorn algorithm \cite{cuturiSinkhornDistancesLightspeed2013}. The basic idea is to write the 1st order optimality condition for the primal variables for the Lagrangian,
-\begin{align}
-    \sL(P,f,g)
-        &= \inner{P}{C} - \epsilon H(P) - \inner{f}{P1_m-a}- \inner{g}{P^T1_n-b} \\
-    \partial \sL(P,f,g)/\partial P_{ij}
-        &= C_{ij} + \epsilon \log(P_{ij}) - f_i - g_j = 0
-        \quad\Rightarrow\quad
-        P_{ij} = e^{(-C_{ij}+f_i+g_j)/\epsilon}
-\end{align}
-
-% Note optimal $P$ can be written as scaling of Gibbs kernel row-wise by $u=e^{f/\epsilon}$ and column-wise by $v=e^{g/\epsilon}$, i.e. $P=\diag(u)K \diag(v)$. Substitute expression for $P$ into marginal constraints, get $a = \diag(u) K \diag(v) 1_m = u\odot (Kv)$ and $b = v\odot (K^T u)$. The Sinkhorn's algorithm updates $u,v$ alternatingly
-\begin{align}
-    u^{(\ell+1)} 
-        \leftarrow a \oslash (Kv^{(\ell)}) 
-    \quad\quad
+    u^{(\ell+1)}
+        &\leftarrow \lambda\epsilon \left( \log(a) - \log(Ke^{v^{(\ell)}/\epsilon}) \right) \\
     v^{(\ell+1)}
-        \leftarrow b \oslash (K^Tu^{(\ell+1)})
-\end{align}
-Each iteration of the algorithm uses $\sO(nm)$ computation for matrix-vector products and can be accelerated to $\sO(n\log n)$ using convolution if suppport is over gridded space. 
-\subsection{Log-domain Stabilization}
-
-Sinkhorn's iteration can be numerically unstable as $\epsilon\to 0$ due zeros in $K$, resulting in null values during division by zero. One solution is to perform computation of $u,v$ in the log-domain \cite{chizatScalingAlgorithmsUnbalanced2017, schmitzerStabilizedSparseScaling2019}. This is equivalent to block coordinate ascent on the dual of entropic regularized optimal transport problem (\ref{eq:opt_entropic_regularized_ot}),
-\begin{align}
-    \max_{f,g\in\R^{n\times m}} \inner{f}{a} + \inner{g}{b} - \epsilon\inner{e^{f/\epsilon}}{Ke^{g/\epsilon}}
-\end{align}
-Then $0 = \partial L_{\text{dual}}(f,g)/\partial f = a - e^{f/\epsilon} \odot (Ke^{g/\epsilon})$ implies $f = \epsilon \log(a) - \epsilon \log(Ke^{g/\epsilon})$ and similarly for $g$. So,
-\begin{align}
-    f^{(\ell+1)}
-        \leftarrow \epsilon \log(a) - \epsilon\log(Ke^{g^{(\ell)}/\epsilon})
-    \quad\quad
-    g^{(\ell+1)}
-        \leftarrow \epsilon \log(b) - \epsilon\log(Ke^{f^{(\ell+1)}/\epsilon})
+        &\leftarrow \lambda\epsilon \left( \log(b) - \log(Ke^{u^{(\ell+1)}/\epsilon}) \right)
     \label{eq:sinkhorn_dual_ascent}
 \end{align}
-This is equivalent to Sinkhorn's iteration in log domain. Additionally, we can define a numerically stable softmin operator based on log-sum-exp, $\text{softmin}_{\epsilon}(z) = - \epsilon \log \sum_{i} e^{-z_i/\epsilon} = -\epsilon \text{LSE}(-z/\epsilon)$. Note $f_i = \epsilon \log a_i - \epsilon \log \sum_j e^{-(C_{ij}-g_j)/\epsilon} =\text{softmin}_{\epsilon}(C_{ij}-f_i-g_j) + f_i +  \epsilon \log a_i$. Therefore, (\ref{eq:sinkhorn_dual_ascent}) can be equivalently written as,
-\begin{align}
-    f^{(\ell+1)}
-        &\leftarrow \text{softmin}_{\epsilon} (S(f^{(\ell)}, g^{(\ell)})) + f^{(\ell)} + \epsilon \log(a) \\ 
-    g^{(\ell+1)}
-        &\leftarrow \text{softmin}_{\epsilon} (S(f^{(\ell+1)}, g^{(\ell)})) + g^{(\ell)} + \epsilon \log(b)
-    \label{eq:sinkhorn_dual_ascent2}
-\end{align}
-where $S(f,g)_{ij} = C_{ij}-f_i-g_j$. 
+where $\lambda = \frac{\rho}{\rho+\epsilon}$. This algorithm, unlike the original matrix scaling algorithm, is numerically stable due to computation in log domain. A remarkable property is that gradients of $W_{\epsilon,\rho}(\alpha,\beta)$ with respect to $x_i,a_i$ is readily computable, prompting easy integration into existing gradient based methods for registration problems \cite{feydyOptimalTransportDiffeomorphic2017a}. 
 
 
-\subsection{Minimum Kantorovich Estimator}
+\section{Approach}\label{sec:approach}
+
+\subsection{Probabilistic Diffeomorphic Registration}
+
+
+
+
+
+
+
+
+
 
  
 
-\section{Unbalanced Transport}
-
-Previously, optimal transprot problem requires $\alpha,\beta$ to have equal mass. This becomes a problem in applications when either the measures are noisy or when preservation of mass is not desirable. We can relax hard marginal constraints with soft penalty that measures deviation from exact coupling using some divergence, e.g. KL-divergence \cite{chizatScalingAlgorithmsUnbalanced2017},
-\begin{align}
-    \min_{P\in\R^{n\times m}_+}\, 
-        \inner{P}{C} - \epsilon H(P) + \rho \text{KL}(P1_m \Vert a) + \rho \text{KL}(P^T 1_m \Vert b)
-\end{align}
-Similar to balanced case, we can show that optimal coupling is again a scaling of $K$, i.e. $P = \diag(u) K \diag(v)$ where $u = (a \oslash (Kv))^{\lambda}$ and $v = (b \oslash (K^T u))^{\lambda}$ where $\lambda = \frac{\rho}{\rho + \epsilon}$ \cite{frognerLearningWassersteinLoss2015}. We can derive a similar Sinkhorn iteration in the log domain for unbalanced case.
 
 
 \section{Results}
