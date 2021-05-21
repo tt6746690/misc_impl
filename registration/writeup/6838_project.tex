@@ -458,11 +458,11 @@ For simplicity, we use a simple isotropic multivariate normal for $Q(p_0)$ with 
 \end{align}
 We use radial basis kernel $k(x,y) = \sigma^2 \exp(-\norm{x-y}_2^2/\ell^2)$ with hyperparameter $\sigma^2,\ell$. In summary, $\theta = \pc{\mu,w,\sigma^2,\ell}$.
 
-In practice, we approximate the cost matrix $\widetilde{C}_{ij}=\widetilde{c}(x_i,y_j)$ via sampling, i.e. sample random trajectories, compute pairwise cost between transformed and target shapes, and then averaging the costs. We simply use gradient descent to optimize for (\ref{eq:opt_elbo2}). 
+We approximate the cost matrix $\widetilde{C}_{ij}=\widetilde{c}(x_i,y_j)$ via sampling, i.e. sample random trajectories, compute pairwise cost between transformed and target shapes, and then averaging the costs. We simply use gradient descent to optimize for (\ref{eq:opt_elbo2}). 
 
 We optimize for hyperparameters through an adaptive gradient method, e.g. ADAM. The gradient of the KL term requires $\sO((ND)^3)$ computation and $\sO((ND)^2)$ memory due to need for a Cholesky factorization, a significant addition to compute cost from previous methods that computes the MAP solution. To reduce cost to $\sO(N^3)$ computation and $\sO(N^2)$ memory, we assume that the kernel is the same regardless of $d=1,\cdots,D$, i.e. $K=K'\otimes I_D$ for some $K'\in\R^{n\times n}$. The cost for computing gradients $\nabla_{\theta} \sW_{\epsilon,\rho}^{\widetilde{c}}(\alpha,\beta)$ is primarily dominated by ODE solves and Sinkhorn's iterations. We keep a fixed 10 samples to approximate $\widetilde{C}$ and a fixed 100 iterations to solve for the optimal transport problem. We have experimented with as little as 1 samples for approximating $\widetilde{C}$, but the variance of gradient is too large for the optimization to converge to a reasonable local minima. For simplicity, we just autodiff to accumulate gradient through Sinkhorn's iteration as \cite{genevayLearningGenerativeModels2018} instead of computing gradients of OT cost with respect to the optimal transport plan. We backprop through sampling of $p_0$ using reparamterization trick originally proposed for training variational autoencoders.
 
-We fix $\epsilon=.15^2$ and pick $\rho$ such that $\epsilon\rho/(\rho+\epsilon) = .998$. In practice we weight the KL term in the loss functions with constant $\lambda = .003$.
+We fix $\epsilon=.15^2$ and pick $\rho$ such that $\epsilon\rho/(\rho+\epsilon) = .998$. We also weight the KL term in the loss functions with constant $\lambda = .003$.
 
 When estimating registration uncertainty, we set $L=100$ and interpolate via thin-plate spline to obtain a smooth heat map.
 
