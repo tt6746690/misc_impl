@@ -189,6 +189,7 @@
 \newcommand\pa[1]{\ensuremath{\left\langle #1 \right\rangle}} % <>
 \newcommand\pb[1]{\ensuremath{\left[ #1 \right]}} % []
 \newcommand\pc[1]{\ensuremath{\left\{ #1 \right\}}} % {}
+\DeclareMathOperator*{\tr}{tr}
 
 
 \title[]{Optimal Transport based Probabilistic Diffeomorphic Registration}
@@ -202,7 +203,7 @@
 \begin{document}
 
 \teaser{
- \includegraphics[width=.9\linewidth]{{assets/amoeba/plt_lddmm_points}}
+ \includegraphics[width=.9\linewidth]{{assets/amoeba0/plt_lddmm_points}}
  \centering
   \caption{The red amoeba is registered to blue amoeba. A valid diffeomorphic transformation can be generated from per-particle momenta (orange arrow) by solving a set of Geodesic equations (black dashed line). On the right, we can visualize variance of the effect of random transformation on shape as a heatmap. Although the two shapes is matched almost perfectly, the two legs flips over itself respectively and we are able to spot this mistake from the uncertainty heatmap.}
 \label{fig:teaser}
@@ -211,7 +212,7 @@
 \maketitle
 
 \begin{abstract}
-
+    In this project, we implemented optimal transport based diffeomorphic registration algorithms. We extended the current algorithm to account for uncertainty in the transformation mapping, and showed that such extension is useful for identifying errors.
 \end{abstract}
 
 \section{Introduction}
@@ -225,7 +226,10 @@ Diffeomorphic registration of shapes with unknown correspondence is an important
 
 % fill the hole: to show reader how/why the paper will fix these problems and deliver us into a better place. don't need a whirlwind summary of technical details, but need reader's convinced to keep reading. 
 
-We propose to extend optimal transport based diffeomorphic registration to probabilistic setting. Our method interprets the diffeomorphic transformation as a random variable, and estimates its parameters using variational inference. In particular, we find diffeomorphic maps that minimize the average optimal transport distance between shapes. Naturally, the probabilistic formulation provides us with uncertainty estimates of both the transformation as well as the uncertainty of its effect on shapes. Hyperparameters such as the degree of smoothness of the transformation parameterizes the variational distribution, and thus can be optimized. However, the inference procedure requires repeated sampling of valid diffeomorphic transformations to approximate the average cost. To alleviate the computational burden, we explored links to sparse Gaussian Process, specifically interdomain inducing variables, as a way to alleviate this concern \cite{figueiras-vidalInterdomainGaussianProcesses2009a}.
+We propose to extend optimal transport based diffeomorphic registration to probabilistic setting. Our method interprets the diffeomorphic transformation as a random variable, and estimates its parameters using variational inference. In particular, we find diffeomorphic maps that minimize the average optimal transport distance between shapes. Naturally, the probabilistic formulation provides us with uncertainty estimates of both the transformation as well as the uncertainty of its effect on shapes. Hyperparameters such as the degree of smoothness of the transformation parameterizes the variational distribution, and thus can be optimized. 
+
+
+% However, the inference procedure requires repeated sampling of valid diffeomorphic transformations to approximate the average cost. To alleviate the computational burden, we explored links to sparse Gaussian Process, specifically interdomain inducing variables, as a way to alleviate this concern \cite{figueiras-vidalInterdomainGaussianProcesses2009a}.
 
 
 \section{Related Work}
@@ -323,18 +327,20 @@ Define $c:\Omega^2 \to \R$ be cost of mass transportation, hereafter we let $c$ 
                 \quad\quad+\rho\left( \text{KL}(P^1_\sharp \pi \Vert \mu) + \text{KL}(P^2_\sharp \pi \Vert \nu) \right)
     \label{eq:ot_wasserstein_regularized_unbalanced}
 \end{align}
-$P^i_\sharp$ is the projection to the $i$-th marginal. The correspondence of the optimal transport plan $\pi$ can be made sharper by using a smaller $\epsilon >0$. If the two shapes vary in scale, we can relax the mass conservation constraints by using a smaller $\rho>0$. For discrete measures, generalized Sinkhorn's algorithm computes $W_{\epsilon,\rho}(\alpha,\beta)$ efficiently and in a numerically stable manner \cite{chizatScalingAlgorithmsUnbalanced2017,feydyInterpolatingOptimalTransport2018}. The idea is to do coordinate ascent over the dual variables $u\in\R^N,v\in\R^M$,
+$P^i_\sharp$ is the projection to the $i$-th marginal. The correspondence of the optimal transport plan $\pi$ can be made sharper by using a smaller $\epsilon >0$. If the two shapes vary in scale, we can relax the mass conservation constraints by using a smaller $\rho>0$. 
+
+For discrete measures, generalized Sinkhorn's algorithm computes $W_{\epsilon,\rho}(\alpha,\beta)$ efficiently and in a numerically stable manner \cite{chizatScalingAlgorithmsUnbalanced2017,feydyInterpolatingOptimalTransport2018}. The idea is to do coordinate ascent over the dual variables $u\in\R^N,v\in\R^M$,
 \begin{align}
     u^{(\ell+1)}
-        &\leftarrow \lambda\epsilon \left( \log(a) - \log(Ke^{v^{(\ell)}/\epsilon}) \right) \\
+        &\leftarrow \frac{\epsilon\rho}{\rho+\epsilon} \left( \log(a) - \log(Ke^{v^{(\ell)}/\epsilon}) \right) \\
     v^{(\ell+1)}
-        &\leftarrow \lambda\epsilon \left( \log(b) - \log(Ke^{u^{(\ell+1)}/\epsilon}) \right)
+        &\leftarrow \frac{\epsilon\rho}{\rho+\epsilon} \left( \log(b) - \log(Ke^{u^{(\ell+1)}/\epsilon}) \right)
     \label{eq:sinkhorn_dual_ascent}
 \end{align}
-where $\lambda = \frac{\rho}{\rho+\epsilon}$ and $K\in\R^{N\times M}$ defined as $\pb{K}_{ij} = e^{-c(x_i,y_j)/\epsilon}$ is the Gibbs kernel. This algorithm, unlike the original matrix scaling algorithm, is numerically stable due to computation in log domain. A desirable property of optimal transport problem is that gradients of $W_{\epsilon,\rho}(\alpha,\beta)$ with respect to $x_i,a_i$ is readily computable, prompting easy integration into existing gradient based methods for registration problems \cite{feydyOptimalTransportDiffeomorphic2017a}. 
+where $K\in\R^{N\times M}$ defined as $\pb{K}_{ij} = e^{-c(x_i,y_j)/\epsilon}$ is the Gibbs kernel. This algorithm, unlike the original matrix scaling algorithm, is numerically stable due to computation in log domain. A desirable property of optimal transport problem is that gradients of $W_{\epsilon,\rho}(\alpha,\beta)$ with respect to $x_i,a_i$ is readily computable, prompting easy integration into existing gradient based methods for registration problems \cite{feydyOptimalTransportDiffeomorphic2017a}. 
 
 
-\section{Approach}\label{sec:approach}
+\section{Technical Approach}\label{sec:technical_approach}
 
 \subsection{Registration as MAP Inference}
 
@@ -353,30 +359,27 @@ maximization of log posterior $\max_v \log P(v\mid x,y)$ recovers (\ref{eq:optim
         &= \sum_{i=1}^N \frac{1}{\sigma^2_i} \norm{q_1^i - \overline{y}^i}_2^2 + \text{const} \\
         &= (\overline{y} - q_1)^T \Sigma^{-1} (\overline{y} - q_1) + \text{const}
 \end{align}
-where $\sigma_i^2 = 1/(\sum_{j}\pi_{ij}^*)$, $\Sigma = I_D \otimes \diag(\sigma_1^2,\cdots,\sigma_N^2)$ are variances and $\overline{y}_i = \sum_j \sigma_i \pi_{ij}^* y^j$ is a weighted combination of $y$ with weights summing to 1, which we group together as $\overline{y} = (\overline{y}^1,\cdots,\overline{y}^N) \in \R^{ND}$. Intuitively, $\overline{y}^i$ is matched to $q_1^i$ by the transport plan, albeit at a synthetic location. The likelihood of observing $\overline{y}^i$ is large if it is close to $q_1^i$ in the Euclidean sense and if the total mass coming from $q_1^i$, i.e. $\sum_{j}\pi_{ij}^*$, is small, indicating a larger uncertainty as to where transport plan might assign the point to. Of course, the behavior of the transport plan is affected by $\epsilon,\rho$. Not entirely sure, but this might suggest inclusion of hyperparameters $\epsilon,\rho$ as optimziation variables of the likelihood model, akin to how we might want to optimize for the variance of an iid Gaussian noise model for registering images.
+where $\sigma_i^2 = 1/(\sum_{j}\pi_{ij}^*)$, $\Sigma = \diag(\sigma_1^2,\cdots,\sigma_N^2)\otimes I_D$ are variances and $\overline{y}_i = \sum_j \sigma_i \pi_{ij}^* y^j$ is a weighted combination of $y$ with weights summing to 1, which we group together as $\overline{y} = (\overline{y}^1,\cdots,\overline{y}^N) \in \R^{ND}$. Intuitively, $q_1^i$ is matched with $\overline{y}^i$ by the transport plan, albeit at a synthetic location. The likelihood of observing $\overline{y}^i$ is large if it is close to $q_1^i$ and if the total mass coming from $q_1^i$, i.e. $\sum_{j}\pi_{ij}^*$, is small, indicating a larger uncertainty as to where transport plan might assign the point to. 
+
+Of course, the behavior of the transport plan is affected by $\epsilon,\rho$. This might suggest inclusion of hyperparameters $\epsilon,\rho$ as optimziation variables of the likelihood model, akin to how we might want to optimize for the variance of an iid Gaussian noise model for registering images.
 
 \subsection{Variational Inference with Average Transport Cost}
 
-Let $y$ be observed variables, initial velocity field $v$ as latent variables. We are interested in the posterior density, $P(v\mid x, y) \propto P(v\mid x) P(y\mid v,x)$ where prior and likelihood is as defined in (\ref{eq:registration_prior_and_likelihood}). We define variational distribution over $v$ as a linear function (\ref{eq:eulerian_velocity_interpolation}) of a free-form initial momentum $p_0$,
-\begin{align}
-    Q(p_0)
-        &= \sN(p_0\mid \mu_p, \Sigma_p) \\
-    Q(v\mid x)
-        &= \sN(v\mid K(x,x)\mu_p, K(x,x) \Sigma_p K(x,x)^T)
-\end{align}
-We parameterize the initial momentum instead of velocity because we do not need to invert the kernel matrix $K(x,x)$ whenever we want to generate random diffeomorphic maps at test time. Additionally, this approach works better in practice for the limited experiments we have tried. Here $\pc{\mu_p, \Sigma_d}$ as well as hyperparameter for the kernel $k$ is the set of variational parameters $\theta$. Inference relegates to finding an approximate posterior $Q(v)$ that is close to the true posterior using optimization, $\min_{\theta} \text{KL}(Q(v)\Vert P(v\mid x, y))$. As usually done in variational inference, we optimize the \text{ELBO},
+Let $y$ be observed variables, initial velocity field $v$ as latent variables. We are interested in the posterior density, $P(v\mid x, y) \propto P(v\mid x) P(y\mid v,x)$ where prior and likelihood is as defined in (\ref{eq:registration_prior_and_likelihood}). We define variational distribution over velocity vector field $Q(v)$ as a linear function of a free-form initial momentum $p_0$ with density $Q(p_0)$ via (\ref{eq:eulerian_velocity_interpolation}). We parameterize the initial momentum instead of velocity because we do not need to invert the kernel matrix $K(x,x)$ whenever we want to generate random diffeomorphic maps at test time. 
+
+Let $\theta$ be the set of variational parameters to be optimized, encompassing parameters for $Q(p_0)$ and hyperparameter of kernel $k$. Inference relegates to finding an approximate posterior $Q(v)$ that is close to the true posterior using optimization, $\min_{\theta} \text{KL}(Q(v)\Vert P(v\mid x, y))$. As usually done in variational inference, we optimize the \text{ELBO},
 \begin{align}
     \min_{\theta}\,
         \text{KL}(Q(v\mid x)\Vert P(v\mid x)) + \int \sW_{\epsilon,\rho}(\varphi_\sharp\alpha,\beta) \, dQ(p_0)
     \label{eq:opt_elbo1}
 \end{align}
-The first term is computable in $\sO(N^3)$. The second term can be approximated via Monte Carlo integration, but will be computationally inefficient due to need to solve several discrete transport problems for each gradient update to $\theta$. Alternatively, we optimize an upper bound, requiring one solve with a modified transport cost that marginalizes over $p_0$, $\widetilde{c}: \Omega^2\to\R$ with,
+The second term can be approximated via Monte Carlo integration, but will be computationally inefficient due to need to solve several discrete transport problems for each gradient update to $\theta$. Alternatively, we optimize an upper bound, requiring one solve with a modified transport cost $\widetilde{c}: \Omega^2\to\R$ that marginalizes over $p_0$,
 \begin{align}
     \widetilde{c}(x,y)
         = \int c(q_1(x,p_0),y)\, dQ(p_0)
     \label{eq:cost_marginalize_momentum}
 \end{align}
-Notationally, $q_1(p_0,\alpha)$ emphasizes the fact that $q_1$ is a deterministic function of $(p_0,\alpha)$ as specified by the Geodesic flow (\ref{eq:geodesic_equations}). So,
+Notationally, $q_1(p_0,\alpha)$ emphasizes the fact that $q_1$ is a deterministic function of $(p_0,\alpha)$ via (\ref{eq:geodesic_equations}). So,
 \begin{align}
     \int \text{OT}^c(\varphi_\sharp\alpha,\beta) \, dQ(p_0)
         &\leq \text{OT}^{\widetilde{c}}(\alpha,\beta) \\
@@ -389,14 +392,85 @@ This relationship also holds for regularized unbalanced cost. It is interesting 
         \text{KL}(Q(v\mid x)\Vert P(v\mid x)) + \sW_{\epsilon,\rho}^{\widetilde{c}}(\alpha,\beta)
     \label{eq:opt_elbo2}
 \end{align}
-In practice, we approximate cost matrix $\widetilde{C}$ with sampling. We use autodiff to compute the gradient through a fixed Sinkhorn's iterations, as \cite{genevayLearningGenerativeModels2018} did.
+
+
+\subsection{Registration Uncertainty}
+
+We can visualize the marginal variance of $Q(v)$ as well as a measure of spread of transformed points to get a sense of behavior of registration. There is no analytic formula for $\text{var}(q_1)$, and so we estimate it via $L$ samples,
+\begin{align}
+    \widehat{var}(q_1)
+        &= \frac{1}{L} \sum_{l=1}^L (q_1^l-\widehat{\mu}(q_1)) (q_1^l-\widehat{\mu}(q_1))^T \\
+    \widehat{\mu}(q_1)
+        &= \frac{1}{L} \sum_{l=1}^L q_1^l 
+    \quad\text{where}\quad
+        q_1^l = q_1(g, p_0^l),\;\;
+        p_0^l \overset{iid}{\sim} Q(p_0)
+\end{align}
+where $g\in\Omega^J$ is some gridded locations. We compute $\tr(\widehat{var}(q_1))$ as a scalar measure of uncertainty. The latter is often more informative, and correlates qualitatively to locations where the points are transported incorrectly, see~Figure (\ref{fig:plt_two_types_of_uncertainty}).
+
+\begin{figure}[h!]
+    \begin{center} 
+    \includegraphics[width=.43\linewidth]{{assets/amoeba0/variance_velocity}}
+    \includegraphics[width=.45\linewidth]{{assets/amoeba0/variance_q1}}
+    \caption{(left) velocity marginal variance $\sigma^2(Q(v))$ (right) measure of spread of transformed points $\tr(\widehat{var}(q_1))$}
+    \label{fig:plt_two_types_of_uncertainty}
+\end{center}
+\end{figure} 
+
+
+\begin{figure*}[t]
+    \begin{center} 
+    \includegraphics[width=\linewidth]{{assets/shapes/plt_lddmm_points}}
+    \includegraphics[width=\linewidth]{{assets/bat/plt_lddmm_points}}
+    \caption{(left) two segmented shapes (middle right) estimated initial momentum (middle right) shape transformation (right) $\tr(\widehat{var}(q_1))$}
+    \label{fig:plt_visualize_correct}
+\end{center}
+\end{figure*} 
 
 
 
+\begin{figure*}[t]
+    \begin{center} 
+    \includegraphics[width=\linewidth]{{assets/amoeba0/plt_lddmm_points}}
+    \includegraphics[width=\linewidth]{{assets/deer/plt_lddmm_points}}
+    \caption{(left) two segmented shapes (middle right) estimated initial momentum (middle right) shape transformation (right) $\tr(\widehat{var}(q_1))$}
+    \label{fig:plt_visualize_error}
+\end{center}
+\end{figure*} 
 
 \section{Results}
 
-Figures/tables illustrating the results of your work, as well as text interpreting these results. \cite{peyreComputationalOptimalTransport2020},
+
+\subsection{Dataset}
+
+We used synthetic shape (amoeba) from \cite{feydyOptimalTransportDiffeomorphic2017a}. To re-iterate, the target is synthetically generated using a sum of Gaussian kernels with output variance $\pc{1., .75}$ and input standard deviation of $\pc{.025, .15}$.
+
+In addition, take some images from MPEG7, a dataset of binary images for shape retrieval applications. We segment the shape via a simple thresholding on the image values and parameterize the shape with curves.
+
+\subsection{Implementation}
+
+For simplicity, we use a simple isotropic multivariate normal for $Q(p_0)$ with equal variance at each location $x\in\Omega$. the variational distribution for $v$ is also a multivariate normal via (\ref{eq:eulerian_velocity_interpolation}),
+\begin{align}
+    Q(p_0)
+        &= \sN(p_0\mid \mu, \diag(w) \otimes I_D) \\
+    Q(v\mid x)
+        &= \sN(v\mid K(x,x)\mu, K(x,x) (\diag(w)\otimes I_D) K(x,x)^T)
+\end{align}
+We use radial basis kernel $k(x,y) = \sigma^2 \exp(-\norm{x-y}_2^2/\ell^2)$ with hyperparameter $\sigma^2,\ell$. In summary, $\theta = \pc{\mu,w,\sigma^2,\ell}$.
+
+In practice, we approximate the cost matrix $\widetilde{C}_{ij}=\widetilde{c}(x_i,y_j)$ via sampling, i.e. sample random trajectories, compute pairwise cost between transformed and target shapes, and then averaging the costs. We simply use gradient descent to optimize for (\ref{eq:opt_elbo2}). 
+
+We optimize for hyperparameters through an adaptive gradient method, e.g. ADAM. The gradient of the KL term requires $\sO((ND)^3)$ computation and $\sO((ND)^2)$ memory due to need for a Cholesky factorization, a significant addition to compute cost from previous methods that computes the MAP solution. To reduce cost to $\sO(N^3)$ computation and $\sO(N^2)$ memory, we assume that the kernel is the same regardless of $d=1,\cdots,D$, i.e. $K=K'\otimes I_D$ for some $K'\in\R^{n\times n}$. The cost for computing gradients $\nabla_{\theta} \sW_{\epsilon,\rho}^{\widetilde{c}}(\alpha,\beta)$ is primarily dominated by ODE solves and Sinkhorn's iterations. We keep a fixed 10 samples to approximate $\widetilde{C}$ and a fixed 100 iterations to solve for the optimal transport problem. We have experimented with as little as 1 samples for approximating $\widetilde{C}$, but the variance of gradient is too large for the optimization to converge to a reasonable local minima. For simplicity, we just autodiff to accumulate gradient through Sinkhorn's iteration as \cite{genevayLearningGenerativeModels2018} instead of computing gradients of OT cost with respect to the optimal transport plan. We backprop through sampling of $p_0$ using reparamterization trick originally proposed for training variational autoencoders.
+
+We fix $\epsilon=.15^2$ and pick $\rho$ such that $\epsilon\rho/(\rho+\epsilon) = .998$. In practice we weight the KL term in the loss functions with constant $\lambda = .003$.
+
+When estimating registration uncertainty, we set $L=100$ and interpolate via thin-plate spline to obtain a smooth heat map.
+
+
+\subsection{Registration Errors}
+
+We want to visualize uncertainty of transformed shape. For shapes that are correctly registered, we notice that similar levels of uncertainty is located on the boundary of the curve, as shown in Figure~\ref{fig:plt_visualize_correct}. On the contrary, for shapes that are not correctly registered, due to some complicated nonlinear deformations, we see higher uncertainty in regions where shapes are incorrectly matched in Figure~(\ref{fig:plt_visualize_error})
+
 
 \newpage
 \newpage
