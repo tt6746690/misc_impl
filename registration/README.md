@@ -22,3 +22,5 @@ ideas
 + dataset 
     + https://github.com/gpeyre/2015-SIGGRAPH-convolutional-ot/blob/master/data/images/faces/face4.png
     + https://dabi.temple.edu/external/shape/MPEG7/dataset.html
++ grid idea
+    + warped coordinate space use grid + sinkhorn iteration can be implemented efficiently using fft. is it possible to evolve the grid back in time (should be possible, since we use diffeomorphism) 

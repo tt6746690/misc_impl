@@ -216,7 +216,6 @@
 
 \section{Introduction}
 
- 
 % narrow in no topic: remind this is a graphics paper, need to help them to figure out what topic and area of research. no need to wax poetic about topic's importance
 
 
@@ -280,6 +279,7 @@ and that the resulting flow velocity in the Eulerian coordinates $\Omega$ can be
     \quad\quad
     p_t
         = K(q_t, q_t)^{-1} \dot{q}_t
+    \label{eq:eulerian_velocity_interpolation}
 \end{align}
 where $p_t^i \in \R^{D}$ is the momenta associated with point $q_t^i$. As a side note, this interpolation is akin to computing posterior mean of a gaussian process regression of velocity fields, i.e. $v_t(x) = K(x,q_t) K(q_t,q_t)^{-1} \dot{q}_t$. Note the integrand of RKHS norm can be viewed as Lagrangian of of a system of ND particles. \cite{millerGeodesicShootingComputational2006} argues the dynamics of these particles in canonical coordinates $(q_t,p_t)$ follows the Geodesic equations
 \begin{align}
@@ -355,60 +355,42 @@ maximization of log posterior $\max_v \log P(v\mid x,y)$ recovers (\ref{eq:optim
 \end{align}
 where $\sigma_i^2 = 1/(\sum_{j}\pi_{ij}^*)$, $\Sigma = I_D \otimes \diag(\sigma_1^2,\cdots,\sigma_N^2)$ are variances and $\overline{y}_i = \sum_j \sigma_i \pi_{ij}^* y^j$ is a weighted combination of $y$ with weights summing to 1, which we group together as $\overline{y} = (\overline{y}^1,\cdots,\overline{y}^N) \in \R^{ND}$. Intuitively, $\overline{y}^i$ is matched to $q_1^i$ by the transport plan, albeit at a synthetic location. The likelihood of observing $\overline{y}^i$ is large if it is close to $q_1^i$ in the Euclidean sense and if the total mass coming from $q_1^i$, i.e. $\sum_{j}\pi_{ij}^*$, is small, indicating a larger uncertainty as to where transport plan might assign the point to. Of course, the behavior of the transport plan is affected by $\epsilon,\rho$. Not entirely sure, but this might suggest inclusion of hyperparameters $\epsilon,\rho$ as optimziation variables of the likelihood model, akin to how we might want to optimize for the variance of an iid Gaussian noise model for registering images.
 
-\subsection{Approximate Inference}
+\subsection{Variational Inference with Average Transport Cost}
 
-Let $y$ be observed variables, initial velocity field $v$ as latent variables. We are interested in the posterior density,
-\begin{align}
-    P(v\mid x, y) \propto P(v\mid x) P(y\mid v,x)
-\end{align}
-where prior and likelihood is as defined in (\ref{eq:registration_prior_and_likelihood}). We define variational distribution over $v$ indirectly using the initial momentum $p_0$.
+Let $y$ be observed variables, initial velocity field $v$ as latent variables. We are interested in the posterior density, $P(v\mid x, y) \propto P(v\mid x) P(y\mid v,x)$ where prior and likelihood is as defined in (\ref{eq:registration_prior_and_likelihood}). We define variational distribution over $v$ as a linear function (\ref{eq:eulerian_velocity_interpolation}) of a free-form initial momentum $p_0$,
 \begin{align}
     Q(p_0)
         &= \sN(p_0\mid \mu_p, \Sigma_p) \\
     Q(v\mid x)
         &= \sN(v\mid K(x,x)\mu_p, K(x,x) \Sigma_p K(x,x)^T)
 \end{align}
-We parameterize the initial momentum instead of velocity because we do not need to invert the kernel matrix $K(x,x)$ whenever we want to generate random diffeomorphic maps at test time. Additionally, this approach works better in practice for the limited experiments we have tried. Here $\pc{\mu_p, \Sigma_d}$ as well as hyperparameter for the kernel $k$ is the set of variational parameters $\theta$. Inference relegates to finding an approximate posterior $Q(v)$ that is close to the true posterior using optimization, $\min_{\theta} \text{KL}(Q(v)\Vert P(v\mid x, y))$. As usually done in variational inference, we optimize the evidence lower bound,
+We parameterize the initial momentum instead of velocity because we do not need to invert the kernel matrix $K(x,x)$ whenever we want to generate random diffeomorphic maps at test time. Additionally, this approach works better in practice for the limited experiments we have tried. Here $\pc{\mu_p, \Sigma_d}$ as well as hyperparameter for the kernel $k$ is the set of variational parameters $\theta$. Inference relegates to finding an approximate posterior $Q(v)$ that is close to the true posterior using optimization, $\min_{\theta} \text{KL}(Q(v)\Vert P(v\mid x, y))$. As usually done in variational inference, we optimize the \text{ELBO},
 \begin{align}
     \min_{\theta}\,
-        \text{KL}(Q(v\mid x)\Vert P(v\mid x)) + \int \sW_{\epsilon,\rho}(\varphi_\sharp\alpha,\beta)\, dQ(p_0)
-    \label{eq:opt_elbo}
+        \text{KL}(Q(v\mid x)\Vert P(v\mid x)) + \int \sW_{\epsilon,\rho}(\varphi_\sharp\alpha,\beta) \, dQ(p_0)
+    \label{eq:opt_elbo1}
 \end{align}
-The first term can be computed in $\sO(N^3)$ time due to need to do Cholesky factorization. The second term is not a semi-discrete problem, but an upper bound of it is,
+The first term is computable in $\sO(N^3)$. The second term can be approximated via Monte Carlo integration, but will be computationally inefficient due to need to solve several discrete transport problems for each gradient update to $\theta$. Alternatively, we optimize an upper bound, requiring one solve with a modified transport cost that marginalizes over $p_0$, $\widetilde{c}: \Omega^2\to\R$ with,
 \begin{align}
-    \int \sW_{\epsilon,\rho}(\varphi_\sharp\alpha,\beta)\, dQ(p_0)
-        \leq \sW_{\epsilon,\rho}( q_1 ,\beta )
+    \widetilde{c}(x,y)
+        = \int c(q_1(x,p_0),y)\, dQ(p_0)
+    \label{eq:cost_marginalize_momentum}
 \end{align}
-if we think of $q_1$ as a deterministic function of $(p_0,\alpha)$ as specified by the Geodesic flow in (\ref{eq:geodesic_equations}), and so is a non-discrete random variable. Note this inequality for unregularized and balanced optimal transport problem, since given fixed $\varphi$, $\int \pi(x,y)\, d\varphi_\sharp\alpha(x) = \int \pi(\varphi(x),y) \, d\alpha(x)$.
+Notationally, $q_1(p_0,\alpha)$ emphasizes the fact that $q_1$ is a deterministic function of $(p_0,\alpha)$ as specified by the Geodesic flow (\ref{eq:geodesic_equations}). So,
+\begin{align}
+    \int \text{OT}^c(\varphi_\sharp\alpha,\beta) \, dQ(p_0)
+        &\leq \text{OT}^{\widetilde{c}}(\alpha,\beta) \\
+    \text{with}\quad \text{OT}^c(\alpha,\beta)
+        &= \min_{\pi\in\Pi(\alpha,\beta)} \iint_{\Omega^2} c(x, y) \, d\pi(x,y)
+\end{align}
+This relationship also holds for regularized unbalanced cost. It is interesting that we are essentially computing optimal transport on source and target shapes directly, and that the randomness in $\varphi$ is incoporated into $\widetilde{c}$. Employing this upper bound for optimization of (\ref{eq:opt_elbo1}), we arrive at an objective that is computationally more tractable with the risk of derailing the optimization from good solutions.
+\begin{align}
+    \min_{\theta}\,
+        \text{KL}(Q(v\mid x)\Vert P(v\mid x)) + \sW_{\epsilon,\rho}^{\widetilde{c}}(\alpha,\beta)
+    \label{eq:opt_elbo2}
+\end{align}
+In practice, we approximate cost matrix $\widetilde{C}$ with sampling. We use autodiff to compute the gradient through a fixed Sinkhorn's iterations, as \cite{genevayLearningGenerativeModels2018} did.
 
-
-% can be approximated via Monte Carlo samples, naively doing so requires solving an optimal transport problem many times. To alleviate this problem, we upper bound the expected data matching term with an average cost. 
-
-
-
-
-% $m \sim \sN(\mu,\Sigma)$ parameterized by $\mu\in\R^{ND}, \Sigma = I_D\otimes \diag{d}$,
-
-
-
-
-
-
-% $m\in \sN(\mu,\Sigma)$, 
-
-
-% then diffeomorphic registration problem (\ref{eq:optimization_lddmm_landmark_momentum}) can be viewed as maximum a posteri problem, 
-
-% Diffeomorphic registration can be formulated as maximum a posteriori problem,
-
- 
-
-
-
-
-
-
- 
 
 
 
