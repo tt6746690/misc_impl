@@ -1,0 +1,11 @@
+# Compatible with PyTorch=1.5.1
+scipy
+scikit-learn
+numpy
+pandas
+matplotlib
+jax
+jaxlib
+flax
+tabulate
+pytest

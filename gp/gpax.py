@@ -163,14 +163,14 @@ class Kernel(nn.Module):
     def __mul__(self, other):
         return compose_kernel(self, other, np.multiply)
 
-    def check_ard_dims(self, ℓ):
-        """Verify that ard ℓ size matches with `active_dims` 
+    def check_ard_dims(self, ls):
+        """Verify that ard ls size matches with `active_dims` 
             when `active_dims` is specified, `ard_len>1` """
-        if ℓ.size > 1 and self.active_dims is not None:
+        if ls.size > 1 and self.active_dims is not None:
             s, cvt = slice_to_array(self.active_dims)
-            if cvt and s.size != ℓ.size:
+            if cvt and s.size != ls.size:
                 raise ValueError(
-                    f'ardℓ {ℓ} does not match with active_dims={s}')
+                    f'ardℓ {ls} does not match with active_dims={s}')
 
 
 class CovLin(Kernel):
@@ -202,15 +202,15 @@ class CovSE(Kernel):
     output_scaling: bool = True
 
     def setup(self):
-        self.ℓ = BijSoftplus.forward(self.param(
-            'ℓ', lambda k, s: BijSoftplus.reverse(
+        self.ls = BijSoftplus.forward(self.param(
+            'ls', lambda k, s: BijSoftplus.reverse(
                 self.init_val_l*np.ones(s, dtype=np.float32)), (self.ard_len,)))
         self.σ2 = BijSoftplus.forward(self.param(
             'σ2', lambda k, s: BijSoftplus.reverse(np.array([1.])), (1,)))
-        self.check_ard_dims(self.ℓ)
+        self.check_ard_dims(self.ls)
 
     def scale(self, X):
-        return X/self.ℓ if X is not None else X
+        return X/self.ls if X is not None else X
 
     def K(self, X, Y=None):
         X = self.scale(X)
@@ -237,15 +237,15 @@ class CovSEwithEncoder(Kernel):
 
     def setup(self):
         self.g = self.g_cls()
-        self.ℓ = BijSoftplus.forward(self.param(
-            'ℓ', lambda k, s: BijSoftplus.reverse(
-                self.init_val_l*np.ones(s, dtype=np.float32)), (self.ard_len,)))
+        self.ls = BijSoftplus.forward(self.param(
+            'ls', lambda k, s: BijSoftplus.reverse(
+                 self.init_val_l*np.ones(s, dtype=np.float32)), (self.ard_len,)))
         self.σ2 = BijSoftplus.forward(self.param(
             'σ2', lambda k, s: BijSoftplus.reverse(np.array([1.])), (1,)))
-        self.check_ard_dims(self.ℓ)
+        self.check_ard_dims(self.ls)
 
     def scale(self, X):
-        return X/self.ℓ if X is not None else X
+        return X/self.ls if X is not None else X
 
     def K(self, X, Y=None):
         X = self.scale(X)
@@ -654,9 +654,10 @@ class GPR(nn.Module, GPModel):
         self.k = self.k_cls()
         self.lik = self.lik_cls()
 
-    def get_init_params(self, key):
-        Xs = np.zeros((1, self.data[0].shape[-1]))
-        params = self.init(key, method=self.mll)
+    @classmethod
+    def get_init_params(self, model, key):
+        Xs = np.zeros((1, model.data[0].shape[-1]))
+        params = model.init(key, method=model.mll)
         return params
 
     def pred_cov(self, K, ind):
@@ -711,9 +712,10 @@ class GPRFITC(nn.Module, GPModel):
         self.Xu = self.param('Xu', lambda k, s: X[:self.n_inducing],
                              (self.n_inducing, X.shape[-1]))
 
-    def get_init_params(self, key):
-        Xs = np.ones((1, self.data[0].shape[-1]))
-        params = self.init(key, Xs, method=self.pred_f)
+    @classmethod
+    def get_init_params(self, model, key):
+        Xs = np.ones((1, model.data[0].shape[-1]))
+        params = model.init(key, Xs, method=model.pred_f)
         return params
 
     def precompute(self):
@@ -772,6 +774,12 @@ class VFE(nn.Module, GPModel):
     def get_init_params(self, key):
         params = self.init(key, np.ones((1, self.data[0].shape[-1])),
                            method=self.pred_f)
+        return params
+
+    @classmethod
+    def get_init_params(self, model, key):
+        params = model.init(key, np.ones((1, model.data[0].shape[-1])),
+                            method=model.pred_f)
         return params
 
     def precompute(self):
@@ -843,11 +851,12 @@ class SVGP(nn.Module, GPModel):
         # For now just assume its a large mvn where Σ models both input&output
         self.q = VariationalMultivariateNormal(self.output_dim*self.n_inducing)
 
-    def get_init_params(self, key):
+    @classmethod
+    def get_init_params(self, model, key):
         n = 1
-        Xs = np.ones((n, self.Xu_initial.shape[-1]))
-        ys = np.ones((n, self.output_dim))
-        params = self.init(key, (Xs, ys), method=self.mll)
+        Xs = np.ones((n, model.Xu_initial.shape[-1]))
+        ys = np.ones((n, model.output_dim))
+        params = model.init(key, (Xs, ys), method=model.mll)
         return params
 
     def mll(self, data):
@@ -1387,6 +1396,38 @@ def pytree_leaves(tree, names):
     return leafs
 
 
+def flax_check_traversal(params, traversal):
+
+    if isinstance(params, (dict, flax.core.FrozenDict)):
+        return optim.GradientDescent().create(
+            params, traversal).state
+    else:
+        def flax_optim_get_params_dict(inputs):
+            if isinstance(inputs, flax.nn.base.Model):
+                return inputs.params
+            elif isinstance(inputs, (dict, flax.core.FrozenDict)):
+                return flax.core.unfreeze(inputs)
+            else:
+                raise ValueError(
+                    'Can only traverse a flax Model instance or a nested dict, not '
+                    f'{type(inputs)}')
+
+        def flax_optim_sorted_items(x):
+            """Returns items of a dict ordered by keys."""
+            return sorted(x.items(), key=lambda x: x[0])
+            
+
+        def iterate_path(traversal, inputs):
+            params = flax_optim_get_params_dict(inputs)
+            flat_dict = flax.traverse_util.flatten_dict(params)
+            for key, value in flax_optim_sorted_items(flat_dict):
+                path = '/' + '/'.join(key)
+                if traversal._filter_fn(path, value):
+                    yield path
+
+        return list(iterate_path(traversal, params.params))
+
+
 def pytree_check_device(tree):
     return jax.tree_util.tree_map(lambda x: x.device_buffer.device(), tree)
 
@@ -1400,7 +1441,7 @@ def flax_create_optimizer(params, optimizer_name, optimizer_kwargs, optimizer_fo
     return flax_get_optimizer(optimizer_name)(**optimizer_kwargs).create(params, optimizer_focus)
 
 
-def flax_create_multioptimizer_3focus(params, optimizer_name, optimizer_kwargs, kwds, kwds_noopt):
+def flax_create_multioptimizer_3focus(params, optimizer_name, optimizer_kwargs, kwds, kwds_noopt, ):
     """3 distjoint set of parameters/traversals
             0. optimize parameters not mentioned in `kwds` or `kwds_noopt`
                 - optimize using `optimizer_kwargs[0]`
