@@ -1,5 +1,5 @@
 import math
-from typing import Any, Callable, Sequence, Optional, Tuple, Union, List
+from typing import Any, Callable, Sequence, Optional, Tuple, Union, List, Iterable
 from functools import partial
 from dataclasses import dataclass, field
 
@@ -630,36 +630,91 @@ class LikMultipleNormalKron(Lik):
 
 
 class LikMulticlassSoftmax(Lik):
+    """ Represents p(y|f) = Cat(π) where π = softmax(f) """
     output_dim: int = 1
     n_mc_samples: int = 100
-
-    def predictive_dist(self, μ, Σ, full_cov=True):
-        raise ValueError('`LikMulticlassSoftmax.predictive_dist`'
-                         'not yet implemented')
         
-    def variational_log_prob(self, y, μf, σ2f):
-        """ Computes variational log prob with MC samples
-                ∫ log p(y|p) q(f) df 
-                    = ∫ Σᵢ yᵢ log( eᶠⁱ/(Σⱼeᶠʲ) ) q(f) df
-                    = (1/L) Σ_ℓ yt*logsoftmax(f_ℓ)  
-                        where f_1,...,f_L ~ μf + σf*ϵ
+    def predictive_dist(self, μf, σ2f, full_cov=False):
+        """ Computes posterior distribution via MC samples of `f` 
+                     E[y] = ∫∫ y p(y|f)q(f) df dy
+                          = ∫ softmax(f) q(f) df
+                     V[y] = ∫∫ (y-E[y]) p(y|f)q(f) df dy
+                          = ∫ softmax(f)*(1-softmax(f)) q(f) df
         """
-        key = self.make_rng('lik_mc_samples')
-        L = self.n_mc_samples
+        if full_cov:
+            raise ValueError('`LikMulticlassSoftmax.predictive_dist`'
+                             'full covariance not implemented!')
+        print(μf.shape, σ2f.shape)
+        D = self.output_dim
+        μf, σ2f = μf.reshape((-1,D)), σ2f.reshape((-1,D))
+        
+        Ey, Vy = reparam_mc_integration([self.predictive_mean, self.predictive_variance],
+                                        self.make_rng('lik_mc_samples'),
+                                        self.n_mc_samples,
+                                        μf, σ2f)
+        return Ey, Vy
+            
+    def predictive_mean(self, f):
+        return jax.nn.softmax(f, axis=-1)
+
+    def predictive_variance(self, f):
+        p = jax.nn.softmax(f, axis=-1)
+        return p - p**2
+            
+    def logprob(self, f, y):
+        """Computes log p(y|f) = Σᵢ yᵢ log( eᶠⁱ/(Σⱼeᶠʲ) ) 
+                
+            f,y    (N*L, D)
+            logp   (N*L, 1)
+        """
+        logp = jax.nn.log_softmax(f)
+        logp = np.sum(logp*y, axis=-1)
+        return logp
+
+    def variational_log_prob(self, y, μf, σ2f):
+        """ Computes variational log prob with MC samples of `f`
+                ∫ log p(y|p) q(f) df 
+        """
         N, D = y.shape
+        μf, σ2f = μf.reshape((N,D)), σ2f.reshape((N,D))
         if D != self.output_dim:
             raise ValueError('`LikMulticlassSoftmax`: dimension mismatch')
-        μf, σ2f = μf.reshape((N,D)), σ2f.reshape((N,D))
-
-        # (L, N, D)
-        ϵ = random.normal(key, (L, *μf.shape))
-        fmc = np.sqrt(σ2f)*ϵ + μf
-
-        logp = jax.nn.log_softmax(fmc)
-        logp = np.sum(logp*y, axis=-1)  # compute logprob
-        logp = np.mean(logp, axis=0)    # MC integration
-        logp = np.sum(logp)             # sum over data 
+        
+        logp = reparam_mc_integration(self.logprob,
+                                      self.make_rng('lik_mc_samples'),
+                                      self.n_mc_samples,
+                                      μf, σ2f,
+                                      y=y)
+        logp = np.sum(logp)
         return logp
+
+
+def reparam_mc_integration(fns, key, L, μ, σ2, **kwargs):
+    """Computes
+            fn(S, **kwargs) for fn in fns
+                where S_1,...,S_L ~ N(μ, σ2)
+    """
+    N, D = μ.shape
+    ϵ = random.normal(key, (L, *μ.shape))
+    S = np.sqrt(σ2)*ϵ + μ
+    S = np.reshape(S, (L*N, D))
+    
+    for k, v in kwargs.items():
+        D_v = v.shape[1]
+        V = np.tile(v[np.newaxis,...], (L,1,1))
+        kwargs[k] = np.reshape(V, (L*N, D_v))
+        
+    def eval_fn(fn):
+        fn_eval = fn(S, **kwargs)
+        fn_eval = fn_eval.reshape((L, N, -1))
+        fn_eval = np.mean(fn_eval, axis=0)
+        return fn_eval
+    
+    if isinstance(fns, Iterable):
+        return [eval_fn(fn) for fn in fns]
+    else:
+        return eval_fn(fns)
+        
 
 
 class GPModel(object):
