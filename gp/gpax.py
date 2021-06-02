@@ -629,6 +629,39 @@ class LikMultipleNormalKron(Lik):
                       (.5/σ2I)*(np.square((y-μf)) + σ2f))
 
 
+class LikMulticlassSoftmax(Lik):
+    output_dim: int = 1
+    n_mc_samples: int = 100
+
+    def predictive_dist(self, μ, Σ, full_cov=True):
+        raise ValueError('`LikMulticlassSoftmax.predictive_dist`'
+                         'not yet implemented')
+        
+    def variational_log_prob(self, y, μf, σ2f):
+        """ Computes variational log prob with MC samples
+                ∫ log p(y|p) q(f) df 
+                    = ∫ Σᵢ yᵢ log( eᶠⁱ/(Σⱼeᶠʲ) ) q(f) df
+                    = (1/L) Σ_ℓ yt*logsoftmax(f_ℓ)  
+                        where f_1,...,f_L ~ μf + σf*ϵ
+        """
+        key = self.make_rng('lik_mc_samples')
+        L = self.n_mc_samples
+        N, D = y.shape
+        if D != self.output_dim:
+            raise ValueError('`LikMulticlassSoftmax`: dimension mismatch')
+        μf, σ2f = μf.reshape((N,D)), σ2f.reshape((N,D))
+
+        # (L, N, D)
+        ϵ = random.normal(key, (L, *μf.shape))
+        fmc = np.sqrt(σ2f)*ϵ + μf
+
+        logp = jax.nn.log_softmax(fmc)
+        logp = np.sum(logp*y, axis=-1)  # compute logprob
+        logp = np.mean(logp, axis=0)    # MC integration
+        logp = np.sum(logp)             # sum over data 
+        return logp
+
+
 class GPModel(object):
 
     def pred_y(self, Xs, full_cov=False):
@@ -828,6 +861,7 @@ class VFE(nn.Module, GPModel):
 
 
 
+
 class SVGP(nn.Module, GPModel):
     mean_fn_cls: Callable
     k_cls: Callable
@@ -853,10 +887,14 @@ class SVGP(nn.Module, GPModel):
 
     @classmethod
     def get_init_params(self, model, key):
+        k1, k2 = random.split(key)
+        rngs = {'params': k1}
+        if isinstance(model.lik_cls(), LikMulticlassSoftmax):
+            rngs.update({'lik_mc_samples': k2})
         n = 1
         Xs = np.ones((n, model.Xu_initial.shape[-1]))
         ys = np.ones((n, model.output_dim))
-        params = model.init(key, (Xs, ys), method=model.mll)
+        params = model.init(rngs, (Xs, ys), method=model.mll)
         return params
 
     def mll(self, data):

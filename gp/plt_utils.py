@@ -123,9 +123,9 @@ def _2simplex_contour(ax, f, vertexlabels=None, contourfunc=None, **kwargs):
 
 
 def _draw_axes(ax, vertexlabels):
-    l1 = mpl.lines.Line2D([0, 0.5, 1.0, 0], [0, np.sqrt(3) / 2, 0, 0],
-                          color="k", linewidth=1, antialiased=True)
-    ax.add_line(l1)
+    # l1 = mpl.lines.Line2D([0, 0.5, 1.0, 0], [0, np.sqrt(3) / 2, 0, 0],
+    #                       color="k", linewidth=1, antialiased=True)
+    # ax.add_line(l1)
     ax.text(-0.05, -0.05, vertexlabels[0], ha='right')
     ax.text(1.05, -0.05, vertexlabels[1], ha='left')
     ax.text(0.5, np.sqrt(3) / 2 + 0.05, vertexlabels[2], ha='center')
@@ -136,7 +136,7 @@ def _draw_axes(ax, vertexlabels):
     ax.axis('off')
     ax.set_aspect("equal")
 
-def plt_2simplex_dirichlet_pdf(ax, α, **kwargs):
+def plt_2simplex_dirichlet_pdf(ax, α, log_scale=False, **kwargs):
     from jax.scipy.stats import dirichlet
-    f = lambda X: dirichlet.pdf(X.T, α)
+    f = lambda X: np.log(dirichlet.pdf(X.T, α)+1e-10) if log_scale else dirichlet.pdf(X.T, α)
     plt_2simplex_contourf(ax, f, **kwargs)
