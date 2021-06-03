@@ -741,12 +741,6 @@ class LikMulticlassDirichlet(Lik):
         return ỹ, σ̃2
 
     def predictive_dist(self, μf, σ2f, full_cov=False):
-        """ Computes posterior distribution via MC samples of `f` 
-                     E[y] = ∫∫ y p(y|f)q(f) df dy
-                          = ∫ softmax(f) q(f) df
-                     V[y] = ∫∫ (y-E[y]) p(y|f)q(f) df dy
-                          = ∫ softmax(f)*(1-softmax(f)) q(f) df
-        """
         if full_cov:
             raise ValueError('`LikMulticlassDirichlet.predictive_dist`'
                              'full covariance not implemented!')
@@ -1594,6 +1588,13 @@ def pytree_leaves(tree, names):
     return leafs
 
 
+def flax_check_multiopt(params, opt):
+    for hyper_param, traversal in zip(opt.optimizer_def.hyper_params,
+                                      opt.optimizer_def.traversals):
+        print(hyper_param)
+        print(flax_check_traversal(params, traversal))
+
+
 def flax_check_traversal(params, traversal):
 
     if isinstance(params, (dict, flax.core.FrozenDict)):
@@ -1661,18 +1662,26 @@ def flax_create_multioptimizer_3focus(params, optimizer_name, optimizer_kwargs, 
     opt = opt_def.create(params)
     return opt
 
-
-def flax_create_multioptimizer(params, optimizer_name, optimizer_kwargs, kwds):
-    focus0 = optim.ModelParamTraversal(
-        lambda p, v: not pytree_path_contains_keywords(p, kwds))
-    focus1 = optim.ModelParamTraversal(
-        lambda p, v: pytree_path_contains_keywords(p, kwds))
-    opt0 = flax_get_optimizer(optimizer_name)(**optimizer_kwargs[0])
-    opt1 = flax_get_optimizer(optimizer_name)(**optimizer_kwargs[0])
-    opt_def = optim.MultiOptimizer((focus0, opt0),
-                                   (focus1, opt1))
+    
+def flax_create_multioptimizer(params, optimizer_name, optimizer_kwargs, traversal_filter_fns):
+    import itertools
+    traversals_and_optimizers = []
+    for filter_fn, opt_kwargs in zip(traversal_filter_fns,
+                                     itertools.cycle(optimizer_kwargs)):
+        traversal = optim.ModelParamTraversal(filter_fn)
+        opt_def = flax_get_optimizer(optimizer_name)(**opt_kwargs)
+        traversals_and_optimizers.append((traversal, opt_def))
+    opt_def = optim.MultiOptimizer(*traversals_and_optimizers)
     opt = opt_def.create(params)
     return opt
+
+
+def flax_create_multioptimizer_2focus(params, optimizer_name, optimizer_kwargs, filter_fn_kwds):
+    """ Create multiopimizer with 2 focus, where 1st focus uses `filter_fn_kwds` """
+    traversal_filter_fns = [lambda p, v: pytree_path_contains_keywords(p, filter_fn_kwds),
+                            lambda p, v: not pytree_path_contains_keywords(p, filter_fn_kwds)]
+    return flax_create_multioptimizer(params, optimizer_name, optimizer_kwargs, traversal_filter_fns)
+
 
 
 def flax_run_optim(f, params, num_steps=10, log_func=None,
