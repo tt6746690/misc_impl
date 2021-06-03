@@ -632,8 +632,8 @@ class LikMultipleNormalKron(Lik):
 class LikMulticlassSoftmax(Lik):
     """ Represents p(y|f) = Cat(π) where π = softmax(f) """
     output_dim: int = 1
-    n_mc_samples: int = 100
-        
+    n_mc_samples: int = 20
+
     def predictive_dist(self, μf, σ2f, full_cov=False):
         """ Computes posterior distribution via MC samples of `f` 
                      E[y] = ∫∫ y p(y|f)q(f) df dy
@@ -644,23 +644,22 @@ class LikMulticlassSoftmax(Lik):
         if full_cov:
             raise ValueError('`LikMulticlassSoftmax.predictive_dist`'
                              'full covariance not implemented!')
-        print(μf.shape, σ2f.shape)
         D = self.output_dim
         μf, σ2f = μf.reshape((-1,D)), σ2f.reshape((-1,D))
+
+        def predictive_mean(f):
+            return jax.nn.softmax(f, axis=-1)
+
+        def predictive_variance(f):
+            p = jax.nn.softmax(f, axis=-1)
+            return p - p**2
         
-        Ey, Vy = reparam_mc_integration([self.predictive_mean, self.predictive_variance],
+        Ey, Vy = reparam_mc_integration([predictive_mean, predictive_variance],
                                         self.make_rng('lik_mc_samples'),
                                         self.n_mc_samples,
                                         μf, σ2f)
         return Ey, Vy
-            
-    def predictive_mean(self, f):
-        return jax.nn.softmax(f, axis=-1)
 
-    def predictive_variance(self, f):
-        p = jax.nn.softmax(f, axis=-1)
-        return p - p**2
-            
     def logprob(self, f, y):
         """Computes log p(y|f) = Σᵢ yᵢ log( eᶠⁱ/(Σⱼeᶠʲ) ) 
                 
@@ -688,7 +687,6 @@ class LikMulticlassSoftmax(Lik):
         logp = np.sum(logp)
         return logp
 
-
 def reparam_mc_integration(fns, key, L, μ, σ2, **kwargs):
     """Computes
             fn(S, **kwargs) for fn in fns
@@ -714,7 +712,114 @@ def reparam_mc_integration(fns, key, L, μ, σ2, **kwargs):
         return [eval_fn(fn) for fn in fns]
     else:
         return eval_fn(fns)
+
+
+class LikMulticlassDirichlet(Lik):
+    """ Represents p(y|f) = Cat(π) where π ~ Dir(α)
+            where Dir(α) is approximated using LogNormals
+                e.g. (eᶠ, ... eᶠᴷ) ~ Dir(α)
+                      eᶠᵏ ~ LogNormal(μ, σ2) approx Gamma(α, 1)
+                      fk  ~ Normal(μ, σ2)
+    """
+    output_dim: int = 1
+    init_val_α_ϵ: float = .1
+    init_val_α_δ: float = 10.
+    approx_type: str = 'kl'
+    n_mc_samples: int = 20
+
+    def setup(self):
+        self.α_ϵ = self.init_val_α_ϵ
+        self.α_δ = self.init_val_α_δ
+        self.α = np.array([self.α_ϵ, self.α_δ+self.α_ϵ])
+        self.lognorm_y, self.lognorm_σ2 = gamma_to_lognormal(
+            self.α, self.approx_type) 
+
+    def to_lognorm(self, y_onehot):
+        y = np.asarray(y_onehot, np.int32)
+        ỹ = self.lognorm_y[y]
+        σ̃2 = self.lognorm_σ2[y]
+        return ỹ, σ̃2
+
+    def predictive_dist(self, μf, σ2f, full_cov=False):
+        """ Computes posterior distribution via MC samples of `f` 
+                     E[y] = ∫∫ y p(y|f)q(f) df dy
+                          = ∫ softmax(f) q(f) df
+                     V[y] = ∫∫ (y-E[y]) p(y|f)q(f) df dy
+                          = ∫ softmax(f)*(1-softmax(f)) q(f) df
+        """
+        if full_cov:
+            raise ValueError('`LikMulticlassDirichlet.predictive_dist`'
+                             'full covariance not implemented!')
+        D = self.output_dim
+        μf, σ2f = μf.reshape((-1,D)), σ2f.reshape((-1,D))
+
+        def predictive_mean(f):
+            return jax.nn.softmax(f, axis=-1)
+
+        def predictive_variance(f):
+            p = jax.nn.softmax(f, axis=-1)
+            return p - p**2
         
+        Ey, Vy = reparam_mc_integration([predictive_mean, predictive_variance],
+                                        self.make_rng('lik_mc_samples'),
+                                        self.n_mc_samples,
+                                        μf, σ2f)
+        return Ey, Vy
+
+    def variational_log_prob(self, y, μf, σ2f):
+        y = y.reshape(-1, 1)
+        μf, σ2f = μf.reshape(y.shape), σ2f.reshape(y.shape)
+        ỹ, σ̃2 = self.to_lognorm(y)
+        return np.sum(-.5*np.log(2*np.pi*σ̃2) -
+                      (.5/σ̃2)*(np.square(ỹ-μf) + σ2f))
+
+    
+
+def gamma_to_lognormal(α, approx_type='kl'):
+    """Computes lognormal approximation to Gamma(α,1)
+        Two types of `approx_type` possible,
+            - 'kl'
+                \min_{μ,σ2} = KL(LogNormal(μ,σ2)||Gamma(α,1))
+                    implies α -> (ln(α)-.5*σ2, 1/α)
+                    
+            - `moment`    match first & second moment
+                    implies α -> (ln(α)-.5*σ2, log(1/α + 1))
+    """
+    if approx_type == 'kl':
+        σ2 = 1/α
+        μ = np.log(α) - σ2/2
+    elif approx_type == 'moment':
+        σ2 = np.log(1/α + 1)
+        μ = np.log(α) - σ2/2
+    else:
+        raise ValueError(f'approx_type={approx_type} not implemented!')
+    return μ, σ2
+
+
+def gamma_to_lognormal_inv(μ, σ2,
+                           approx_type='kl',
+                           mc_key=random.PRNGKey(0),
+                           mc_n_samples=1000):
+    """Computes inverse of lognormal approximation to Gamma(α,1) 
+    """
+    import scipy
+
+    if approx_type == 'kl':
+        α = np.real(1/(scipy.special.lambertw(1/(2*np.exp(μ)))*2))
+    elif approx_type == 'moment':
+        """via interpolation"""
+        α = np.linspace(1e-10, 100, 2000)
+        σ2 = np.log( 1/α + 1 )
+        y = np.log(α) - σ2/2
+        interp_fn = scipy.interpolate.interp1d(y, α)
+        α = interp_fn(μ)
+    elif approx_type == 'mc':
+        α = reparam_mc_integration(
+            lambda f: np.exp(f), mc_key, mc_n_samples, μ, σ2)
+    else:
+        raise ValueError(f'approx_type={approx_type} not implemented!')
+    return α
+
 
 
 class GPModel(object):
