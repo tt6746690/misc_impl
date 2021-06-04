@@ -34,6 +34,9 @@ logs/
 *-blx.bib
 __latexindent_temp.tex
 
+# data
+*.pkl
+
 # external library 
 knockoff/external
 registration/output

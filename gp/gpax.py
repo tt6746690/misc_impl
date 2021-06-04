@@ -41,8 +41,9 @@ class MeanConstant(Mean):
 
     def m(self, X):
         c = self.c.reshape(1, -1)
-        m = np.tile(c, X.shape[:-1]+(1,))
+        m = np.tile(c, (X.shape[0], 1))
         return m
+
 
 
 def compose_kernel(k, l, op_reduce):
@@ -1046,7 +1047,7 @@ class SVGP(nn.Module, GPModel):
         if isinstance(model.lik_cls(), LikMulticlassSoftmax):
             rngs.update({'lik_mc_samples': k2})
         n = 1
-        Xs = np.ones((n, model.Xu_initial.shape[-1]))
+        Xs = np.ones((n, *model.Xu_initial.shape[1:]))
         ys = np.ones((n, model.output_dim))
         params = model.init(rngs, (Xs, ys), method=model.mll)
         return params
@@ -1528,8 +1529,8 @@ def log_func_default(i, f, params, everyn=20):
         print(f'[{i:3}]\tLoss={f(params):.3f}\t{S}')
 
 
-def get_data_stream(key, bsz, X, y):
-    n = len(X)
+def get_data_stream(key, bsz, dataset):
+    n = len(dataset[0] if isinstance(dataset, (list, tuple)) else dataset)
     n_complete_batches, leftover = divmod(n, bsz)
     n_batches = n_complete_batches + bool(leftover)
 
@@ -1539,7 +1540,15 @@ def get_data_stream(key, bsz, X, y):
             perm = random.permutation(permkey, n)
             for i in range(n_batches):
                 ind = perm[i*bsz:(i+1)*bsz]
-                yield (X[ind], y[ind])
+                if isinstance(dataset, np.ndarray):
+                    yield dataset[ind]
+                elif isinstance(dataset, (list, tuple)):
+                    yield tuple((X[ind] for X in dataset))
+                else:
+                    # isinstance(dataset, torchvision.datasets.VisionDataset)
+                    data = [dataset[i] for i in ind]
+                    data_batched = tuple(np.stack(x) for x in list(zip(*data)))
+                    yield data_batched
 
     return n_batches, data_stream(key)
 
@@ -1588,13 +1597,6 @@ def pytree_leaves(tree, names):
     return leafs
 
 
-def flax_check_multiopt(params, opt):
-    for hyper_param, traversal in zip(opt.optimizer_def.hyper_params,
-                                      opt.optimizer_def.traversals):
-        print(hyper_param)
-        print(flax_check_traversal(params, traversal))
-
-
 def flax_check_traversal(params, traversal):
 
     if isinstance(params, (dict, flax.core.FrozenDict)):
@@ -1627,6 +1629,13 @@ def flax_check_traversal(params, traversal):
         return list(iterate_path(traversal, params.params))
 
 
+def flax_check_multiopt(params, opt):
+    for hyper_param, traversal in zip(opt.optimizer_def.hyper_params,
+                                      opt.optimizer_def.traversals):
+        print(hyper_param)
+        print(flax_check_traversal(params, traversal))
+
+
 def pytree_check_device(tree):
     return jax.tree_util.tree_map(lambda x: x.device_buffer.device(), tree)
 
@@ -1640,7 +1649,7 @@ def flax_create_optimizer(params, optimizer_name, optimizer_kwargs, optimizer_fo
     return flax_get_optimizer(optimizer_name)(**optimizer_kwargs).create(params, optimizer_focus)
 
 
-def flax_create_multioptimizer_3focus(params, optimizer_name, optimizer_kwargs, kwds, kwds_noopt, ):
+def flax_create_multioptimizer_3focus(params, optimizer_name, optimizer_kwargs, kwds, kwds_noopt):
     """3 distjoint set of parameters/traversals
             0. optimize parameters not mentioned in `kwds` or `kwds_noopt`
                 - optimize using `optimizer_kwargs[0]`
@@ -1702,6 +1711,18 @@ def flax_run_optim(f, params, num_steps=10, log_func=None,
             log_func(i, f, opt.target)
     return opt.target
 
+def pytree_save(tree, path):
+    import pickle
+    with open(path, 'wb') as file:
+        pickle.dump(tree, file)
+        
+def pytree_load(tree, path):
+    import pickle
+    from flax import serialization
+    with open(path, 'rb') as file:
+        output = pickle.load(file) # onp.ndarray
+    new_tree = serialization.from_state_dict(tree, output)
+    return new_tree
 
 def is_symm(A, rtol=1e-05, atol=1e-08):
     return np.allclose(A, A.T, rtol=rtol, atol=atol)
@@ -1749,3 +1770,17 @@ def preproc_data(data, T):
     if X is not None and y is not None:
         assert(X.shape[0] == y.shape[0])
     return X, y
+
+
+def rotated_ims(x, rot_range=(0, 180), n_ims=10):
+    import scipy
+    degs = np.linspace(*rot_range, n_ims)
+    ims = []
+    for deg in degs:
+        im = scipy.ndimage.rotate(x, angle=deg,
+                                  reshape=False,
+                                  order=1,
+                                  mode='constant', cval=0.)
+        ims.append(im)
+    ims = np.stack(ims)
+    return ims
