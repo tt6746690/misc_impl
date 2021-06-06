@@ -46,7 +46,6 @@ class MeanConstant(Mean):
         return m
 
 
-
 def compose_kernel(k, l, op_reduce):
 
     class KernelComposition(nn.Module):
@@ -94,7 +93,6 @@ def kernel_active_dims_overlap(k1, k2):
         return (len(o) > 0), o
     else:
         return True, None
-
 
 
 def sqdist(X, Y=None):
@@ -179,18 +177,18 @@ class CovLin(Kernel):
     """Linear kernel k(x,y) = σ2xy"""
     # #ard σ2
     ard_len: int = 1
-    
+
     def setup(self):
         self.σ2 = BijSoftplus.forward(self.param(
             'σ2', lambda k, s: BijSoftplus.reverse(
                 1.*np.ones(s, dtype=np.float32)), (self.ard_len,)))
         self.check_ard_dims(self.σ2)
-        
+
     def K(self, X, Y=None):
         if Y is None:
             Y = X
         return (X*self.σ2)@Y.T
-    
+
     def Kdiag(self, X, Y=None):
         return np.sum(np.square(X)*self.σ2, axis=1)
 
@@ -200,7 +198,7 @@ class CovSE(Kernel):
     ard_len: int = 1
     # initialization
     init_val_l: float = 1.
-    # no scaling 
+    # no scaling
     output_scaling: bool = True
 
     def setup(self):
@@ -241,7 +239,7 @@ class CovSEwithEncoder(Kernel):
         self.g = self.g_cls()
         self.ls = BijSoftplus.forward(self.param(
             'ls', lambda k, s: BijSoftplus.reverse(
-                 self.init_val_l*np.ones(s, dtype=np.float32)), (self.ard_len,)))
+                self.init_val_l*np.ones(s, dtype=np.float32)), (self.ard_len,)))
         self.σ2 = BijSoftplus.forward(self.param(
             'σ2', lambda k, s: BijSoftplus.reverse(np.array([1.])), (1,)))
         self.check_ard_dims(self.ls)
@@ -376,18 +374,19 @@ class CovAdd1(Kernel):
         # `active_dims` for children kernel should start from 0
         #     since `__call__` has inputs that are pre-sliced
         self.ks = [self.k_cls(active_dims=[d]) for d in range(len(s))]
-        
+
     def K(self, X, Y=None):
         K = None
         for i, k in enumerate(self.ks):
             Ki = k(X, Y, full_cov=True)
-            K = Ki if (K is None) else jax.ops.index_update(K, jax.ops.index[:,:], K+Ki)
+            K = Ki if (K is None) else jax.ops.index_update(
+                K, jax.ops.index[:, :], K+Ki)
         return K
-    
+
     def Kdiag(self, X, Y=None):
         Ks = [k(X, Y, full_cov=False) for k in self.ks]
         return np.sum(np.stack(Ks), axis=0)
-        
+
 
 class CovProduct(Kernel):
     """Hadamard product of two kernel matrices
@@ -396,16 +395,16 @@ class CovProduct(Kernel):
     # k0 & k1
     k0_cls: Callable = CovSE
     k1_cls: Callable = CovSE
-    
+
     def setup(self):
         self.k0 = self.k0_cls()
         self.k1 = self.k1_cls()
-        
+
     def K(self, X, Y=None):
         K0 = self.k0(X, Y, full_cov=True)
         K1 = self.k1(X, Y, full_cov=True)
         return K0*K1
-    
+
     def Kdiag(self, X, Y=None):
         K0diag = self.k0(X, Y, full_cov=False)
         K1diag = self.k1(X, Y, full_cov=False)
@@ -668,7 +667,7 @@ class LikMulticlassSoftmax(Lik):
             raise ValueError('`LikMulticlassSoftmax.predictive_dist`'
                              'full covariance not implemented!')
         D = self.output_dim
-        μf, σ2f = μf.reshape((-1,D)), σ2f.reshape((-1,D))
+        μf, σ2f = μf.reshape((-1, D)), σ2f.reshape((-1, D))
 
         def predictive_mean(f):
             return jax.nn.softmax(f, axis=-1)
@@ -676,7 +675,7 @@ class LikMulticlassSoftmax(Lik):
         def predictive_variance(f):
             p = jax.nn.softmax(f, axis=-1)
             return p - p**2
-        
+
         Ey, Vy = reparam_mc_integration([predictive_mean, predictive_variance],
                                         self.make_rng('lik_mc_samples'),
                                         self.n_mc_samples,
@@ -685,7 +684,7 @@ class LikMulticlassSoftmax(Lik):
 
     def logprob(self, f, y):
         """Computes log p(y|f) = Σᵢ yᵢ log( eᶠⁱ/(Σⱼeᶠʲ) ) 
-                
+
             f,y    (N*L, D)
             logp   (N*L, 1)
         """
@@ -700,10 +699,10 @@ class LikMulticlassSoftmax(Lik):
             Assumes `y` is one hot encoded 
         """
         N, D = y.shape
-        μf, σ2f = μf.reshape((N,D)), σ2f.reshape((N,D))
+        μf, σ2f = μf.reshape((N, D)), σ2f.reshape((N, D))
         if D != self.output_dim:
             raise ValueError('`LikMulticlassSoftmax`: dimension mismatch')
-        
+
         logp = reparam_mc_integration(self.logprob,
                                       self.make_rng('lik_mc_samples'),
                                       self.n_mc_samples,
@@ -711,6 +710,7 @@ class LikMulticlassSoftmax(Lik):
                                       y=y)
         logp = np.sum(logp)
         return logp
+
 
 def reparam_mc_integration(fns, key, L, μ, σ2, **kwargs):
     """Computes
@@ -721,18 +721,18 @@ def reparam_mc_integration(fns, key, L, μ, σ2, **kwargs):
     ϵ = random.normal(key, (L, *μ.shape))
     S = np.sqrt(σ2)*ϵ + μ
     S = np.reshape(S, (L*N, D))
-    
+
     for k, v in kwargs.items():
         D_v = v.shape[1]
-        V = np.tile(v[np.newaxis,...], (L,1,1))
+        V = np.tile(v[np.newaxis, ...], (L, 1, 1))
         kwargs[k] = np.reshape(V, (L*N, D_v))
-        
+
     def eval_fn(fn):
         fn_eval = fn(S, **kwargs)
         fn_eval = fn_eval.reshape((L, N, -1))
         fn_eval = np.mean(fn_eval, axis=0)
         return fn_eval
-    
+
     if isinstance(fns, Iterable):
         return [eval_fn(fn) for fn in fns]
     else:
@@ -757,7 +757,7 @@ class LikMulticlassDirichlet(Lik):
         self.α_δ = self.init_val_α_δ
         self.α = np.array([self.α_ϵ, self.α_δ+self.α_ϵ])
         self.lognorm_y, self.lognorm_σ2 = gamma_to_lognormal(
-            self.α, self.approx_type) 
+            self.α, self.approx_type)
 
     def to_lognorm(self, y_onehot):
         y = np.asarray(y_onehot, np.int32)
@@ -770,7 +770,7 @@ class LikMulticlassDirichlet(Lik):
             raise ValueError('`LikMulticlassDirichlet.predictive_dist`'
                              'full covariance not implemented!')
         D = self.output_dim
-        μf, σ2f = μf.reshape((-1,D)), σ2f.reshape((-1,D))
+        μf, σ2f = μf.reshape((-1, D)), σ2f.reshape((-1, D))
 
         def predictive_mean(f):
             return jax.nn.softmax(f, axis=-1)
@@ -778,7 +778,7 @@ class LikMulticlassDirichlet(Lik):
         def predictive_variance(f):
             p = jax.nn.softmax(f, axis=-1)
             return p - p**2
-        
+
         Ey, Vy = reparam_mc_integration([predictive_mean, predictive_variance],
                                         self.make_rng('lik_mc_samples'),
                                         self.n_mc_samples,
@@ -791,9 +791,8 @@ class LikMulticlassDirichlet(Lik):
         μf, σ2f = μf.reshape(y.shape), σ2f.reshape(y.shape)
         ỹ, σ̃2 = self.to_lognorm(y)
         return np.sum(-.5*np.log(2*np.pi*σ̃2) -
-                      (.5/σ̃2)*(np.square(ỹ-μf) + σ2f))
+                      (.5/σ̃2)*(np.square(ỹ- μf) + σ2f))
 
-    
 
 def gamma_to_lognormal(α, approx_type='kl'):
     """Computes lognormal approximation to Gamma(α,1)
@@ -801,7 +800,7 @@ def gamma_to_lognormal(α, approx_type='kl'):
             - 'kl'
                 \min_{μ,σ2} = KL(LogNormal(μ,σ2)||Gamma(α,1))
                     implies α -> (ln(α)-.5*σ2, 1/α)
-                    
+
             - `moment`    match first & second moment
                     implies α -> (ln(α)-.5*σ2, log(1/α + 1))
     """
@@ -830,7 +829,7 @@ def gamma_to_lognormal_inv(μ, σ2,
         """via interpolation"""
         y = np.logspace(np.log(1e-5), np.log(40), 2000, base=np.ℯ)
         α = np.exp(y-30)   # α = np.linspace(1e-10, 100, 2000)
-        σ2 = np.log( 1/α + 1 )
+        σ2 = np.log(1/α + 1)
         y = np.log(α) - σ2/2
         interp_fn = scipy.interpolate.interp1d(y, α)
         α = interp_fn(μ)
@@ -853,7 +852,6 @@ class GPModel(object):
         else:
             μy, σ2y = self.lik.predictive_dist(μf, σ2f, full_cov=full_cov)
         return μy, σ2y
-
 
 
 class GPR(nn.Module, GPModel):
@@ -890,8 +888,7 @@ class GPR(nn.Module, GPModel):
         L = linalg.cholesky(K)
 
         m = self.mean_fn(X)
-        mlik = MultivariateNormalTril(m, L)
-        mll = mlik.log_prob(y)
+        mll = log_prob_mvn_tril(m, L, y)
 
         return mll
 
@@ -1040,8 +1037,6 @@ class VFE(nn.Module, GPModel):
         return μ, Σ
 
 
-
-
 class SVGP(nn.Module, GPModel):
     mean_fn_cls: Callable
     k_cls: Callable
@@ -1059,11 +1054,19 @@ class SVGP(nn.Module, GPModel):
         self.Xu = self.param('Xu', lambda k, s: self.Xu_initial,
                              (self.n_inducing, self.d))
 
-        # len(Xu)=100, then 400 outputs ...
-        # In https://arxiv.org/pdf/1705.09862.pdf
-        #     variational mvn also parameterized by some kronecker structure !
-        # For now just assume its a large mvn where Σ models both input&output
-        self.q = VariationalMultivariateNormal(self.output_dim*self.n_inducing)
+        # Two types of variational distribution
+        # (1) shared inducing points & independent multiple-output `q`
+        #     only usable with multiple output kernel `CovMultipleOutputIndependent`
+        #     equivalent to (2) when `CovIndex` is fixed to be identity
+        # (2) shared inducing points & correlated multiple-output `q`
+        #     use in conjunction with `CovICM`, e.g. len(Xu)=100, then 400 outputs ...
+        #     In https://arxiv.org/pdf/1705.09862.pdf
+        #     Assume its a large mvn where Σ models both input&output
+        if isinstance(self.k_cls(), CovMultipleOutputIndependent):
+            D, P = self.n_inducing, self.output_dim
+        else:
+            D, P = self.n_inducing*self.output_dim, 1
+        self.q = VariationalMultivariateNormal(D=D, P=P)
 
     @classmethod
     def get_init_params(self, model, key):
@@ -1071,7 +1074,7 @@ class SVGP(nn.Module, GPModel):
         rngs = {'params': k1}
         if isinstance(model.lik_cls(), LikMulticlassSoftmax):
             rngs.update({'lik_mc_samples': k2})
-        n = 1
+        n = 2
         Xs = np.ones((n, *model.Xu_initial.shape[1:]))
         ys = np.ones((n, model.output_dim))
         params = model.init(rngs, (Xs, ys), method=model.mll)
@@ -1080,42 +1083,49 @@ class SVGP(nn.Module, GPModel):
     def mll(self, data):
         X, y = data
         k = self.k
-        Xu = self.Xu               # (M,...)
-        μq, Lq = q.μ, q.L          # (P, M) & (P, M, M)
+        Xu = self.Xu                 # (M,...)
+        μq, Lq = self.q.μ, self.q.L  # (P, M) & (P, M, M)
+        if μq.shape[0] == 1:
+            μq, Lq = μq.squeeze(0), Lq.squeeze(0)
 
-        mf = self.mean_fn(X)       # (N, P)
-        mu = self.mean_fn(Xu)      # (M, P)
+        mf = self.mean_fn(X)        # (N, P)
+        mu = self.mean_fn(Xu)       # (M, P)
 
-        Kff = k(X, full_cov=False) # (P, N)
-        Kuf = k(Xu, X)             # (P, M, N)
-        Kuu = k(Xu)                # (P, M, M)
-        Luu = cholesky_jitter_vmap(Kuu, jitter=5e-5) # (P, M, M)
+        Kff = k(X, full_cov=False)  # (P, N)
+        Kuf = k(Xu, X)              # (P, M, N)
+        Kuu = k(Xu)                 # (P, M, M)
+        Luu = cholesky_jitter_vmap(Kuu, jitter=5e-5)  # (P, M, M)
 
         α = self.n_data/len(X) \
             if self.n_data is not None else 1.
 
-        mapK = None if Kuu.ndim == 2 else 0
-        mvn_marginal_variational_vmap = vmap(
-            mvn_marginal_variational, (mapK, mapK, 1, mapK, 1, 0, 0, None), -1) # along P-dim
-        μqf, σ2qf = mvn_marginal_variational_vmap(Kff, Kuf, mf,
-                                                  Luu, mu, μq, Lq, False)
-        μqf = μqf.reshape(σ2qf.shape) # (N, P)
+        if isinstance(k, CovMultipleOutputIndependent):
+            mvn_marginal_variational_fn = vmap(
+                mvn_marginal_variational, (0, 0, 1, 0, 1, 0, 0, None), -1)  # along P-dim
+            kl_mvn_tril_fn = vmap(kl_mvn_tril, (0, 0, 1, 0))
+        else:
+            mvn_marginal_variational_fn = mvn_marginal_variational
+            kl_mvn_tril_fn = kl_mvn_tril
+
+        μqf, σ2qf = mvn_marginal_variational_fn(Kff, Kuf, mf,
+                                                Luu, mu, μq, Lq, False)
+        μqf = μqf.reshape(σ2qf.shape)  # (N, P)
 
         if isinstance(self.lik, LikMultipleNormal):
             elbo_lik = α*self.lik.variational_log_prob(y, μqf, σ2qf, X[:, -1])
         else:
-            variational_log_prob_vmap = vmap(
-                self.lik.variational_log_prob, (1, 1, 1)) # along M-dim
-            elbo_lik = α*np.sum(variational_log_prob_vmap(y, μqf, σ2qf))
-        kl_mvn_tril_vmap = vmap(kl_mvn_tril, (0, 0, 1, mapK))
-        elbo_nkl = -np.sum(kl_mvn_tril_vmap(μq, Lq, mu, Luu))
+            elbo_lik = α*np.sum(self.lik.variational_log_prob(y, μqf, σ2qf))
+        elbo_nkl = -np.sum(kl_mvn_tril_fn(μq, Lq, mu, Luu))
         elbo = elbo_lik + elbo_nkl
 
         return elbo
 
     def pred_f(self, Xs, full_cov=True):
         k = self.k
-        Xu, μq, Lq = self.Xu, self.q.μ, self.q.L
+        Xu = self.Xu                 # (M,...)
+        μq, Lq = self.q.μ, self.q.L  # (P, M) & (P, M, M)
+        if μq.shape[0] == 1:
+            μq, Lq = μq.squeeze(0), Lq.squeeze(0)
 
         ms = self.mean_fn(Xs)
         mu = self.mean_fn(Xu)
@@ -1123,47 +1133,45 @@ class SVGP(nn.Module, GPModel):
         Kss = k(Xs, full_cov=full_cov)
         Kus = k(Xu, Xs)
         Kuu = k(Xu)
-        Luu = cholesky_jitter_vmap(Kuu, jitter=5e-5) # (P, M, M)
+        Luu = cholesky_jitter_vmap(Kuu, jitter=5e-5)  # (P, M, M)
 
-        mapK = None if Kuu.ndim == 2 else 0
-        mvn_marginal_variational_vmap = vmap(
-            mvn_marginal_variational, (mapK, mapK, 1, mapK, 1, 0, 0, None), -1) # along P-dim
-        μf, Σf = mvn_marginal_variational(Kss, Kus, ms,
-                                          Luu, mu, μq, Lq, full_cov=full_cov)
+        if isinstance(k, CovMultipleOutputIndependent):
+            mvn_marginal_variational_fn = vmap(
+                mvn_marginal_variational, (0, 0, 1, 0, 1, 0, 0, None), -1)  # along P-dim
+        else:
+            mvn_marginal_variational_fn = mvn_marginal_variational
+
+        μf, Σf = mvn_marginal_variational_fn(Kss, Kus, ms,
+                                             Luu, mu, μq, Lq, full_cov)
         return μf, Σf
 
 
-class MultivariateNormalTril(object):
-    """N(μ, LLᵀ) """
 
+class MultivariateNormalTril(object):
+    """N(μ, LLᵀ) representing multiple independent mvn
+            where μ (P, D)
+                  L (P, D, D)
+    """
     def __init__(self, μ, L):
-        if μ.ndim != 1:
-            μ = μ.flatten()
-        d = μ.size
-        if L.shape != (d, d):
+        P, D = μ.shape
+        if L.shape != (P, D, D):
             raise ValueError(
-                f'L should have dim ({d},{d})')
-        self.d = d
+                f'L should have dim ({P}, {D}, {D})')
         self.μ = μ
         self.L = L
 
     def log_prob(self, x):
         """x: (n, m) -> (n*m,)"""
-        x = x.reshape(self.μ.shape)
-        α = solve_triangular(self.L, (x-self.μ), lower=True)
-        mahan = -.5*np.sum(np.square(α))
-        lgdet = -np.sum(np.log(np.diag(self.L)))
-        const = -.5*self.d*np.log(2*np.pi)
-        return mahan + const + lgdet
+        P, D = self.μ.shape
+        # Note `x` usually (d, P) previous impl
+        x = x.reshape((D, P))
+        logp_vmap = vmap(log_prob_mvn_tril, (0, 0, 1), 0)
+        logp = logp_vmap(self.μ, self.L, x)
+        return np.sum(logp)
 
     def cov(self):
-        return self.L@self.L.T
+        return vmap(lambda X: X@X.T, (0,), 0)(self.L).squeeze()
 
-    def sample(self, key, shape=()):
-        """Outputs μ+Lϵ where ϵ~N(0,I)"""
-        shape = shape + self.μ.shape
-        ϵ = random.normal(key, shape)
-        return self.μ.T + np.tensordot(ϵ, self.L, [-1, 1])
 
 
 class MultivariateNormalInducing(object):
@@ -1200,14 +1208,22 @@ class MultivariateNormalInducing(object):
 
 
 class VariationalMultivariateNormal(nn.Module):
-    d: int = 1
+    D: int = 1
+    P: int = 1
 
     def setup(self):
-        self.μ = self.param('μ', jax.nn.initializers.zeros, (self.d,))
-        self.L = BijFillTril.forward(
-            self.param('L', lambda k, s: BijFillTril.reverse(np.eye(self.d)),
-                       (BijFillTril.reverse_shape(self.d),)))
-
+        """ Variational Normal distribution with 
+                μ (P, D) 
+                L (P, D, D)
+        """
+        P, D = self.P, self.D
+        self.μ = self.param('μ', jax.nn.initializers.zeros, (P, D))
+        init_L_shape = (P, BijFillTril.reverse_shape(D))
+        def init_L_fn(k, s):
+            return np.stack([BijFillTril.reverse(np.eye(D)) for i in range(P)])
+        self.L = np.stack([BijFillTril.forward(L) 
+                           for L in self.param('L', init_L_fn, init_L_shape)])
+        
     def __call__(self):
         return MultivariateNormalTril(self.μ, self.L)
 
@@ -1492,7 +1508,7 @@ class CNN(nn.Module):
 
     @nn.compact
     def __call__(self, x):
-        conv = partial(nn.Conv, kernel_size=(4,4), strides=(2,2))
+        conv = partial(nn.Conv, kernel_size=(4, 4), strides=(2, 2))
         assert(x.shape[1] == 224 and x.shape[2] == 224)
         x = x.reshape(-1, 224, 224, 1)
         # (1, 224, 224, 1)
@@ -1623,7 +1639,7 @@ def pytree_get_kvs(tree):
     """Gets `tree['params']` to {path: np.ndarray, ...} """
     kvs = {}
     for k, v in flax.traverse_util.flatten_dict(
-                unfreeze(tree['params'])).items():
+            unfreeze(tree['params'])).items():
         kvs['/'.join(k)] = v
     return kvs
 
@@ -1671,6 +1687,7 @@ def pytree_leaf(tree, path):
         a = np.nan
     return a
 
+
 def flax_check_traversal(params, traversal):
 
     if isinstance(params, (dict, flax.core.FrozenDict)):
@@ -1690,7 +1707,6 @@ def flax_check_traversal(params, traversal):
         def flax_optim_sorted_items(x):
             """Returns items of a dict ordered by keys."""
             return sorted(x.items(), key=lambda x: x[0])
-            
 
         def iterate_path(traversal, inputs):
             params = flax_optim_get_params_dict(inputs)
@@ -1745,7 +1761,7 @@ def flax_create_multioptimizer_3focus(params, optimizer_name, optimizer_kwargs, 
     opt = opt_def.create(params)
     return opt
 
-    
+
 def flax_create_multioptimizer(params, optimizer_name, optimizer_kwargs, traversal_filter_fns):
     import itertools
     traversals_and_optimizers = []
@@ -1764,7 +1780,6 @@ def flax_create_multioptimizer_2focus(params, optimizer_name, optimizer_kwargs, 
     traversal_filter_fns = [lambda p, v: pytree_path_contains_keywords(p, filter_fn_kwds),
                             lambda p, v: not pytree_path_contains_keywords(p, filter_fn_kwds)]
     return flax_create_multioptimizer(params, optimizer_name, optimizer_kwargs, traversal_filter_fns)
-
 
 
 def flax_run_optim(f, params, num_steps=10, log_func=None,
@@ -1796,7 +1811,7 @@ def pytree_load(tree, path):
     import pickle
     from flax import serialization
     with open(path, 'rb') as file:
-        output = pickle.load(file) # onp.ndarray
+        output = pickle.load(file)  # onp.ndarray
     new_tree = serialization.from_state_dict(tree, output)
     return new_tree
 
