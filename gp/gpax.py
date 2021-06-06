@@ -233,7 +233,7 @@ class CovSEwithEncoder(Kernel):
     # initialization
     init_val_l: float = 1.
     # encoder
-    g_cls: Callable = partial(nn.Dense, n_features=1)
+    g_cls: Callable = LayerIdentity
 
     def setup(self):
         self.g = self.g_cls()
@@ -504,6 +504,10 @@ class CovICMLearnable(Kernel):
         K = Kx*Kt
         return K
 
+class LayerIdentity(nn.Module):
+    @nn.compact
+    def __call__(self, X):
+        return X
 
 class CovMultipleOutputIndependent(Kernel):
     """Represents multiple output GP with a shared encoder
@@ -513,9 +517,11 @@ class CovMultipleOutputIndependent(Kernel):
     """
     output_dim: int = 1
     k_cls: Callable = CovSE
+    g_cls: Callable = LayerIdentity
     
     def setup(self):
         self.ks = [self.k_cls() for d in range(self.output_dim)]
+        self.g = self.g_cls()
         
     def K(self, X, Y=None):
         Ks = np.stack([ k(X, Y, full_cov=True)  for k in self.ks ]) # (P, N, N) 
@@ -524,6 +530,7 @@ class CovMultipleOutputIndependent(Kernel):
     def Kdiag(self, X, Y=None):
         Ks = np.stack([ k(X, Y, full_cov=False) for k in self.ks ]) # (P, N)
         return Ks
+    
 
 
 class Lik(nn.Module):
@@ -1682,7 +1689,7 @@ def pytree_leaves(tree, names):
 def pytree_leaf(tree, path):
     import operator
     try:
-        a = functools.reduce(operator.getitem, path.split('/'), params)
+        a = functools.reduce(operator.getitem, path.split('/'), tree)
     except:
         a = np.nan
     return a
