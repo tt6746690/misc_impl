@@ -1,10 +1,11 @@
 import math
 from typing import Any, Callable, Sequence, Optional, Tuple, Union, List, Iterable
+import functools
 from functools import partial
 from dataclasses import dataclass, field
 
 import jax
-from jax import random, device_put
+from jax import random, device_put, vmap
 import jax.numpy as np
 import jax.numpy.linalg as linalg
 from jax.scipy.linalg import cho_solve, solve_triangular
@@ -505,6 +506,27 @@ class CovICMLearnable(Kernel):
         return K
 
 
+class CovMultipleOutputIndependent(Kernel):
+    """Represents multiple output GP with a shared encoder
+            f = (f1,...,fᴾ)
+            fᵖ ~ GP(0, kᵖ(NeuralNets(x)))
+            kᵖ are the different kernels
+    """
+    output_dim: int = 1
+    k_cls: Callable = CovSE
+    
+    def setup(self):
+        self.ks = [self.k_cls() for d in range(self.output_dim)]
+        
+    def K(self, X, Y=None):
+        Ks = np.stack([ k(X, Y, full_cov=True)  for k in self.ks ]) # (P, N, N) 
+        return Ks
+
+    def Kdiag(self, X, Y=None):
+        Ks = np.stack([ k(X, Y, full_cov=False) for k in self.ks ]) # (P, N)
+        return Ks
+
+
 class Lik(nn.Module):
     """ p(y|f) """
 
@@ -674,6 +696,8 @@ class LikMulticlassSoftmax(Lik):
     def variational_log_prob(self, y, μf, σ2f):
         """ Computes variational log prob with MC samples of `f`
                 ∫ log p(y|p) q(f) df 
+
+            Assumes `y` is one hot encoded 
         """
         N, D = y.shape
         μf, σ2f = μf.reshape((N,D)), σ2f.reshape((N,D))
@@ -762,6 +786,7 @@ class LikMulticlassDirichlet(Lik):
         return Ey, Vy
 
     def variational_log_prob(self, y, μf, σ2f):
+        """ Handles multiple response `y` """
         y = y.reshape(-1, 1)
         μf, σ2f = μf.reshape(y.shape), σ2f.reshape(y.shape)
         ỹ, σ̃2 = self.to_lognorm(y)
@@ -803,7 +828,8 @@ def gamma_to_lognormal_inv(μ, σ2,
         α = np.real(1/(scipy.special.lambertw(1/(2*np.exp(μ)))*2))
     elif approx_type == 'moment':
         """via interpolation"""
-        α = np.linspace(1e-10, 100, 2000)
+        y = np.logspace(np.log(1e-5), np.log(40), 2000, base=np.ℯ)
+        α = np.exp(y-30)   # α = np.linspace(1e-10, 100, 2000)
         σ2 = np.log( 1/α + 1 )
         y = np.log(α) - σ2/2
         interp_fn = scipy.interpolate.interp1d(y, α)
@@ -814,7 +840,6 @@ def gamma_to_lognormal_inv(μ, σ2,
     else:
         raise ValueError(f'approx_type={approx_type} not implemented!')
     return α
-
 
 
 class GPModel(object):
@@ -1055,26 +1080,35 @@ class SVGP(nn.Module, GPModel):
     def mll(self, data):
         X, y = data
         k = self.k
-        Xu, μq, Lq = self.Xu, self.q.μ, self.q.L
+        Xu = self.Xu               # (M,...)
+        μq, Lq = q.μ, q.L          # (P, M) & (P, M, M)
 
-        mf = self.mean_fn(X)
-        mu = self.mean_fn(Xu)
+        mf = self.mean_fn(X)       # (N, P)
+        mu = self.mean_fn(Xu)      # (M, P)
 
-        Kff = k(X, full_cov=False)
-        Kuf = k(Xu, X)
-        Kuu = k(Xu)
-        Luu = cholesky_jitter(Kuu, jitter=5e-5)
+        Kff = k(X, full_cov=False) # (P, N)
+        Kuf = k(Xu, X)             # (P, M, N)
+        Kuu = k(Xu)                # (P, M, M)
+        Luu = cholesky_jitter_vmap(Kuu, jitter=5e-5) # (P, M, M)
 
         α = self.n_data/len(X) \
             if self.n_data is not None else 1.
 
-        μqf, σ2qf = mvn_marginal_variational(Kff, Kuf, mf,
-                                             Luu, mu, μq, Lq, full_cov=False)
+        mapK = None if Kuu.ndim == 2 else 0
+        mvn_marginal_variational_vmap = vmap(
+            mvn_marginal_variational, (mapK, mapK, 1, mapK, 1, 0, 0, None), -1) # along P-dim
+        μqf, σ2qf = mvn_marginal_variational_vmap(Kff, Kuf, mf,
+                                                  Luu, mu, μq, Lq, False)
+        μqf = μqf.reshape(σ2qf.shape) # (N, P)
+
         if isinstance(self.lik, LikMultipleNormal):
             elbo_lik = α*self.lik.variational_log_prob(y, μqf, σ2qf, X[:, -1])
         else:
-            elbo_lik = α*self.lik.variational_log_prob(y, μqf, σ2qf)
-        elbo_nkl = -kl_mvn_tril(μq, Lq, mu, Luu)
+            variational_log_prob_vmap = vmap(
+                self.lik.variational_log_prob, (1, 1, 1)) # along M-dim
+            elbo_lik = α*np.sum(variational_log_prob_vmap(y, μqf, σ2qf))
+        kl_mvn_tril_vmap = vmap(kl_mvn_tril, (0, 0, 1, mapK))
+        elbo_nkl = -np.sum(kl_mvn_tril_vmap(μq, Lq, mu, Luu))
         elbo = elbo_lik + elbo_nkl
 
         return elbo
@@ -1089,8 +1123,11 @@ class SVGP(nn.Module, GPModel):
         Kss = k(Xs, full_cov=full_cov)
         Kus = k(Xu, Xs)
         Kuu = k(Xu)
-        Luu = cholesky_jitter(Kuu, jitter=5e-5)
+        Luu = cholesky_jitter_vmap(Kuu, jitter=5e-5) # (P, M, M)
 
+        mapK = None if Kuu.ndim == 2 else 0
+        mvn_marginal_variational_vmap = vmap(
+            mvn_marginal_variational, (mapK, mapK, 1, mapK, 1, 0, 0, None), -1) # along P-dim
         μf, Σf = mvn_marginal_variational(Kss, Kus, ms,
                                           Luu, mu, μq, Lq, full_cov=full_cov)
         return μf, Σf
@@ -1387,6 +1424,18 @@ def mvn_conditional_sparse(Kss, Kus,
     return μ, Σ
 
 
+def log_prob_mvn_tril(μ, L, x):
+    """ μ (d,)   L (d,d)   x (d,) """
+    d = μ.size
+    x = x.reshape((d,))
+    μ = μ.reshape((d,))
+    α = solve_triangular(L, (x-μ), lower=True)
+    mahan = -.5*np.sum(np.square(α))
+    lgdet = -np.sum(np.log(np.diag(L)))
+    const = -.5*d*np.log(2*np.pi)
+    return mahan + const + lgdet
+
+
 def rand_μΣ(key, d):
     k1, k2 = random.split(key)
     μ = random.normal(k1, (d,))
@@ -1464,6 +1513,14 @@ class CNN(nn.Module):
 def cholesky_jitter(K, jitter=1e-5):
     L = linalg.cholesky(jax_add_to_diagonal(K, jitter))
     return L
+
+
+def cholesky_jitter_vmap(K, jitter=1e-5):
+    """ Handles batched kernel matrix """
+    if K.ndim == 2:
+        return cholesky_jitter(K, jitter)
+    else:
+        return vmap(cholesky_jitter, (0, None), 0)(K, jitter)
 
 
 def jax_add_to_diagonal(A, v):
@@ -1562,6 +1619,15 @@ def pytree_path_contains_keywords(path, kwds):
     return True if any(k in path for k in kwds) else False
 
 
+def pytree_get_kvs(tree):
+    """Gets `tree['params']` to {path: np.ndarray, ...} """
+    kvs = {}
+    for k, v in flax.traverse_util.flatten_dict(
+                unfreeze(tree['params'])).items():
+        kvs['/'.join(k)] = v
+    return kvs
+
+
 def pytree_mutate(tree, kvs):
     """Mutate `tree` with `kvs: {path: value}` """
     aggregate = []
@@ -1587,7 +1653,7 @@ def pytree_leave(tree, name):
 
 def pytree_leaves(tree, names):
     """Access `tree` leaves using `ks: [path]` """
-    leafs = [None for _ in range(len(names))]
+    leafs = [np.nan for _ in range(len(names))]
     for k, v in flax.traverse_util.flatten_dict(
             unfreeze(tree)).items():
         path = '/'.join(k)
@@ -1596,6 +1662,14 @@ def pytree_leaves(tree, names):
                 leafs[i] = v
     return leafs
 
+
+def pytree_leaf(tree, path):
+    import operator
+    try:
+        a = functools.reduce(operator.getitem, path.split('/'), params)
+    except:
+        a = np.nan
+    return a
 
 def flax_check_traversal(params, traversal):
 
@@ -1711,11 +1785,13 @@ def flax_run_optim(f, params, num_steps=10, log_func=None,
             log_func(i, f, opt.target)
     return opt.target
 
+
 def pytree_save(tree, path):
     import pickle
     with open(path, 'wb') as file:
         pickle.dump(tree, file)
-        
+
+
 def pytree_load(tree, path):
     import pickle
     from flax import serialization
@@ -1723,6 +1799,7 @@ def pytree_load(tree, path):
         output = pickle.load(file) # onp.ndarray
     new_tree = serialization.from_state_dict(tree, output)
     return new_tree
+
 
 def is_symm(A, rtol=1e-05, atol=1e-08):
     return np.allclose(A, A.T, rtol=rtol, atol=atol)
