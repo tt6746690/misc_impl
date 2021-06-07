@@ -232,6 +232,7 @@ class LayerIdentity(nn.Module):
     def __call__(self, X):
         return X
 
+
 class CovSEwithEncoder(Kernel):
     # #ard lengthscales
     ard_len: int = 1
@@ -508,7 +509,6 @@ class CovICMLearnable(Kernel):
         Kt = np.vstack(Kt).T.flatten()
         K = Kx*Kt
         return K
-
 
 
 class CovMultipleOutputIndependent(Kernel):
@@ -1156,42 +1156,42 @@ class InducingLocations(nn.Module):
     shape: Tuple[int]
     # (key, shape) -> ndarray
     init_fn_inducing: Callable
-    
+
     def setup(self):
         self.X = self.param('X', self.init_inducing_fn, self.shape)
-        
+
     def __call__(self):
         return self.X
-    
 
 
-class InducingLocationsST(nn.Module):
+class InducingLocationsSpatialTransform(nn.Module):
     shape: Tuple[int]
     # (key, shape) -> ndarray
     init_fn_inducing: Callable
     trans_type: str
-    
+
     def setup(self):
         self.X = self.param('X', self.init_fn_inducing, self.shape)
         init_shape_transform, init_fn_transform = \
             self.get_init_for_transform()
         self.T = self.param_to_transform(
             self.param('T', init_fn_transform, init_shape_transform))
-        
+
     def get_init_for_transform(self):
         n_inducing = self.shape[0]
         if self.trans_type == '3':
             init_shape = (n_inducing, 3)
-            init_fn = lambda k, s: np.tile(np.array([1., 0, 0]),
-                                           (n_inducing, 1))
+
+            def init_fn(k, s): return np.tile(np.array([1., 0, 0]),
+                                              (n_inducing, 1))
         elif self.trans_type == '4':
             init_shape = (n_inducing, 4)
-            init_fn = lambda k, s: np.tile(np.array([1., 1, 0, 0]),
-                                           (n_inducing, 1))
+            def init_fn(k, s): return np.tile(np.array([1., 1, 0, 0]),
+                                              (n_inducing, 1))
         else:
             raise ValueError(f'{trans_type} not Implemented!')
         return init_shape, init_fn
-        
+
     def param_to_transform(self, θs):
         def param_to_transform_one(θ):
             T = np.zeros((2, 3))
@@ -1215,8 +1215,6 @@ class InducingLocationsST(nn.Module):
                                       (0, 0, None), 0)
         X = spatial_transform_vmap(self.T, self.X, (h, w))
         return X
-
-
 
 
 class MultivariateNormalTril(object):
@@ -2007,6 +2005,7 @@ def grid_sample(S, G):
         wd[..., np.newaxis]*Sd
 
     return T
+
 
 def spatial_transform(A, S, Tsize):
     """Differentiable transformation of `S` via
