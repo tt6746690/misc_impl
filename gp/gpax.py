@@ -1155,7 +1155,7 @@ class SVGP(nn.Module, GPModel):
 class InducingLocations(nn.Module):
     shape: Tuple[int]
     # (key, shape) -> ndarray
-    init_inducing_fn: Callable
+    init_fn_inducing: Callable
     
     def setup(self):
         self.X = self.param('X', self.init_inducing_fn, self.shape)
@@ -1163,32 +1163,34 @@ class InducingLocations(nn.Module):
     def __call__(self):
         return self.X
     
+
+
 class InducingLocationsST(nn.Module):
     shape: Tuple[int]
     # (key, shape) -> ndarray
-    init_inducing_fn: Callable
+    init_fn_inducing: Callable
     trans_type: str
     
     def setup(self):
-        self.X = self.param('X', self.init_inducing_fn, self.shape)
-        init_transform_s, init_transform_fn = \
-            self.get_init_fn_shape()
+        self.X = self.param('X', self.init_fn_inducing, self.shape)
+        init_shape_transform, init_fn_transform = \
+            self.get_init_for_transform()
         self.T = self.param_to_transform(
-            self.param('T', init_transform_fn, init_transform_s))
+            self.param('T', init_fn_transform, init_shape_transform))
         
-    def get_init_fn_shape(self):
+    def get_init_for_transform(self):
         n_inducing = self.shape[0]
         if self.trans_type == '3':
-            init_transform_s = (n_inducing, 3)
-            init_transform_fn: Callable = \
-                lambda k, s: np.tile(np.array([1., 0, 0]), (n_inducing, 1))
+            init_shape = (n_inducing, 3)
+            init_fn = lambda k, s: np.tile(np.array([1., 0, 0]),
+                                           (n_inducing, 1))
         elif self.trans_type == '4':
-            init_transform_s = (n_inducing, 4)
-            init_transform_fn: Callable = \
-                lambda k, s: np.tile(np.array([1., 1, 0, 0]), (n_inducing, 1))
+            init_shape = (n_inducing, 4)
+            init_fn = lambda k, s: np.tile(np.array([1., 1, 0, 0]),
+                                           (n_inducing, 1))
         else:
             raise ValueError(f'{trans_type} not Implemented!')
-        return init_transform_s, init_transform_fn
+        return init_shape, init_fn
         
     def param_to_transform(self, θs):
         def param_to_transform_one(θ):
@@ -1208,9 +1210,13 @@ class InducingLocationsST(nn.Module):
         return Ts
 
     def __call__(self):
-        spatial_transform_vmap = vmap(spatial_transform, (0, 0, None), 0)
-        X = spatial_transform_vmap(self.T, self.X, (28, 28))
+        n_inducing, h, w, c = self.shape
+        spatial_transform_vmap = vmap(spatial_transform,
+                                      (0, 0, None), 0)
+        X = spatial_transform_vmap(self.T, self.X, (h, w))
         return X
+
+
 
 
 class MultivariateNormalTril(object):
