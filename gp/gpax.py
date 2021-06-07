@@ -227,6 +227,11 @@ class CovSE(Kernel):
             return np.tile(np.array([1.]), len(X))
 
 
+class LayerIdentity(nn.Module):
+    @nn.compact
+    def __call__(self, X):
+        return X
+
 class CovSEwithEncoder(Kernel):
     # #ard lengthscales
     ard_len: int = 1
@@ -504,10 +509,7 @@ class CovICMLearnable(Kernel):
         K = Kx*Kt
         return K
 
-class LayerIdentity(nn.Module):
-    @nn.compact
-    def __call__(self, X):
-        return X
+
 
 class CovMultipleOutputIndependent(Kernel):
     """Represents multiple output GP with a shared encoder
@@ -518,19 +520,18 @@ class CovMultipleOutputIndependent(Kernel):
     output_dim: int = 1
     k_cls: Callable = CovSE
     g_cls: Callable = LayerIdentity
-    
+
     def setup(self):
         self.ks = [self.k_cls() for d in range(self.output_dim)]
         self.g = self.g_cls()
-        
+
     def K(self, X, Y=None):
-        Ks = np.stack([ k(X, Y, full_cov=True)  for k in self.ks ]) # (P, N, N) 
+        Ks = np.stack([k(X, Y, full_cov=True) for k in self.ks])  # (P, N, N)
         return Ks
 
     def Kdiag(self, X, Y=None):
-        Ks = np.stack([ k(X, Y, full_cov=False) for k in self.ks ]) # (P, N)
+        Ks = np.stack([k(X, Y, full_cov=False) for k in self.ks])  # (P, N)
         return Ks
-    
 
 
 class Lik(nn.Module):
@@ -1048,18 +1049,16 @@ class SVGP(nn.Module, GPModel):
     mean_fn_cls: Callable
     k_cls: Callable
     lik_cls: Callable
+    inducing_loc_cls: Callable
     n_data: int
     output_dim: int
-    Xu_initial: np.ndarray
 
     def setup(self):
-        self.d = self.Xu_initial.shape[1]
-        self.n_inducing = self.Xu_initial.shape[0]
         self.mean_fn = self.mean_fn_cls()
         self.k = self.k_cls()
         self.lik = self.lik_cls()
-        self.Xu = self.param('Xu', lambda k, s: self.Xu_initial,
-                             (self.n_inducing, self.d))
+        self.Xu = self.inducing_loc_cls()
+        self.n_inducing = self.Xu.shape[0]
 
         # Two types of variational distribution
         # (1) shared inducing points & independent multiple-output `q`
@@ -1082,7 +1081,7 @@ class SVGP(nn.Module, GPModel):
         if isinstance(model.lik_cls(), LikMulticlassSoftmax):
             rngs.update({'lik_mc_samples': k2})
         n = 2
-        Xs = np.ones((n, *model.Xu_initial.shape[1:]))
+        Xs = np.ones((n, *model.inducing_loc_cls().shape[1:]))
         ys = np.ones((n, model.output_dim))
         params = model.init(rngs, (Xs, ys), method=model.mll)
         return params
@@ -1090,7 +1089,7 @@ class SVGP(nn.Module, GPModel):
     def mll(self, data):
         X, y = data
         k = self.k
-        Xu = self.Xu                 # (M,...)
+        Xu = self.Xu()               # (M,...)
         μq, Lq = self.q.μ, self.q.L  # (P, M) & (P, M, M)
         if μq.shape[0] == 1:
             μq, Lq = μq.squeeze(0), Lq.squeeze(0)
@@ -1129,7 +1128,7 @@ class SVGP(nn.Module, GPModel):
 
     def pred_f(self, Xs, full_cov=True):
         k = self.k
-        Xu = self.Xu                 # (M,...)
+        Xu = self.Xu()               # (M,...)
         μq, Lq = self.q.μ, self.q.L  # (P, M) & (P, M, M)
         if μq.shape[0] == 1:
             μq, Lq = μq.squeeze(0), Lq.squeeze(0)
@@ -1153,12 +1152,73 @@ class SVGP(nn.Module, GPModel):
         return μf, Σf
 
 
+class InducingLocations(nn.Module):
+    shape: Tuple[int]
+    # (key, shape) -> ndarray
+    init_inducing_fn: Callable
+    
+    def setup(self):
+        self.X = self.param('X', self.init_inducing_fn, self.shape)
+        
+    def __call__(self):
+        return self.X
+    
+class InducingLocationsST(nn.Module):
+    shape: Tuple[int]
+    # (key, shape) -> ndarray
+    init_inducing_fn: Callable
+    trans_type: str
+    
+    def setup(self):
+        self.X = self.param('X', self.init_inducing_fn, self.shape)
+        init_transform_s, init_transform_fn = \
+            self.get_init_fn_shape()
+        self.T = self.param_to_transform(
+            self.param('T', init_transform_fn, init_transform_s))
+        
+    def get_init_fn_shape(self):
+        n_inducing = self.shape[0]
+        if self.trans_type == '3':
+            init_transform_s = (n_inducing, 3)
+            init_transform_fn: Callable = \
+                lambda k, s: np.tile(np.array([1., 0, 0]), (n_inducing, 1))
+        elif self.trans_type == '4':
+            init_transform_s = (n_inducing, 4)
+            init_transform_fn: Callable = \
+                lambda k, s: np.tile(np.array([1., 1, 0, 0]), (n_inducing, 1))
+        else:
+            raise ValueError(f'{trans_type} not Implemented!')
+        return init_transform_s, init_transform_fn
+        
+    def param_to_transform(self, θs):
+        def param_to_transform_one(θ):
+            T = np.zeros((2, 3))
+            if self.trans_type == '3':
+                ind = (np.array([0, 1, 0, 1]),
+                       np.array([0, 1, 2, 2]))
+                T = jax.ops.index_update(
+                    T, ind, np.array([θ[0], θ[0], θ[1], θ[2]]))
+            elif self.trans_type == '4':
+                ind = (np.array([0, 1, 0, 1]),
+                       np.array([0, 1, 2, 2]))
+                T = jax.ops.index_update(
+                    T, ind, np.array([θ[0], θ[1], θ[2], θ[3]]))
+            return T
+        Ts = vmap(param_to_transform_one)(θs)
+        return Ts
+
+    def __call__(self):
+        spatial_transform_vmap = vmap(spatial_transform, (0, 0, None), 0)
+        X = spatial_transform_vmap(self.T, self.X, (28, 28))
+        return X
+
 
 class MultivariateNormalTril(object):
     """N(μ, LLᵀ) representing multiple independent mvn
             where μ (P, D)
                   L (P, D, D)
     """
+
     def __init__(self, μ, L):
         P, D = μ.shape
         if L.shape != (P, D, D):
@@ -1178,7 +1238,6 @@ class MultivariateNormalTril(object):
 
     def cov(self):
         return vmap(lambda X: X@X.T, (0,), 0)(self.L).squeeze()
-
 
 
 class MultivariateNormalInducing(object):
@@ -1226,11 +1285,12 @@ class VariationalMultivariateNormal(nn.Module):
         P, D = self.P, self.D
         self.μ = self.param('μ', jax.nn.initializers.zeros, (P, D))
         init_L_shape = (P, BijFillTril.reverse_shape(D))
+
         def init_L_fn(k, s):
             return np.stack([BijFillTril.reverse(np.eye(D)) for i in range(P)])
-        self.L = np.stack([BijFillTril.forward(L) 
+        self.L = np.stack([BijFillTril.forward(L)
                            for L in self.param('L', init_L_fn, init_L_shape)])
-        
+
     def __call__(self):
         return MultivariateNormalTril(self.μ, self.L)
 
@@ -1883,3 +1943,85 @@ def rotated_ims(x, rot_range=(0, 180), n_ims=10):
         ims.append(im)
     ims = np.stack(ims)
     return ims
+
+
+def homogeneous_grid(height, width):
+    """ Returns target grid in homogeneous coordinate
+            grid    (3, width*height)
+    """
+    Xt, Yt = np.meshgrid(np.linspace(-1, 1, width),
+                         np.linspace(-1, 1, height))
+    ones = np.ones(Xt.size)
+    grid = np.vstack([Xt.flatten(), Yt.flatten(), ones])
+    return grid
+
+
+def grid_sample(S, G):
+    """Use bilinear interpolation to interpolate values 
+        of `S` at source grid `G`'s location
+    '"""
+    w, h, c = S.shape
+    X, Y = G
+
+    # (-1, 1) -> (0, height/width)
+    X = w*(X+1)/2
+    Y = h*(Y+1)/2
+
+    X0 = np.floor(X).astype(np.int32)
+    Y0 = np.floor(Y).astype(np.int32)
+    X1 = X0+1
+    Y1 = Y0+1
+
+    Xmax = w-1
+    Ymax = h-1
+    X0 = np.clip(X0, 0, Xmax)
+    X1 = np.clip(X1, 0, Xmax)
+    Y0 = np.clip(Y0, 0, Ymax)
+    Y1 = np.clip(Y1, 0, Ymax)
+
+    #
+    # a -- c
+    # |  x |
+    # b -- d
+    #
+    wa = (X1-X)*(Y1-Y)
+    wb = (X1-X)*(Y-Y0)
+    wc = (X-X0)*(Y1-Y)
+    wd = (X-X0)*(Y-Y0)
+
+    S_flat = S.reshape(h*w, c)
+    Sa = S_flat[np.ravel_multi_index((Y0, X0), dims=(h, w), mode='wrap'), ...]
+    Sb = S_flat[np.ravel_multi_index((Y1, X0), dims=(h, w), mode='wrap'), ...]
+    Sc = S_flat[np.ravel_multi_index((Y0, X1), dims=(h, w), mode='wrap'), ...]
+    Sd = S_flat[np.ravel_multi_index((Y1, X1), dims=(h, w), mode='wrap'), ...]
+
+    T = wa[..., np.newaxis]*Sa + \
+        wb[..., np.newaxis]*Sb + \
+        wc[..., np.newaxis]*Sc + \
+        wd[..., np.newaxis]*Sd
+
+    return T
+
+def spatial_transform(A, S, Tsize):
+    """Differentiable transformation of `S` via
+        application of homogeneous matrix `A` 
+            to get target image `T` of size `Tsize`
+
+        Following allows for (uniform) stretching by `s`
+            and translation of `tx` and `ty`
+            A = [s  0  tx]
+                [0  s  ty]
+
+       A     (2, 3)
+       S     (h, w, c)
+       Tsize (2,)
+    """
+    height, width = Tsize
+    Gt = homogeneous_grid(height, width)
+    Gs = A@Gt
+    Xs_flat = Gs[0, :]
+    Ys_flat = Gs[1, :]
+    Xs = Xs_flat.reshape(*Tsize)
+    Ys = Ys_flat.reshape(*Tsize)
+    T = grid_sample(S, (Xs, Ys))
+    return T
