@@ -1180,15 +1180,27 @@ class InducingLocationsSpatialTransform(nn.Module):
             self.param('T', init_fn_transform, init_shape_transform))
 
     def get_init_for_transform(self):
+        """ 2: translation 
+            3: translation + uniform scaling
+            4: translation + scaling
+            6: arbitrary affine 
+        """
         n_inducing = self.shape[0]
-        if self.trans_type == '3':
+        if self.trans_type == '2':
+            init_shape = (n_inducing, 2)
+            def init_fn(k, s): return np.tile(np.array([0., 0]),
+                                              (n_inducing, 1))
+        elif self.trans_type == '3':
             init_shape = (n_inducing, 3)
-
             def init_fn(k, s): return np.tile(np.array([1., 0, 0]),
                                               (n_inducing, 1))
         elif self.trans_type == '4':
             init_shape = (n_inducing, 4)
             def init_fn(k, s): return np.tile(np.array([1., 1, 0, 0]),
+                                              (n_inducing, 1))
+        elif self.trans_type == '6':
+            init_shape = (n_inducing, 6)
+            def init_fn(k, s): return np.tile(np.array([1., 0, 0, 0, 1, 0]),
                                               (n_inducing, 1))
         else:
             raise ValueError(f'{trans_type} not Implemented!')
@@ -1196,8 +1208,13 @@ class InducingLocationsSpatialTransform(nn.Module):
 
     def param_to_transform(self, θs):
         def param_to_transform_one(θ):
-            T = np.zeros((2, 3))
-            if self.trans_type == '3':
+            T = np.zeros((2, 3), dtype=np.float32)
+            if self.trans_type == '2':
+                ind = (np.array([0, 1, 0, 1]),
+                       np.array([0, 1, 2, 2]))
+                T = jax.ops.index_update(
+                    T, ind, np.array([1., 1., θ[0], θ[1]]))
+            elif self.trans_type == '3':
                 ind = (np.array([0, 1, 0, 1]),
                        np.array([0, 1, 2, 2]))
                 T = jax.ops.index_update(
@@ -1207,6 +1224,9 @@ class InducingLocationsSpatialTransform(nn.Module):
                        np.array([0, 1, 2, 2]))
                 T = jax.ops.index_update(
                     T, ind, np.array([θ[0], θ[1], θ[2], θ[3]]))
+            elif self.trans_type == '6':
+                T = jax.ops.index_update(
+                    T, jax.ops.index[:], θ.reshape(2,3))
             return T
         Ts = vmap(param_to_transform_one)(θs)
         return Ts
