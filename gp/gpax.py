@@ -1149,6 +1149,8 @@ class SVGP(nn.Module, GPModel):
 
         μf, Σf = mvn_marginal_variational_fn(Kss, Kus, ms,
                                              Luu, mu, μq, Lq, full_cov)
+        if not full_cov:
+                μf = μf.reshape(Σf.shape)  # (N, P)
         return μf, Σf
 
 
