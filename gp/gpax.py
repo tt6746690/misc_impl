@@ -663,6 +663,7 @@ class LikMulticlassSoftmax(Lik):
     """ Represents p(y|f) = Cat(π) where π = softmax(f) """
     output_dim: int = 1
     n_mc_samples: int = 20
+    apx_gamma: bool = False
 
     def predictive_dist(self, μf, σ2f, full_cov=False):
         """ Computes posterior distribution via MC samples of `f` 
@@ -684,6 +685,7 @@ class LikMulticlassSoftmax(Lik):
             p = jax.nn.softmax(f, axis=-1)
             return p - p**2
 
+        μf = self.get_μf(μf, σ2f)
         Ey, Vy = reparam_mc_integration([predictive_mean, predictive_variance],
                                         self.make_rng('lik_mc_samples'),
                                         self.n_mc_samples,
@@ -711,6 +713,7 @@ class LikMulticlassSoftmax(Lik):
         if D != self.output_dim:
             raise ValueError('`LikMulticlassSoftmax`: dimension mismatch')
 
+        μf = self.get_μf(μf, σ2f)
         logp = reparam_mc_integration(self.logprob,
                                       self.make_rng('lik_mc_samples'),
                                       self.n_mc_samples,
@@ -718,6 +721,12 @@ class LikMulticlassSoftmax(Lik):
                                       y=y)
         logp = np.sum(logp)
         return logp
+    
+    def get_μf(self, μf, σ2f):
+        if self.apx_gamma:
+            β = 1/(σ2f*np.exp(μf+σ2f/2)+1e-10)
+            μf = μf + np.log(β+1e-10)
+        return μf
 
 
 def reparam_mc_integration(fns, key, L, μ, σ2, **kwargs):
@@ -841,7 +850,11 @@ def gamma_to_lognormal_inv(μ, σ2,
         y = np.log(α) - σ2/2
         interp_fn = scipy.interpolate.interp1d(y, α)
         α = interp_fn(μ)
-    elif approx_type == 'mc':
+    elif approx_type == 'mc1':
+        α = reparam_mc_integration(
+            lambda f: np.exp(f), mc_key, mc_n_samples, μ, σ2)
+    elif approx_type == 'mc2':
+        μ = μ + np.log(1/(σ2*np.exp(μ+σ2/2)))
         α = reparam_mc_integration(
             lambda f: np.exp(f), mc_key, mc_n_samples, μ, σ2)
     else:
@@ -1077,9 +1090,7 @@ class SVGP(nn.Module, GPModel):
     @classmethod
     def get_init_params(self, model, key):
         k1, k2 = random.split(key)
-        rngs = {'params': k1}
-        if isinstance(model.lik_cls(), LikMulticlassSoftmax):
-            rngs.update({'lik_mc_samples': k2})
+        rngs = {'params': k1, 'lik_mc_samples': k2}
         n = 2
         Xs = np.ones((n, *model.inducing_loc_cls().shape[1:]))
         ys = np.ones((n, model.output_dim))
@@ -1160,7 +1171,7 @@ class InducingLocations(nn.Module):
     init_fn_inducing: Callable
 
     def setup(self):
-        self.X = self.param('X', self.init_inducing_fn, self.shape)
+        self.X = self.param('X', self.init_fn_inducing, self.shape)
 
     def __call__(self):
         return self.X
