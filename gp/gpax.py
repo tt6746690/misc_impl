@@ -37,7 +37,7 @@ class MeanConstant(Mean):
     init_val_m: float = 0.
 
     def setup(self):
-        self.c = self.param('c', lambda k, s: np.full(s, self.init_val_m),
+        self.c = self.param('c', lambda k, s: np.repeat(self.init_val_m, s),
                             (self.output_dim,))
 
     def m(self, X):
@@ -663,6 +663,8 @@ class LikMulticlassSoftmax(Lik):
     """ Represents p(y|f) = Cat(π) where π = softmax(f) """
     output_dim: int = 1
     n_mc_samples: int = 20
+    # Normalize posterior process `f` 
+    #     s.t.`exp(f) ~ Gamma(1/σ2, 1)`
     apx_gamma: bool = False
 
     def predictive_dist(self, μf, σ2f, full_cov=False):
@@ -1941,6 +1943,17 @@ def jax_to_cpu(x, i=0):
 
 def jax_to_gpu(x, i=0):
     return device_put(x, jax.devices('gpu')[i])
+
+
+def flax_model2params(target):
+    if isinstance(target, flax.nn.base.Model):
+        params = flax.core.freeze(target.params)
+    else:
+        params = target
+    return params
+
+def flax_params2model(model, params):
+    return flax.nn.base.Model(model, unfreeze(params))
 
 
 def torch_to_array(x):
