@@ -1631,6 +1631,7 @@ class CNN(nn.Module):
         # (1, 128)
         return x
 
+
 def compute_receptive_fields(model_def, in_shape, spike_loc=None):
     """Computes receptive fields using gradients
         For images, returns receptive fields for (h, w)
