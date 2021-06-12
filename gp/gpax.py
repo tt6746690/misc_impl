@@ -5,7 +5,7 @@ from functools import partial
 from dataclasses import dataclass, field
 
 import jax
-from jax import random, device_put, vmap
+from jax import random, device_put, vmap, vjp
 import jax.numpy as np
 import jax.numpy.linalg as linalg
 from jax.scipy.linalg import cho_solve, solve_triangular
@@ -1630,6 +1630,33 @@ class CNN(nn.Module):
         x = np.mean(x, axis=(1, 2))
         # (1, 128)
         return x
+
+def compute_receptive_fields(model_def, in_shape, spike_loc=None):
+    """Computes receptive fields using gradients
+        For images, returns receptive fields for (h, w)
+    """
+    x = np.ones(in_shape)
+    model = model_def()
+    params = model.init(random.PRNGKey(0), x)
+    params = freeze(jax.tree_map(lambda w: np.ones(w.shape),
+                                 unfreeze(params)))
+    # vjp (𝑥,𝑣)↦∂𝑓(𝑥)ᵀv
+    # vjp :: (a -> b) -> a -> (b, CT b -> CT a)
+    #     vjp: (f, x) -> (f(x), vjp_fn) where vjp_fn: u -> v
+    f = lambda x: model.apply(params, x)
+    y, vjp_fn = vjp(f, x)
+    S = y.shape
+    gy = np.zeros(S)
+    if spike_loc is not None:
+        ind = jax.ops.index[0, spike_loc[:,0], spike_loc[:,1], ...]
+    else:
+        ind = jax.ops.index[0, S[1]//2, S[2]//2, ...]
+    gy = jax.ops.index_update(gy, ind, 1)
+    gx = vjp_fn(gy)[0]
+    I = np.where(gx!=0)
+    rf = np.array([np.max(idx)-np.min(idx)+1
+                   for idx in I])[[1,2]] # (y, x)
+    return rf, gx
 
 
 def cholesky_jitter(K, jitter=1e-5):
