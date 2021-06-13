@@ -262,6 +262,72 @@ class CovSEwithEncoder(Kernel):
         return np.tile(self.σ2, len(X))
 
 
+
+class CovConvolutional(Kernel):
+    """ Convolutional Kernel f~GP(0,k)
+            where k(x,x') = ΣpΣp' kᵧ(X[p], X[p'])
+                  kᵧ(z,z') is the patch kernel
+    """
+    image_size: Tuple[int] = (28, 28, 1) # (H, W, C)
+    patch_size: Tuple[int] = (3, 3)      # (h, w)
+    kg_cls: Callable = CovSE
+
+    def setup(self):
+        self.kg = self.kg_cls()
+    
+    def kp(self, Xp, Yp, full_cov):
+        """ Computes yet-to-be summed kernel `self.kg`
+
+            Xp    (N, P, h, w)
+            Yp    (M, P, h, w)
+            Returns
+                (N, P, M, P) if `Yp` not None 
+                    Computes K(X,Y)
+                (N, P, P) if `Yp` is None
+                    Computes K(X)
+        """
+        patch_len = patch_size[0]*patch_size[1]
+        if full_cov:
+            Xp_shape = Xp.shape # (N, P, h, w)
+            Xp = Xp.reshape(-1, patch_len) # (N*P, h*w)
+            Yp_shape = Yp.shape if Yp is not None else Xp_shape # (M, P, h, w)
+            Yp = Yp.reshape(-1, patch_len) if Yp is not None else Yp # (M*P, h*w)
+            Kp = self.kg(Xp, Yp, full_cov=full_cov) # (N*P, M*P)
+            Kp = Kp.reshape(Xp_shape[:2]+Yp_shape[:2]) # (N, P, M, P)
+        else:
+            Xp_shape = Xp.shape
+            Xp = Xp.reshape((Xp_shape[0], Xp_shape[1], -1)) # (N, P, h*w)
+            Kp = vmap(self.kg, (0, None, None), 0)(Xp, None, True) # (N, P, P)
+        return Kp
+        
+    def get_patches(self, X):
+        """ (N, H, W, 1) -> # (N, P, h, w) where P=#patches """
+        patches = extract_patches_2d_vmap(X.reshape((-1, *self.image_size)),
+                                          self.patch_size)
+        if patches.shape[1] != self.num_patches:
+            raise ValueError('#patches extracted not correct')
+        return patches
+
+    def K(self, X, Y=None):
+        Xp = self.get_patches(X)
+        Yp = None if Y is None else self.get_patches(Y)
+        Kp = self.kp(Xp, Yp, full_cov=True)
+        K = np.mean(Kp, axis=[1, 3])
+        return K
+
+    def Kdiag(self, X, Y=None):
+        Xp = self.get_patches(X)
+        Kp = self.kp(Xp, None, full_cov=False)
+        K = np.mean(Kp, axis=[1, 2])
+        return K
+    
+    @property
+    def num_patches(self):
+        H, W, C = self.image_size
+        h, w = self.patch_size
+        return (H-h+1)*(W-w+1)*C
+    
+
 class CovIndex(Kernel):
     """A kernel applied to indices over a lookup table B
             K[i,j] = B[i,j]
@@ -2007,6 +2073,27 @@ def preproc_data(data, T):
     if X is not None and y is not None:
         assert(X.shape[0] == y.shape[0])
     return X, y
+
+
+def extract_patches_2d(im, patch_size):
+    """Extract patches with size `patch_size` from image `im` 
+            (H, W, 1) -> (P, h, w) where P=#patches
+    """
+    if im.ndim == 3 and im.shape[2] != 1:
+        raise ValueError('`extract_patches_2d` only supports C=1')
+    h, w = patch_size
+    H, W = im.shape[0], im.shape[1]
+    P = (H-h+1)*(W-w+1)
+    patches = []
+    for hi in range(H-h+1):
+        for wi in range(W-w+1):
+            patches.append(im[hi:hi+h, wi:wi+w, ...])
+    patches = np.stack(patches)
+    return patches
+
+
+def extract_patches_2d_batched(ims, patch_size):
+    return vmap(extract_patches_2d, (0, None), 0)(ims, patch_size)
 
 
 def rotated_ims(x, rot_range=(0, 180), n_ims=10):
