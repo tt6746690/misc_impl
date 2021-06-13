@@ -262,7 +262,6 @@ class CovSEwithEncoder(Kernel):
         return np.tile(self.σ2, len(X))
 
 
-
 class CovConvolutional(Kernel):
     """ Convolutional Kernel f~GP(0,k)
             where k(x,x') = ΣpΣp' kᵧ(X[p], X[p'])
@@ -286,12 +285,11 @@ class CovConvolutional(Kernel):
                 (N, P, P) if `Yp` is None
                     Computes K(X)
         """
-        patch_len = patch_size[0]*patch_size[1]
         if full_cov:
             Xp_shape = Xp.shape # (N, P, h, w)
-            Xp = Xp.reshape(-1, patch_len) # (N*P, h*w)
+            Xp = Xp.reshape(-1, self.patch_len) # (N*P, h*w)
             Yp_shape = Yp.shape if Yp is not None else Xp_shape # (M, P, h, w)
-            Yp = Yp.reshape(-1, patch_len) if Yp is not None else Yp # (M*P, h*w)
+            Yp = Yp.reshape(-1, self.patch_len) if Yp is not None else Yp # (M*P, h*w)
             Kp = self.kg(Xp, Yp, full_cov=full_cov) # (N*P, M*P)
             Kp = Kp.reshape(Xp_shape[:2]+Yp_shape[:2]) # (N, P, M, P)
         else:
@@ -320,6 +318,10 @@ class CovConvolutional(Kernel):
         Kp = self.kp(Xp, None, full_cov=False)
         K = np.mean(Kp, axis=[1, 2])
         return K
+
+    @property
+    def patch_len(self):
+        return self.patch_size[0]*self.patch_size[1]
     
     @property
     def num_patches(self):
@@ -2092,7 +2094,7 @@ def extract_patches_2d(im, patch_size):
     return patches
 
 
-def extract_patches_2d_batched(ims, patch_size):
+def extract_patches_2d_vmap(ims, patch_size):
     return vmap(extract_patches_2d, (0, None), 0)(ims, patch_size)
 
 
