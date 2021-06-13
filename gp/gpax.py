@@ -2077,10 +2077,7 @@ def preproc_data(data, T):
     return X, y
 
 
-def extract_patches_2d(im, patch_size):
-    """Extract patches with size `patch_size` from image `im` 
-            (H, W, 1) -> (P, h, w) where P=#patches
-    """
+def extract_patches_2d_nojit(im, patch_size):
     if im.ndim == 3 and im.shape[2] != 1:
         raise ValueError('`extract_patches_2d` only supports C=1')
     h, w = patch_size
@@ -2091,6 +2088,24 @@ def extract_patches_2d(im, patch_size):
         for wi in range(W-w+1):
             patches.append(im[hi:hi+h, wi:wi+w, ...])
     patches = np.stack(patches)
+    return patches
+
+
+def extract_patches_2d(im, patch_size):
+    """Extract patches with size `patch_size` from image `im` 
+            (H, W, 1) -> (P, h, w) where P=#patches
+    """
+    if im.ndim == 3 and im.shape[2] != 1:
+        raise ValueError('`extract_patches_2d` only supports C=1')
+    h, w = patch_size
+    H, W = im.shape[0], im.shape[1]
+    im = im.reshape((H, W))
+    P = (H-h+1)*(W-w+1)
+    hi = np.arange(H-h+1)
+    wi = np.arange(W-w+1)
+    hwi = np.array(list(itertools.product(hi, wi)))
+    f = lambda hwi: jax.lax.dynamic_slice(im, (hwi[0], hwi[1]), (h, w))
+    patches = jax.lax.map(f, hwi)
     return patches
 
 
