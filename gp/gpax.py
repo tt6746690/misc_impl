@@ -1,6 +1,6 @@
 import math
 from typing import Any, Callable, Sequence, Optional, Tuple, Union, List, Iterable
-import functools
+import functools, itertools
 from functools import partial
 from dataclasses import dataclass, field
 
@@ -123,6 +123,7 @@ def sqdist(X, Y=None):
     return D
 
 
+
 class Kernel(nn.Module):
 
     active_dims: Union[slice, list, np.ndarray] = None
@@ -144,18 +145,39 @@ class Kernel(nn.Module):
             return self.g(X)
         else:
             return X
-
-    def __call__(self, X, Y=None, full_cov=True):
+        
+    def slice_and_map(self, X, Y):
         X = self.slice(X)
         Y = self.slice(Y)
         X = self.apply_mapping(X)
         Y = self.apply_mapping(Y)
+        return X, Y
+    
+    def check_full_cov(self, Y, full_cov):
+        if full_cov == False and Y is not None:
+            raise ValueError('full_cov=False & Y=None not compatible')
+
+    def __call__(self, X, Y=None, full_cov=True):
+        X, Y = self.slice_and_map(X, Y)
         if full_cov:
             return self.K(X, Y)
         else:
-            if Y is not None:
-                raise ValueError('full_cov=True & Y=None not compatible')
+            self.check_full_cov(Y, full_cov)
             return self.Kdiag(X, Y)
+
+    """ By default, `Kff,Kuf,Kuu` has `f,u ~ GP(0,k)`
+        Methods which override `Kff,Kuf,Kuu` require handling of 
+            slicing and application of encoder `self.g`, as well as 
+            logic related to `full_cov`
+    """
+    def Kff(self, X, Y=None, full_cov=True):
+        return self.__call__(X, Y, full_cov=full_cov)
+
+    def Kuf(self, X, Y=None, full_cov=True):
+        return self.__call__(X, Y, full_cov=full_cov)
+    
+    def Kuu(self, X, Y=None, full_cov=True):
+        return self.__call__(X, Y, full_cov=full_cov)
 
     def __add__(self, other):
         return compose_kernel(self, other, np.add)
@@ -264,70 +286,96 @@ class CovSEwithEncoder(Kernel):
 
 class CovConvolutional(Kernel):
     """ Convolutional Kernel f~GP(0,k)
-            where k(x,x') = ΣpΣp' kᵧ(X[p], X[p'])
-                  kᵧ(z,z') is the patch kernel
+            where k(X,X') = ΣpΣp' kᵧ(X[p], X[p'])
+                      kᵧ(Z,Z') is the patch kernel
     """
-    image_size: Tuple[int] = (28, 28, 1) # (H, W, C)
-    patch_size: Tuple[int] = (3, 3)      # (h, w)
+    image_shape: Tuple[int] = (28, 28, 1) # (H, W, C)
+    patch_shape: Tuple[int] = (3, 3)      # (h, w)
     kg_cls: Callable = CovSE
 
     def setup(self):
         self.kg = self.kg_cls()
     
-    def kp(self, Xp, Yp, full_cov):
-        """ Computes yet-to-be summed kernel `self.kg`
-
-            Xp    (N, P, h, w)
-            Yp    (M, P, h, w)
-            Returns
-                (N, P, M, P) if `Yp` not None 
-                    Computes K(X,Y)
-                (N, P, P) if `Yp` is None
-                    Computes K(X)
-        """
-        if full_cov:
-            Xp_shape = Xp.shape # (N, P, h, w)
-            Xp = Xp.reshape(-1, self.patch_len) # (N*P, h*w)
-            Yp_shape = Yp.shape if Yp is not None else Xp_shape # (M, P, h, w)
-            Yp = Yp.reshape(-1, self.patch_len) if Yp is not None else Yp # (M*P, h*w)
-            Kp = self.kg(Xp, Yp, full_cov=full_cov) # (N*P, M*P)
-            Kp = Kp.reshape(Xp_shape[:2]+Yp_shape[:2]) # (N, P, M, P)
-        else:
-            Xp_shape = Xp.shape
-            Xp = Xp.reshape((Xp_shape[0], Xp_shape[1], -1)) # (N, P, h*w)
-            Kp = vmap(self.kg, (0, None, None), 0)(Xp, None, True) # (N, P, P)
-        return Kp
-        
     def get_patches(self, X):
         """ (N, H, W, 1) -> # (N, P, h, w) where P=#patches """
-        patches = extract_patches_2d_vmap(X.reshape((-1, *self.image_size)),
-                                          self.patch_size)
+        patches = extract_patches_2d_vmap(X.reshape((-1, *self.image_shape)),
+                                          self.patch_shape)
         if patches.shape[1] != self.num_patches:
             raise ValueError('#patches extracted not correct')
         return patches
 
     def K(self, X, Y=None):
-        Xp = self.get_patches(X)
-        Yp = None if Y is None else self.get_patches(Y)
-        Kp = self.kp(Xp, Yp, full_cov=True)
-        K = np.mean(Kp, axis=[1, 3])
+        """ Normally when X,Y are image inputs, compute
+                patch-wise kernels and sum along patch-dim
+            If X, Y are patches, treat them as inter-domain
+                inducing points {Zp} in patch space. 
+                    Kuu = kᵧ(Z)
+                    Kuf = Σp kᵧ(Zp, X[p])
+                    Kff = ΣpΣp' kᵧ(X[p], X[p'])
+        """
+        Xtype = self.input_type(X)
+        Ytype = self.input_type(Y) if Y is not None else Xtype
+        print(Xtype, Ytype)
+        if Xtype == 'image' and Ytype == 'image': # Kff
+            Xp = self.get_patches(X)
+            Yp = self.get_patches(Y) if Y is not None else None
+            Xp_shape = Xp.shape # (N, P, h, w)
+            Yp_shape = Yp.shape if Yp is not None else Xp_shape # (M, P, h, w)
+            Xp = self.flatten_patch(Xp) # (N*P, h*w)
+            Yp = self.flatten_patch(Yp) # (M*P, h*w)
+            Kp = self.kg(Xp, Yp, full_cov=True) # (N*P, M*P)
+            Kp = Kp.reshape(Xp_shape[:2]+Yp_shape[:2]) # (N, P, M, P)
+            K = np.mean(Kp, axis=[1, 3]) # (N, M)
+        if Xtype == 'patch' and Ytype == 'image': # Kuf
+            Yp = self.get_patches(Y)
+            M, P, _, _ = Yp.shape # (M, P, h, w)
+            Xp = self.flatten_patch(X)  # (N, h*w)
+            Yp = self.flatten_patch(Yp) # (M*P, h*w)
+            Kp = self.kg(Xp, Yp) # (N, M*P)
+            Kp = Kp.reshape((len(X), M, P)) # (N, M, P)
+            K = np.mean(Kp, axis=[2]) # (N, M)
+        if Xtype == 'patch' and Ytype == 'patch': # Kuu
+            Xp = self.flatten_patch(X)  # (N, h*w)
+            Yp = self.flatten_patch(Y)  # (M, h*w)
+            Kp = self.kg(Xp, Yp) # (N, M)
+            K = Kp
         return K
 
     def Kdiag(self, X, Y=None):
+        """ Note `X,Y` must be image type ... """
         Xp = self.get_patches(X)
-        Kp = self.kp(Xp, None, full_cov=False)
-        K = np.mean(Kp, axis=[1, 2])
+        Xp_shape = Xp.shape
+        Xp = Xp.reshape((Xp_shape[0], Xp_shape[1], -1)) # (N, P, h*w)
+        Kp = vmap(self.kg, (0, None, None), 0)(Xp, None, True) # (N, P, P)
+        K = np.mean(Kp, axis=[1, 2]) # (N,)
         return K
+    
+    def input_type(self, X):
+        Xsize = X[0].size
+        if   Xsize == self.image_len:
+            return 'image'
+        elif Xsize == self.patch_len:
+            return 'patch'
+        else:
+            raise ValueError('`X` is neither image or patch')
+            
+    def flatten_patch(self, X):
+        return X.reshape(-1, self.patch_len) if X is not None else X
+            
+    @property
+    def image_len(self):
+        return np.prod(np.array(self.image_shape))
 
     @property
     def patch_len(self):
-        return self.patch_size[0]*self.patch_size[1]
+        return self.patch_shape[0]*self.patch_shape[1]
     
     @property
     def num_patches(self):
-        H, W, C = self.image_size
-        h, w = self.patch_size
+        H, W, C = self.image_shape
+        h, w = self.patch_shape
         return (H-h+1)*(W-w+1)*C
+
     
 
 class CovIndex(Kernel):
@@ -579,6 +627,8 @@ class CovICMLearnable(Kernel):
         return K
 
 
+
+    
 class CovMultipleOutputIndependent(Kernel):
     """Represents multiple output GP with a shared encoder
             f = (f1,...,fᴾ)
@@ -592,6 +642,24 @@ class CovMultipleOutputIndependent(Kernel):
     def setup(self):
         self.ks = [self.k_cls() for d in range(self.output_dim)]
         self.g = self.g_cls()
+        
+    def Kff(self, X, Y=None, full_cov=True):
+        X, Y = self.slice_and_map(X, Y)
+        if not full_cov: self.check_full_cov(Y, full_cov); return self.Kdiag(X, Y)
+        Ks = np.stack([k.Kff(X, Y, full_cov=full_cov) for k in self.ks])  # (P, N, N)
+        return Ks
+    
+    def Kuf(self, X, Y=None, full_cov=True):
+        X, Y = self.slice_and_map(X, Y)
+        if not full_cov: raise ValueError('Kuf(full_cov=False) not valid')
+        Ks = np.stack([k.Kuf(X, Y, full_cov=full_cov) for k in self.ks])  # (P, N, N)
+        return Ks
+    
+    def Kuu(self, X, Y=None, full_cov=True):
+        X, Y = self.slice_and_map(X, Y)
+        if not full_cov: raise ValueError('Kuu(full_cov=False) not implemented')
+        Ks = np.stack([k.Kuu(X, Y, full_cov=full_cov) for k in self.ks])  # (P, N, N)
+        return Ks
 
     def K(self, X, Y=None):
         Ks = np.stack([k(X, Y, full_cov=True) for k in self.ks])  # (P, N, N)
@@ -1178,9 +1246,9 @@ class SVGP(nn.Module, GPModel):
         mf = self.mean_fn(X)        # (N, P)
         mu = self.mean_fn(Xu)       # (M, P)
 
-        Kff = k(X, full_cov=False)  # (P, N)
-        Kuf = k(Xu, X)              # (P, M, N)
-        Kuu = k(Xu)                 # (P, M, M)
+        Kff = k.Kff(X, full_cov=False)  # (P, N)
+        Kuf = k.Kuf(Xu, X)              # (P, M, N)
+        Kuu = k.Kuu(Xu)                 # (P, M, M)
         Luu = cholesky_jitter_vmap(Kuu, jitter=5e-5)  # (P, M, M)
 
         α = self.n_data/len(X) \
@@ -1217,9 +1285,9 @@ class SVGP(nn.Module, GPModel):
         ms = self.mean_fn(Xs)
         mu = self.mean_fn(Xu)
 
-        Kss = k(Xs, full_cov=full_cov)
-        Kus = k(Xu, Xs)
-        Kuu = k(Xu)
+        Kss = k.Kff(Xs, full_cov=full_cov)
+        Kus = k.Kuf(Xu, Xs)
+        Kuu = k.Kuu(Xu)
         Luu = cholesky_jitter_vmap(Kuu, jitter=5e-5)  # (P, M, M)
 
         if isinstance(k, CovMultipleOutputIndependent):
@@ -1965,7 +2033,6 @@ def flax_create_multioptimizer_3focus(params, optimizer_name, optimizer_kwargs, 
 
 
 def flax_create_multioptimizer(params, optimizer_name, optimizer_kwargs, traversal_filter_fns):
-    import itertools
     traversals_and_optimizers = []
     for filter_fn, opt_kwargs in zip(traversal_filter_fns,
                                      itertools.cycle(optimizer_kwargs)):
@@ -1988,7 +2055,6 @@ def flax_run_optim(f, params, num_steps=10, log_func=None,
                    optimizer='GradientDescent',
                    optimizer_kwargs={'learning_rate': .002},
                    optimizer_focus=None):
-    import itertools
     fg_fn = jax.value_and_grad(f)
     opt = flax_create_optimizer(params,
                                 optimizer_name=optimizer,

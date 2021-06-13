@@ -1,38 +1,34 @@
+from jaxkern import *
+from gpax import *
+import torch
+from jax.scipy.linalg import cho_solve, solve_triangular
+import jax.numpy.linalg as linalg
+from jax import random
+from jax import numpy as np
+import jax
+import numpy as onp
+from functools import partial
+import sys
 import unittest
 import warnings
 warnings.simplefilter("ignore", DeprecationWarning)
 
-import sys
 sys.path.append('../kernel')
-
-from functools import partial
-import numpy as onp
-
-import jax
-from jax import numpy as np
-from jax import random
-import jax.numpy.linalg as linalg
-from jax.scipy.linalg import cho_solve, solve_triangular
-
-import torch
-
-from gpax import *
-from jaxkern import *
 
 
 class TestNumpyBehavior(unittest.TestCase):
 
     def test_ravel_multi_index(self):
-        m, n = 4,5
+        m, n = 4, 5
         for i in range(m):
             for j in range(n):
-                a = np.ravel_multi_index((i,j), (m,n))
+                a = np.ravel_multi_index((i, j), (m, n))
                 b = i*n+j
                 test_same = a == b
                 self.assertTrue(test_same)
 
         indtrue = np.ravel_multi_index(
-            np.tile(np.arange(m), (2,1)),(m,m))
+            np.tile(np.arange(m), (2, 1)), (m, m))
         ind = [i*m+i for i in range(m)]
         test_diagonal_indices = np.array_equal(indtrue, ind)
         self.assertTrue(test_diagonal_indices)
@@ -44,17 +40,17 @@ class TestJaxUtilities(unittest.TestCase):
 
         n = 100
         key = random.PRNGKey(0)
-        A = random.normal(key, (n,n))
+        A = random.normal(key, (n, n))
         jitter = 10
 
         a = jax_add_to_diagonal(A, jitter)
         b = A+jitter*np.eye(len(A))
-        self.assertTrue(np.array_equal(a,b))
+        self.assertTrue(np.array_equal(a, b))
 
         v = np.ones(n)*jitter
         a = jax_add_to_diagonal(A, v)
         b = A+np.diag(v)
-        self.assertTrue(np.array_equal(a,b))
+        self.assertTrue(np.array_equal(a, b))
 
 
 class TestBijectors(unittest.TestCase):
@@ -64,11 +60,11 @@ class TestBijectors(unittest.TestCase):
         v = np.arange(n, dtype=np.float32)
         L = BijFillTril.forward(v)
         w = BijFillTril.reverse(L)
-        K = np.array([[0,0,0],
-                      [1,2,0],
-                      [3,4,5]])
-        same_vec = np.array_equal(v,w)
-        same_mat = np.array_equal(K,L)
+        K = np.array([[0, 0, 0],
+                      [1, 2, 0],
+                      [3, 4, 5]])
+        same_vec = np.array_equal(v, w)
+        same_mat = np.array_equal(K, L)
         self.assertTrue(same_vec)
         self.assertTrue(same_mat)
 
@@ -79,17 +75,17 @@ class TestMeanFn(unittest.TestCase):
 
         key = random.PRNGKey(0)
         n = 3
-        X = np.linspace(0,1,n).reshape(-1,1)
-        c = np.array([0,.5,1])
+        X = np.linspace(0, 1, n).reshape(-1, 1)
+        c = np.array([0, .5, 1])
         output_dim = 3
 
         mean_fn = MeanConstant(output_dim=output_dim,
-                            flat=True)
+                               flat=True)
         params = {'params': {'c': c}}
         mean_fn = mean_fn.bind(params)
 
         m = mean_fn(X)
-        mtrue = np.repeat(c.reshape(1,-1),3,axis=0).reshape(n*output_dim,1)
+        mtrue = np.repeat(c.reshape(1, -1), 3, axis=0).reshape(n*output_dim, 1)
         test_entries = np.array_equal(m, mtrue)
 
         self.assertTrue(test_entries)
@@ -101,21 +97,21 @@ class TestLikelihoods(unittest.TestCase):
 
         key = random.PRNGKey(0)
         lik = LikNormal()
-        μ = np.ones((10,1)).astype(np.float32)
+        μ = np.ones((10, 1)).astype(np.float32)
         Σ = np.eye(10)
         params = lik.init(key, μ, Σ, method=lik.predictive_dist)
-        μ1, Σ1 = lik.apply(params, μ, Σ, full_cov=True, method=lik.predictive_dist)
+        μ1, Σ1 = lik.apply(params, μ, Σ, full_cov=True,
+                           method=lik.predictive_dist)
         self.assertTrue(np.array_equal(μ, μ1))
         self.assertTrue(np.array_equal(Σ+np.eye(10), Σ1))
-
 
     def test_LikMultipleNormalKron(self):
 
         n, T = 10, 2
         lik = LikMultipleNormalKron(output_dim=T)
         lik = lik.bind({'params': {'σ2': np.arange(T)}})
-        Σ = np.zeros((n,n))
-        Σy = lik.predictive_dist(None, Σ)[1] 
+        Σ = np.zeros((n, n))
+        Σy = lik.predictive_dist(None, Σ)[1]
         test_diagonal_entries = np.allclose(np.diag(Σy),
                                             np.kron(lik.σ2, np.ones((n//2,))))
 
@@ -124,8 +120,8 @@ class TestKernel(unittest.TestCase):
 
     def test_CovLin(self):
         key = random.PRNGKey(0)
-        X = random.normal(key, (3,10))
-        Y = random.normal(key, (3,10))+2
+        X = random.normal(key, (3, 10))
+        Y = random.normal(key, (3, 10))+2
 
         k = CovLin(ard_len=1)
         k = k.bind(k.init(key, X))
@@ -135,44 +131,65 @@ class TestKernel(unittest.TestCase):
         Kdiag_agrees = np.allclose(diagK, Kdiag)
         self.assertTrue(Kdiag_agrees)
 
+    def test_CovConvolutional(self):
+        key = random.PRNGKey(0)
+        N, M = 2, 3
+        Np, Mp = 7, 8
+        image_shape = (9, 9, 1)
+        patch_shape = (3, 3)
+        x = random.normal(key, (N, *image_shape))
+        y = random.normal(key, (M, *image_shape))
+        xp = random.normal(key, (Np, *patch_shape))
+        yp = random.normal(key, (Mp, *patch_shape))
+        k = CovConvolutional(image_shape=image_shape,
+                             patch_shape=patch_shape)
+        params = k.init(key, x)
+
+        for X, Y, shape, method in [(x, None, (N, N), k.Kff),
+                                    (x, y, (N, M), k.Kff),
+                                    (y, y, (M, M), k.Kff),
+                                    (xp, x, (Np, N), k.Kuf),
+                                    (xp, y, (Np, M), k.Kuf),     # k(Xu, X)
+                                    (xp, None, (Np, Np), k.Kuu), # k(Xu)
+                                    (xp, xp, (Np, Np), k.Kuu),
+                                    (xp, yp, (Np, Mp), k.Kuu)]:
+            K = k.apply(params, X, Y, method=method)
 
     def test_CovIndex(self):
-        for d in [1,3]: # active_dims
+        for d in [1, 3]:  # active_dims
             for i in range(2):
                 key = random.PRNGKey(i)
-                X = random.randint(key, (10,5), 0, 3)
-                Y = random.randint(key, (10,5), 0, 3)
+                X = random.randint(key, (10, 5), 0, 3)
+                Y = random.randint(key, (10, 5), 0, 3)
                 k = CovIndex(active_dims=[d], output_dim=4, rank=2)
                 params = k.init(key, X)
                 W = params['params']['W']
                 v = BijSoftplus.forward(params['params']['v'])
                 B = W@W.T+np.diag(v)
                 K1 = k.apply(params, X, Y, full_cov=True)
-                K2 = LookupKernel(X[:,d],Y[:,d], B)
+                K2 = LookupKernel(X[:, d], Y[:, d], B)
                 self.assertTrue(np.array_equal(K1, K2))
                 K1diag = k.apply(params, X, full_cov=False)
-                K2diag = np.diag(LookupKernel(X[:,d],X[:,d], B))
+                K2diag = np.diag(LookupKernel(X[:, d], X[:, d], B))
                 self.assertTrue(np.array_equal(K1diag, K2diag))
-
 
     def test_CovIndexSpherical(self):
 
         key = random.PRNGKey(0)
         k = CovIndexSpherical(output_dim=4)
-        X = random.randint(key, (3,1), 0, 3)
+        X = random.randint(key, (3, 1), 0, 3)
         params = k.init(key, X)
         k = k.bind(params)
         B = k.cov()
         test_diagonal_entries = np.array_equal(np.diag(B), np.full((4,), 1))
 
-
     def test_CovICM(self):
 
-        for T in [3,5]:
+        for T in [3, 5]:
             n, d = 12, 2
 
             key = random.PRNGKey(0)
-            X = random.normal(key, (n,d))
+            X = random.normal(key, (n, d))
             kt_cls = partial(CovIndex, output_dim=T, rank=1)
             k = CovICM(kt_cls=kt_cls)
             params = k.init(key, X)
@@ -181,34 +198,35 @@ class TestKernel(unittest.TestCase):
             Kdiag = k(X, full_cov=False)
 
             test_output_dim = (K.shape[0] == n*T) and (K.shape[1] == n*T)
-            test_diag_entries = np.allclose(Kdiag, np.diag(K), rtol=1e-6).item()
+            test_diag_entries = np.allclose(
+                Kdiag, np.diag(K), rtol=1e-6).item()
 
             self.assertTrue(test_output_dim)
             self.assertTrue(test_diag_entries)
 
     def test_CovICMLearnable(self):
-        
+
         key = random.PRNGKey(0)
         m = 3
         nr = 5
 
-        for nc in [nr,10]:
-            X = random.normal(key, (nr,5))
-            Y = random.normal(key, (nc,5))
-            k = CovICMLearnable(mode='all',output_dim=m)
+        for nc in [nr, 10]:
+            X = random.normal(key, (nr, 5))
+            Y = random.normal(key, (nc, 5))
+            k = CovICMLearnable(mode='all', output_dim=m)
             k = k.bind(k.init(key, X))
             K = k(X, Y)
             Kdiag = k(X, full_cov=False)
 
-            lhs = np.kron(k.kx(X, Y), np.ones((m,m)))
+            lhs = np.kron(k.kx(X, Y), np.ones((m, m)))
             rhs = []
             for i in range(m):
                 for j in range(m):
-                    Eij = np.zeros((m,m))
+                    Eij = np.zeros((m, m))
                     ind = (np.array([i]), np.array([j]))
                     v = np.array([1.])
                     Eij = jax.ops.index_update(Eij, ind, v)
-                    kti = np.ravel_multi_index((i,j), (m,m))
+                    kti = np.ravel_multi_index((i, j), (m, m))
                     Kti = np.kron(k.kt[kti](X, Y), Eij)
                     rhs.append(Kti)
             rhs = np.sum(np.stack(rhs), axis=0)
@@ -218,50 +236,47 @@ class TestKernel(unittest.TestCase):
             test_Kdiag = (nr != nc) or np.allclose(np.diag(Ktrue), Kdiag)
             test_size_K = K.size == (m*nr)*(m*nc)
 
-
             self.assertTrue(test_K)
             self.assertTrue(test_Kdiag)
             self.assertTrue(test_size_K)
 
     def test_CovICMLearnableMeshgrid(self):
         # symmetric A
-        i,j = 1,0
+        i, j = 1, 0
         m = 2
         n = 2
-        A = np.array([[ 0,  1,  2,  3],
-                      [ 4,  5,  6,  7],
-                      [ 8,  9, 10, 11],
+        A = np.array([[0,  1,  2,  3],
+                      [4,  5,  6,  7],
+                      [8,  9, 10, 11],
                       [12, 13, 14, 15]],)
         ind = np.arange(m*n, step=m)
         ind = tuple(x.T for x in np.meshgrid(ind, ind))
         ind = (ind[0]+i, ind[1]+j)
-        v = np.array([1,2,3,4]).reshape(2,2)*1000
+        v = np.array([1, 2, 3, 4]).reshape(2, 2)*1000
         A = jax.ops.index_update(A, ind, v)
-        Atrue = np.array([[   0,    1,    2,    3],
+        Atrue = np.array([[0,    1,    2,    3],
                           [1000,    5, 2000,    7],
-                          [   8,    9,   10,   11],
+                          [8,    9,   10,   11],
                           [3000,   13, 4000,   15]])
         self.assertTrue(np.allclose(Atrue, A))
 
-        # asymmetric A 
-        i,j = 1,0
+        # asymmetric A
+        i, j = 1, 0
         T = 2
         n = 3
         m = 2
-        A = np.arange(24).reshape(4,6)
+        A = np.arange(24).reshape(4, 6)
         ind = np.meshgrid(np.arange(T*m, step=T),
                           np.arange(T*n, step=T))
         ind = tuple(x.T for x in ind)
         ind = (ind[0]+i, ind[1]+j)
-        v = np.arange(6).reshape(2,3)*1000
+        v = np.arange(6).reshape(2, 3)*1000
         A = jax.ops.index_update(A, ind, v)
-        Atrue = np.array([[   0,    1,    2,    3,    4,    5],
-                          [   0,    7, 1000,    9, 2000,   11],
-                          [  12,   13,   14,   15,   16,   17],
+        Atrue = np.array([[0,    1,    2,    3,    4,    5],
+                          [0,    7, 1000,    9, 2000,   11],
+                          [12,   13,   14,   15,   16,   17],
                           [3000,   19, 4000,   21, 5000,   23]])
         self.assertTrue(np.allclose(Atrue, A))
-
-
 
 
 class TestKL(unittest.TestCase):
@@ -271,8 +286,8 @@ class TestKL(unittest.TestCase):
         import tensorflow_probability as tfp
 
         i, m = 0, 50
-        μ0,Σ0 = rand_μΣ(random.PRNGKey(i), m)
-        μ1,Σ1 = rand_μΣ(random.PRNGKey(i*2), m)
+        μ0, Σ0 = rand_μΣ(random.PRNGKey(i), m)
+        μ1, Σ1 = rand_μΣ(random.PRNGKey(i*2), m)
         μ1 = np.zeros((m,))
         L0 = linalg.cholesky(Σ0)
         L1 = linalg.cholesky(Σ1)
@@ -307,9 +322,9 @@ class TestMvnConditional(unittest.TestCase):
         n, ns = 5, 3
         key = random.PRNGKey(0)
         k1, k2, k3 = random.split(key, 3)
-        X  = random.normal(k1, (n, 3))
-        Xs = random.normal(k2, (ns,3))
-        y  = random.uniform(k3, (n,1))
+        X = random.normal(k1, (n, 3))
+        Xs = random.normal(k2, (ns, 3))
+        y = random.uniform(k3, (n, 1))
 
         k = CovSE()
         k = k.bind(k.init(key, X))
@@ -329,9 +344,9 @@ class TestMvnConditional(unittest.TestCase):
         v = solve_triangular(L, Kfs, lower=True)
         Σt = Kss - v.T@v
 
-        μ,Σ = mvn_conditional_exact(
+        μ, Σ = mvn_conditional_exact(
             Kss, Kfs, ms, L, mf, y, full_cov=True)
-        _,Σd = mvn_conditional_exact(
+        _, Σd = mvn_conditional_exact(
             np.diag(Kss), Kfs, ms, L, mf, y, full_cov=False)
 
         test_μ_entries = np.allclose(μt, μ)
@@ -343,20 +358,20 @@ class TestMvnConditional(unittest.TestCase):
         self.assertTrue(test_Σ_diagonal_entries)
 
     def test_mvn_conditional_exact_multipleoutput(self):
-        
+
         T = 2
         n, ns = 5, 3
         key = random.PRNGKey(0)
         k1, k2, k3 = random.split(key, 3)
-        X  = random.normal(k1, (n, 3))
-        Xs = random.normal(k2, (ns,3))
-        y  = random.uniform(k3, (n, T))
+        X = random.normal(k1, (n, 3))
+        Xs = random.normal(k2, (ns, 3))
+        y = random.uniform(k3, (n, T))
 
         kt_cls = partial(CovIndex, output_dim=T)
         k = CovICM(kt_cls=kt_cls)
         k = k.bind(k.init(key, X))
         mean_fn = MeanConstant(output_dim=T)
-        mean_fn = mean_fn.bind({'params': {'c': np.full((T,),.2)}})
+        mean_fn = mean_fn.bind({'params': {'c': np.full((T,), .2)}})
 
         Kff = k(X)
         Kfs = k(X, Xs)
@@ -366,14 +381,14 @@ class TestMvnConditional(unittest.TestCase):
         mf = mean_fn(X)
         ms = mean_fn(Xs)
 
-        α = cho_solve((L, True), (y.reshape(-1,1)-mf))
+        α = cho_solve((L, True), (y.reshape(-1, 1)-mf))
         μt = Kfs.T@α + ms
         v = solve_triangular(L, Kfs, lower=True)
         Σt = Kss - v.T@v
 
-        μ,Σ = mvn_conditional_exact(
+        μ, Σ = mvn_conditional_exact(
             Kss, Kfs, ms, L, mf, y, full_cov=True)
-        _,Σd = mvn_conditional_exact(
+        _, Σd = mvn_conditional_exact(
             np.diag(Kss), Kfs, ms, L, mf, y, full_cov=False)
 
         test_μ_entries = np.allclose(μt, μ)
@@ -389,12 +404,12 @@ class TestMvnConditional(unittest.TestCase):
         from jax.scipy.linalg import solve_triangular
 
         def mvn_marginal_variational_unstable(
-            Kff, Kuf, Kuu, μq, Σq, mf, mu, full_cov=False):
+                Kff, Kuf, Kuu, μq, Σq, mf, mu, full_cov=False):
             """ Unstable version of `mvn_marginal_variational` """
             # for multiple-output
-            μq = μq.reshape(-1,1)
-            mu = mu.reshape(-1,1)
-            mf = mf.reshape(-1,1)
+            μq = μq.reshape(-1, 1)
+            mu = mu.reshape(-1, 1)
+            mf = mf.reshape(-1, 1)
 
             Lq = linalg.cholesky(Σq)
             Luu = linalg.cholesky(Kuu)
@@ -408,10 +423,10 @@ class TestMvnConditional(unittest.TestCase):
                 Σf = np.diag(Kff - Qff + β.T@Σq@β)
             return μf, Σf
 
-        for T in [1,2]:
-            n,m,l = 10,3,5
+        for T in [1, 2]:
+            n, m, l = 10, 3, 5
             key = random.PRNGKey(0)
-            X, Xu = random.normal(key, (n,2)), random.normal(key, (m,2))
+            X, Xu = random.normal(key, (n, 2)), random.normal(key, (m, 2))
             kt_cls = partial(CovIndex, output_dim=T)
             k = CovICM(kt_cls=kt_cls)
             k = k.bind(k.init(key, X))
@@ -452,16 +467,14 @@ class TestDistributions(unittest.TestCase):
 
         p = MultivariateNormalTril(μ, L)
         log_prob = p.log_prob(y)
-        log_prob_unflattened = p.log_prob(y.reshape(-1,2))
+        log_prob_unflattened = p.log_prob(y.reshape(-1, 2))
 
         test_log_prob = np.allclose(log_prob_true, log_prob)
-        test_log_prob_unflattened = np.allclose(log_prob_true, log_prob_unflattened)
+        test_log_prob_unflattened = np.allclose(
+            log_prob_true, log_prob_unflattened)
 
         self.assertTrue(test_log_prob)
         self.assertTrue(test_log_prob_unflattened)
-
-
-
 
 
 if __name__ == '__main__':
