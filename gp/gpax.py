@@ -284,6 +284,7 @@ class CovSEwithEncoder(Kernel):
         return np.tile(self.σ2, len(X))
 
 
+                
 class CovConvolutional(Kernel):
     """ Convolutional Kernel f~GP(0,k)
             where k(X,X') = ΣpΣp' kᵧ(X[p], X[p'])
@@ -292,17 +293,52 @@ class CovConvolutional(Kernel):
     image_shape: Tuple[int] = (28, 28, 1) # (H, W, C)
     patch_shape: Tuple[int] = (3, 3)      # (h, w)
     kg_cls: Callable = CovSE
+    patch_inducing_loc: bool = False
 
     def setup(self):
         self.kg = self.kg_cls()
     
-    def get_patches(self, X):
-        """ (N, H, W, 1) -> # (N, P, h, w) where P=#patches """
-        patches = extract_patches_2d_vmap(X.reshape((-1, *self.image_shape)),
-                                          self.patch_shape)
-        if patches.shape[1] != self.num_patches:
-            raise ValueError('#patches extracted not correct')
-        return patches
+    def Kff(self, X, Y=None, full_cov=True):
+        X, Y = self.slice_and_map(X, Y)
+        if not full_cov: self.check_full_cov(Y, full_cov); return self.Kdiag(X, Y)
+        # self.check_input_type(X, Y, 2) # not jittable 
+        Xp = self.get_patches(X)
+        Yp = self.get_patches(Y) if Y is not None else None
+        Xp_shape = Xp.shape # (N, P, h, w)
+        Yp_shape = Yp.shape if Yp is not None else Xp_shape # (M, P, h, w)
+        Xp = self.flatten_patch(Xp) # (N*P, h*w)
+        Yp = self.flatten_patch(Yp) # (M*P, h*w)
+        Kp = self.kg(Xp, Yp, full_cov=True) # (N*P, M*P)
+        Kp = Kp.reshape(Xp_shape[:2]+Yp_shape[:2]) # (N, P, M, P)
+        K = np.mean(Kp, axis=[1, 3]) # (N, M)
+        return K
+    
+    def Kuf(self, X, Y=None, full_cov=True):
+        if not self.patch_inducing_loc:
+            return self.__call__(X, Y, full_cov=full_cov)
+        X, Y = self.slice_and_map(X, Y)
+        if not full_cov: raise ValueError('Kuf(full_cov=False) not valid')
+        # self.check_input_type(X, Y, 1) # not jittable 
+        Yp = self.get_patches(Y)
+        M, P, _, _ = Yp.shape # (M, P, h, w)
+        Xp = self.flatten_patch(X)  # (N, h*w)
+        Yp = self.flatten_patch(Yp) # (M*P, h*w)
+        Kp = self.kg(Xp, Yp) # (N, M*P)
+        Kp = Kp.reshape((len(X), M, P)) # (N, M, P)
+        K = np.mean(Kp, axis=[2]) # (N, M)
+        return K
+    
+    def Kuu(self, X, Y=None, full_cov=True):
+        if not self.patch_inducing_loc:
+            return self.__call__(X, Y, full_cov=full_cov)
+        X, Y = self.slice_and_map(X, Y)
+        if not full_cov: raise ValueError('Kuu(full_cov=False) not implemented')
+        # self.check_input_type(X, Y, 0) # not jittable 
+        Xp = self.flatten_patch(X)  # (N, h*w)
+        Yp = self.flatten_patch(Y)  # (M, h*w)
+        Kp = self.kg(Xp, Yp) # (N, M)
+        K = Kp
+        return K
 
     def K(self, X, Y=None):
         """ Normally when X,Y are image inputs, compute
@@ -313,33 +349,7 @@ class CovConvolutional(Kernel):
                     Kuf = Σp kᵧ(Zp, X[p])
                     Kff = ΣpΣp' kᵧ(X[p], X[p'])
         """
-        Xtype = self.input_type(X)
-        Ytype = self.input_type(Y) if Y is not None else Xtype
-        print(Xtype, Ytype)
-        if Xtype == 'image' and Ytype == 'image': # Kff
-            Xp = self.get_patches(X)
-            Yp = self.get_patches(Y) if Y is not None else None
-            Xp_shape = Xp.shape # (N, P, h, w)
-            Yp_shape = Yp.shape if Yp is not None else Xp_shape # (M, P, h, w)
-            Xp = self.flatten_patch(Xp) # (N*P, h*w)
-            Yp = self.flatten_patch(Yp) # (M*P, h*w)
-            Kp = self.kg(Xp, Yp, full_cov=True) # (N*P, M*P)
-            Kp = Kp.reshape(Xp_shape[:2]+Yp_shape[:2]) # (N, P, M, P)
-            K = np.mean(Kp, axis=[1, 3]) # (N, M)
-        if Xtype == 'patch' and Ytype == 'image': # Kuf
-            Yp = self.get_patches(Y)
-            M, P, _, _ = Yp.shape # (M, P, h, w)
-            Xp = self.flatten_patch(X)  # (N, h*w)
-            Yp = self.flatten_patch(Yp) # (M*P, h*w)
-            Kp = self.kg(Xp, Yp) # (N, M*P)
-            Kp = Kp.reshape((len(X), M, P)) # (N, M, P)
-            K = np.mean(Kp, axis=[2]) # (N, M)
-        if Xtype == 'patch' and Ytype == 'patch': # Kuu
-            Xp = self.flatten_patch(X)  # (N, h*w)
-            Yp = self.flatten_patch(Y)  # (M, h*w)
-            Kp = self.kg(Xp, Yp) # (N, M)
-            K = Kp
-        return K
+        return self.Kff(X, Y, full_cov=True)
 
     def Kdiag(self, X, Y=None):
         """ Note `X,Y` must be image type ... """
@@ -350,14 +360,23 @@ class CovConvolutional(Kernel):
         K = np.mean(Kp, axis=[1, 2]) # (N,)
         return K
     
+    def check_input_type(self, X, Y, correct):
+        Xtype = self.input_type(X)
+        Ytype = self.input_type(Y) if Y is not None else Xtype
+        if Xtype+Ytype != correct:
+            raise ValueError(f'(X,Y) type: ({Xtype},{Ytype}) not correct ({correct})')
+
     def input_type(self, X):
-        Xsize = X[0].size
-        if   Xsize == self.image_len:
-            return 'image'
-        elif Xsize == self.patch_len:
-            return 'patch'
-        else:
-            raise ValueError('`X` is neither image or patch')
+        return jax.lax.cond(X[0].size==self.image_len,
+                            lambda _: 1, lambda _: 0, operand=None)
+    
+    def get_patches(self, X):
+        """ (N, H, W, 1) -> # (N, P, h, w) where P=#patches """
+        patches = extract_patches_2d_vmap(X.reshape((-1, *self.image_shape)),
+                                          self.patch_shape)
+        if patches.shape[1] != self.num_patches:
+            raise ValueError('#patches extracted not correct')
+        return patches
             
     def flatten_patch(self, X):
         return X.reshape(-1, self.patch_len) if X is not None else X
