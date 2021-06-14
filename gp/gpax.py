@@ -283,12 +283,15 @@ class CovSEwithEncoder(Kernel):
     def Kdiag(self, X, Y=None):
         return np.tile(self.σ2, len(X))
 
-
                 
 class CovConvolutional(Kernel):
     """ Convolutional Kernel f~GP(0,k)
-            where k(X,X') = ΣpΣp' kᵧ(X[p], X[p'])
+            where k(X,X') = (1/P^2) ΣpΣp' kᵧ(X[p], X[p'])
                       kᵧ(Z,Z') is the patch kernel
+        Note we apply average of patch kernel since doing so
+            requires no change to the mean function 
+                m(X) = E[f(X)] = (1/P) Σp m(Xp)
+                    the choice of m(Xp) = m(X) works fine
     """
     image_shape: Tuple[int] = (28, 28, 1) # (H, W, C)
     patch_shape: Tuple[int] = (3, 3)      # (h, w)
@@ -301,16 +304,7 @@ class CovConvolutional(Kernel):
     def Kff(self, X, Y=None, full_cov=True):
         X, Y = self.slice_and_map(X, Y)
         if not full_cov: self.check_full_cov(Y, full_cov); return self.Kdiag(X, Y)
-        # self.check_input_type(X, Y, 2) # not jittable 
-        Xp = self.get_patches(X)
-        Yp = self.get_patches(Y) if Y is not None else None
-        Xp_shape = Xp.shape # (N, P, h, w)
-        Yp_shape = Yp.shape if Yp is not None else Xp_shape # (M, P, h, w)
-        Xp = self.flatten_patch(Xp) # (N*P, h*w)
-        Yp = self.flatten_patch(Yp) # (M*P, h*w)
-        Kp = self.kg(Xp, Yp, full_cov=True) # (N*P, M*P)
-        Kp = Kp.reshape(Xp_shape[:2]+Yp_shape[:2]) # (N, P, M, P)
-        K = np.mean(Kp, axis=[1, 3]) # (N, M)
+        K = self.K(X, Y, full_cov=True)
         return K
     
     def Kuf(self, X, Y=None, full_cov=True):
@@ -346,10 +340,20 @@ class CovConvolutional(Kernel):
             If X, Y are patches, treat them as inter-domain
                 inducing points {Zp} in patch space. 
                     Kuu = kᵧ(Z)
-                    Kuf = Σp kᵧ(Zp, X[p])
-                    Kff = ΣpΣp' kᵧ(X[p], X[p'])
+                    Kuf = (1/P) Σp kᵧ(Zp, X[p])
+                    Kff = (1/P^2) ΣpΣp' kᵧ(X[p], X[p'])
         """
-        return self.Kff(X, Y, full_cov=True)
+        # self.check_input_type(X, Y, 2) # not jittable 
+        Xp = self.get_patches(X)
+        Yp = self.get_patches(Y) if Y is not None else None
+        Xp_shape = Xp.shape # (N, P, h, w)
+        Yp_shape = Yp.shape if Yp is not None else Xp_shape # (M, P, h, w)
+        Xp = self.flatten_patch(Xp) # (N*P, h*w)
+        Yp = self.flatten_patch(Yp) # (M*P, h*w)
+        Kp = self.kg(Xp, Yp, full_cov=True) # (N*P, M*P)
+        Kp = Kp.reshape(Xp_shape[:2]+Yp_shape[:2]) # (N, P, M, P)
+        K = np.mean(Kp, axis=[1, 3]) # (N, M)
+        return K
 
     def Kdiag(self, X, Y=None):
         """ Note `X,Y` must be image type ... """
