@@ -288,12 +288,21 @@ class CovConvolutional(Kernel):
     """ Convolutional Kernel f~GP(0,k)
             where k(X,X') = (1/P^2) ΣpΣp' kᵧ(X[p], X[p'])
         The additive kernel over patches models a linear 
-            function of patch response, e.g.  f(X) = (1/P) Σp g(Xp)
-                for g ~ GP(0, kᵧ) where kᵧ(Z,Z') is the patch kernel
+            function of patch response, e.g.  f(X) = (1/P) Σp u(Xp)
+                for u ~ GP(0, kᵧ) where kᵧ(Z,Z') is the patch kernel
         Note we apply average of patch kernel since doing so
             requires no change to the mean function 
                 m(X) = E[f(X)] = (1/P) Σp m(Xp)
                     the choice of m(Xp) = m(X) works fine
+
+        `patch_inducing_loc`
+            If True, u~GP(0, kᵧ), f~GP(0, k)
+                Kuu = kᵧ(Z)
+                Kuf = (1/P) Σp kᵧ(Zp, X[p])
+                Treat X as patches, Y as images
+            otherwise, u,f~GP(0, k)
+                Kuu, Kuf fall back to brute force NMP^2 evaluation of kᵧ
+                Treat both X, Y as images 
     """
     image_shape: Tuple[int] = (28, 28, 1) # (H, W, C)
     patch_shape: Tuple[int] = (3, 3)      # (h, w)
@@ -337,14 +346,6 @@ class CovConvolutional(Kernel):
         return K
 
     def K(self, X, Y=None):
-        """ Normally when X,Y are image inputs, compute
-                patch-wise kernels and sum along patch-dim
-            If X, Y are patches, treat them as inter-domain
-                inducing points {Zp} in patch space. 
-                    Kuu = kᵧ(Z)
-                    Kuf = (1/P) Σp kᵧ(Zp, X[p])
-                    Kff = (1/P^2) ΣpΣp' kᵧ(X[p], X[p'])
-        """
         # self.check_input_type(X, Y, 2) # not jittable 
         Xp = self.get_patches(X)
         Yp = self.get_patches(Y) if Y is not None else None
