@@ -287,7 +287,9 @@ class CovSEwithEncoder(Kernel):
 class CovConvolutional(Kernel):
     """ Convolutional Kernel f~GP(0,k)
             where k(X,X') = (1/P^2) ΣpΣp' kᵧ(X[p], X[p'])
-                      kᵧ(Z,Z') is the patch kernel
+        The additive kernel over patches models a linear 
+            function of patch response, e.g.  f(X) = (1/P) Σp g(Xp)
+                for g ~ GP(0, kᵧ) where kᵧ(Z,Z') is the patch kernel
         Note we apply average of patch kernel since doing so
             requires no change to the mean function 
                 m(X) = E[f(X)] = (1/P) Σp m(Xp)
