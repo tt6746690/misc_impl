@@ -5,7 +5,7 @@ from functools import partial
 from dataclasses import dataclass, field
 
 import jax
-from jax import random, device_put, vmap, vjp
+from jax import random, device_put, vmap, vjp, jit
 import jax.numpy as np
 import jax.numpy.linalg as linalg
 from jax.scipy.linalg import cho_solve, solve_triangular
@@ -166,7 +166,7 @@ class Kernel(nn.Module):
             return self.Kdiag(X, Y)
 
     """ By default, `Kff,Kuf,Kuu` has `f,u ~ GP(0,k)`
-        Methods which override `Kff,Kuf,Kuu` require handling of 
+        Methods which override `Kuf,Kuu` require handling of 
             slicing and application of encoder `self.g`, as well as 
             logic related to `full_cov`
     """
@@ -283,7 +283,7 @@ class CovSEwithEncoder(Kernel):
     def Kdiag(self, X, Y=None):
         return np.tile(self.σ2, len(X))
 
-                
+    
 class CovConvolutional(Kernel):
     """ Convolutional Kernel f~GP(0,k)
             where k(X,X') = (1/P^2) ΣpΣp' kᵧ(X[p], X[p'])
@@ -301,7 +301,7 @@ class CovConvolutional(Kernel):
                 Kuf = (1/P) Σp kᵧ(Zp, X[p])
                 Treat X as patches, Y as images
             otherwise, u,f~GP(0, k)
-                Kuu, Kuf fall back to brute force NMP^2 evaluation of kᵧ
+                Kuu, Kuf fall back to brute force evaluation of k (NMP^2 kᵧ call)
                 Treat both X, Y as images 
     """
     image_shape: Tuple[int] = (28, 28, 1) # (H, W, C)
@@ -311,12 +311,6 @@ class CovConvolutional(Kernel):
 
     def setup(self):
         self.kg = self.kg_cls()
-    
-    def Kff(self, X, Y=None, full_cov=True):
-        X, Y = self.slice_and_map(X, Y)
-        if not full_cov: self.check_full_cov(Y, full_cov); return self.Kdiag(X, Y)
-        K = self.K(X, Y, full_cov=True)
-        return K
     
     def Kuf(self, X, Y=None, full_cov=True):
         if not self.patch_inducing_loc:
@@ -401,8 +395,31 @@ class CovConvolutional(Kernel):
         H, W, C = self.image_shape
         h, w = self.patch_shape
         return (H-h+1)*(W-w+1)*C
-
     
+
+
+def get_init_patches(key, X, M, image_shape, patch_shape, init_method='unique'):
+    """ `random` might result in many duplicate initializations 
+        Currently, cannot be jitted, since requires calling to numpy.unique
+    """
+    import numpy as onp
+    k1, k2, k3 = random.split(key, 3)
+    ind = random.randint(k2, (M,), 0, len(X))
+    X = np.take(X, ind, axis=0).reshape((-1, *image_shape))
+    jit_extract_patches_2d_vmap = jit(extract_patches_2d_vmap,
+                                      static_argnums=(1,))
+    patches = jit_extract_patches_2d_vmap(X, patch_shape) # (N, P, h, w)
+    patches = patches.reshape(-1, patch_shape[0]*patch_shape[1]) # (N*P, h*w)
+    if init_method == 'random':
+        ind = random.randint(k3, (M,), 0, len(patches))
+        patches = np.take(patches, ind, axis=0)
+        patches += random.normal(key, (*patches.shape,))*.001
+    elif init_method == 'unique':
+        patches = onp.unique(patches, axis=0)
+        ind = random.randint(k3, (M,), 0, len(patches))
+        patches = np.take(patches, ind, axis=0)
+    return patches
+
 
 class CovIndex(Kernel):
     """A kernel applied to indices over a lookup table B
@@ -653,8 +670,6 @@ class CovICMLearnable(Kernel):
         return K
 
 
-
-    
 class CovMultipleOutputIndependent(Kernel):
     """Represents multiple output GP with a shared encoder
             f = (f1,...,fᴾ)
@@ -668,12 +683,6 @@ class CovMultipleOutputIndependent(Kernel):
     def setup(self):
         self.ks = [self.k_cls() for d in range(self.output_dim)]
         self.g = self.g_cls()
-        
-    def Kff(self, X, Y=None, full_cov=True):
-        X, Y = self.slice_and_map(X, Y)
-        if not full_cov: self.check_full_cov(Y, full_cov); return self.Kdiag(X, Y)
-        Ks = np.stack([k.Kff(X, Y, full_cov=full_cov) for k in self.ks])  # (P, N, N)
-        return Ks
     
     def Kuf(self, X, Y=None, full_cov=True):
         X, Y = self.slice_and_map(X, Y)
@@ -1252,11 +1261,19 @@ class SVGP(nn.Module, GPModel):
         self.q = VariationalMultivariateNormal(D=D, P=P)
 
     @classmethod
-    def get_init_params(self, model, key):
+    def get_init_params(self, model, key, X_shape=None):
+        """ If `X_shape` is not None, implies using interdomain inducing variables
+                where `inducing_loc.shape` is different from `X.shape`
+                so requires supplying shape of inputs for jax tracing
+        """
+        if X_shape is None:
+            X_shape = model.inducing_loc_cls().shape[1:]
         k1, k2 = random.split(key)
         rngs = {'params': k1, 'lik_mc_samples': k2}
         n = 2
-        Xs = np.ones((n, *model.inducing_loc_cls().shape[1:]))
+        # for interdomain inducing points in different domain, e.g. patches
+        # might give error if inducing_loc.shape is not shape of inputs in original domain
+        Xs = np.ones((n, *X_shape))
         ys = np.ones((n, model.output_dim))
         params = model.init(rngs, (Xs, ys), method=model.mll)
         return params
@@ -1271,7 +1288,7 @@ class SVGP(nn.Module, GPModel):
 
         mf = self.mean_fn(X)        # (N, P)
         mu = self.mean_fn(Xu)       # (M, P)
-
+        
         Kff = k.Kff(X, full_cov=False)  # (P, N)
         Kuf = k.Kuf(Xu, X)              # (P, M, N)
         Kuu = k.Kuu(Xu)                 # (P, M, M)
@@ -1388,7 +1405,7 @@ class InducingLocationsSpatialTransform(nn.Module):
                 ind = (np.array([0, 1, 0, 1]),
                        np.array([0, 1, 2, 2]))
                 T = jax.ops.index_update(
-                    T, ind, np.array([1., 1., θ[0], θ[1]]))
+                    T, ind, np.array([.25, .25, θ[0], θ[1]]))
             elif self.trans_type == '3':
                 ind = (np.array([0, 1, 0, 1]),
                        np.array([0, 1, 2, 2]))
@@ -2203,6 +2220,33 @@ def extract_patches_2d(im, patch_size):
 
 def extract_patches_2d_vmap(ims, patch_size):
     return vmap(extract_patches_2d, (0, None), 0)(ims, patch_size)
+
+
+def make_im_grid(ims, im_per_row=8, padding=1, pad_value=.2):
+    """Makes a grid of image from batched images
+    
+        ims    (N, H, W, C)
+        grid   (H, N*W, C) if no padding
+    """
+    if ims.ndim == 3:
+        ims = ims[...,np.newaxis]
+    N, H, W, C = ims.shape
+    n_col = min(im_per_row, N)
+    n_row = int(math.ceil(N/n_col))
+    H = int(H+padding)
+    W = int(W+padding)
+    k = 0
+    grid = np.full((H*n_row+padding, W*n_col+padding, C),
+                   pad_value)
+    for ri in range(n_row):
+        for ci in range(n_col):
+            if k > N: break
+            grid = jax.ops.index_update(grid,
+                                        jax.ops.index[(ri*H+padding):(ri*H+H),
+                                                      (ci*W+padding):(ci*W+W), ...],
+                                        ims[k])
+            k += 1
+    return grid
 
 
 def rotated_ims(x, rot_range=(0, 180), n_ims=10):
