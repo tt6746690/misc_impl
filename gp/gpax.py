@@ -1346,89 +1346,17 @@ class SVGP(nn.Module, GPModel):
 
 
 class InducingLocations(nn.Module):
-    shape: Tuple[int]
-    # (key, shape) -> ndarray
-    init_fn_inducing: Callable
+    shape: Tuple[int]  # shape output by init_fn
+    init_fn: Callable
+    transform_cls: Callable = LayerIdentity
 
     def setup(self):
-        self.X = self.param('X', self.init_fn_inducing, self.shape)
+        self.X = self.param('X', self.init_fn, self.shape)
+        self.transform = self.transform_cls()
 
     def __call__(self):
-        return self.X
-
-
-class InducingLocationsSpatialTransform(nn.Module):
-    shape: Tuple[int]
-    # (key, shape) -> ndarray
-    init_fn_inducing: Callable
-    trans_type: str
-
-    def setup(self):
-        self.X = self.param('X', self.init_fn_inducing, self.shape)
-        init_shape_transform, init_fn_transform = \
-            self.get_init_for_transform()
-        self.T = self.param_to_transform(
-            self.param('T', init_fn_transform, init_shape_transform))
-
-    def get_init_for_transform(self):
-        """ 2: translation 
-            3: translation + uniform scaling
-            4: translation + scaling
-            6: arbitrary affine 
-        """
-        n_inducing = self.shape[0]
-        if self.trans_type == '2':
-            init_shape = (n_inducing, 2)
-            def init_fn(k, s): return np.tile(np.array([0., 0]),
-                                              (n_inducing, 1))
-        elif self.trans_type == '3':
-            init_shape = (n_inducing, 3)
-            def init_fn(k, s): return np.tile(np.array([1., 0, 0]),
-                                              (n_inducing, 1))
-        elif self.trans_type == '4':
-            init_shape = (n_inducing, 4)
-            def init_fn(k, s): return np.tile(np.array([1., 1, 0, 0]),
-                                              (n_inducing, 1))
-        elif self.trans_type == '6':
-            init_shape = (n_inducing, 6)
-            def init_fn(k, s): return np.tile(np.array([1., 0, 0, 0, 1, 0]),
-                                              (n_inducing, 1))
-        else:
-            raise ValueError(f'{trans_type} not Implemented!')
-        return init_shape, init_fn
-
-    def param_to_transform(self, θs):
-        def param_to_transform_one(θ):
-            T = np.zeros((2, 3), dtype=np.float32)
-            if self.trans_type == '2':
-                ind = (np.array([0, 1, 0, 1]),
-                       np.array([0, 1, 2, 2]))
-                T = jax.ops.index_update(
-                    T, ind, np.array([.25, .25, θ[0], θ[1]]))
-            elif self.trans_type == '3':
-                ind = (np.array([0, 1, 0, 1]),
-                       np.array([0, 1, 2, 2]))
-                T = jax.ops.index_update(
-                    T, ind, np.array([θ[0], θ[0], θ[1], θ[2]]))
-            elif self.trans_type == '4':
-                ind = (np.array([0, 1, 0, 1]),
-                       np.array([0, 1, 2, 2]))
-                T = jax.ops.index_update(
-                    T, ind, np.array([θ[0], θ[1], θ[2], θ[3]]))
-            elif self.trans_type == '6':
-                T = jax.ops.index_update(
-                    T, jax.ops.index[:], θ.reshape(2,3))
-            return T
-        Ts = vmap(param_to_transform_one)(θs)
-        return Ts
-
-    def __call__(self):
-        n_inducing, h, w, c = self.shape
-        spatial_transform_vmap = vmap(spatial_transform,
-                                      (0, 0, None), 0)
-        X = spatial_transform_vmap(self.T, self.X, (h, w))
+        X = self.transform(self.X)
         return X
-
 
 
 def transform_to_matrix(θ, T_type, A_init_val):
@@ -1477,11 +1405,11 @@ class SpatialTransform(nn.Module):
         if   T_type == 'transl':
             init_shape, init_val = (n, 2), np.array([0, 0.])
         elif T_type == 'transl+isot_scal':
-            init_shape, init_val = (n, 3), np.array([1., 0, 0])
+            init_shape, init_val = (n, 3), np.array([1, 0, 0.])
         elif T_type == 'transl+anis_scal':
-            init_shape, init_val = (n, 4), np.array([1., 1, 0, 0])
+            init_shape, init_val = (n, 4), np.array([1, 1, 0, 0.])
         elif T_type == 'affine':
-            init_shape, init_val = (n, 6), np.array([1., 0, 0, 0, 1, 0])
+            init_shape, init_val = (n, 6), np.array([1, 0, 0, 0, 1, 0.])
         def init_fn(k, s):
             return np.tile(init_val, (n, 1))
         return init_shape, init_fn

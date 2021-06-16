@@ -493,5 +493,25 @@ class TestDistributions(unittest.TestCase):
         self.assertTrue(test_log_prob)
 
 
+class TestSpatialTransformations(unittest.TestCase):
+
+    def test_SpatialTransforms(self):
+
+        key = random.PRNGKey(0)
+        n = 1
+        x = random.normal(key, (n,14,14,1))
+        target_shape = (5, 5)
+        T_type = 'transl';
+        A_init_val = np.array([[.25,0,0], [0,.25,0]])
+        st = SpatialTransform(target_shape, n, T_type)
+        params = st.init(key, x)
+        t = st.apply(params, x)
+        self.assertTrue(t.shape == (n, *target_shape, 1))
+
+        Ts = pytree_leaf(params, 'params/T')
+        self.assertTrue(Ts.shape == st.apply(params, method=st.default_T_init)[0])
+
+
+
 if __name__ == '__main__':
     unittest.main()
