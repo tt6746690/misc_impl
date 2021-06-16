@@ -1411,7 +1411,7 @@ class SpatialTransform(nn.Module):
         elif T_type == 'affine':
             init_shape, init_val = (n, 6), np.array([1, 0, 0, 0, 1, 0.])
         def init_fn(k, s):
-            return np.tile(init_val, (n, 1))
+            return np.tile(init_val, (s[0], 1))
         return init_shape, init_fn
         
     def params_to_matrix(self, params):
@@ -2341,3 +2341,41 @@ def spatial_transform(A, S, Tsize):
     Ys = Ys_flat.reshape(*Tsize)
     T = grid_sample(S, (Xs, Ys))
     return T
+
+
+@partial(jax.jit, static_argnums=(2,))
+def spatial_transform_details(A, S, Tsize):
+    height, width = Tsize
+    Gt = homogeneous_grid(height, width)
+    Gs = A@Gt
+    Xs_flat = Gs[0, :]
+    Ys_flat = Gs[1, :]
+    Xs = Xs_flat.reshape(*Tsize)
+    Ys = Ys_flat.reshape(*Tsize)
+    T = grid_sample(S, (Xs, Ys))
+    return T, Gs
+
+
+def plt_spatial_transform(axs, Gs, S, T):
+    """ Given `axs` of size 2, source grid `Gs` 
+            draw source image `S` with source grid `Gs` and
+            target spatially transformed image `T`
+    """
+    h, w = T.shape[0], T.shape[1]
+    Gt = homogeneous_grid(h, w)
+    Xt, Yt = np.meshgrid(np.linspace(-1, 1, h),
+                         np.linspace(-1, 1, w))
+    Xs_flat = Gs[0, :]
+    Ys_flat = Gs[1, :]
+    Xs = Xs_flat.reshape((h,w))
+    Ys = Ys_flat.reshape((h,w))
+    
+    ax = axs[0]
+    ax.set_xticks([]); ax.set_yticks([])
+    ax.scatter(Xs, Ys, marker='+', c='r', s=50)
+    ax.imshow(S, cmap='Greys', extent=(-1,1,1,-1), origin='upper')
+    
+    ax = axs[1]
+    ax.set_xticks([]); ax.set_yticks([])
+    ax.scatter(Xt, Yt, marker='+', c='r', s=30)
+    ax.imshow(T, cmap='Greys', extent=(-1,1,1,-1), origin='upper')
