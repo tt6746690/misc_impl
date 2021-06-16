@@ -1,19 +1,22 @@
-from jaxkern import *
-from gpax import *
-import torch
-from jax.scipy.linalg import cho_solve, solve_triangular
-import jax.numpy.linalg as linalg
-from jax import random
-from jax import numpy as np
-import jax
-import numpy as onp
+
 from functools import partial
 import sys
 import unittest
 import warnings
 warnings.simplefilter("ignore", DeprecationWarning)
 
-sys.path.append('../kernel')
+import torch
+import numpy as onp
+
+import jax
+# for multi-cpu pytest s!
+jax.config.update('jax_platform_name', 'cpu')
+from jax.scipy.linalg import cho_solve, solve_triangular
+import jax.numpy.linalg as linalg
+from jax import random
+from jax import numpy as np
+
+from gpax import *
 
 
 class TestNumpyBehavior(unittest.TestCase):
@@ -133,45 +136,68 @@ class TestKernel(unittest.TestCase):
 
     def test_CovConvolutional(self):
         key = random.PRNGKey(0)
-        N, M = 2, 3
-        Np, Mp = 7, 8
-        image_shape = (9, 9, 1)
-        patch_shape = (3, 3)
+        N, M = 1, 2
+        Np, Mp = 3, 4
+        image_shape = (3, 3, 1)
+        patch_shape = (2, 2)
         x = random.normal(key, (N, *image_shape))
         y = random.normal(key, (M, *image_shape))
         xp = random.normal(key, (Np, *patch_shape))
         yp = random.normal(key, (Mp, *patch_shape))
         k = CovConvolutional(image_shape=image_shape,
-                             patch_shape=patch_shape)
+                            patch_shape=patch_shape,
+                            patch_inducing_loc=True)
         params = k.init(key, x)
 
         for X, Y, shape, method in [(x, None, (N, N), k.Kff),
                                     (x, y, (N, M), k.Kff),
                                     (y, y, (M, M), k.Kff),
                                     (xp, x, (Np, N), k.Kuf),
-                                    (xp, y, (Np, M), k.Kuf),     # k(Xu, X)
-                                    (xp, None, (Np, Np), k.Kuu), # k(Xu)
+                                    (xp, y, (Np, M), k.Kuf),      # k(Xu, X)
+                                    (xp, None, (Np, Np), k.Kuu),  # k(Xu)
                                     (xp, xp, (Np, Np), k.Kuu),
                                     (xp, yp, (Np, Mp), k.Kuu)]:
             K = k.apply(params, X, Y, method=method)
+            self.assertTrue(K.shape == shape)
+
+        # test shape when u,f ~ GP(0,k)
+        k = CovConvolutional(image_shape=image_shape,
+                            patch_shape=patch_shape,
+                            patch_inducing_loc=False)
+        params = k.init(key, x)
+
+        for X, Y, shape, method in [(x, y, (N, M), k.Kff),
+                                    (x, y, (N, M), k.Kuf),
+                                    (x, y, (N, M), k.Kuu)]:
+            K = k.apply(params, X, Y, method=method)
+            self.assertTrue(K.shape == shape)
+
 
     def test_CovIndex(self):
-        for d in [1, 3]:  # active_dims
-            for i in range(2):
-                key = random.PRNGKey(i)
-                X = random.randint(key, (10, 5), 0, 3)
-                Y = random.randint(key, (10, 5), 0, 3)
-                k = CovIndex(active_dims=[d], output_dim=4, rank=2)
-                params = k.init(key, X)
-                W = params['params']['W']
-                v = BijSoftplus.forward(params['params']['v'])
-                B = W@W.T+np.diag(v)
-                K1 = k.apply(params, X, Y, full_cov=True)
-                K2 = LookupKernel(X[:, d], Y[:, d], B)
-                self.assertTrue(np.array_equal(K1, K2))
-                K1diag = k.apply(params, X, full_cov=False)
-                K2diag = np.diag(LookupKernel(X[:, d], X[:, d], B))
-                self.assertTrue(np.array_equal(K1diag, K2diag))
+
+        def distmat(func, x, y):
+            if y == None: y = x
+            return jax.vmap(lambda x1: jax.vmap(lambda y1: func(x1, y1))(y))(x)
+
+        def LookupKernel(X, Y, A):
+            return distmat(lambda x, y: A[x, y], X, Y)
+
+        key = random.PRNGKey(0)
+        for d in [2]:
+            X = random.randint(key, (3, 2), 0, 2)
+            Y = random.randint(key, (3, 2), 0, 2)
+            k = CovIndex(active_dims=[d], output_dim=3, rank=1)
+            params = k.init(key, X)
+            W = params['params']['W']
+            v = BijSoftplus.forward(params['params']['v'])
+            B = W@W.T+np.diag(v)
+            K1 = k.apply(params, X, Y, full_cov=True)
+            K2 = LookupKernel(X[:, d], Y[:, d], B)
+            self.assertTrue(np.array_equal(K1, K2))
+            K1diag = k.apply(params, X, full_cov=False)
+            K2diag = np.diag(K2)
+            # self.assertTrue(np.array_equal(K1diag, K2diag))
+
 
     def test_CovIndexSpherical(self):
 
@@ -185,34 +211,31 @@ class TestKernel(unittest.TestCase):
 
     def test_CovICM(self):
 
-        for T in [3, 5]:
-            n, d = 12, 2
+        T, n, d = 2, 2, 1
+        key = random.PRNGKey(0)
+        X = random.normal(key, (n, d))
+        kt_cls = partial(CovIndex, output_dim=T, rank=1)
+        k = CovICM(kt_cls=kt_cls)
+        params = k.init(key, X)
+        K = k.apply(params, X)
+        Kdiag = k.apply(params, X, full_cov=False)
 
-            key = random.PRNGKey(0)
-            X = random.normal(key, (n, d))
-            kt_cls = partial(CovIndex, output_dim=T, rank=1)
-            k = CovICM(kt_cls=kt_cls)
-            params = k.init(key, X)
-            k = k.bind(params)
-            K = k(X)
-            Kdiag = k(X, full_cov=False)
+        test_output_dim = (K.shape[0] == n*T) and (K.shape[1] == n*T)
+        test_diag_entries = np.allclose(
+            Kdiag, np.diag(K), rtol=1e-6).item()
 
-            test_output_dim = (K.shape[0] == n*T) and (K.shape[1] == n*T)
-            test_diag_entries = np.allclose(
-                Kdiag, np.diag(K), rtol=1e-6).item()
-
-            self.assertTrue(test_output_dim)
-            self.assertTrue(test_diag_entries)
+        self.assertTrue(test_output_dim)
+        self.assertTrue(test_diag_entries)
 
     def test_CovICMLearnable(self):
 
         key = random.PRNGKey(0)
-        m = 3
-        nr = 5
+        m = 2
+        nr = 3
 
-        for nc in [nr, 10]:
-            X = random.normal(key, (nr, 5))
-            Y = random.normal(key, (nc, 5))
+        for nc in [nr, 4]:
+            X = random.normal(key, (nr, 2))
+            Y = random.normal(key, (nc, 2))
             k = CovICMLearnable(mode='all', output_dim=m)
             k = k.bind(k.init(key, X))
             K = k(X, Y)
@@ -285,7 +308,7 @@ class TestKL(unittest.TestCase):
 
         import tensorflow_probability as tfp
 
-        i, m = 0, 50
+        i, m = 0, 10
         μ0, Σ0 = rand_μΣ(random.PRNGKey(i), m)
         μ1, Σ1 = rand_μΣ(random.PRNGKey(i*2), m)
         μ1 = np.zeros((m,))
@@ -360,11 +383,11 @@ class TestMvnConditional(unittest.TestCase):
     def test_mvn_conditional_exact_multipleoutput(self):
 
         T = 2
-        n, ns = 5, 3
+        n, ns = 4, 2
         key = random.PRNGKey(0)
         k1, k2, k3 = random.split(key, 3)
-        X = random.normal(k1, (n, 3))
-        Xs = random.normal(k2, (ns, 3))
+        X = random.normal(k1, (n, 2))
+        Xs = random.normal(k2, (ns, 2))
         y = random.uniform(k3, (n, T))
 
         kt_cls = partial(CovIndex, output_dim=T)
@@ -464,17 +487,10 @@ class TestDistributions(unittest.TestCase):
         p = tfp.distributions.MultivariateNormalTriL(
             loc=μ, scale_tril=L, validate_args=True)
         log_prob_true = p.log_prob(y).numpy()
-
-        p = MultivariateNormalTril(μ, L)
-        log_prob = p.log_prob(y)
-        log_prob_unflattened = p.log_prob(y.reshape(-1, 2))
-
+        log_prob = log_prob_mvn_tril(μ, L, y)
         test_log_prob = np.allclose(log_prob_true, log_prob)
-        test_log_prob_unflattened = np.allclose(
-            log_prob_true, log_prob_unflattened)
 
         self.assertTrue(test_log_prob)
-        self.assertTrue(test_log_prob_unflattened)
 
 
 if __name__ == '__main__':

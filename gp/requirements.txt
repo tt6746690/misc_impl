@@ -9,3 +9,4 @@ jaxlib
 flax
 tabulate
 pytest
+pytest-xdist

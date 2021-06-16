@@ -37,7 +37,7 @@ class MeanConstant(Mean):
     init_val_m: float = 0.
 
     def setup(self):
-        self.c = self.param('c', lambda k, s: np.repeat(self.init_val_m, s),
+        self.c = self.param('c', lambda k, s: np.repeat(self.init_val_m, s[0]),
                             (self.output_dim,))
 
     def m(self, X):
@@ -396,7 +396,6 @@ class CovConvolutional(Kernel):
         h, w = self.patch_shape
         return (H-h+1)*(W-w+1)*C
     
-
 
 def get_init_patches(key, X, M, image_shape, patch_shape, init_method='unique'):
     """ `random` might result in many duplicate initializations 
@@ -1428,6 +1427,76 @@ class InducingLocationsSpatialTransform(nn.Module):
         spatial_transform_vmap = vmap(spatial_transform,
                                       (0, 0, None), 0)
         X = spatial_transform_vmap(self.T, self.X, (h, w))
+        return X
+
+
+
+def transform_to_matrix(θ, T_type, A_init_val):
+    """Given trainable parameter `θ`,  
+        convert to 2x3 affine change of coordinate matrix `A` """
+    assert(θ.ndim == 1)
+    if T_type == 'transl':
+        ind = jax.ops.index[[0, 1], [2, 2]]
+    elif T_type == 'transl+isot_scal':
+        ind = jax.ops.index[[0, 1, 0, 1], [0, 1, 2, 2]]
+        θ = np.array([θ[0], θ[0], θ[1], θ[2]])
+    elif T_type == 'transl+anis_scal':
+        ind = jax.ops.index[[0, 1, 0, 1],[0, 1, 2, 2]]
+    elif T_type == 'affine':
+        ind = jax.ops.index[[0, 0, 0, 1, 1, 1], [0, 1, 2, 0, 1, 2]]
+    A = jax.ops.index_update(A_init_val, ind, θ)
+    return A
+
+
+class SpatialTransform(nn.Module):
+    shape: Tuple[int] # (h, w) output shape
+    n_transforms: int
+    T_type: str
+    T_init_fn: Callable = None
+    A_init_val: np.ndarray = np.array([[1, 0, 0],
+                                       [0, 1, 0]], dtype=np.float32)
+        
+    def setup(self):
+        if len(self.shape) != 2:
+            raise ValueError(
+                '`SpatialTransform.shape` should have dim of 2')
+        if self.T_type not in ['transl', 'transl+isot_scal',
+                               'transl+anis_scal', 'affine']:
+            raise ValueError(
+                f'`self.T_type`={self.T_type} not Implemented')
+            
+        T_init_shape, T_init_fn = self.default_T_init()
+        if self.T_init_fn is not None:
+            T_init_fn = self.T_init_fn
+        self.T = self.params_to_matrix(
+            self.param('T', T_init_fn, T_init_shape))
+        
+    def default_T_init(self):
+        """Get initial shape and init_fn for spatial transformation θ """
+        T_type, n = self.T_type, self.n_transforms
+        if   T_type == 'transl':
+            init_shape, init_val = (n, 2), np.array([0, 0.])
+        elif T_type == 'transl+isot_scal':
+            init_shape, init_val = (n, 3), np.array([1., 0, 0])
+        elif T_type == 'transl+anis_scal':
+            init_shape, init_val = (n, 4), np.array([1., 1, 0, 0])
+        elif T_type == 'affine':
+            init_shape, init_val = (n, 6), np.array([1., 0, 0, 0, 1, 0])
+        def init_fn(k, s):
+            return np.tile(init_val, (n, 1))
+        return init_shape, init_fn
+        
+    def params_to_matrix(self, params):
+        """ θ -> A """
+        fn = vmap(transform_to_matrix, (0, None, None), 0)
+        return fn(params, self.T_type, self.A_init_val)
+    
+    def __call__(self, X):
+        """Spatially transforms batched image X (N, H, W, 1)
+                to target image of size (N, h, w, 1) """
+        h, w = self.shape
+        fn = vmap(spatial_transform, (0, 0, None), 0)
+        X = fn(self.T, X, (h, w))
         return X
 
 
