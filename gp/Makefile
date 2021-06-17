@@ -15,8 +15,14 @@ pytest_time:
 
 
 install_jax:
+	# pip install --upgrade jax==0.2.3 jaxlib==0.1.56+cuda100 -f https://storage.googleapis.com/jax-releases/jax_releases.html
+	# pip install flax==0.2.2
+	# https://pypi.org/project/flax/#history
+	# flax >0.3.0 requires jax>0.2.6
+
 	pip install --upgrade jax jaxlib==0.1.67+cuda111 -f https://storage.googleapis.com/jax-releases/jax_releases.html
 	pip install flax
+	
 
 autoremove:
 	pip install pip-autoremove
@@ -25,4 +31,3 @@ autoremove:
 uninstall_jax:
 	pip install pip-autoremove
 	pip-autoremove jax jaxlib -y
-	

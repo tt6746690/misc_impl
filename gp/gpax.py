@@ -1969,6 +1969,14 @@ def pytree_mutate(tree, kvs):
     return tree
 
 
+def pytree_mutate_with_fn(params, path, mutate_fn):
+    """ mutates `param` at `path` with 
+            `mutate_fn`: np.ndarray -> np.ndarray """
+    a = pytree_leaf(params, path)
+    a = mutate_fn(a)
+    return pytree_mutate(params, {path: a})
+
+
 def pytree_leave(tree, name):
     for k, v in flax.traverse_util.flatten_dict(
             unfreeze(tree)).items():
@@ -1997,12 +2005,18 @@ def pytree_leaf(tree, path):
         a = np.nan
     return a
 
+def pytree_keys(tree):
+    kvs = flax.traverse_util.flatten_dict(unfreeze(tree))
+    return ['/'.join(k) for k,v in kvs.items()]
+
 
 def flax_check_traversal(params, traversal):
 
     if isinstance(params, (dict, flax.core.FrozenDict)):
-        return optim.GradientDescent().create(
+        state = optim.GradientDescent().create(
             params, traversal).state
+        kvs = flax.traverse_util.flatten_dict(unfreeze(state.param_states))
+        return ['/'.join(k) for k,v in kvs.items() if v is not None]
     else:
         def flax_optim_get_params_dict(inputs):
             if isinstance(inputs, flax.nn.base.Model):
