@@ -8,6 +8,12 @@ warnings.simplefilter("ignore", DeprecationWarning)
 import torch
 import numpy as onp
 
+has_tfp = False
+try:
+    import tensorflow_probability as tfp
+    has_tfp = True
+except:
+    pass
 import jax
 # for multi-cpu pytest s!
 jax.config.update('jax_platform_name', 'cpu')
@@ -121,6 +127,23 @@ class TestLikelihoods(unittest.TestCase):
 
 class TestKernel(unittest.TestCase):
 
+    def test_CovConstant(self):
+
+        key = random.PRNGKey(0)
+        x = random.normal(key, (10,3))
+        y = random.normal(key, (20,3))
+        k = CovConstant()
+        params = k.init(key, x)
+        k = k.bind(params)
+        Kdiag = k.Kdiag(x)
+        K = k.K(x)
+        test_Kdiagshape = ( Kdiag.shape == (len(x),) )
+        test_Kshape = ( K.shape == (len(x), len(x)) )
+
+        self.assertTrue(test_Kdiagshape)
+        self.assertTrue(test_Kshape)
+
+
     def test_CovLin(self):
         key = random.PRNGKey(0)
         X = random.normal(key, (3, 10))
@@ -144,21 +167,8 @@ class TestKernel(unittest.TestCase):
         y = random.normal(key, (M, *image_shape))
         xp = random.normal(key, (Np, *patch_shape))
         yp = random.normal(key, (Mp, *patch_shape))
-        k = CovConvolutional(image_shape=image_shape,
-                            patch_shape=patch_shape,
-                            patch_inducing_loc=True)
-        params = k.init(key, x)
-
-        for X, Y, shape, method in [(x, None, (N, N), k.Kff),
-                                    (x, y, (N, M), k.Kff),
-                                    (y, y, (M, M), k.Kff),
-                                    (xp, x, (Np, N), k.Kuf),
-                                    (xp, y, (Np, M), k.Kuf),      # k(Xu, X)
-                                    (xp, None, (Np, Np), k.Kuu),  # k(Xu)
-                                    (xp, xp, (Np, Np), k.Kuu),
-                                    (xp, yp, (Np, Mp), k.Kuu)]:
-            K = k.apply(params, X, Y, method=method)
-            self.assertTrue(K.shape == shape)
+        xl = random.normal(key, (Np, 2))
+        yl = random.normal(key, (Mp, 2))
 
         # test shape when u,f ~ GP(0,k)
         k = CovConvolutional(image_shape=image_shape,
@@ -170,7 +180,46 @@ class TestKernel(unittest.TestCase):
                                     (x, y, (N, M), k.Kuf),
                                     (x, y, (N, M), k.Kuu)]:
             K = k.apply(params, X, Y, method=method)
-            self.assertTrue(K.shape == shape)
+            Kshape_correct = K.shape == shape
+            self.assertTrue(Kshape_correct)
+
+        # test shape when u ~ GP(0,ku) f ~ GP(0, kf)
+        k = CovConvolutional(image_shape=image_shape,
+                            patch_shape=patch_shape,
+                            patch_inducing_loc=True)
+        params = k.init(key, x)
+        for X, Y, shape, method in [(x, None, (N, N), k.Kff),
+                                    (x, y, (N, M), k.Kff),
+                                    (y, y, (M, M), k.Kff),
+                                    (xp, x, (Np, N), k.Kuf),
+                                    (xp, y, (Np, M), k.Kuf),      # k(Xu, X)
+                                    (xp, None, (Np, Np), k.Kuu),  # k(Xu)
+                                    (xp, xp, (Np, Np), k.Kuu),
+                                    (xp, yp, (Np, Mp), k.Kuu)]:
+            K = k.apply(params, X, Y, method=method)
+            Kshape_correct = K.shape == shape
+            self.assertTrue(Kshape_correct)
+
+        # test shape  when u ~ GP(0,ku) f ~ GP(0, kf)
+        #      and use non-constant location kernel kl
+        xpl = (xp, xl)
+        ypl = (yp, yl)
+        k = CovConvolutional(image_shape=image_shape,
+                             patch_shape=patch_shape,
+                             patch_inducing_loc=True,
+                             kl_cls=CovSE)
+        params = k.init(key, x)
+        for X, Y, shape, method in [(x, None, (N, N), k.Kff),
+                                    (x, y, (N, M), k.Kff),
+                                    (y, y, (M, M), k.Kff),
+                                    (xpl, x, (Np, N), k.Kuf),
+                                    (xpl, y, (Np, M), k.Kuf),      # k(Xu, X)
+                                    (xpl, None, (Np, Np), k.Kuu),  # k(Xu)
+                                    (xpl, xpl, (Np, Np), k.Kuu),
+                                    (xpl, ypl, (Np, Mp), k.Kuu)]:
+            K = k.apply(params, X, Y, method=method)
+            Kshape_correct = K.shape == shape
+            self.assertTrue(Kshape_correct)
 
 
     def test_CovIndex(self):
@@ -306,8 +355,6 @@ class TestKL(unittest.TestCase):
 
     def test_kl_mvn(self):
 
-        import tensorflow_probability as tfp
-
         i, m = 0, 10
         μ0, Σ0 = rand_μΣ(random.PRNGKey(i), m)
         μ1, Σ1 = rand_μΣ(random.PRNGKey(i*2), m)
@@ -325,17 +372,20 @@ class TestKL(unittest.TestCase):
             torch.distributions.MultivariateNormal(
                 loc=torch.tensor(onp.array(μ1)),
                 scale_tril=torch.tensor(onp.array(L1)))).mean().item()
-        kl5 = tfp.distributions.kl_divergence(
-            tfp.distributions.MultivariateNormalTriL(
-                loc=μ0, scale_tril=L0),
-            tfp.distributions.MultivariateNormalTriL(
-                loc=μ1, scale_tril=L1)).numpy()
 
         if not np.isnan(kl1):
             self.assertTrue(np.allclose(kl1, kl2, rtol=1e-3))
         self.assertTrue(np.allclose(kl2, kl3))
         self.assertTrue(np.allclose(kl2, kl4))
-        self.assertTrue(np.allclose(kl2, kl5))
+
+        if has_tfp:
+            kl5 = tfp.distributions.kl_divergence(
+                tfp.distributions.MultivariateNormalTriL(
+                    loc=μ0, scale_tril=L0),
+                tfp.distributions.MultivariateNormalTriL(
+                    loc=μ1, scale_tril=L1)).numpy()
+            self.assertTrue(np.allclose(kl2, kl5))
+
 
 
 class TestMvnConditional(unittest.TestCase):
@@ -476,21 +526,21 @@ class TestDistributions(unittest.TestCase):
 
     def test_MultivariateNormalTril(self):
 
-        import tensorflow_probability as tfp
+        if has_tfp:
 
-        key = random.PRNGKey(0)
-        n = 10
-        μ, Σ = rand_μΣ(key, n)
-        L = linalg.cholesky(Σ)
-        y = random.uniform(key, (n,))
+            key = random.PRNGKey(0)
+            n = 10
+            μ, Σ = rand_μΣ(key, n)
+            L = linalg.cholesky(Σ)
+            y = random.uniform(key, (n,))
 
-        p = tfp.distributions.MultivariateNormalTriL(
-            loc=μ, scale_tril=L, validate_args=True)
-        log_prob_true = p.log_prob(y).numpy()
-        log_prob = log_prob_mvn_tril(μ, L, y)
-        test_log_prob = np.allclose(log_prob_true, log_prob)
+            p = tfp.distributions.MultivariateNormalTriL(
+                loc=μ, scale_tril=L, validate_args=True)
+            log_prob_true = p.log_prob(y).numpy()
+            log_prob = log_prob_mvn_tril(μ, L, y)
+            test_log_prob = np.allclose(log_prob_true, log_prob)
 
-        self.assertTrue(test_log_prob)
+            self.assertTrue(test_log_prob)
 
 
 class TestSpatialTransformations(unittest.TestCase):

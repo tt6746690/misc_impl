@@ -195,6 +195,26 @@ class Kernel(nn.Module):
                     f'ardℓ {ls} does not match with active_dims={s}')
 
 
+class CovConstant(Kernel):
+    """ Constant kernel k(x, y) = σ2 """
+    train_σ2: bool = True
+    
+    def setup(self):
+        self.σ2 = BijSoftplus.forward(self.param(
+            'σ2', lambda k, s: BijSoftplus.reverse(np.array([1.])), (1,)))
+
+    def get_σ2(self):
+        return self.σ2 if self.train_σ2 else np.array([1.]) 
+    
+    def K(self, X, Y=None):
+        Xshape = X.shape
+        Yshape = Y.shape if Y is not None else X.shape
+        return np.full(Xshape[:1]+Yshape[:1], self.get_σ2())
+    
+    def Kdiag(self, X, Y=None):
+        return np.full(X.shape[:1], self.get_σ2())
+    
+
 class CovLin(Kernel):
     """Linear kernel k(x,y) = σ2xy"""
     # #ard σ2
@@ -284,12 +304,15 @@ class CovSEwithEncoder(Kernel):
         return np.tile(self.σ2, len(X))
 
     
+
 class CovConvolutional(Kernel):
     """ Convolutional Kernel f~GP(0,k)
-            where k(X,X') = (1/P^2) ΣpΣp' kᵧ(X[p], X[p'])
+            where k(X,X') = (1/P^2) ΣpΣp' kᵧ(X[p], X[p'])·kℓ(p,p')
         The additive kernel over patches models a linear 
             function of patch response, e.g.  f(X) = (1/P) Σp u(Xp)
-                for u ~ GP(0, kᵧ) where kᵧ(Z,Z') is the patch kernel
+                for u ~ GP(0, kᵤ) where kᵤ = kᵧ·kℓ
+                    kᵧ(Z,Z') is the patch kernel
+                    kℓ(p,p') is the patch location kernel
         Note we apply average of patch kernel since doing so
             requires no change to the mean function 
                 m(X) = E[f(X)] = (1/P) Σp m(Xp)
@@ -303,62 +326,82 @@ class CovConvolutional(Kernel):
             otherwise, u,f~GP(0, k)
                 Kuu, Kuf fall back to brute force evaluation of k (NMP^2 kᵧ call)
                 Treat both X, Y as images 
+        `kl_cls`
+            If not `CovConstant`, then inducing patches 
+                have the form (Xp, XL) where XL is location information
     """
     image_shape: Tuple[int] = (28, 28, 1) # (H, W, C)
     patch_shape: Tuple[int] = (3, 3)      # (h, w)
     kg_cls: Callable = CovSE
     patch_inducing_loc: bool = False
+    kl_cls: Callable = partial(CovConstant, train_σ2=False)
 
     def setup(self):
         self.kg = self.kg_cls()
+        self.kl = self.kl_cls()
+        self.has_loc_kernel = not isinstance(self.kl, CovConstant)
     
     def Kuf(self, X, Y=None, full_cov=True):
         if not self.patch_inducing_loc:
             return self.__call__(X, Y, full_cov=full_cov)
+        # XL as placeholder for CovConstant
+        X, XL = X if self.has_loc_kernel else (X, X)
         X, Y = self.slice_and_map(X, Y)
         if not full_cov: raise ValueError('Kuf(full_cov=False) not valid')
         # self.check_input_type(X, Y, 1) # not jittable 
-        Yp = self.get_patches(Y)
+        Yp, YL = self.get_patches(Y)
         M, P, _, _ = Yp.shape # (M, P, h, w)
         Xp = self.flatten_patch(X)  # (N, h*w)
         Yp = self.flatten_patch(Yp) # (M*P, h*w)
         Kp = self.kg(Xp, Yp) # (N, M*P)
         Kp = Kp.reshape((len(X), M, P)) # (N, M, P)
-        K = np.mean(Kp, axis=[2]) # (N, M)
+        KL = self.kl(XL, YL, full_cov=True) # (N, P)
+        KL = np.expand_dims(KL, (1,)) # (N, 1, P)
+        K = np.mean(Kp*KL, axis=(2,)) # (N, M)
         return K
     
     def Kuu(self, X, Y=None, full_cov=True):
         if not self.patch_inducing_loc:
             return self.__call__(X, Y, full_cov=full_cov)
+        if self.has_loc_kernel:
+            X, XL = X
+            Y, YL = Y if Y is not None else (None, None)
+        else:
+            XL, YL = X, Y # XL,YL as placeholder for CovConstant
         X, Y = self.slice_and_map(X, Y)
         if not full_cov: raise ValueError('Kuu(full_cov=False) not implemented')
         # self.check_input_type(X, Y, 0) # not jittable 
         Xp = self.flatten_patch(X)  # (N, h*w)
         Yp = self.flatten_patch(Y)  # (M, h*w)
         Kp = self.kg(Xp, Yp) # (N, M)
-        K = Kp
+        KL = self.kl(XL, YL, full_cov=True) # (N, M)
+        K = Kp*KL
         return K
 
     def K(self, X, Y=None):
         # self.check_input_type(X, Y, 2) # not jittable 
-        Xp = self.get_patches(X)
-        Yp = self.get_patches(Y) if Y is not None else None
+        Xp, XL = self.get_patches(X)
+        Yp, YL = self.get_patches(Y) if Y is not None else (None, None)
         Xp_shape = Xp.shape # (N, P, h, w)
         Yp_shape = Yp.shape if Yp is not None else Xp_shape # (M, P, h, w)
         Xp = self.flatten_patch(Xp) # (N*P, h*w)
         Yp = self.flatten_patch(Yp) # (M*P, h*w)
         Kp = self.kg(Xp, Yp, full_cov=True) # (N*P, M*P)
         Kp = Kp.reshape(Xp_shape[:2]+Yp_shape[:2]) # (N, P, M, P)
-        K = np.mean(Kp, axis=[1, 3]) # (N, M)
+        KL = self.kl(XL, YL, full_cov=True) # (P, P)
+        KL = np.expand_dims(KL, (0, 2)) # (1, P, 1, P)
+        K = np.mean(Kp*KL, axis=(1, 3)) # (N, M)
         return K
 
     def Kdiag(self, X, Y=None):
         """ Note `X,Y` must be image type ... """
-        Xp = self.get_patches(X)
+        Xp, XL = self.get_patches(X)
         Xp_shape = Xp.shape
         Xp = Xp.reshape((Xp_shape[0], Xp_shape[1], -1)) # (N, P, h*w)
         Kp = vmap(self.kg, (0, None, None), 0)(Xp, None, True) # (N, P, P)
-        K = np.mean(Kp, axis=[1, 2]) # (N,)
+        KL = self.kl(XL, full_cov=True) # (P, P)
+        KL = np.expand_dims(KL, (0,)) # (1, P, P)
+        K = np.mean(Kp*KL, axis=(1, 2)) # (N,)
         return K
     
     def check_input_type(self, X, Y, correct):
@@ -375,9 +418,11 @@ class CovConvolutional(Kernel):
         """ (N, H, W, 1) -> # (N, P, h, w) where P=#patches """
         patches = extract_patches_2d_vmap(X.reshape((-1, *self.image_shape)),
                                           self.patch_shape)
+        scal, transl = extract_patches_2d_scal_transl(self.image_shape,
+                                                      self.patch_shape)
         if patches.shape[1] != self.num_patches:
             raise ValueError('#patches extracted not correct')
-        return patches
+        return patches, transl
             
     def flatten_patch(self, X):
         return X.reshape(-1, self.patch_len) if X is not None else X
@@ -2239,6 +2284,8 @@ def extract_patches_2d_scal_transl(image_shape, patch_shape):
             for patches as output of `extract_patches_2d` """
     image_shape = np.array(image_shape[:2])
     patch_shape = np.array(patch_shape)
+    H, W = image_shape
+    h, w = patch_shape
     hi = np.arange(H-h+1)
     wi = np.arange(W-w+1)
     hwi = np.array(list(itertools.product(hi, wi)))
