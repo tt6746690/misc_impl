@@ -2233,6 +2233,25 @@ def extract_patches_2d_vmap(ims, patch_size):
     return vmap(extract_patches_2d, (0, None), 0)(ims, patch_size)
 
 
+def extract_patches_2d_scal_transl(image_shape, patch_shape):
+    """Computes scaling `s` and translation `t` 
+            in the sense of spatial transforms impl 
+            for patches as output of `extract_patches_2d` """
+    image_shape = np.array(image_shape[:2])
+    patch_shape = np.array(patch_shape)
+    hi = np.arange(H-h+1)
+    wi = np.arange(W-w+1)
+    hwi = np.array(list(itertools.product(hi, wi)))
+    s = patch_shape/image_shape
+    t = 2*hwi/image_shape - 1 + s
+    return s, t
+
+
+def trans2x3_from_scal_transl(s, t):
+    """ s = [sy, sx]; t = [ty, tx] """
+    return np.array([[s[1], 0, t[1]], [0, s[0], t[0]]])
+
+
 def make_im_grid(ims, im_per_row=8, padding=1, pad_value=.2):
     """Makes a grid of image from batched images
     
