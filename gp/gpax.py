@@ -16,12 +16,17 @@ from flax import optim, struct
 from flax import linen as nn
 
 
-class Mean(nn.Module):
 
-    def __call__(self, X):
-        m = self.m(X)
+class Mean(nn.Module):
+    
+    def flatten(self, m):
         return m.reshape(-1, 1) if self.flat else m
 
+    def __call__(self, X):
+        """ Applyes mean_fn to `x` or first element of `x` """
+        if isinstance(X, tuple):
+            X = X[0]
+        return self.flatten(self.m(X))
 
 class MeanZero(Mean):
     output_dim: int = 1
@@ -46,19 +51,6 @@ class MeanConstant(Mean):
         return m
 
 
-def compose_kernel(k, l, op_reduce):
-
-    class KernelComposition(nn.Module):
-        op_reduce: Any
-
-        def setup(self):
-            self.ks = [k, l]
-
-        def __call__(self, X, Y=None, full_cov=True):
-            Ks = [k.__call__(X, Y, full_cov=full_cov) for k in self.ks]
-            return op_reduce(*Ks)
-
-    return KernelComposition(op_reduce)
 
 
 def slice_to_array(s):
@@ -123,6 +115,13 @@ def sqdist(X, Y=None):
     return D
 
 
+def apply_fn_ndarray_or_tuple(fn, x):
+    """ Computes `fn(x)` if `x` is `np.ndarray` o.w. (fn(x), ...)"""
+    if isinstance(x, np.ndarray):
+        return fn(x)
+    elif isinstance(x, tuple):
+        return (fn(x[0]),) + x[1:]
+    
 
 class Kernel(nn.Module):
 
@@ -147,10 +146,13 @@ class Kernel(nn.Module):
             return X
         
     def slice_and_map(self, X, Y):
-        X = self.slice(X)
-        Y = self.slice(Y)
-        X = self.apply_mapping(X)
-        Y = self.apply_mapping(Y)
+        """Allows for `X,Y` as `np.ndarray` as well as tuple of form `(np.ndarray, ...)` """
+        slice_fn = lambda x: apply_fn_ndarray_or_tuple(self.slice, x)
+        apply_mapping_fn = lambda x: apply_fn_ndarray_or_tuple(self.apply_mapping, x)
+        X = slice_fn(X)
+        Y = slice_fn(Y)
+        X = apply_mapping_fn(X)
+        Y = apply_mapping_fn(Y)
         return X, Y
     
     def check_full_cov(self, Y, full_cov):
@@ -180,10 +182,10 @@ class Kernel(nn.Module):
         return self.__call__(X, Y, full_cov=full_cov)
 
     def __add__(self, other):
-        return compose_kernel(self, other, np.add)
+        raise NotImplemented
 
     def __mul__(self, other):
-        return compose_kernel(self, other, np.multiply)
+        return NotImplemented
 
     def check_ard_dims(self, ls):
         """Verify that ard ls size matches with `active_dims` 
@@ -305,6 +307,7 @@ class CovSEwithEncoder(Kernel):
 
     
 
+    
 class CovConvolutional(Kernel):
     """ Convolutional Kernel f~GP(0,k)
             where k(X,X') = (1/P^2) ΣpΣp' kᵧ(X[p], X[p'])·kℓ(p,p')
@@ -327,8 +330,6 @@ class CovConvolutional(Kernel):
                 Kuu, Kuf fall back to brute force evaluation of k (NMP^2 kᵧ call)
                 Treat both X, Y as images 
         `kl_cls`
-            If not `CovConstant`, then inducing patches 
-                have the form (Xp, XL) where XL is location information
     """
     image_shape: Tuple[int] = (28, 28, 1) # (H, W, C)
     patch_shape: Tuple[int] = (3, 3)      # (h, w)
@@ -339,13 +340,22 @@ class CovConvolutional(Kernel):
     def setup(self):
         self.kg = self.kg_cls()
         self.kl = self.kl_cls()
-        self.has_loc_kernel = not isinstance(self.kl, CovConstant)
+        
+    @property
+    def use_loc_kernel(self):
+        """ If True, when `kl_cls!=CovConstant`, then inducing patches
+                is now a tuple of the form (Xp, XL)
+                    where XL is location information
+            Operationally, if `use_loc_kernel=True`, need to supply 
+                (Xp, XL) instead of Xp as inducing inputs for `Kuf,Kuu` 
+        """
+        return not isinstance(self.kl, CovConstant)
     
     def Kuf(self, X, Y=None, full_cov=True):
         if not self.patch_inducing_loc:
             return self.__call__(X, Y, full_cov=full_cov)
         # XL as placeholder for CovConstant
-        X, XL = X if self.has_loc_kernel else (X, X)
+        X, XL = X if self.use_loc_kernel else (X, X)
         X, Y = self.slice_and_map(X, Y)
         if not full_cov: raise ValueError('Kuf(full_cov=False) not valid')
         # self.check_input_type(X, Y, 1) # not jittable 
@@ -363,7 +373,7 @@ class CovConvolutional(Kernel):
     def Kuu(self, X, Y=None, full_cov=True):
         if not self.patch_inducing_loc:
             return self.__call__(X, Y, full_cov=full_cov)
-        if self.has_loc_kernel:
+        if self.use_loc_kernel:
             X, XL = X
             Y, YL = Y if Y is not None else (None, None)
         else:
@@ -1389,7 +1399,6 @@ class SVGP(nn.Module, GPModel):
                 μf = μf.reshape(Σf.shape)  # (N, P)
         return μf, Σf
 
-
 class InducingLocations(nn.Module):
     shape: Tuple[int]  # shape output by init_fn
     init_fn: Callable
@@ -1428,6 +1437,7 @@ class SpatialTransform(nn.Module):
     T_init_fn: Callable = None
     A_init_val: np.ndarray = np.array([[1, 0, 0],
                                        [0, 1, 0]], dtype=np.float32)
+    output_transform: bool = False
         
     def setup(self):
         if len(self.shape) != 2:
@@ -1468,9 +1478,16 @@ class SpatialTransform(nn.Module):
         """Spatially transforms batched image X (N, H, W, 1)
                 to target image of size (N, h, w, 1) """
         h, w = self.shape
+        A = self.T
         fn = vmap(spatial_transform, (0, 0, None), 0)
-        X = fn(self.T, X, (h, w))
-        return X
+        X = fn(A, X, (h, w))
+        if self.output_transform:
+            scal = A[:,[1,0],[1,0]]
+            transl = A[:,[1,0],2]
+            return X, transl
+        else:
+            return X
+
 
 
 class MultivariateNormalTril(object):
@@ -1545,11 +1562,9 @@ class VariationalMultivariateNormal(nn.Module):
         P, D = self.P, self.D
         self.μ = self.param('μ', jax.nn.initializers.zeros, (P, D))
         init_L_shape = (P, BijFillTril.reverse_shape(D))
-
         def init_L_fn(k, s):
-            return np.stack([BijFillTril.reverse(np.eye(D)) for i in range(P)])
-        self.L = np.stack([BijFillTril.forward(L)
-                           for L in self.param('L', init_L_fn, init_L_shape)])
+            return np.repeat(BijFillTril.reverse(np.eye(D))[np.newaxis,...], P, axis=0)
+        self.L = vmap(BijFillTril.forward)(self.param('L', init_L_fn, init_L_shape))
 
     def __call__(self):
         return MultivariateNormalTril(self.μ, self.L)
@@ -1580,6 +1595,35 @@ class BijSoftplus(object):
     @staticmethod
     def reverse(y):
         return softplus_inv(y)
+
+
+class BijSigmoid(object):
+    """ Logistic sigmoid bijector g(X) = 1/(1+exp(-X))
+            if `bound` specified, then computes
+                Y = lo + (hi-lo)*g(X)
+                X = σ(Y) where σ is logistic function
+
+        https://github.com/tensorflow/probability/blob/master/tensorflow_probability/python/bijectors/sigmoid.py
+    """
+    
+    def __init__(self, bound=None):
+        if bound is None: bound = np.array([0, 1.])
+        self.bound = bound
+        
+    @property
+    def lo(self):
+        return self.bound[0]
+    
+    @property
+    def hi(self):
+        return self.bound[1]
+    
+    def forward(self, x):
+        return self.hi*jax.nn.sigmoid(x) + self.lo*jax.nn.sigmoid(-x)
+
+    def reverse(self, y):
+        x = np.log(y-self.lo) - np.log(self.hi-y)
+        return x
 
 
 class BijFillTril(object):

@@ -77,6 +77,15 @@ class TestBijectors(unittest.TestCase):
         self.assertTrue(same_vec)
         self.assertTrue(same_mat)
 
+    def TestSigmoid(self):
+
+        bound = np.array([-2, .25])
+        bij = BijSigmoid(bound)
+        x = np.linspace(-10,10,100)
+        cycleconsistent = np.allclose(x, bij.reverse(bij.forward(x)), rtol=1e-4)
+        self.assertTrue(cycleconsistent)
+
+
 
 class TestMeanFn(unittest.TestCase):
 

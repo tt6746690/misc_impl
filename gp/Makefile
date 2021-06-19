@@ -20,7 +20,7 @@ install_jax:
 	# https://pypi.org/project/flax/#history
 	# flax >0.3.0 requires jax>0.2.6
 
-	pip install --upgrade jax jaxlib==0.1.67+cuda111 -f https://storage.googleapis.com/jax-releases/jax_releases.html
+	pip install --upgrade jax jaxlib==0.1.66+cuda111 -f https://storage.googleapis.com/jax-releases/jax_releases.html
 	pip install flax
 	
 
