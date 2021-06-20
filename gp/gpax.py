@@ -306,6 +306,7 @@ class CovSEwithEncoder(Kernel):
         return np.tile(self.σ2, len(X))
 
     
+
 class CovConvolutional(Kernel):
     """ Convolutional Kernel f~GP(0,k)
             where k(X,X') = (1/P^2) ΣpΣp' kᵧ(X[p], X[p'])·kℓ(p,p')
@@ -338,6 +339,13 @@ class CovConvolutional(Kernel):
     def setup(self):
         self.kg = self.kg_cls()
         self.kl = self.kl_cls()
+
+        # `image_loc` unchanged ! faster jit compilation if put here
+        scal, transl = extract_patches_2d_scal_transl(self.image_shape,
+                                                      self.patch_shape)
+        scal = np.repeat(scal[np.newaxis,...], len(transl), axis=0)
+        scal_transl = np.column_stack([scal, transl])
+        self.image_loc = scal_transl
         
     @property
     def use_loc_kernel(self):
@@ -426,14 +434,10 @@ class CovConvolutional(Kernel):
         """ (N, H, W, 1) -> # (N, P, h, w) where P=#patches """
         patches = extract_patches_2d_vmap(X.reshape((-1, *self.image_shape)),
                                           self.patch_shape)
-        scal, transl = extract_patches_2d_scal_transl(self.image_shape,
-                                                      self.patch_shape)
-        scal = np.repeat(scal[np.newaxis,...], len(transl), axis=0)
-        scal_transl = np.column_stack([scal, transl])
         
         if patches.shape[1] != self.num_patches:
             raise ValueError('#patches extracted not correct')
-        return patches, scal_transl
+        return patches, self.image_loc
             
     def flatten_patch(self, X):
         return X.reshape(-1, self.patch_len) if X is not None else X
@@ -1441,6 +1445,7 @@ def spatial_transform_bound_init_fn(in_shape, out_shape):
 
 
 
+
 class SpatialTransform(nn.Module):
     shape: Tuple[int] # (h, w) output shape
     n_transforms: int
@@ -1460,6 +1465,9 @@ class SpatialTransform(nn.Module):
             raise ValueError(
                 f'`self.T_type`={self.T_type} not Implemented')
             
+        if self.bound_init_fn is not None:
+            self.bij = self.get_bij()
+
         T_init_shape, T_init_fn = self.default_T_init()
         if self.T_init_fn is not None:
             T_init_fn = self.T_init_fn
@@ -1483,12 +1491,9 @@ class SpatialTransform(nn.Module):
             return np.tile(init_val, (s[0], 1))
         return init_shape, init_fn
     
-    def param_bij(self, θ, direction):
-        if self.bound_init_fn is None:
-            return θ
+    def get_bij(self):
         T_type = self.T_type
         bnd_scal, bnd_transly, bnd_translx = self.bound_init_fn()
-
         if   T_type == 'transl':
             bnds = [bnd_translx, bnd_transly]
         elif T_type == 'transl+isot_scal':
@@ -1496,11 +1501,15 @@ class SpatialTransform(nn.Module):
         elif T_type == 'transl+anis_scal':
             bnds = [bnd_scal, bnd_scal, bnd_translx, bnd_transly]
         elif T_type == 'affine':
+            # for now just standard Sigmoid applied to free-form transform
+            bnds = [np.array([0,1]) for _ in range(6)]
+        bound = np.column_stack(bnds)
+        return BijSigmoid(bound)
+    
+    def param_bij(self, θ, direction):
+        if self.bound_init_fn is None:
             return θ
-        bijs = [BijSigmoid(bnd) for bnd in bnds]
-        θ = np.column_stack([getattr(bij, direction)(θ[:,i])
-                             for i, bij in enumerate(bijs)])
-        return θ
+        return getattr(self.bij, direction)(θ)
     
     def param_bij_forward(self, θ):
         return self.param_bij(θ, 'forward')
@@ -1533,6 +1542,7 @@ class SpatialTransform(nn.Module):
             return X, np.column_stack([self.scal, self.transl])
         else:
             return X
+
 
 
 class MultivariateNormalTril(object):

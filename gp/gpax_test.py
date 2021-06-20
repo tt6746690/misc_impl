@@ -85,6 +85,18 @@ class TestBijectors(unittest.TestCase):
         cycleconsistent = np.allclose(x, bij.reverse(bij.forward(x)), rtol=1e-4)
         self.assertTrue(cycleconsistent)
 
+        # same code works for batch bound/inputs as well
+        key = random.PRNGKey(0)
+        bnd_scal, bnd_transly, bnd_translx = np.array([0,1]), np.array([1,2]), np.array([.2,.3])
+        bnds = [bnd_scal, bnd_translx, bnd_transly]
+        x = random.normal(key, (10,3))
+        bijs = [BijSigmoid(bnd) for bnd in bnds]
+        y = np.column_stack([bij.forward(x[:,i])
+                            for i, bij in enumerate(bijs)])
+        bound = np.column_stack(bnds)
+        bij = BijSigmoid(bound)
+        same = np.all(y == bij.forward(x))
+        self.assertTrue(same)
 
 
 class TestMeanFn(unittest.TestCase):
@@ -176,8 +188,8 @@ class TestKernel(unittest.TestCase):
         y = random.normal(key, (M, *image_shape))
         xp = random.normal(key, (Np, *patch_shape))
         yp = random.normal(key, (Mp, *patch_shape))
-        xl = random.normal(key, (Np, 2))
-        yl = random.normal(key, (Mp, 2))
+        xl = random.normal(key, (Np, 4))
+        yl = random.normal(key, (Mp, 4))
 
         # test shape when u,f ~ GP(0,k)
         k = CovConvolutional(image_shape=image_shape,
