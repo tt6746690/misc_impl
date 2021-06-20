@@ -306,8 +306,6 @@ class CovSEwithEncoder(Kernel):
         return np.tile(self.σ2, len(X))
 
     
-
-    
 class CovConvolutional(Kernel):
     """ Convolutional Kernel f~GP(0,k)
             where k(X,X') = (1/P^2) ΣpΣp' kᵧ(X[p], X[p'])·kℓ(p,p')
@@ -430,9 +428,12 @@ class CovConvolutional(Kernel):
                                           self.patch_shape)
         scal, transl = extract_patches_2d_scal_transl(self.image_shape,
                                                       self.patch_shape)
+        scal = np.repeat(scal[np.newaxis,...], len(transl), axis=0)
+        scal_transl = np.column_stack([scal, transl])
+        
         if patches.shape[1] != self.num_patches:
             raise ValueError('#patches extracted not correct')
-        return patches, transl
+        return patches, scal_transl
             
     def flatten_patch(self, X):
         return X.reshape(-1, self.patch_len) if X is not None else X
@@ -1430,6 +1431,16 @@ def transform_to_matrix(θ, T_type, A_init_val):
     return A
 
 
+def spatial_transform_bound_init_fn(in_shape, out_shape):
+    scal, transl = extract_patches_2d_scal_transl(in_shape, out_shape)
+    bnd_transly = np.array((np.min(transl[:,0]), np.max(transl[:,0])))
+    bnd_translx = np.array((np.min(transl[:,1]), np.max(transl[:,1])))
+    bnd_scal = np.array([np.max(np.array((0.5*np.min(scal), np.array(0.)))),
+                         np.min(np.array((1.5*np.max(scal), np.array(1.))))])
+    return bnd_scal, bnd_transly, bnd_translx
+
+
+
 class SpatialTransform(nn.Module):
     shape: Tuple[int] # (h, w) output shape
     n_transforms: int
@@ -1438,6 +1449,7 @@ class SpatialTransform(nn.Module):
     A_init_val: np.ndarray = np.array([[1, 0, 0],
                                        [0, 1, 0]], dtype=np.float32)
     output_transform: bool = False
+    bound_init_fn: Callable = None
         
     def setup(self):
         if len(self.shape) != 2:
@@ -1458,21 +1470,55 @@ class SpatialTransform(nn.Module):
         """Get initial shape and init_fn for spatial transformation θ """
         T_type, n = self.T_type, self.n_transforms
         if   T_type == 'transl':
-            init_shape, init_val = (n, 2), np.array([0, 0.])
+            init_shape, init_val = (n, 2), np.array([0, 0.]) # (tx, ty)
         elif T_type == 'transl+isot_scal':
-            init_shape, init_val = (n, 3), np.array([1, 0, 0.])
+            init_shape, init_val = (n, 3), np.array([1, 0, 0.]) # (s, tx, ty)
         elif T_type == 'transl+anis_scal':
-            init_shape, init_val = (n, 4), np.array([1, 1, 0, 0.])
+            init_shape, init_val = (n, 4), np.array([1, 1, 0, 0.]) # (sx, sy, tx, ty)
         elif T_type == 'affine':
             init_shape, init_val = (n, 6), np.array([1, 0, 0, 0, 1, 0.])
         def init_fn(k, s):
             return np.tile(init_val, (s[0], 1))
         return init_shape, init_fn
+    
+    def param_bij(self, θ, direction):
+        if self.bound_init_fn is None:
+            return θ
+        T_type, n = self.T_type, self.n_transforms
+        bnd_scal, bnd_transly, bnd_translx = self.bound_init_fn()
+
+        if   T_type == 'transl':
+            bnds = [bnd_translx, bnd_transly]
+        elif T_type == 'transl+isot_scal':
+            bnds = [bnd_scal, bnd_translx, bnd_transly]
+        elif T_type == 'transl+anis_scal':
+            bnds = [bnd_scal, bnd_scal, bnd_translx, bnd_transly]
+        elif T_type == 'affine':
+            return θ
+        bijs = [BijSigmoid(bnd) for bnd in bnds]
+        θ = np.column_stack([getattr(bij, direction)(θ[:,i])
+                             for i, bij in enumerate(bijs)])
+        return θ
+    
+    def param_bij_forward(self, θ):
+        return self.param_bij(θ, 'forward')
+    
+    def param_bij_reverse(self, θ):
+        return self.param_bij(θ, 'reverse')
         
-    def params_to_matrix(self, params):
+    def params_to_matrix(self, θ):
         """ θ -> A """
+        θ = self.param_bij_forward(θ)
         fn = vmap(transform_to_matrix, (0, None, None), 0)
-        return fn(params, self.T_type, self.A_init_val)
+        return fn(θ, self.T_type, self.A_init_val)
+    
+    @property
+    def scal(self):
+        return self.T[:,[1, 0],[1, 0]] # (sy, sx)
+    
+    @property
+    def transl(self):
+        return self.T[:, [1, 0], 2] # (ty, tx)
     
     def __call__(self, X):
         """Spatially transforms batched image X (N, H, W, 1)
@@ -1482,12 +1528,9 @@ class SpatialTransform(nn.Module):
         fn = vmap(spatial_transform, (0, 0, None), 0)
         X = fn(A, X, (h, w))
         if self.output_transform:
-            scal = A[:,[1,0],[1,0]]
-            transl = A[:,[1,0],2]
-            return X, transl
+            return X, np.column_stack([self.scal, self.transl])
         else:
             return X
-
 
 
 class MultivariateNormalTril(object):

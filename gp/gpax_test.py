@@ -570,6 +570,38 @@ class TestSpatialTransformations(unittest.TestCase):
         Ts = pytree_leaf(params, 'params/T')
         self.assertTrue(Ts.shape == st.apply(params, method=st.default_T_init)[0])
 
+    def test_SpatialTransformBounds(self):
+
+        key = random.PRNGKey(0)
+        image_shape = (14,14)
+        patch_shape = (7,7)
+        T_type = 'transl+isot_scal'
+        bound_init_fn = partial(spatial_transform_bound_init_fn,
+                                in_shape=image_shape,
+                                out_shape=patch_shape)
+        bnd_scal, bnd_transly, bnd_translx = bound_init_fn()
+        st = SpatialTransform(shape=patch_shape,
+                            n_transforms=3,
+                            T_type=T_type,
+                            output_transform=True,
+                            bound_init_fn=bound_init_fn)
+
+        x = random.normal(key, (3,*image_shape,1))
+        params = st.init(key, x)
+        params = pytree_mutate(params, {'params/T': random.normal(key, (3,3))})
+        st = st.bind(params)
+        Tx, scal_transl = st(x)
+        θ = pytree_leaf(params, 'params/T')
+        translx_correct = np.all(BijSigmoid(bnd_translx).forward(θ[:,1]) == scal_transl[:,1+2])
+        transly_correct = np.all(BijSigmoid(bnd_transly).forward(θ[:,2]) == scal_transl[:,0+2])
+        scalx_correct = np.all(BijSigmoid(bnd_scal).forward(θ[:,0]) == scal_transl[:,0])
+        scaly_correct = np.all(BijSigmoid(bnd_scal).forward(θ[:,0]) == scal_transl[:,1])
+
+        self.assertTrue(translx_correct)
+        self.assertTrue(transly_correct)
+        self.assertTrue(scalx_correct)
+        self.assertTrue(scaly_correct)
+
 
 
 if __name__ == '__main__':
