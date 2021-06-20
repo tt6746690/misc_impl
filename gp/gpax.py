@@ -1467,7 +1467,9 @@ class SpatialTransform(nn.Module):
             self.param('T', T_init_fn, T_init_shape))
         
     def default_T_init(self):
-        """Get initial shape and init_fn for spatial transformation θ """
+        """Get initial shape and init_fn for spatial transformation θ 
+                If `bound_fn` used, then these initial values lives in 
+                the bouned space, e.g. init_scal=1 -> middle of scale bound """
         T_type, n = self.T_type, self.n_transforms
         if   T_type == 'transl':
             init_shape, init_val = (n, 2), np.array([0, 0.]) # (tx, ty)
@@ -1484,7 +1486,7 @@ class SpatialTransform(nn.Module):
     def param_bij(self, θ, direction):
         if self.bound_init_fn is None:
             return θ
-        T_type, n = self.T_type, self.n_transforms
+        T_type = self.T_type
         bnd_scal, bnd_transly, bnd_translx = self.bound_init_fn()
 
         if   T_type == 'transl':
