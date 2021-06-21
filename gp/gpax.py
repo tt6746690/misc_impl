@@ -1,6 +1,7 @@
 import math
 from typing import Any, Callable, Sequence, Optional, Tuple, Union, List, Iterable
-import functools, itertools
+import functools
+import itertools
 from functools import partial
 from dataclasses import dataclass, field
 
@@ -16,9 +17,8 @@ from flax import optim, struct
 from flax import linen as nn
 
 
-
 class Mean(nn.Module):
-    
+
     def flatten(self, m):
         return m.reshape(-1, 1) if self.flat else m
 
@@ -27,6 +27,7 @@ class Mean(nn.Module):
         if isinstance(X, tuple):
             X = X[0]
         return self.flatten(self.m(X))
+
 
 class MeanZero(Mean):
     output_dim: int = 1
@@ -49,8 +50,6 @@ class MeanConstant(Mean):
         c = self.c.reshape(1, -1)
         m = np.tile(c, (X.shape[0], 1))
         return m
-
-
 
 
 def slice_to_array(s):
@@ -121,7 +120,7 @@ def apply_fn_ndarray_or_tuple(fn, x):
         return fn(x)
     elif isinstance(x, tuple):
         return (fn(x[0]),) + x[1:]
-    
+
 
 class Kernel(nn.Module):
 
@@ -138,7 +137,7 @@ class Kernel(nn.Module):
             return self.g(X)
         else:
             return X
-        
+
     def slice_and_map(self, X):
         """Allows for `X,Y` as `np.ndarray` as well as tuple of form `(np.ndarray, ...)` """
         X = apply_fn_ndarray_or_tuple(self.slice, X)
@@ -170,12 +169,13 @@ class Kernel(nn.Module):
             slicing and application of encoder `self.g`, as well as 
             logic related to `full_cov`
     """
+
     def Kff(self, X, Y=None, full_cov=True):
         return self.__call__(X, Y, full_cov=full_cov)
 
     def Kuf(self, X, Y=None, full_cov=True):
         return self.__call__(X, Y, full_cov=full_cov)
-    
+
     def Kuu(self, X, Y=None, full_cov=True):
         return self.__call__(X, Y, full_cov=full_cov)
 
@@ -198,22 +198,22 @@ class Kernel(nn.Module):
 class CovConstant(Kernel):
     """ Constant kernel k(x, y) = σ2 """
     train_σ2: bool = True
-    
+
     def setup(self):
         self.σ2 = BijSoftplus.forward(self.param(
             'σ2', lambda k, s: BijSoftplus.reverse(np.array([1.])), (1,)))
 
     def get_σ2(self):
-        return self.σ2 if self.train_σ2 else np.array([1.]) 
-    
+        return self.σ2 if self.train_σ2 else np.array([1.])
+
     def K(self, X, Y=None):
         Xshape = X.shape
         Yshape = Y.shape if Y is not None else X.shape
         return np.full(Xshape[:1]+Yshape[:1], self.get_σ2())
-    
+
     def Kdiag(self, X, Y=None):
         return np.full(X.shape[:1], self.get_σ2())
-    
+
 
 class CovLin(Kernel):
     """Linear kernel k(x,y) = σ2xy"""
@@ -268,13 +268,13 @@ class CovSE(Kernel):
         else:
             return np.tile(np.array([1.]), len(X))
 
-    
+
 class LayerIdentity(nn.Module):
-    
+
     @nn.compact
     def __call__(self, X):
         return X
-    
+
     def gz(self, X):
         return X
 
@@ -336,74 +336,76 @@ class CovPatchBase(Kernel):
 
     def K(self, X, Y=None):
         N, M = len(X), len(Y) if Y is not None else len(X)
-        Xp, XL = self.proc_image(X) # (N, P, L)
+        Xp, XL = self.proc_image(X)  # (N, P, L)
         P, L = Xp.shape[1], Xp.shape[2]
-        Xp = Xp.reshape(-1, L) # (N*P, L)
+        Xp = Xp.reshape(-1, L)  # (N*P, L)
         if Y is not None:
-            Yp, YL = self.proc_image(Y) # (M, P, L)
-            Yp = Yp.reshape(-1, L) # (M*P, L)
+            Yp, YL = self.proc_image(Y)  # (M, P, L)
+            Yp = Yp.reshape(-1, L)  # (M*P, L)
         else:
             Yp, YL = None, None
-        Kp = self.kp(Xp, Yp, full_cov=True) # (N*P, M*P)
-        Kp = Kp.reshape(N, P, M, P) # (N, P, M, P)
-        KL = self.kl(XL, YL, full_cov=True) # (P, P)
-        KL = np.expand_dims(KL, (0, 2)) # (1, P, 1, P)
-        K = Kp*KL # (N, P, M, P)
+        Kp = self.kp(Xp, Yp, full_cov=True)  # (N*P, M*P)
+        Kp = Kp.reshape(N, P, M, P)  # (N, P, M, P)
+        KL = self.kl(XL, YL, full_cov=True)  # (P, P)
+        KL = np.expand_dims(KL, (0, 2))  # (1, P, 1, P)
+        K = Kp*KL  # (N, P, M, P)
         return K
-    
+
     def Kdiag(self, X, Y=None):
-        Xp, XL = self.proc_image(X) # (N, P, L)
-        Kp = vmap(self.kp, (0, None, None), 0)(Xp, None, True) # (N, P, P)
-        KL = self.kl(XL, full_cov=True) # (P, P)
-        KL = np.expand_dims(KL, (0,)) # (1, P, P)
-        K = Kp*KL # (N, P, P)
+        Xp, XL = self.proc_image(X)  # (N, P, L)
+        Kp = vmap(self.kp, (0, None, None), 0)(Xp, None, True)  # (N, P, P)
+        KL = self.kl(XL, full_cov=True)  # (P, P)
+        KL = np.expand_dims(KL, (0,))  # (1, P, P)
+        K = Kp*KL  # (N, P, P)
         return K
-    
+
     def Kuu(self, X, Y=None, full_cov=True):
-        Xp, XL = self.proc_patch(X) # (N, L)
-        Yp, YL = self.proc_patch(Y) if Y is not None else (None, None) # (M, L)
-        if not full_cov: raise ValueError('Kuu(full_cov=False) not implemented')
-        Kp = self.kp(Xp, Yp) # (N, M)
-        KL = self.kl(XL, YL, full_cov=True) # (N, M)
+        Xp, XL = self.proc_patch(X)  # (N, L)
+        Yp, YL = self.proc_patch(
+            Y) if Y is not None else (None, None)  # (M, L)
+        if not full_cov:
+            raise ValueError('Kuu(full_cov=False) not implemented')
+        Kp = self.kp(Xp, Yp)  # (N, M)
+        KL = self.kl(XL, YL, full_cov=True)  # (N, M)
         K = Kp*KL
         return K
-    
+
     def Kuf(self, X, Y=None, full_cov=True):
-        Xp, XL = self.proc_patch(X) # (N, L)
-        Yp, YL = self.proc_image(Y) # (M, P, L)
+        Xp, XL = self.proc_patch(X)  # (N, L)
+        Yp, YL = self.proc_image(Y)  # (M, P, L)
         P, L = Yp.shape[1], Yp.shape[2]
-        Yp = Yp.reshape(-1, L) # (M*P, L)
-        Kp = self.kp(Xp, Yp) # (N, M*P)
+        Yp = Yp.reshape(-1, L)  # (M*P, L)
+        Kp = self.kp(Xp, Yp)  # (N, M*P)
         N, M = len(Xp), len(Y)
-        Kp = Kp.reshape((N, M, P)) # (N, M, P)
-        KL = self.kl(XL, YL, full_cov=True) # (N, P)
-        KL = np.expand_dims(KL, (1,)) # (N, 1, P)
-        K = Kp*KL # (N, M, P)
+        Kp = Kp.reshape((N, M, P))  # (N, M, P)
+        KL = self.kl(XL, YL, full_cov=True)  # (N, P)
+        KL = np.expand_dims(KL, (1,))  # (N, 1, P)
+        K = Kp*KL  # (N, M, P)
         return K
-    
+
     def proc_image(self, X):
         raise NotImplementedError
-        
+
     def proc_patch(self, X):
         raise NotImplementedError
-        
+
     def get_XL(self):
         raise NotImplementedError
-    
+
 
 class CovPatch(CovPatchBase):
     """ Patch based kernel where all overlapping patches
             are extracted from the image and `kᵤ` applied """
-    image_shape: Tuple[int] = (28, 28, 1) # (H, W, C)
+    image_shape: Tuple[int] = (28, 28, 1)  # (H, W, C)
     patch_shape: Tuple[int] = (3, 3)      # (h, w)
-        
+
     def proc_image(self, X):
         Xp = extract_patches_2d_vmap(X.reshape((-1, *self.image_shape)),
-                                     self.patch_shape) # (N, P, h, w)
+                                     self.patch_shape)  # (N, P, h, w)
         N, P = Xp.shape[:2]
-        Xp = Xp.reshape(N, P, self.L) # (N, P, L)
+        Xp = Xp.reshape(N, P, self.L)  # (N, P, L)
         return Xp, self.XL
-    
+
     def proc_patch(self, X):
         if self.use_loc_kernel:
             Xp, XL = X
@@ -411,11 +413,11 @@ class CovPatch(CovPatchBase):
             Xp, XL = X, X
         Xp = Xp.reshape(-1, self.L)   # (N, L)
         return Xp, XL
-    
+
     def get_XL(self):
         scal, transl = extract_patches_2d_scal_transl(self.image_shape,
                                                       self.patch_shape)
-        scal = np.repeat(scal[np.newaxis,...], len(transl), axis=0)
+        scal = np.repeat(scal[np.newaxis, ...], len(transl), axis=0)
         scal_transl = np.column_stack([scal, transl])
         return scal_transl
 
@@ -423,7 +425,7 @@ class CovPatch(CovPatchBase):
     def L(self):
         """ Patch length / input dimension to `kp` """
         return self.patch_shape[0]*self.patch_shape[1]
-    
+
     @property
     def P(self):
         """ #patches """
@@ -435,18 +437,31 @@ class CovPatch(CovPatchBase):
 class CovPatchEncoder(CovPatchBase):
     """ Patch based kernel where patch based responses
             are computed using an encoder, e.g. bagnet """
-    L: int = 64
-    P: int = 7*7
-        
+    encoder: 'str' = 'CNNMnist'
+    
+    def setup(self):
+        if self.encoder not in self.available_encoders:
+            raise ValueError(
+                f'CovPatchEncoder.encoder should be in {list(patch_encoders.keys())}')
+        if getattr(self, 'g', None) is not None:
+            raise ValueError('`CovPatchEncoder.g` should not be implemented')
+        self.kp = self.kp_cls()
+        self.kl = self.kl_cls()
+        self.XL = self.available_encoders[self.encoder].get_XL()
+
     def proc_image(self, X):
         # (N, Px, Py, L)
         if X.ndim != 4:
             raise ValueError(f'Patch should have 4-dims, '
                              f'but got {x.ndim}-dims')
-        N, L = X.shape[0], X.shape[3]
-        Xp = X.reshape((N, -1, L))  # (N, P, L)
-        return Xp, self.XL
-    
+        N, Py, Px, L = X.shape
+        P = Py*Px
+        Xp = X.reshape((N, P, L))  # (N, P, L)
+        if self.XL is None:
+            return Xp, np.ones((P, 4))
+        else:
+            return Xp, self.XL
+
     def proc_patch(self, X):
         if  (isinstance(X, np.ndarray) and X.ndim != 2) or \
             (isinstance(X, tuple) and X[0].ndim != 2):
@@ -458,20 +473,13 @@ class CovPatchEncoder(CovPatchBase):
             Xp, XL = X, X
         return Xp, XL
     
-    def get_XL(self):
-        start_ind = np.array(
-            [[0, 0], [0, 1], [0, 5], [0, 9], [0, 13], [0, 17], [0, 21],
-             [1, 0], [1, 1], [1, 5], [1, 9], [1, 13], [1, 17], [1, 21],
-             [5, 0], [5, 1], [5, 5], [5, 9], [5, 13], [5, 17], [5, 21],
-             [9, 0], [9, 1], [9, 5], [9, 9], [9, 13], [9, 17], [9, 21],
-             [13, 0], [13, 1], [13, 5], [13, 9], [13, 13], [13, 17],
-             [13, 21], [17, 0], [17, 1], [17, 5], [17, 9], [17, 13],
-             [17, 17], [17, 21], [21, 0], [21, 1], [21, 5], [21, 9],
-             [21, 13], [21, 17], [21, 21]])
-        scal, transl = startind_to_scal_transl((28,28), (10,10), start_ind)
-        scal = np.repeat(scal[np.newaxis,...], len(transl), axis=0)
-        scal_transl = np.column_stack([scal, transl])
-        return scal_transl
+    @property
+    def available_encoders(self):
+        return CovPatchEncoder.get_available_encoders()
+    
+    @classmethod
+    def get_available_encoders(self):
+        return {'CNNMnist': CNNMnistTrunk,}
     
 
 class CovConvolutional(Kernel):
@@ -501,33 +509,34 @@ class CovConvolutional(Kernel):
 
     def setup(self):
         self.kg = self.kg_cls()
-        
+
     def K(self, X, Y=None):
-        Kg = self.kg(X, Y, full_cov=True) # (N, P, M, P)
-        K = np.mean(Kg, axis=(1, 3)) # (N, M)
+        Kg = self.kg(X, Y, full_cov=True)  # (N, P, M, P)
+        K = np.mean(Kg, axis=(1, 3))  # (N, M)
         return K
 
     def Kdiag(self, X, Y=None):
-        Kg = self.kg(X, full_cov=False) # (N, P, P)
-        K = np.mean(Kg, axis=(1, 2)) # (N,)
+        Kg = self.kg(X, full_cov=False)  # (N, P, P)
+        K = np.mean(Kg, axis=(1, 2))  # (N,)
         return K
-    
+
     def Kuf(self, X, Y=None, full_cov=True):
         if not self.patch_inducing_loc:
             return self.__call__(X, Y, full_cov=full_cov)
-        if not full_cov: raise ValueError('Kuf(full_cov=False) not valid')
-        Kg = self.kg.Kuf(X, Y) # (N, M, P)
-        K = np.mean(Kg, axis=(2,)) # (N, M)
+        if not full_cov:
+            raise ValueError('Kuf(full_cov=False) not valid')
+        Kg = self.kg.Kuf(X, Y)  # (N, M, P)
+        K = np.mean(Kg, axis=(2,))  # (N, M)
         return K
-    
+
     def Kuu(self, X, Y=None, full_cov=True):
         if not self.patch_inducing_loc:
             return self.__call__(X, Y, full_cov=full_cov)
-        if not full_cov: raise ValueError('Kuu(full_cov=False) not implemented')
-        Kg = self.kg.Kuu(X, Y) # (N, M)
+        if not full_cov:
+            raise ValueError('Kuu(full_cov=False) not implemented')
+        Kg = self.kg.Kuu(X, Y)  # (N, M)
         return Kg
 
-    
 
 def get_init_patches(key, X, M, image_shape, patch_shape, init_method='unique'):
     """ `random` might result in many duplicate initializations 
@@ -539,8 +548,8 @@ def get_init_patches(key, X, M, image_shape, patch_shape, init_method='unique'):
     X = np.take(X, ind, axis=0).reshape((-1, *image_shape))
     jit_extract_patches_2d_vmap = jit(extract_patches_2d_vmap,
                                       static_argnums=(1,))
-    patches = jit_extract_patches_2d_vmap(X, patch_shape) # (N, P, h, w)
-    patches = patches.reshape(-1, patch_shape[0]*patch_shape[1]) # (N*P, h*w)
+    patches = jit_extract_patches_2d_vmap(X, patch_shape)  # (N, P, h, w)
+    patches = patches.reshape(-1, patch_shape[0]*patch_shape[1])  # (N*P, h*w)
     if init_method == 'random':
         ind = random.randint(k3, (M,), 0, len(patches))
         patches = np.take(patches, ind, axis=0)
@@ -801,7 +810,6 @@ class CovICMLearnable(Kernel):
         return K
 
 
-
 class CovMultipleOutputIndependent(Kernel):
     """Represents multiple output GP with a shared encoder
             f = (f1,...,fᴾ)
@@ -816,8 +824,8 @@ class CovMultipleOutputIndependent(Kernel):
         self.ks = [self.k_cls() for d in range(self.output_dim)]
         self.g = self.g_cls()
         if isinstance(self.ks[0], CovConvolutional) and \
-            self.ks[0].patch_inducing_loc == True and \
-            not hasattr(self.g, 'gz'):
+                self.ks[0].patch_inducing_loc == True and \
+                not hasattr(self.g, 'gz'):
             raise ValueError('`CovConvolutional(patch_inducing_loc=True)`'
                              'requires `g.gz` implemented')
 
@@ -832,31 +840,35 @@ class CovMultipleOutputIndependent(Kernel):
     def Kuf(self, X, Y=None, full_cov=True):
         X = self.slice_and_map_inducing(X)
         Y = self.slice_and_map(Y)
-        if not full_cov: raise ValueError('Kuf(full_cov=False) not valid')
-        Ks = np.stack([k.Kuf(X, Y, full_cov=full_cov) for k in self.ks])  # (P, N, N)
+        if not full_cov:
+            raise ValueError('Kuf(full_cov=False) not valid')
+        Ks = np.stack([k.Kuf(X, Y, full_cov=full_cov)
+                      for k in self.ks])  # (P, N, N)
         return Ks
-    
+
     def Kuu(self, X, Y=None, full_cov=True):
         X = self.slice_and_map_inducing(X)
         Y = self.slice_and_map_inducing(Y)
-        if not full_cov: raise ValueError('Kuu(full_cov=False) not implemented')
-        Ks = np.stack([k.Kuu(X, Y, full_cov=full_cov) for k in self.ks])  # (P, N, N)
+        if not full_cov:
+            raise ValueError('Kuu(full_cov=False) not implemented')
+        Ks = np.stack([k.Kuu(X, Y, full_cov=full_cov)
+                      for k in self.ks])  # (P, N, N)
         return Ks
-    
+
     def slice_and_map_inducing(self, X):
         X = apply_fn_ndarray_or_tuple(self.slice, X)
         X = apply_fn_ndarray_or_tuple(self.apply_mapping_inducing, X)
         return X
-    
+
     def apply_mapping_inducing(self, X):
         if (X is None) or (not hasattr(self, 'g')):
             return X
         if isinstance(self.ks[0], CovConvolutional) and \
-            self.ks[0].patch_inducing_loc == True:
+                self.ks[0].patch_inducing_loc == True:
             return self.g.gz(X)
         else:
             return self.g(X)
-    
+
 
 class Lik(nn.Module):
     """ p(y|f) """
@@ -987,7 +999,7 @@ class LikMulticlassSoftmax(Lik):
     """ Represents p(y|f) = Cat(π) where π = softmax(f) """
     output_dim: int = 1
     n_mc_samples: int = 20
-    # Normalize posterior process `f` 
+    # Normalize posterior process `f`
     #     s.t.`exp(f) ~ Gamma(1/σ2, 1)`
     apx_gamma: bool = False
 
@@ -1047,7 +1059,7 @@ class LikMulticlassSoftmax(Lik):
                                       y=y)
         logp = np.sum(logp)
         return logp
-    
+
     def get_μf(self, μf, σ2f):
         if self.apx_gamma:
             β = 1/(σ2f*np.exp(μf+σ2f/2)+1e-10)
@@ -1441,7 +1453,7 @@ class SVGP(nn.Module, GPModel):
 
         mf = self.mean_fn(X)        # (N, P)
         mu = self.mean_fn(Xu)       # (M, P)
-        
+
         Kff = k.Kff(X, full_cov=False)  # (P, N)
         Kuf = k.Kuf(Xu, X)              # (P, M, N)
         Kuu = k.Kuu(Xu)                 # (P, M, M)
@@ -1495,8 +1507,9 @@ class SVGP(nn.Module, GPModel):
         μf, Σf = mvn_marginal_variational_fn(Kss, Kus, ms,
                                              Luu, mu, μq, Lq, full_cov)
         if not full_cov:
-                μf = μf.reshape(Σf.shape)  # (N, P)
+            μf = μf.reshape(Σf.shape)  # (N, P)
         return μf, Σf
+
 
 class InducingLocations(nn.Module):
     shape: Tuple[int]  # shape output by init_fn
@@ -1522,7 +1535,7 @@ def transform_to_matrix(θ, T_type, A_init_val):
         ind = jax.ops.index[[0, 1, 0, 1], [0, 1, 2, 2]]
         θ = np.array([θ[0], θ[0], θ[1], θ[2]])
     elif T_type == 'transl+anis_scal':
-        ind = jax.ops.index[[0, 1, 0, 1],[0, 1, 2, 2]]
+        ind = jax.ops.index[[0, 1, 0, 1], [0, 1, 2, 2]]
     elif T_type == 'affine':
         ind = jax.ops.index[[0, 0, 0, 1, 1, 1], [0, 1, 2, 0, 1, 2]]
     A = jax.ops.index_update(A_init_val, ind, θ)
@@ -1531,17 +1544,15 @@ def transform_to_matrix(θ, T_type, A_init_val):
 
 def spatial_transform_bound_init_fn(in_shape, out_shape):
     scal, transl = extract_patches_2d_scal_transl(in_shape, out_shape)
-    bnd_transly = np.array((np.min(transl[:,0]), np.max(transl[:,0])))
-    bnd_translx = np.array((np.min(transl[:,1]), np.max(transl[:,1])))
+    bnd_transly = np.array((np.min(transl[:, 0]), np.max(transl[:, 0])))
+    bnd_translx = np.array((np.min(transl[:, 1]), np.max(transl[:, 1])))
     bnd_scal = np.array([np.max(np.array((0.5*np.min(scal), np.array(0.)))),
                          np.min(np.array((1.5*np.max(scal), np.array(1.))))])
     return bnd_scal, bnd_transly, bnd_translx
 
 
-
-
 class SpatialTransform(nn.Module):
-    shape: Tuple[int] # (h, w) output shape
+    shape: Tuple[int]  # (h, w) output shape
     n_transforms: int
     T_type: str
     T_init_fn: Callable = None
@@ -1549,7 +1560,7 @@ class SpatialTransform(nn.Module):
                                        [0, 1, 0]], dtype=np.float32)
     output_transform: bool = False
     bound_init_fn: Callable = None
-        
+
     def setup(self):
         if len(self.shape) != 2:
             raise ValueError(
@@ -1558,7 +1569,7 @@ class SpatialTransform(nn.Module):
                                'transl+anis_scal', 'affine']:
             raise ValueError(
                 f'`self.T_type`={self.T_type} not Implemented')
-            
+
         if self.bound_init_fn is not None:
             self.bij = self.get_bij()
 
@@ -1567,28 +1578,30 @@ class SpatialTransform(nn.Module):
             T_init_fn = self.T_init_fn
         self.T = self.params_to_matrix(
             self.param('T', T_init_fn, T_init_shape))
-        
+
     def default_T_init(self):
         """Get initial shape and init_fn for spatial transformation θ 
                 If `bound_fn` used, then these initial values lives in 
                 the bouned space, e.g. init_scal=1 -> middle of scale bound """
         T_type, n = self.T_type, self.n_transforms
-        if   T_type == 'transl':
-            init_shape, init_val = (n, 2), np.array([0, 0.]) # (tx, ty)
+        if T_type == 'transl':
+            init_shape, init_val = (n, 2), np.array([0, 0.])  # (tx, ty)
         elif T_type == 'transl+isot_scal':
-            init_shape, init_val = (n, 3), np.array([1, 0, 0.]) # (s, tx, ty)
+            init_shape, init_val = (n, 3), np.array([1, 0, 0.])  # (s, tx, ty)
         elif T_type == 'transl+anis_scal':
-            init_shape, init_val = (n, 4), np.array([1, 1, 0, 0.]) # (sx, sy, tx, ty)
+            init_shape, init_val = (n, 4), np.array(
+                [1, 1, 0, 0.])  # (sx, sy, tx, ty)
         elif T_type == 'affine':
             init_shape, init_val = (n, 6), np.array([1, 0, 0, 0, 1, 0.])
+
         def init_fn(k, s):
             return np.tile(init_val, (s[0], 1))
         return init_shape, init_fn
-    
+
     def get_bij(self):
         T_type = self.T_type
         bnd_scal, bnd_transly, bnd_translx = self.bound_init_fn()
-        if   T_type == 'transl':
+        if T_type == 'transl':
             bnds = [bnd_translx, bnd_transly]
         elif T_type == 'transl+isot_scal':
             bnds = [bnd_scal, bnd_translx, bnd_transly]
@@ -1599,32 +1612,32 @@ class SpatialTransform(nn.Module):
             bnds = [np.array([0, 1]) for _ in range(6)]
         bound = np.column_stack(bnds)
         return BijSigmoid(bound)
-    
+
     def param_bij(self, θ, direction):
         if self.bound_init_fn is None:
             return θ
         return getattr(self.bij, direction)(θ)
-    
+
     def param_bij_forward(self, θ):
         return self.param_bij(θ, 'forward')
-    
+
     def param_bij_reverse(self, θ):
         return self.param_bij(θ, 'reverse')
-        
+
     def params_to_matrix(self, θ):
         """ θ -> A """
         θ = self.param_bij_forward(θ)
         fn = vmap(transform_to_matrix, (0, None, None), 0)
         return fn(θ, self.T_type, self.A_init_val)
-    
+
     @property
     def scal(self):
-        return self.T[:,[1, 0],[1, 0]] # (sy, sx)
-    
+        return self.T[:, [1, 0], [1, 0]]  # (sy, sx)
+
     @property
     def transl(self):
-        return self.T[:, [1, 0], 2] # (ty, tx)
-    
+        return self.T[:, [1, 0], 2]  # (ty, tx)
+
     def __call__(self, X):
         """Spatially transforms batched image X (N, H, W, 1)
                 to target image of size (N, h, w, 1) """
@@ -1636,7 +1649,6 @@ class SpatialTransform(nn.Module):
             return X, np.column_stack([self.scal, self.transl])
         else:
             return X
-
 
 
 class MultivariateNormalTril(object):
@@ -1711,9 +1723,11 @@ class VariationalMultivariateNormal(nn.Module):
         P, D = self.P, self.D
         self.μ = self.param('μ', jax.nn.initializers.zeros, (P, D))
         init_L_shape = (P, BijFillTril.reverse_shape(D))
+
         def init_L_fn(k, s):
-            return np.repeat(BijFillTril.reverse(np.eye(D))[np.newaxis,...], P, axis=0)
-        self.L = vmap(BijFillTril.forward)(self.param('L', init_L_fn, init_L_shape))
+            return np.repeat(BijFillTril.reverse(np.eye(D))[np.newaxis, ...], P, axis=0)
+        self.L = vmap(BijFillTril.forward)(
+            self.param('L', init_L_fn, init_L_shape))
 
     def __call__(self):
         return MultivariateNormalTril(self.μ, self.L)
@@ -1754,19 +1768,20 @@ class BijSigmoid(object):
 
         https://github.com/tensorflow/probability/blob/master/tensorflow_probability/python/bijectors/sigmoid.py
     """
-    
+
     def __init__(self, bound=None):
-        if bound is None: bound = np.array([0, 1.])
+        if bound is None:
+            bound = np.array([0, 1.])
         self.bound = bound
-        
+
     @property
     def lo(self):
         return self.bound[0]
-    
+
     @property
     def hi(self):
         return self.bound[1]
-    
+
     def forward(self, x):
         return self.hi*jax.nn.sigmoid(x) + self.lo*jax.nn.sigmoid(-x)
 
@@ -2064,7 +2079,10 @@ class CNNMnist(nn.Module):
         return x
 
 
+
 class CNNMnistTrunk(nn.Module):
+    # in_shape: (1, 28, 28, 1)
+    # receptive field: (10, 10)
 
     @nn.compact
     def __call__(self, x):
@@ -2077,19 +2095,36 @@ class CNNMnistTrunk(nn.Module):
         x = nn.avg_pool(x, window_shape=(2, 2), strides=(2, 2))
         # (N, Px, Py, L)
         return x
-    
+
     def gz(self, x):
         if x.ndim == 3:
-            x = x[...,np.newaxis] # add color channel
+            x = x[..., np.newaxis]  # add color channel
         x = np.pad(x, pad_width=((0, 0), (1, 1), (1, 1), (0, 0)),
-                      mode='constant',
-                      constant_values=0)
+                   mode='constant',
+                   constant_values=0)
         x = self.__call__(x)
         if x.shape[1:3] != (3, 3):
             raise ValueError(
                 'CNNMnistTrunk.gz(x) does not have correct shape')
         x = x[:, 1, 1, :].squeeze()
         return x
+
+    @classmethod
+    def get_XL(self):
+        start_ind = np.array(
+            [[0, 0], [0, 1], [0, 5], [0, 9], [0, 13], [0, 17], [0, 21],
+             [1, 0], [1, 1], [1, 5], [1, 9], [1, 13], [1, 17], [1, 21],
+             [5, 0], [5, 1], [5, 5], [5, 9], [5, 13], [5, 17], [5, 21],
+             [9, 0], [9, 1], [9, 5], [9, 9], [9, 13], [9, 17], [9, 21],
+             [13, 0], [13, 1], [13, 5], [13, 9], [13, 13], [13, 17],
+             [13, 21], [17, 0], [17, 1], [17, 5], [17, 9], [17, 13],
+             [17, 17], [17, 21], [21, 0], [21, 1], [21, 5], [21, 9],
+             [21, 13], [21, 17], [21, 21]])
+        scal, transl = startind_to_scal_transl((28, 28), (10, 10), start_ind)
+        scal = np.repeat(scal[np.newaxis, ...], len(transl), axis=0)
+        XL = np.column_stack([scal, transl])
+        return XL
+
 
 
 def compute_receptive_fields(model_def, in_shape, spike_loc=None):
@@ -2104,44 +2139,43 @@ def compute_receptive_fields(model_def, in_shape, spike_loc=None):
     # vjp (𝑥,𝑣)↦∂𝑓(𝑥)ᵀv
     # vjp :: (a -> b) -> a -> (b, CT b -> CT a)
     #     vjp: (f, x) -> (f(x), vjp_fn) where vjp_fn: u -> v
-    f = lambda x: model.apply(params, x)
+    def f(x): return model.apply(params, x)
     y, vjp_fn = vjp(f, x)
     S = y.shape
     gy = np.zeros(S)
     if spike_loc is not None:
-        ind = jax.ops.index[0, spike_loc[:,0], spike_loc[:,1], ...]
+        ind = jax.ops.index[0, spike_loc[:, 0], spike_loc[:, 1], ...]
     else:
         ind = jax.ops.index[0, S[1]//2, S[2]//2, ...]
     gy = jax.ops.index_update(gy, ind, 1)
     gx = vjp_fn(gy)[0]
-    I = np.where(gx!=0)
+    I = np.where(gx != 0)
     rf = np.array([np.max(idx)-np.min(idx)+1
-                   for idx in I])[np.array([1,2])] # (y, x)
+                   for idx in I])[np.array([1, 2])]  # (y, x)
     return rf, gx, gy
 
 
 def compute_receptive_fields_start_ind(model_def, in_shape):
     """Computes start indices for patches to get transformation 
             parameters (in start indices of patches)
-            
+
         ```
-        g_cls = CNNMnistTrunk
-        image_shape = (28, 28, 1)
+        g_cls = CNNMnistTrunk; image_shape = (28, 28, 1)
         ind_start, rf = compute_receptive_fields_start_ind(
             g_cls, (1, *image_shape))
         fig,ax = plt.subplots(1,1,figsize=(5,5))
         ax.imshow(np.zeros(image_shape), cmap='Greys', origin='upper')
         ax.scatter(ind_start[:,0], ind_start[:,1])
-        ax.set_title(rf)
         ax.grid()
         ``` 
     """
     if len(in_shape) != 4:
         raise ValueError('`in_shape` has dims (N, H, W, C)')
-        
-    image_shape = in_shape[1:1+2] # ndim=2
+
+    image_shape = in_shape[1:1+2]  # ndim=2
     rf, _, gy = compute_receptive_fields(model_def, in_shape)
-    Py, Px = gy.shape[1:3]; P = Py*Px
+    Py, Px = gy.shape[1:3]
+    P = Py*Px
     spike_locs = list(itertools.product(np.arange(Py), np.arange(Px)))
     spike_locs = np.array(spike_locs, dtype=np.int32)
 
@@ -2150,8 +2184,10 @@ def compute_receptive_fields_start_ind(model_def, in_shape):
     params = model.init(random.PRNGKey(0), x)
     params = freeze(jax.tree_map(lambda w: np.ones(w.shape),
                                  unfreeze(params)))
-    f = lambda x: model.apply(params, x)
+
+    def f(x): return model.apply(params, x)
     y, vjp_fn = vjp(f, x)
+
     def construct_gy(spike_loc):
         if len(spike_loc) != 2:
             raise ValueError(f'len(spike_loc)={len(spike_loc)}')
@@ -2165,19 +2201,19 @@ def compute_receptive_fields_start_ind(model_def, in_shape):
     ind = []
     for p in range(len(gx)):
         gxp = gx[p]
-        I = np.where(gxp>1e-2)
+        I = np.where(gxp > 1e-2)
         ind.append([(np.min(idx), np.max(idx)) for idx in I])
 
     # (P, 3, 2)
-    ind = np.array(ind)[:, [0,1]]
+    ind = np.array(ind)[:, [0, 1]]
     # (P, hi/wi, min/max)
-    if not np.all((ind[:,:,1]-ind[:,:,0]+1) <= rf):
+    if not np.all((ind[:, :, 1]-ind[:, :, 0]+1) <= rf):
         # Note patches on boundary have < receptive_field!
         raise ValueError('leaky gradient, `gx` has'
                          'more nonzero entries than possible')
     # (P, hi/wi)
-    ind_start = ind[:,:,0]
-    
+    ind_start = ind[:, :, 0]
+
     return ind_start, rf
 
 
@@ -2350,9 +2386,10 @@ def pytree_leaf(tree, path):
         a = np.nan
     return a
 
+
 def pytree_keys(tree):
     kvs = flax.traverse_util.flatten_dict(unfreeze(tree))
-    return ['/'.join(k) for k,v in kvs.items()]
+    return ['/'.join(k) for k, v in kvs.items()]
 
 
 def flax_check_traversal(params, traversal):
@@ -2361,7 +2398,7 @@ def flax_check_traversal(params, traversal):
         state = optim.GradientDescent().create(
             params, traversal).state
         kvs = flax.traverse_util.flatten_dict(unfreeze(state.param_states))
-        return ['/'.join(k) for k,v in kvs.items() if v is not None]
+        return ['/'.join(k) for k, v in kvs.items() if v is not None]
     else:
         def flax_optim_get_params_dict(inputs):
             if isinstance(inputs, flax.nn.base.Model):
@@ -2513,6 +2550,7 @@ def flax_model2params(target):
         params = target
     return params
 
+
 def flax_params2model(model, params):
     return flax.nn.base.Model(model, unfreeze(params))
 
@@ -2569,7 +2607,7 @@ def extract_patches_2d(im, patch_size):
     hi = np.arange(H-h+1)
     wi = np.arange(W-w+1)
     hwi = np.array(list(itertools.product(hi, wi)))
-    f = lambda hwi: jax.lax.dynamic_slice(im, (hwi[0], hwi[1]), (h, w))
+    def f(hwi): return jax.lax.dynamic_slice(im, (hwi[0], hwi[1]), (h, w))
     patches = jax.lax.map(f, hwi)
     return patches
 
@@ -2590,12 +2628,14 @@ def extract_patches_2d_scal_transl(image_shape, patch_shape):
     s, t = startind_to_scal_transl(image_shape, patch_shape, hwi)
     return s, t
 
+
 def startind_to_scal_transl(image_shape, patch_shape, start_ind):
     image_shape = np.array(image_shape[:2])
     patch_shape = np.array(patch_shape)
     s = patch_shape/image_shape
     t = 2*start_ind/image_shape - 1 + s
     return s, t
+
 
 def trans2x3_from_scal_transl(s, t):
     """ s = [sy, sx]; t = [ty, tx] """
@@ -2604,12 +2644,12 @@ def trans2x3_from_scal_transl(s, t):
 
 def make_im_grid(ims, im_per_row=8, padding=1, pad_value=.2):
     """Makes a grid of image from batched images
-    
+
         ims    (N, H, W, C)
         grid   (H, N*W, C) if no padding
     """
     if ims.ndim == 3:
-        ims = ims[...,np.newaxis]
+        ims = ims[..., np.newaxis]
     N, H, W, C = ims.shape
     n_col = min(im_per_row, N)
     n_row = int(math.ceil(N/n_col))
@@ -2620,7 +2660,8 @@ def make_im_grid(ims, im_per_row=8, padding=1, pad_value=.2):
                    pad_value)
     for ri in range(n_row):
         for ci in range(n_col):
-            if k > N: break
+            if k > N:
+                break
             grid = jax.ops.index_update(grid,
                                         jax.ops.index[(ri*H+padding):(ri*H+H),
                                                       (ci*W+padding):(ci*W+W), ...],
@@ -2750,15 +2791,17 @@ def plt_spatial_transform(axs, Gs, S, T):
                          np.linspace(-1, 1, w))
     Xs_flat = Gs[0, :]
     Ys_flat = Gs[1, :]
-    Xs = Xs_flat.reshape((h,w))
-    Ys = Ys_flat.reshape((h,w))
-    
+    Xs = Xs_flat.reshape((h, w))
+    Ys = Ys_flat.reshape((h, w))
+
     ax = axs[0]
-    ax.set_xticks([]); ax.set_yticks([])
+    ax.set_xticks([])
+    ax.set_yticks([])
     ax.scatter(Xs, Ys, marker='+', c='r', s=50)
-    ax.imshow(S, cmap='Greys', extent=(-1,1,1,-1), origin='upper')
-    
+    ax.imshow(S, cmap='Greys', extent=(-1, 1, 1, -1), origin='upper')
+
     ax = axs[1]
-    ax.set_xticks([]); ax.set_yticks([])
+    ax.set_xticks([])
+    ax.set_yticks([])
     ax.scatter(Xt, Yt, marker='+', c='r', s=30)
-    ax.imshow(T, cmap='Greys', extent=(-1,1,1,-1), origin='upper')
+    ax.imshow(T, cmap='Greys', extent=(-1, 1, 1, -1), origin='upper')

@@ -280,7 +280,7 @@ class TestKernel(unittest.TestCase):
         g_cls = CNNMnistTrunk
         kg_cls = CovPatchEncoder
         kf_cls = partial(CovConvolutional, kg_cls=kg_cls,
-                                        patch_inducing_loc=False)
+                                           patch_inducing_loc=False)
         k_cls = partial(CovMultipleOutputIndependent, k_cls=kf_cls,
                                                     output_dim=O,
                                                     g_cls=g_cls)
@@ -297,7 +297,7 @@ class TestKernel(unittest.TestCase):
 
         # test shape when u ~ GP(0,ku) f ~ GP(0, kf)
         kf_cls = partial(CovConvolutional, kg_cls=kg_cls,
-                                        patch_inducing_loc=True)
+                                           patch_inducing_loc=True)
         k_cls = partial(CovMultipleOutputIndependent, k_cls=kf_cls,
                                                     output_dim=O,
                                                     g_cls=g_cls)
@@ -322,7 +322,7 @@ class TestKernel(unittest.TestCase):
         ypl = (yp, yl)
         kg_cls = partial(CovPatchEncoder, kl_cls=CovSE)
         kf_cls = partial(CovConvolutional, kg_cls=kg_cls,
-                                        patch_inducing_loc=True)
+                                           patch_inducing_loc=True)
         k_cls = partial(CovMultipleOutputIndependent, k_cls=kf_cls,
                                                     output_dim=O,
                                                     g_cls=g_cls)
