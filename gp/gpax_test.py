@@ -62,6 +62,18 @@ class TestJaxUtilities(unittest.TestCase):
         self.assertTrue(np.array_equal(a, b))
 
 
+class TestReceptiveFields(unittest.TestCase):
+
+    def test_cnnmnist(self):
+        g_cls = CNNMnistTrunk; image_shape = (28, 28, 1)
+        ind_start, rf = compute_receptive_fields_start_ind(
+            g_cls, (1, *image_shape))
+        ind_start_true = np.array([[0, 0], [0, 1], [0, 5], [0, 9], [0, 13], [0, 17], [0, 21], [1, 0], [1, 1], [1, 5], [1, 9], [1, 13], [1, 17], [1, 21], [5, 0], [5, 1], [5, 5], [5, 9], [5, 13], [5, 17], [5, 21], [9, 0], [9, 1], [9, 5], [9, 9], [9, 13], [9, 17], [9, 21], [13, 0], [13, 1], [13, 5], [13, 9], [13, 13], [13, 17], [13, 21], [17, 0], [17, 1], [17, 5], [17, 9], [17, 13], [17, 17], [17, 21], [21, 0], [21, 1], [21, 5], [21, 9], [21, 13], [21, 17], [21, 21]])
+        rf_correct = np.all(rf == np.array([10, 10], np.int32))
+        ind_start_correct = np.all(ind_start==ind_start_true)
+        self.assertTrue(ind_start_correct)
+        self.assertTrue(rf_correct)
+
 class TestBijectors(unittest.TestCase):
 
     def test_BijFillTril(self):
@@ -245,6 +257,86 @@ class TestKernel(unittest.TestCase):
                                     (xpl, None, (Np, Np), k.Kuu),  # k(Xu)
                                     (xpl, xpl, (Np, Np), k.Kuu),
                                     (xpl, ypl, (Np, Mp), k.Kuu)]:
+            K = k.apply(params, X, Y, method=method)
+            Kshape_correct = K.shape == shape
+            self.assertTrue(Kshape_correct)
+
+
+    def test_CovConvolutionalwithMultipleIndependentOutput(self):
+
+        key = random.PRNGKey(0)
+        O = 2
+        N, M = 1, 2
+        Np, Mp = 3, 4
+        image_shape = (28, 28, 1)
+        patch_shape = (10, 10)
+        x = random.normal(key, (N, *image_shape))
+        y = random.normal(key, (M, *image_shape))
+        xp = random.normal(key, (Np, *patch_shape))
+        yp = random.normal(key, (Mp, *patch_shape))
+        xl = random.normal(key, (Np, 4))
+        yl = random.normal(key, (Mp, 4))
+
+        g_cls = CNNMnistTrunk
+        kg_cls = CovPatchEncoder
+        kf_cls = partial(CovConvolutional, kg_cls=kg_cls,
+                                        patch_inducing_loc=False)
+        k_cls = partial(CovMultipleOutputIndependent, k_cls=kf_cls,
+                                                    output_dim=O,
+                                                    g_cls=g_cls)
+        k = k_cls()
+        params = k.init(key, x)
+
+
+        for X, Y, shape, method in [(x, y, (O, N, M), k.Kff),
+                                    (x, y, (O, N, M), k.Kuf),
+                                    (x, y, (O, N, M), k.Kuu)]:
+            K = k.apply(params, X, Y, method=method)
+            Kshape_correct = K.shape == shape
+            self.assertTrue(Kshape_correct)
+
+        # test shape when u ~ GP(0,ku) f ~ GP(0, kf)
+        kf_cls = partial(CovConvolutional, kg_cls=kg_cls,
+                                        patch_inducing_loc=True)
+        k_cls = partial(CovMultipleOutputIndependent, k_cls=kf_cls,
+                                                    output_dim=O,
+                                                    g_cls=g_cls)
+        k = k_cls()
+        params = k.init(key, x)
+
+        for X, Y, shape, method in [(x, None, (O, N, N), k.Kff),
+                                    (x, y, (O, N, M), k.Kff),
+                                    (y, y, (O, M, M), k.Kff),
+                                    (xp, x, (O, Np, N), k.Kuf),
+                                    (xp, y, (O, Np, M), k.Kuf),      # k(Xu, X)
+                                    (xp, None, (O, Np, Np), k.Kuu),  # k(Xu)
+                                    (xp, xp, (O, Np, Np), k.Kuu),
+                                    (xp, yp, (O, Np, Mp), k.Kuu)]:
+            K = k.apply(params, X, Y, method=method)
+            Kshape_correct = K.shape == shape
+            self.assertTrue(Kshape_correct)
+            
+        # test shape  when u ~ GP(0,ku) f ~ GP(0, kf)
+        #      and use non-constant location kernel kl
+        xpl = (xp, xl)
+        ypl = (yp, yl)
+        kg_cls = partial(CovPatchEncoder, kl_cls=CovSE)
+        kf_cls = partial(CovConvolutional, kg_cls=kg_cls,
+                                        patch_inducing_loc=True)
+        k_cls = partial(CovMultipleOutputIndependent, k_cls=kf_cls,
+                                                    output_dim=O,
+                                                    g_cls=g_cls)
+        k = k_cls()
+        params = k.init(key, x)
+
+        for X, Y, shape, method in [(x, None, (O, N, N), k.Kff),
+                                    (x, y, (O, N, M), k.Kff),
+                                    (y, y, (O, M, M), k.Kff),
+                                    (xpl, x, (O, Np, N), k.Kuf),
+                                    (xpl, y, (O, Np, M), k.Kuf),      # k(Xu, X)
+                                    (xpl, None, (O, Np, Np), k.Kuu),  # k(Xu)
+                                    (xpl, xpl, (O, Np, Np), k.Kuu),
+                                    (xpl, ypl, (O, Np, Mp), k.Kuu)]:
             K = k.apply(params, X, Y, method=method)
             Kshape_correct = K.shape == shape
             self.assertTrue(Kshape_correct)

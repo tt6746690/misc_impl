@@ -133,39 +133,37 @@ class Kernel(nn.Module):
         else:
             return X[..., self.active_dims] if X is not None else X
 
-    def K(self, X, Y=None):
-        raise NotImplementedError
-
-    def Kdiag(self, X, Y=None):
-        raise NotImplementedError
-
     def apply_mapping(self, X):
         if X is not None and hasattr(self, 'g'):
             return self.g(X)
         else:
             return X
         
-    def slice_and_map(self, X, Y):
+    def slice_and_map(self, X):
         """Allows for `X,Y` as `np.ndarray` as well as tuple of form `(np.ndarray, ...)` """
-        slice_fn = lambda x: apply_fn_ndarray_or_tuple(self.slice, x)
-        apply_mapping_fn = lambda x: apply_fn_ndarray_or_tuple(self.apply_mapping, x)
-        X = slice_fn(X)
-        Y = slice_fn(Y)
-        X = apply_mapping_fn(X)
-        Y = apply_mapping_fn(Y)
-        return X, Y
-    
+        X = apply_fn_ndarray_or_tuple(self.slice, X)
+        X = apply_fn_ndarray_or_tuple(self.apply_mapping, X)
+        return X
+
     def check_full_cov(self, Y, full_cov):
         if full_cov == False and Y is not None:
             raise ValueError('full_cov=False & Y=None not compatible')
 
     def __call__(self, X, Y=None, full_cov=True):
-        X, Y = self.slice_and_map(X, Y)
         if full_cov:
+            X = self.slice_and_map(X)
+            Y = self.slice_and_map(Y)
             return self.K(X, Y)
         else:
+            X = self.slice_and_map(X)
             self.check_full_cov(Y, full_cov)
             return self.Kdiag(X, Y)
+
+    def K(self, X, Y=None):
+        raise NotImplementedError
+
+    def Kdiag(self, X, Y=None):
+        raise NotImplementedError
 
     """ By default, `Kff,Kuf,Kuu` has `f,u ~ GP(0,k)`
         Methods which override `Kuf,Kuu` require handling of 
@@ -270,10 +268,14 @@ class CovSE(Kernel):
         else:
             return np.tile(np.array([1.]), len(X))
 
-
+    
 class LayerIdentity(nn.Module):
+    
     @nn.compact
     def __call__(self, X):
+        return X
+    
+    def gz(self, X):
         return X
 
 
@@ -307,7 +309,11 @@ class CovSEwithEncoder(Kernel):
 
 
 class CovPatchBase(Kernel):
-    """ Patch-based kernel """
+    """ Kernel over image patches
+            u ~ GP(0, kᵤ) where kᵤ = kᵧ·kℓ
+                kᵧ(Z,Z') is the patch kernel
+                kℓ(p,p') is the patch location kernel
+    """
     kp_cls: Callable = CovSE
     kl_cls: Callable = partial(CovConstant, train_σ2=False)
 
@@ -328,21 +334,25 @@ class CovPatchBase(Kernel):
         """
         return not isinstance(self.kl, CovConstant)
 
-
     def K(self, X, Y=None):
         N, M = len(X), len(Y) if Y is not None else len(X)
-        Xp, XL = self.proc_image(X) # (N*P, L)
-        Yp, YL = self.proc_image(Y) if Y is not None else (None, None) # (M*P, L)
+        Xp, XL = self.proc_image(X) # (N, P, L)
+        P, L = Xp.shape[1], Xp.shape[2]
+        Xp = Xp.reshape(-1, L) # (N*P, L)
+        if Y is not None:
+            Yp, YL = self.proc_image(Y) # (M, P, L)
+            Yp = Yp.reshape(-1, L) # (M*P, L)
+        else:
+            Yp, YL = None, None
         Kp = self.kp(Xp, Yp, full_cov=True) # (N*P, M*P)
-        Kp = Kp.reshape(N, self.P, M, self.P) # (N, P, M, P)
+        Kp = Kp.reshape(N, P, M, P) # (N, P, M, P)
         KL = self.kl(XL, YL, full_cov=True) # (P, P)
         KL = np.expand_dims(KL, (0, 2)) # (1, P, 1, P)
         K = Kp*KL # (N, P, M, P)
         return K
     
     def Kdiag(self, X, Y=None):
-        Xp, XL = self.proc_image(X) # (N*P, L)
-        Xp = Xp.reshape(len(X), self.P, self.L) # (N, P, L)
+        Xp, XL = self.proc_image(X) # (N, P, L)
         Kp = vmap(self.kp, (0, None, None), 0)(Xp, None, True) # (N, P, P)
         KL = self.kl(XL, full_cov=True) # (P, P)
         KL = np.expand_dims(KL, (0,)) # (1, P, P)
@@ -360,10 +370,12 @@ class CovPatchBase(Kernel):
     
     def Kuf(self, X, Y=None, full_cov=True):
         Xp, XL = self.proc_patch(X) # (N, L)
-        Yp, YL = self.proc_image(Y) # (M*P, L)
+        Yp, YL = self.proc_image(Y) # (M, P, L)
+        P, L = Yp.shape[1], Yp.shape[2]
+        Yp = Yp.reshape(-1, L) # (M*P, L)
         Kp = self.kp(Xp, Yp) # (N, M*P)
         N, M = len(Xp), len(Y)
-        Kp = Kp.reshape((N, M, self.P)) # (N, M, P)
+        Kp = Kp.reshape((N, M, P)) # (N, M, P)
         KL = self.kl(XL, YL, full_cov=True) # (N, P)
         KL = np.expand_dims(KL, (1,)) # (N, 1, P)
         K = Kp*KL # (N, M, P)
@@ -377,41 +389,28 @@ class CovPatchBase(Kernel):
         
     def get_XL(self):
         raise NotImplementedError
-        
-    @property
-    def L(self):
-        raise NotImplementedError
-    
-    @property
-    def P(self):
-        raise NotImplementedError
     
 
 class CovPatch(CovPatchBase):
+    """ Patch based kernel where all overlapping patches
+            are extracted from the image and `kᵤ` applied """
     image_shape: Tuple[int] = (28, 28, 1) # (H, W, C)
     patch_shape: Tuple[int] = (3, 3)      # (h, w)
         
     def proc_image(self, X):
-        Xp, XL = self.get_patches(X) # (N, P, h, w), (P, 4)
-        Xp = Xp.reshape(-1, self.L) # (N*P, L)
-        return Xp, XL
+        Xp = extract_patches_2d_vmap(X.reshape((-1, *self.image_shape)),
+                                     self.patch_shape) # (N, P, h, w)
+        N, P = Xp.shape[:2]
+        Xp = Xp.reshape(N, P, self.L) # (N, P, L)
+        return Xp, self.XL
     
     def proc_patch(self, X):
         if self.use_loc_kernel:
             Xp, XL = X
         else:
             Xp, XL = X, X
-        Xp = Xp.reshape(-1, self.L) # (N, h*w)
+        Xp = Xp.reshape(-1, self.L)   # (N, L)
         return Xp, XL
-
-    def get_patches(self, X):
-        """ (N, H, W, 1) -> # (N, P, h, w) where P=#patches """
-        patches = extract_patches_2d_vmap(X.reshape((-1, *self.image_shape)),
-                                          self.patch_shape)
-        
-        if patches.shape[1] != self.P:
-            raise ValueError('#patches extracted not correct')
-        return patches, self.XL
     
     def get_XL(self):
         scal, transl = extract_patches_2d_scal_transl(self.image_shape,
@@ -431,10 +430,72 @@ class CovPatch(CovPatchBase):
         H, W, C = self.image_shape
         h, w = self.patch_shape
         return (H-h+1)*(W-w+1)*C
+
+
+class CovPatchEncoder(CovPatchBase):
+    """ Patch based kernel where patch based responses
+            are computed using an encoder, e.g. bagnet """
+    L: int = 64
+    P: int = 7*7
+        
+    def proc_image(self, X):
+        # (N, Px, Py, L)
+        if X.ndim != 4:
+            raise ValueError(f'Patch should have 4-dims, '
+                             f'but got {x.ndim}-dims')
+        N, L = X.shape[0], X.shape[3]
+        Xp = X.reshape((N, -1, L))  # (N, P, L)
+        return Xp, self.XL
+    
+    def proc_patch(self, X):
+        if  (isinstance(X, np.ndarray) and X.ndim != 2) or \
+            (isinstance(X, tuple) and X[0].ndim != 2):
+            raise ValueError(f'Patch should have 2-dims, '
+                             f'but got {x.ndim}-dims')
+        if self.use_loc_kernel:
+            Xp, XL = X
+        else:
+            Xp, XL = X, X
+        return Xp, XL
+    
+    def get_XL(self):
+        start_ind = np.array(
+            [[0, 0], [0, 1], [0, 5], [0, 9], [0, 13], [0, 17], [0, 21],
+             [1, 0], [1, 1], [1, 5], [1, 9], [1, 13], [1, 17], [1, 21],
+             [5, 0], [5, 1], [5, 5], [5, 9], [5, 13], [5, 17], [5, 21],
+             [9, 0], [9, 1], [9, 5], [9, 9], [9, 13], [9, 17], [9, 21],
+             [13, 0], [13, 1], [13, 5], [13, 9], [13, 13], [13, 17],
+             [13, 21], [17, 0], [17, 1], [17, 5], [17, 9], [17, 13],
+             [17, 17], [17, 21], [21, 0], [21, 1], [21, 5], [21, 9],
+             [21, 13], [21, 17], [21, 21]])
+        scal, transl = startind_to_scal_transl((28,28), (10,10), start_ind)
+        scal = np.repeat(scal[np.newaxis,...], len(transl), axis=0)
+        scal_transl = np.column_stack([scal, transl])
+        return scal_transl
     
 
-
 class CovConvolutional(Kernel):
+    """ Convolutional Kernel f~GP(0,k)
+            where k(X,X') = (1/P^2) ΣpΣp' kᵧ(X[p], X[p'])·kℓ(p,p')
+        The additive kernel over patches models a linear 
+            function of patch response, e.g.  f(X) = (1/P) Σp u(Xp)
+                for u ~ GP(0, kᵤ) where kᵤ = kᵧ·kℓ
+                    kᵧ(Z,Z') is the patch kernel
+                    kℓ(p,p') is the patch location kernel
+        Note we apply average of patch kernel since doing so
+            requires no change to the mean function 
+                m(X) = E[f(X)] = (1/P) Σp m(Xp)
+                    the choice of m(Xp) = m(X) works fine
+        `patch_inducing_loc`
+            If True, u~GP(0, kᵧ), f~GP(0, k)
+                Kuu = kᵧ(Z)
+                Kuf = (1/P) Σp kᵧ(Zp, X[p])
+                Treat X as patches, Y as images
+            otherwise, u,f~GP(0, k)
+                Kuu, Kuf fall back to brute force evaluation of k (NMP^2 kᵧ call)
+                Treat both X, Y as images 
+        `kl_cls`
+    """
     kg_cls: Callable = CovPatch
     patch_inducing_loc: bool = False
 
@@ -740,11 +801,12 @@ class CovICMLearnable(Kernel):
         return K
 
 
+
 class CovMultipleOutputIndependent(Kernel):
     """Represents multiple output GP with a shared encoder
             f = (f1,...,fᴾ)
-            fᵖ ~ GP(0, kᵖ(NeuralNets(x)))
-            kᵖ are the different kernels
+            fᵖ ~ GP(0, kᵖ(NeuralNetTrunk(x)))
+                kᵖ are convolutional kernels
     """
     output_dim: int = 1
     k_cls: Callable = CovSE
@@ -753,27 +815,48 @@ class CovMultipleOutputIndependent(Kernel):
     def setup(self):
         self.ks = [self.k_cls() for d in range(self.output_dim)]
         self.g = self.g_cls()
-    
-    def Kuf(self, X, Y=None, full_cov=True):
-        X, Y = self.slice_and_map(X, Y)
-        if not full_cov: raise ValueError('Kuf(full_cov=False) not valid')
-        Ks = np.stack([k.Kuf(X, Y, full_cov=full_cov) for k in self.ks])  # (P, N, N)
-        return Ks
-    
-    def Kuu(self, X, Y=None, full_cov=True):
-        X, Y = self.slice_and_map(X, Y)
-        if not full_cov: raise ValueError('Kuu(full_cov=False) not implemented')
-        Ks = np.stack([k.Kuu(X, Y, full_cov=full_cov) for k in self.ks])  # (P, N, N)
-        return Ks
+        if isinstance(self.ks[0], CovConvolutional) and \
+            self.ks[0].patch_inducing_loc == True and \
+            not hasattr(self.g, 'gz'):
+            raise ValueError('`CovConvolutional(patch_inducing_loc=True)`'
+                             'requires `g.gz` implemented')
 
     def K(self, X, Y=None):
-        Ks = np.stack([k(X, Y, full_cov=True) for k in self.ks])  # (P, N, N)
+        Ks = np.stack([k(X, Y, full_cov=True) for k in self.ks])   # (P, N, N)
         return Ks
 
     def Kdiag(self, X, Y=None):
         Ks = np.stack([k(X, Y, full_cov=False) for k in self.ks])  # (P, N)
         return Ks
 
+    def Kuf(self, X, Y=None, full_cov=True):
+        X = self.slice_and_map_inducing(X)
+        Y = self.slice_and_map(Y)
+        if not full_cov: raise ValueError('Kuf(full_cov=False) not valid')
+        Ks = np.stack([k.Kuf(X, Y, full_cov=full_cov) for k in self.ks])  # (P, N, N)
+        return Ks
+    
+    def Kuu(self, X, Y=None, full_cov=True):
+        X = self.slice_and_map_inducing(X)
+        Y = self.slice_and_map_inducing(Y)
+        if not full_cov: raise ValueError('Kuu(full_cov=False) not implemented')
+        Ks = np.stack([k.Kuu(X, Y, full_cov=full_cov) for k in self.ks])  # (P, N, N)
+        return Ks
+    
+    def slice_and_map_inducing(self, X):
+        X = apply_fn_ndarray_or_tuple(self.slice, X)
+        X = apply_fn_ndarray_or_tuple(self.apply_mapping_inducing, X)
+        return X
+    
+    def apply_mapping_inducing(self, X):
+        if (X is None) or (not hasattr(self, 'g')):
+            return X
+        if isinstance(self.ks[0], CovConvolutional) and \
+            self.ks[0].patch_inducing_loc == True:
+            return self.g.gz(X)
+        else:
+            return self.g(X)
+    
 
 class Lik(nn.Module):
     """ p(y|f) """
@@ -1963,6 +2046,52 @@ class CNN(nn.Module):
         return x
 
 
+class CNNMnist(nn.Module):
+    output_dim: int = 2
+
+    @nn.compact
+    def __call__(self, x):
+        x = nn.Conv(features=32, kernel_size=(3, 3))(x)
+        x = nn.relu(x)
+        x = nn.avg_pool(x, window_shape=(2, 2), strides=(2, 2))
+        x = nn.Conv(features=64, kernel_size=(3, 3))(x)
+        x = nn.relu(x)
+        x = nn.avg_pool(x, window_shape=(2, 2), strides=(2, 2))
+        x = x.reshape((x.shape[0], -1))
+        x = nn.Dense(features=128)(x)
+        x = nn.relu(x)
+        x = nn.Dense(features=self.output_dim)(x)
+        return x
+
+
+class CNNMnistTrunk(nn.Module):
+
+    @nn.compact
+    def __call__(self, x):
+        # (N, H, W, C)
+        x = nn.Conv(features=32, kernel_size=(3, 3))(x)
+        x = nn.relu(x)
+        x = nn.avg_pool(x, window_shape=(2, 2), strides=(2, 2))
+        x = nn.Conv(features=64, kernel_size=(3, 3))(x)
+        x = nn.relu(x)
+        x = nn.avg_pool(x, window_shape=(2, 2), strides=(2, 2))
+        # (N, Px, Py, L)
+        return x
+    
+    def gz(self, x):
+        if x.ndim == 3:
+            x = x[...,np.newaxis] # add color channel
+        x = np.pad(x, pad_width=((0, 0), (1, 1), (1, 1), (0, 0)),
+                      mode='constant',
+                      constant_values=0)
+        x = self.__call__(x)
+        if x.shape[1:3] != (3, 3):
+            raise ValueError(
+                'CNNMnistTrunk.gz(x) does not have correct shape')
+        x = x[:, 1, 1, :].squeeze()
+        return x
+
+
 def compute_receptive_fields(model_def, in_shape, spike_loc=None):
     """Computes receptive fields using gradients
         For images, returns receptive fields for (h, w)
@@ -1989,6 +2118,68 @@ def compute_receptive_fields(model_def, in_shape, spike_loc=None):
     rf = np.array([np.max(idx)-np.min(idx)+1
                    for idx in I])[np.array([1,2])] # (y, x)
     return rf, gx, gy
+
+
+def compute_receptive_fields_start_ind(model_def, in_shape):
+    """Computes start indices for patches to get transformation 
+            parameters (in start indices of patches)
+            
+        ```
+        g_cls = CNNMnistTrunk
+        image_shape = (28, 28, 1)
+        ind_start, rf = compute_receptive_fields_start_ind(
+            g_cls, (1, *image_shape))
+        fig,ax = plt.subplots(1,1,figsize=(5,5))
+        ax.imshow(np.zeros(image_shape), cmap='Greys', origin='upper')
+        ax.scatter(ind_start[:,0], ind_start[:,1])
+        ax.set_title(rf)
+        ax.grid()
+        ``` 
+    """
+    if len(in_shape) != 4:
+        raise ValueError('`in_shape` has dims (N, H, W, C)')
+        
+    image_shape = in_shape[1:1+2] # ndim=2
+    rf, _, gy = compute_receptive_fields(model_def, in_shape)
+    Py, Px = gy.shape[1:3]; P = Py*Px
+    spike_locs = list(itertools.product(np.arange(Py), np.arange(Px)))
+    spike_locs = np.array(spike_locs, dtype=np.int32)
+
+    x = np.ones(in_shape)
+    model = model_def()
+    params = model.init(random.PRNGKey(0), x)
+    params = freeze(jax.tree_map(lambda w: np.ones(w.shape),
+                                 unfreeze(params)))
+    f = lambda x: model.apply(params, x)
+    y, vjp_fn = vjp(f, x)
+    def construct_gy(spike_loc):
+        if len(spike_loc) != 2:
+            raise ValueError(f'len(spike_loc)={len(spike_loc)}')
+        gy = np.zeros(y.shape)
+        ind = jax.ops.index[0, spike_loc[0], spike_loc[1], ...]
+        gy = jax.ops.index_update(gy, ind, 1)
+        gx = vjp_fn(gy)[0]
+        return gx
+    # (P, *image_shape)  squeeze batch-dim
+    gx = vmap(construct_gy)(spike_locs).squeeze(1)
+    ind = []
+    for p in range(len(gx)):
+        gxp = gx[p]
+        I = np.where(gxp>1e-2)
+        ind.append([(np.min(idx), np.max(idx)) for idx in I])
+
+    # (P, 3, 2)
+    ind = np.array(ind)[:, [0,1]]
+    # (P, hi/wi, min/max)
+    if not np.all((ind[:,:,1]-ind[:,:,0]+1) <= rf):
+        # Note patches on boundary have < receptive_field!
+        raise ValueError('leaky gradient, `gx` has'
+                         'more nonzero entries than possible')
+    # (P, hi/wi)
+    ind_start = ind[:,:,0]
+    
+    return ind_start, rf
+
 
 def cholesky_jitter(K, jitter=1e-5):
     L = linalg.cholesky(jax_add_to_diagonal(K, jitter))
@@ -2391,17 +2582,20 @@ def extract_patches_2d_scal_transl(image_shape, patch_shape):
     """Computes scaling `s` and translation `t` 
             in the sense of spatial transforms impl 
             for patches as output of `extract_patches_2d` """
-    image_shape = np.array(image_shape[:2])
-    patch_shape = np.array(patch_shape)
-    H, W = image_shape
+    H, W = image_shape[:2]
     h, w = patch_shape
     hi = np.arange(H-h+1)
     wi = np.arange(W-w+1)
     hwi = np.array(list(itertools.product(hi, wi)))
-    s = patch_shape/image_shape
-    t = 2*hwi/image_shape - 1 + s
+    s, t = startind_to_scal_transl(image_shape, patch_shape, hwi)
     return s, t
 
+def startind_to_scal_transl(image_shape, patch_shape, start_ind):
+    image_shape = np.array(image_shape[:2])
+    patch_shape = np.array(patch_shape)
+    s = patch_shape/image_shape
+    t = 2*start_ind/image_shape - 1 + s
+    return s, t
 
 def trans2x3_from_scal_transl(s, t):
     """ s = [sy, sx]; t = [ty, tx] """
