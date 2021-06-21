@@ -305,48 +305,19 @@ class CovSEwithEncoder(Kernel):
     def Kdiag(self, X, Y=None):
         return np.tile(self.σ2, len(X))
 
-    
 
-class CovConvolutional(Kernel):
-    """ Convolutional Kernel f~GP(0,k)
-            where k(X,X') = (1/P^2) ΣpΣp' kᵧ(X[p], X[p'])·kℓ(p,p')
-        The additive kernel over patches models a linear 
-            function of patch response, e.g.  f(X) = (1/P) Σp u(Xp)
-                for u ~ GP(0, kᵤ) where kᵤ = kᵧ·kℓ
-                    kᵧ(Z,Z') is the patch kernel
-                    kℓ(p,p') is the patch location kernel
-        Note we apply average of patch kernel since doing so
-            requires no change to the mean function 
-                m(X) = E[f(X)] = (1/P) Σp m(Xp)
-                    the choice of m(Xp) = m(X) works fine
-
-        `patch_inducing_loc`
-            If True, u~GP(0, kᵧ), f~GP(0, k)
-                Kuu = kᵧ(Z)
-                Kuf = (1/P) Σp kᵧ(Zp, X[p])
-                Treat X as patches, Y as images
-            otherwise, u,f~GP(0, k)
-                Kuu, Kuf fall back to brute force evaluation of k (NMP^2 kᵧ call)
-                Treat both X, Y as images 
-        `kl_cls`
-    """
-    image_shape: Tuple[int] = (28, 28, 1) # (H, W, C)
-    patch_shape: Tuple[int] = (3, 3)      # (h, w)
-    kg_cls: Callable = CovSE
-    patch_inducing_loc: bool = False
+class CovPatchBase(Kernel):
+    """ Patch-based kernel """
+    kp_cls: Callable = CovSE
     kl_cls: Callable = partial(CovConstant, train_σ2=False)
 
     def setup(self):
-        self.kg = self.kg_cls()
+        if getattr(self, 'g', None) is not None:
+            raise ValueError('`CovPatch.g` should not be implemented')
+        self.kp = self.kp_cls()
         self.kl = self.kl_cls()
+        self.XL = self.get_XL()
 
-        # `image_loc` unchanged ! faster jit compilation if put here
-        scal, transl = extract_patches_2d_scal_transl(self.image_shape,
-                                                      self.patch_shape)
-        scal = np.repeat(scal[np.newaxis,...], len(transl), axis=0)
-        scal_transl = np.column_stack([scal, transl])
-        self.image_loc = scal_transl
-        
     @property
     def use_loc_kernel(self):
         """ If True, when `kl_cls!=CovConstant`, then inducing patches
@@ -356,105 +327,145 @@ class CovConvolutional(Kernel):
                 (Xp, XL) instead of Xp as inducing inputs for `Kuf,Kuu` 
         """
         return not isinstance(self.kl, CovConstant)
+
+
+    def K(self, X, Y=None):
+        N, M = len(X), len(Y) if Y is not None else len(X)
+        Xp, XL = self.proc_image(X) # (N*P, L)
+        Yp, YL = self.proc_image(Y) if Y is not None else (None, None) # (M*P, L)
+        Kp = self.kp(Xp, Yp, full_cov=True) # (N*P, M*P)
+        Kp = Kp.reshape(N, self.P, M, self.P) # (N, P, M, P)
+        KL = self.kl(XL, YL, full_cov=True) # (P, P)
+        KL = np.expand_dims(KL, (0, 2)) # (1, P, 1, P)
+        K = Kp*KL # (N, P, M, P)
+        return K
     
-    def Kuf(self, X, Y=None, full_cov=True):
-        if not self.patch_inducing_loc:
-            return self.__call__(X, Y, full_cov=full_cov)
-        # XL as placeholder for CovConstant
-        X, XL = X if self.use_loc_kernel else (X, X)
-        X, Y = self.slice_and_map(X, Y)
-        if not full_cov: raise ValueError('Kuf(full_cov=False) not valid')
-        # self.check_input_type(X, Y, 1) # not jittable 
-        Yp, YL = self.get_patches(Y)
-        M, P, _, _ = Yp.shape # (M, P, h, w)
-        Xp = self.flatten_patch(X)  # (N, h*w)
-        Yp = self.flatten_patch(Yp) # (M*P, h*w)
-        Kp = self.kg(Xp, Yp) # (N, M*P)
-        Kp = Kp.reshape((len(X), M, P)) # (N, M, P)
-        KL = self.kl(XL, YL, full_cov=True) # (N, P)
-        KL = np.expand_dims(KL, (1,)) # (N, 1, P)
-        K = np.mean(Kp*KL, axis=(2,)) # (N, M)
+    def Kdiag(self, X, Y=None):
+        Xp, XL = self.proc_image(X) # (N*P, L)
+        Xp = Xp.reshape(len(X), self.P, self.L) # (N, P, L)
+        Kp = vmap(self.kp, (0, None, None), 0)(Xp, None, True) # (N, P, P)
+        KL = self.kl(XL, full_cov=True) # (P, P)
+        KL = np.expand_dims(KL, (0,)) # (1, P, P)
+        K = Kp*KL # (N, P, P)
         return K
     
     def Kuu(self, X, Y=None, full_cov=True):
-        if not self.patch_inducing_loc:
-            return self.__call__(X, Y, full_cov=full_cov)
-        if self.use_loc_kernel:
-            X, XL = X
-            Y, YL = Y if Y is not None else (None, None)
-        else:
-            XL, YL = X, Y # XL,YL as placeholder for CovConstant
-        X, Y = self.slice_and_map(X, Y)
+        Xp, XL = self.proc_patch(X) # (N, L)
+        Yp, YL = self.proc_patch(Y) if Y is not None else (None, None) # (M, L)
         if not full_cov: raise ValueError('Kuu(full_cov=False) not implemented')
-        # self.check_input_type(X, Y, 0) # not jittable 
-        Xp = self.flatten_patch(X)  # (N, h*w)
-        Yp = self.flatten_patch(Y)  # (M, h*w)
-        Kp = self.kg(Xp, Yp) # (N, M)
+        Kp = self.kp(Xp, Yp) # (N, M)
         KL = self.kl(XL, YL, full_cov=True) # (N, M)
         K = Kp*KL
         return K
-
-    def K(self, X, Y=None):
-        # self.check_input_type(X, Y, 2) # not jittable 
-        Xp, XL = self.get_patches(X)
-        Yp, YL = self.get_patches(Y) if Y is not None else (None, None)
-        Xp_shape = Xp.shape # (N, P, h, w)
-        Yp_shape = Yp.shape if Yp is not None else Xp_shape # (M, P, h, w)
-        Xp = self.flatten_patch(Xp) # (N*P, h*w)
-        Yp = self.flatten_patch(Yp) # (M*P, h*w)
-        Kp = self.kg(Xp, Yp, full_cov=True) # (N*P, M*P)
-        Kp = Kp.reshape(Xp_shape[:2]+Yp_shape[:2]) # (N, P, M, P)
-        KL = self.kl(XL, YL, full_cov=True) # (P, P)
-        KL = np.expand_dims(KL, (0, 2)) # (1, P, 1, P)
-        K = np.mean(Kp*KL, axis=(1, 3)) # (N, M)
-        return K
-
-    def Kdiag(self, X, Y=None):
-        """ Note `X,Y` must be image type ... """
-        Xp, XL = self.get_patches(X)
-        Xp_shape = Xp.shape
-        Xp = Xp.reshape((Xp_shape[0], Xp_shape[1], -1)) # (N, P, h*w)
-        Kp = vmap(self.kg, (0, None, None), 0)(Xp, None, True) # (N, P, P)
-        KL = self.kl(XL, full_cov=True) # (P, P)
-        KL = np.expand_dims(KL, (0,)) # (1, P, P)
-        K = np.mean(Kp*KL, axis=(1, 2)) # (N,)
+    
+    def Kuf(self, X, Y=None, full_cov=True):
+        Xp, XL = self.proc_patch(X) # (N, L)
+        Yp, YL = self.proc_image(Y) # (M*P, L)
+        Kp = self.kp(Xp, Yp) # (N, M*P)
+        N, M = len(Xp), len(Y)
+        Kp = Kp.reshape((N, M, self.P)) # (N, M, P)
+        KL = self.kl(XL, YL, full_cov=True) # (N, P)
+        KL = np.expand_dims(KL, (1,)) # (N, 1, P)
+        K = Kp*KL # (N, M, P)
         return K
     
-    def check_input_type(self, X, Y, correct):
-        Xtype = self.input_type(X)
-        Ytype = self.input_type(Y) if Y is not None else Xtype
-        if Xtype+Ytype != correct:
-            raise ValueError(f'(X,Y) type: ({Xtype},{Ytype}) not correct ({correct})')
-
-    def input_type(self, X):
-        return jax.lax.cond(X[0].size==self.image_len,
-                            lambda _: 1, lambda _: 0, operand=None)
+    def proc_image(self, X):
+        raise NotImplementedError
+        
+    def proc_patch(self, X):
+        raise NotImplementedError
+        
+    def get_XL(self):
+        raise NotImplementedError
+        
+    @property
+    def L(self):
+        raise NotImplementedError
     
+    @property
+    def P(self):
+        raise NotImplementedError
+    
+
+class CovPatch(CovPatchBase):
+    image_shape: Tuple[int] = (28, 28, 1) # (H, W, C)
+    patch_shape: Tuple[int] = (3, 3)      # (h, w)
+        
+    def proc_image(self, X):
+        Xp, XL = self.get_patches(X) # (N, P, h, w), (P, 4)
+        Xp = Xp.reshape(-1, self.L) # (N*P, L)
+        return Xp, XL
+    
+    def proc_patch(self, X):
+        if self.use_loc_kernel:
+            Xp, XL = X
+        else:
+            Xp, XL = X, X
+        Xp = Xp.reshape(-1, self.L) # (N, h*w)
+        return Xp, XL
+
     def get_patches(self, X):
         """ (N, H, W, 1) -> # (N, P, h, w) where P=#patches """
         patches = extract_patches_2d_vmap(X.reshape((-1, *self.image_shape)),
                                           self.patch_shape)
         
-        if patches.shape[1] != self.num_patches:
+        if patches.shape[1] != self.P:
             raise ValueError('#patches extracted not correct')
-        return patches, self.image_loc
-            
-    def flatten_patch(self, X):
-        return X.reshape(-1, self.patch_len) if X is not None else X
-            
-    @property
-    def image_len(self):
-        return np.prod(np.array(self.image_shape))
+        return patches, self.XL
+    
+    def get_XL(self):
+        scal, transl = extract_patches_2d_scal_transl(self.image_shape,
+                                                      self.patch_shape)
+        scal = np.repeat(scal[np.newaxis,...], len(transl), axis=0)
+        scal_transl = np.column_stack([scal, transl])
+        return scal_transl
 
     @property
-    def patch_len(self):
+    def L(self):
+        """ Patch length / input dimension to `kp` """
         return self.patch_shape[0]*self.patch_shape[1]
     
     @property
-    def num_patches(self):
+    def P(self):
+        """ #patches """
         H, W, C = self.image_shape
         h, w = self.patch_shape
         return (H-h+1)*(W-w+1)*C
+    
+
+
+class CovConvolutional(Kernel):
+    kg_cls: Callable = CovPatch
+    patch_inducing_loc: bool = False
+
+    def setup(self):
+        self.kg = self.kg_cls()
+        
+    def K(self, X, Y=None):
+        Kg = self.kg(X, Y, full_cov=True) # (N, P, M, P)
+        K = np.mean(Kg, axis=(1, 3)) # (N, M)
+        return K
+
+    def Kdiag(self, X, Y=None):
+        Kg = self.kg(X, full_cov=False) # (N, P, P)
+        K = np.mean(Kg, axis=(1, 2)) # (N,)
+        return K
+    
+    def Kuf(self, X, Y=None, full_cov=True):
+        if not self.patch_inducing_loc:
+            return self.__call__(X, Y, full_cov=full_cov)
+        if not full_cov: raise ValueError('Kuf(full_cov=False) not valid')
+        Kg = self.kg.Kuf(X, Y) # (N, M, P)
+        K = np.mean(Kg, axis=(2,)) # (N, M)
+        return K
+    
+    def Kuu(self, X, Y=None, full_cov=True):
+        if not self.patch_inducing_loc:
+            return self.__call__(X, Y, full_cov=full_cov)
+        if not full_cov: raise ValueError('Kuu(full_cov=False) not implemented')
+        Kg = self.kg.Kuu(X, Y) # (N, M)
+        return Kg
+
     
 
 def get_init_patches(key, X, M, image_shape, patch_shape, init_method='unique'):
@@ -1502,7 +1513,7 @@ class SpatialTransform(nn.Module):
             bnds = [bnd_scal, bnd_scal, bnd_translx, bnd_transly]
         elif T_type == 'affine':
             # for now just standard Sigmoid applied to free-form transform
-            bnds = [np.array([0,1]) for _ in range(6)]
+            bnds = [np.array([0, 1]) for _ in range(6)]
         bound = np.column_stack(bnds)
         return BijSigmoid(bound)
     
@@ -1976,9 +1987,8 @@ def compute_receptive_fields(model_def, in_shape, spike_loc=None):
     gx = vjp_fn(gy)[0]
     I = np.where(gx!=0)
     rf = np.array([np.max(idx)-np.min(idx)+1
-                   for idx in I])[[1,2]] # (y, x)
-    return rf, gx
-
+                   for idx in I])[np.array([1,2])] # (y, x)
+    return rf, gx, gy
 
 def cholesky_jitter(K, jitter=1e-5):
     L = linalg.cholesky(jax_add_to_diagonal(K, jitter))

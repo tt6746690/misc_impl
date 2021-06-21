@@ -179,6 +179,7 @@ class TestKernel(unittest.TestCase):
         self.assertTrue(Kdiag_agrees)
 
     def test_CovConvolutional(self):
+        
         key = random.PRNGKey(0)
         N, M = 1, 2
         Np, Mp = 3, 4
@@ -192,8 +193,10 @@ class TestKernel(unittest.TestCase):
         yl = random.normal(key, (Mp, 4))
 
         # test shape when u,f ~ GP(0,k)
-        k = CovConvolutional(image_shape=image_shape,
-                            patch_shape=patch_shape,
+        kg_cls = partial(CovPatch, image_shape=image_shape,
+                                   patch_shape=patch_shape,
+                                   kp_cls=CovSE)
+        k = CovConvolutional(kg_cls=kg_cls,
                             patch_inducing_loc=False)
         params = k.init(key, x)
 
@@ -204,9 +207,10 @@ class TestKernel(unittest.TestCase):
             Kshape_correct = K.shape == shape
             self.assertTrue(Kshape_correct)
 
+
+
         # test shape when u ~ GP(0,ku) f ~ GP(0, kf)
-        k = CovConvolutional(image_shape=image_shape,
-                            patch_shape=patch_shape,
+        k = CovConvolutional(kg_cls=kg_cls,
                             patch_inducing_loc=True)
         params = k.init(key, x)
         for X, Y, shape, method in [(x, None, (N, N), k.Kff),
@@ -220,15 +224,18 @@ class TestKernel(unittest.TestCase):
             K = k.apply(params, X, Y, method=method)
             Kshape_correct = K.shape == shape
             self.assertTrue(Kshape_correct)
+            
 
         # test shape  when u ~ GP(0,ku) f ~ GP(0, kf)
         #      and use non-constant location kernel kl
         xpl = (xp, xl)
         ypl = (yp, yl)
-        k = CovConvolutional(image_shape=image_shape,
-                             patch_shape=patch_shape,
-                             patch_inducing_loc=True,
-                             kl_cls=CovSE)
+        kg_cls = partial(CovPatch, image_shape=image_shape,
+                                   patch_shape=patch_shape,
+                                   kp_cls=CovSE,
+                                   kl_cls=CovSE)
+        k = CovConvolutional(kg_cls=kg_cls,
+                             patch_inducing_loc=True)
         params = k.init(key, x)
         for X, Y, shape, method in [(x, None, (N, N), k.Kff),
                                     (x, y, (N, M), k.Kff),
