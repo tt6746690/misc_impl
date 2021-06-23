@@ -10,3 +10,4 @@ flax
 tabulate
 pytest
 pytest-xdist
+ml-collections

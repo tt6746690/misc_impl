@@ -197,14 +197,14 @@ class Kernel(nn.Module):
 
 class CovConstant(Kernel):
     """ Constant kernel k(x, y) = σ2 """
-    train_σ2: bool = True
+    output_scaling: bool = True
 
     def setup(self):
         self.σ2 = BijSoftplus.forward(self.param(
             'σ2', lambda k, s: BijSoftplus.reverse(np.array([1.])), (1,)))
 
     def get_σ2(self):
-        return self.σ2 if self.train_σ2 else np.array([1.])
+        return self.σ2 if self.output_scaling else np.array([1.])
 
     def K(self, X, Y=None):
         Xshape = X.shape
@@ -315,7 +315,7 @@ class CovPatchBase(Kernel):
                 kℓ(p,p') is the patch location kernel
     """
     kp_cls: Callable = CovSE
-    kl_cls: Callable = partial(CovConstant, train_σ2=False)
+    kl_cls: Callable = partial(CovConstant, output_scaling=False)
 
     def setup(self):
         if getattr(self, 'g', None) is not None:
@@ -438,7 +438,8 @@ class CovPatchEncoder(CovPatchBase):
     """ Patch based kernel where patch based responses
             are computed using an encoder, e.g. bagnet """
     encoder: 'str' = 'CNNMnist'
-    
+    XL_init_fn: Callable = None
+
     def setup(self):
         if self.encoder not in self.available_encoders:
             raise ValueError(
@@ -447,7 +448,11 @@ class CovPatchEncoder(CovPatchBase):
             raise ValueError('`CovPatchEncoder.g` should not be implemented')
         self.kp = self.kp_cls()
         self.kl = self.kl_cls()
-        self.XL = self.available_encoders[self.encoder].get_XL()
+
+        if self.XL_init_fn is not None:
+            self.XL = self.XL_init_fn()
+        else:
+            self.XL = self.available_encoders[self.encoder].get_XL()
 
     def proc_image(self, X):
         # (N, Px, Py, L)
@@ -463,8 +468,8 @@ class CovPatchEncoder(CovPatchBase):
             return Xp, self.XL
 
     def proc_patch(self, X):
-        if  (isinstance(X, np.ndarray) and X.ndim != 2) or \
-            (isinstance(X, tuple) and X[0].ndim != 2):
+        if (isinstance(X, np.ndarray) and X.ndim != 2) or \
+                (isinstance(X, tuple) and X[0].ndim != 2):
             raise ValueError(f'Patch should have 2-dims, '
                              f'but got {x.ndim}-dims')
         if self.use_loc_kernel:
@@ -472,15 +477,15 @@ class CovPatchEncoder(CovPatchBase):
         else:
             Xp, XL = X, X
         return Xp, XL
-    
+
     @property
     def available_encoders(self):
         return CovPatchEncoder.get_available_encoders()
-    
+
     @classmethod
     def get_available_encoders(self):
-        return {'CNNMnist': CNNMnistTrunk,}
-    
+        return {'CNNMnist': CNNMnistTrunk, }
+
 
 class CovConvolutional(Kernel):
     """ Convolutional Kernel f~GP(0,k)
@@ -494,7 +499,7 @@ class CovConvolutional(Kernel):
             requires no change to the mean function 
                 m(X) = E[f(X)] = (1/P) Σp m(Xp)
                     the choice of m(Xp) = m(X) works fine
-        `patch_inducing_loc`
+        `inducing_patch`
             If True, u~GP(0, kᵧ), f~GP(0, k)
                 Kuu = kᵧ(Z)
                 Kuf = (1/P) Σp kᵧ(Zp, X[p])
@@ -505,7 +510,7 @@ class CovConvolutional(Kernel):
         `kl_cls`
     """
     kg_cls: Callable = CovPatch
-    patch_inducing_loc: bool = False
+    inducing_patch: bool = False
 
     def setup(self):
         self.kg = self.kg_cls()
@@ -521,7 +526,7 @@ class CovConvolutional(Kernel):
         return K
 
     def Kuf(self, X, Y=None, full_cov=True):
-        if not self.patch_inducing_loc:
+        if not self.inducing_patch:
             return self.__call__(X, Y, full_cov=full_cov)
         if not full_cov:
             raise ValueError('Kuf(full_cov=False) not valid')
@@ -530,7 +535,7 @@ class CovConvolutional(Kernel):
         return K
 
     def Kuu(self, X, Y=None, full_cov=True):
-        if not self.patch_inducing_loc:
+        if not self.inducing_patch:
             return self.__call__(X, Y, full_cov=full_cov)
         if not full_cov:
             raise ValueError('Kuu(full_cov=False) not implemented')
@@ -823,10 +828,11 @@ class CovMultipleOutputIndependent(Kernel):
     def setup(self):
         self.ks = [self.k_cls() for d in range(self.output_dim)]
         self.g = self.g_cls()
+
         if isinstance(self.ks[0], CovConvolutional) and \
-                self.ks[0].patch_inducing_loc == True and \
+                self.ks[0].inducing_patch == True and \
                 not hasattr(self.g, 'gz'):
-            raise ValueError('`CovConvolutional(patch_inducing_loc=True)`'
+            raise ValueError('`CovConvolutional(inducing_patch=True)`'
                              'requires `g.gz` implemented')
 
     def K(self, X, Y=None):
@@ -864,7 +870,7 @@ class CovMultipleOutputIndependent(Kernel):
         if (X is None) or (not hasattr(self, 'g')):
             return X
         if isinstance(self.ks[0], CovConvolutional) and \
-                self.ks[0].patch_inducing_loc == True:
+                self.ks[0].inducing_patch == True:
             return self.g.gz(X)
         else:
             return self.g(X)
@@ -2079,7 +2085,6 @@ class CNNMnist(nn.Module):
         return x
 
 
-
 class CNNMnistTrunk(nn.Module):
     # in_shape: (1, 28, 28, 1)
     # receptive field: (10, 10)
@@ -2110,21 +2115,28 @@ class CNNMnistTrunk(nn.Module):
         return x
 
     @classmethod
-    def get_XL(self):
-        start_ind = np.array(
-            [[0, 0], [0, 1], [0, 5], [0, 9], [0, 13], [0, 17], [0, 21],
-             [1, 0], [1, 1], [1, 5], [1, 9], [1, 13], [1, 17], [1, 21],
-             [5, 0], [5, 1], [5, 5], [5, 9], [5, 13], [5, 17], [5, 21],
-             [9, 0], [9, 1], [9, 5], [9, 9], [9, 13], [9, 17], [9, 21],
-             [13, 0], [13, 1], [13, 5], [13, 9], [13, 13], [13, 17],
-             [13, 21], [17, 0], [17, 1], [17, 5], [17, 9], [17, 13],
-             [17, 17], [17, 21], [21, 0], [21, 1], [21, 5], [21, 9],
-             [21, 13], [21, 17], [21, 21]])
-        scal, transl = startind_to_scal_transl((28, 28), (10, 10), start_ind)
+    def get_XL(self, image_shape=(28, 28, 1)):
+        if image_shape not in [(28, 28, 1), (14, 14, 1)]:
+            raise ValueError('CNNMnistTrunk.getXL() invalid image shape')
+
+        if image_shape == (14, 14, 1):
+            start_ind = np.array([[0, 0], [0, 1], [0, 5], [1, 0], [
+                                 1, 1], [1, 5], [5, 0], [5, 1], [5, 5]])
+        if image_shape == (28, 28, 1):
+            start_ind = np.array(
+                [[0, 0], [0, 1], [0, 5], [0, 9], [0, 13], [0, 17], [0, 21],
+                 [1, 0], [1, 1], [1, 5], [1, 9], [1, 13], [1, 17], [1, 21],
+                 [5, 0], [5, 1], [5, 5], [5, 9], [5, 13], [5, 17], [5, 21],
+                 [9, 0], [9, 1], [9, 5], [9, 9], [9, 13], [9, 17], [9, 21],
+                 [13, 0], [13, 1], [13, 5], [13, 9], [13, 13], [13, 17],
+                 [13, 21], [17, 0], [17, 1], [17, 5], [17, 9], [17, 13],
+                 [17, 17], [17, 21], [21, 0], [21, 1], [21, 5], [21, 9],
+                 [21, 13], [21, 17], [21, 21]])
+        scal, transl = startind_to_scal_transl(
+            image_shape[:2], (10, 10), start_ind)
         scal = np.repeat(scal[np.newaxis, ...], len(transl), axis=0)
         XL = np.column_stack([scal, transl])
         return XL
-
 
 
 def compute_receptive_fields(model_def, in_shape, spike_loc=None):
