@@ -2213,7 +2213,7 @@ def compute_receptive_fields_start_ind(model_def, in_shape):
     ind = []
     for p in range(len(gx)):
         gxp = gx[p]
-        I = np.where(gxp > 1e-2)
+        I = np.where(gxp > np.mean(gxp)*.1)
         ind.append([(np.min(idx), np.max(idx)) for idx in I])
 
     # (P, 3, 2)
@@ -2227,6 +2227,67 @@ def compute_receptive_fields_start_ind(model_def, in_shape):
     ind_start = ind[:, :, 0]
 
     return ind_start, rf
+
+
+def compute_receptive_fields_start_ind_extrap(model_def, in_shape):
+    """ Just 3 evalution of `vjp`, rest extrapolated ... """
+
+    if len(in_shape) != 4:
+        raise ValueError('`in_shape` has dims (N, H, W, C)')
+
+    image_shape = in_shape[1:1+2]  # ndim=2
+    rf, _, gy = compute_receptive_fields(model_def, in_shape)
+    Py, Px = gy.shape[1:3]
+    P = Py*Px
+    spike_locs = list(itertools.product([0], np.arange(3)))
+    spike_locs = np.array(spike_locs, dtype=np.int32)
+
+    x = np.ones(in_shape)
+    model = model_def()
+    params = model.init(random.PRNGKey(0), x)
+    params = freeze(jax.tree_map(lambda w: np.ones(w.shape),
+                                 unfreeze(params)))
+
+    def f(x): return model.apply(params, x)
+    y, vjp_fn = vjp(f, x)
+
+    def construct_gy(spike_loc):
+        if len(spike_loc) != 2:
+            raise ValueError(f'len(spike_loc)={len(spike_loc)}')
+        gy = np.zeros(y.shape)
+        ind = jax.ops.index[0, spike_loc[0], spike_loc[1], ...]
+        gy = jax.ops.index_update(gy, ind, 1)
+        gx = vjp_fn(gy)[0]
+        return gx
+    # (P, *image_shape)  squeeze batch-dim
+    gx = vmap(construct_gy)(spike_locs).squeeze(1)
+    ind = []
+    for p in range(len(gx)):
+        gxp = gx[p]
+        I = np.where(gxp > np.mean(gxp)*.1)
+        ind.append([(np.min(idx), np.max(idx)) for idx in I])
+
+    # (P, 3, 2)
+    ind = np.array(ind)[:, [0, 1]]
+
+    # (P, hi/wi, min/max)
+    if not np.all((ind[:, :, 1]-ind[:, :, 0]+1) <= rf):
+        # Note patches on boundary have < receptive_field!
+        raise ValueError('leaky gradient, `gx` has'
+                         'more nonzero entries than possible')
+    # (P, wi)
+    ind_start = ind[:, 1, 0]
+    offset_border = ind_start[1]-ind_start[0]
+    step = ind_start[2]-ind_start[1]
+
+    ind_start = list(itertools.product(np.arange(-1, Py-1),
+                                       np.arange(-1, Px-1)))
+    ind_start = np.array(ind_start)*step + offset_border
+    ind_start = np.maximum(0, ind_start)
+    
+    return ind_start, rf
+
+
 
 
 def cholesky_jitter(K, jitter=1e-5):
