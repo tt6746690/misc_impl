@@ -31,3 +31,6 @@ autoremove:
 uninstall_jax:
 	pip install pip-autoremove
 	pip-autoremove jax jaxlib -y
+
+rsync_assets_r2l:
+	rsync -a wasabi.csail.mit.edu:/data/vision/polina/scratch/wpq/github/misc_impl/gp/summary/assets/ summary/assets/
