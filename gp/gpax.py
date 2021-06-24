@@ -458,7 +458,7 @@ class CovPatchEncoder(CovPatchBase):
         # (N, Px, Py, L)
         if X.ndim != 4:
             raise ValueError(f'Patch should have 4-dims, '
-                             f'but got {x.ndim}-dims')
+                             f'but got {X.ndim}-dims')
         N, Py, Px, L = X.shape
         P = Py*Px
         Xp = X.reshape((N, P, L))  # (N, P, L)
@@ -471,7 +471,7 @@ class CovPatchEncoder(CovPatchBase):
         if (isinstance(X, np.ndarray) and X.ndim != 2) or \
                 (isinstance(X, tuple) and X[0].ndim != 2):
             raise ValueError(f'Patch should have 2-dims, '
-                             f'but got {x.ndim}-dims')
+                             f'but got {X.ndim}-dims')
         if self.use_loc_kernel:
             Xp, XL = X
         else:
@@ -836,7 +836,7 @@ class CovMultipleOutputIndependent(Kernel):
                              'requires `g.gz` implemented')
 
     def K(self, X, Y=None):
-        Ks = np.stack([k(X, Y, full_cov=True) for k in self.ks])   # (P, N, N)
+        Ks = np.stack([k(X, Y, full_cov=True) for k in self.ks])   # (P, N, N')
         return Ks
 
     def Kdiag(self, X, Y=None):
@@ -849,7 +849,7 @@ class CovMultipleOutputIndependent(Kernel):
         if not full_cov:
             raise ValueError('Kuf(full_cov=False) not valid')
         Ks = np.stack([k.Kuf(X, Y, full_cov=full_cov)
-                      for k in self.ks])  # (P, N, N)
+                      for k in self.ks])  # (P, N, N')
         return Ks
 
     def Kuu(self, X, Y=None, full_cov=True):
@@ -1515,6 +1515,58 @@ class SVGP(nn.Module, GPModel):
         if not full_cov:
             μf = μf.reshape(Σf.shape)  # (N, P)
         return μf, Σf
+
+
+def SVGP_pred_f_details(self, Xs):
+    k = self.k
+    Xu = self.Xu()               # (M,...)
+    μq, Lq = self.q.μ, self.q.L  # (P, M) & (P, M, M)
+    if μq.shape[0] == 1:
+        μq, Lq = μq.squeeze(0), Lq.squeeze(0)
+
+    ms = self.mean_fn(Xs)
+    mu = self.mean_fn(Xu)
+
+    Kss = k.Kff(Xs, full_cov=False)
+    Kus = k.Kuf(Xu, Xs)
+    Kuu = k.Kuu(Xu)
+    Luu = cholesky_jitter_vmap(Kuu, jitter=5e-5)  # (P, M, M)
+    
+    def mvn_marginal_variational_details(Kff, Kuf, mf,
+                                         Luu, mu, μq, Lq, full_cov=False):
+        α = solve_triangular(Luu, Kuf, lower=True)
+        β = solve_triangular(Luu.T, α, lower=False)
+        γ = Lq.T@β
+        if full_cov:
+            Σf = Kff - α.T@α + γ.T@γ
+        else:
+            Σf = Kff - \
+                np.sum(np.square(α), axis=0) + \
+                np.sum(np.square(γ), axis=0)
+        # for multiple-output
+        μq = μq.reshape(-1, 1)
+        mu = mu.reshape(-1, 1)
+        mf = mf.reshape(-1, 1)
+        A = β.T; δ = (μq-mu)
+        μf = mf + A@δ
+        return μf, Σf, A, δ, mf
+
+    if isinstance(k, CovMultipleOutputIndependent):
+        mvn_marginal_variational_fn = vmap(
+            mvn_marginal_variational_details, (0, 0, 1, 0, 1, 0, 0, None), -1)  # along P-dim
+    else:
+        mvn_marginal_variational_fn = mvn_marginal_variational_details
+
+    μf, Σf, A, δ, mf = mvn_marginal_variational_fn(Kss, Kus, ms,
+                                         Luu, mu, μq, Lq, False)
+    # μf,      Σf,     A,        δ,       mf
+    # (N, D), (N, D), (N, M, D), (M, D), (N, D)
+    N, D = Σf.shape
+    μf = μf.reshape((N,D))
+    A = A.reshape((N,-1,D))
+    δ = δ.reshape((-1,D))
+    mf = mf.reshape((N,D))
+    return μf, Σf, A, δ, mf
 
 
 class InducingLocations(nn.Module):

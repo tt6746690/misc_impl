@@ -60,7 +60,7 @@ def get_config_mnist():
     config.patch_shape = (10, 10)
 
     config.output_dim = 3
-    config.n_inducing = 20
+    config.n_inducing = 40
     
     return config
 
