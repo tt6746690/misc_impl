@@ -2922,11 +2922,11 @@ def plt_spatial_transform(axs, Gs, S, T):
     ax = axs[0]
     ax.set_xticks([])
     ax.set_yticks([])
-    ax.scatter(Xs, Ys, marker='+', c='r', s=50)
+    ax.scatter(Xs, Ys, marker='+', c='r', s=40, lw=1)
     ax.imshow(S, cmap='Greys', extent=(-1, 1, 1, -1), origin='upper')
 
     ax = axs[1]
     ax.set_xticks([])
     ax.set_yticks([])
-    ax.scatter(Xt, Yt, marker='+', c='r', s=30)
+    ax.scatter(Xt, Yt, marker='+', c='r', s=40, lw=1)
     ax.imshow(T, cmap='Greys', extent=(-1, 1, 1, -1), origin='upper')
