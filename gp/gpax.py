@@ -2930,3 +2930,23 @@ def plt_spatial_transform(axs, Gs, S, T):
     ax.set_yticks([])
     ax.scatter(Xt, Yt, marker='+', c='r', s=40, lw=1)
     ax.imshow(T, cmap='Greys', extent=(-1, 1, 1, -1), origin='upper')
+
+
+def plt_inducing_inputs_spatial_transform(params, model, max_show=10):
+    
+    ind = np.arange(min(max_show, n_inducing))
+    
+    m = model.bind(params)
+    A = m.Xu.transform.T
+    S = pytree_leaf(params, 'params/Xu/X')
+    A = A[ind]; S = S[ind]
+
+    fn = vmap(spatial_transform_details, (0, 0, None), 0)
+    T, Gs = fn(A, S, patch_shape)
+    fig, axs = plt.subplots(2, len(A), figsize=(3*len(A),3*2))
+    for i in range(len(T)):
+        plt_spatial_transform(axs[:,i], Gs[i], S[i], T[i])
+    fig.tight_layout()
+    
+    return fig
+    

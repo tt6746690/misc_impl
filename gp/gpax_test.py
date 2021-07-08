@@ -1,3 +1,6 @@
+import os
+os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
 
 from functools import partial
 import sys
@@ -15,8 +18,8 @@ try:
 except:
     pass
 import jax
-# for multi-cpu pytest s!
-jax.config.update('jax_platform_name', 'cpu')
+jax.config.update('jax_platform_name', 'cpu') # for multi-cpu pytest s!
+
 from jax.scipy.linalg import cho_solve, solve_triangular
 import jax.numpy.linalg as linalg
 from jax import random
@@ -228,7 +231,7 @@ class TestKernel(unittest.TestCase):
                                    patch_shape=patch_shape,
                                    kp_cls=CovSE)
         k = CovConvolutional(kg_cls=kg_cls,
-                            patch_inducing_loc=False)
+                            inducing_patch=False)
         params = k.init(key, x)
 
         for X, Y, shape, method in [(x, y, (N, M), k.Kff),
@@ -242,7 +245,7 @@ class TestKernel(unittest.TestCase):
 
         # test shape when u ~ GP(0,ku) f ~ GP(0, kf)
         k = CovConvolutional(kg_cls=kg_cls,
-                            patch_inducing_loc=True)
+                            inducing_patch=True)
         params = k.init(key, x)
         for X, Y, shape, method in [(x, None, (N, N), k.Kff),
                                     (x, y, (N, M), k.Kff),
@@ -266,7 +269,7 @@ class TestKernel(unittest.TestCase):
                                    kp_cls=CovSE,
                                    kl_cls=CovSE)
         k = CovConvolutional(kg_cls=kg_cls,
-                             patch_inducing_loc=True)
+                             inducing_patch=True)
         params = k.init(key, x)
         for X, Y, shape, method in [(x, None, (N, N), k.Kff),
                                     (x, y, (N, M), k.Kff),
@@ -299,7 +302,7 @@ class TestKernel(unittest.TestCase):
         g_cls = CNNMnistTrunk
         kg_cls = CovPatchEncoder
         kf_cls = partial(CovConvolutional, kg_cls=kg_cls,
-                                           patch_inducing_loc=False)
+                                           inducing_patch=False)
         k_cls = partial(CovMultipleOutputIndependent, k_cls=kf_cls,
                                                     output_dim=O,
                                                     g_cls=g_cls)
@@ -316,7 +319,7 @@ class TestKernel(unittest.TestCase):
 
         # test shape when u ~ GP(0,ku) f ~ GP(0, kf)
         kf_cls = partial(CovConvolutional, kg_cls=kg_cls,
-                                           patch_inducing_loc=True)
+                                           inducing_patch=True)
         k_cls = partial(CovMultipleOutputIndependent, k_cls=kf_cls,
                                                     output_dim=O,
                                                     g_cls=g_cls)
@@ -341,7 +344,7 @@ class TestKernel(unittest.TestCase):
         ypl = (yp, yl)
         kg_cls = partial(CovPatchEncoder, kl_cls=CovSE)
         kf_cls = partial(CovConvolutional, kg_cls=kg_cls,
-                                           patch_inducing_loc=True)
+                                           inducing_patch=True)
         k_cls = partial(CovMultipleOutputIndependent, k_cls=kf_cls,
                                                     output_dim=O,
                                                     g_cls=g_cls)
