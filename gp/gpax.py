@@ -1517,7 +1517,7 @@ class SVGP(nn.Module, GPModel):
         return μf, Σf
 
 
-def SVGP_pred_f_details(self, Xs):
+def SVGP_pred_f_details(self, Xs, output_gh=False):
     k = self.k
     Xu = self.Xu()               # (M,...)
     μq, Lq = self.q.μ, self.q.L  # (P, M) & (P, M, M)
@@ -1538,18 +1538,20 @@ def SVGP_pred_f_details(self, Xs):
         β = solve_triangular(Luu.T, α, lower=False)
         γ = Lq.T@β
         if full_cov:
-            Σf = Kff - α.T@α + γ.T@γ
+            Σg = γ.T@γ       # completely dependent on u, within data uncertainty
+            Σh = Kff - α.T@α # completely indp of u, distributional uncertainty
+            Σf = Σg + Σh
         else:
-            Σf = Kff - \
-                np.sum(np.square(α), axis=0) + \
-                np.sum(np.square(γ), axis=0)
+            Σg = np.sum(np.square(γ), axis=0)
+            Σh = Kff - np.sum(np.square(α), axis=0)
+            Σf = Σg + Σh
         # for multiple-output
         μq = μq.reshape(-1, 1)
         mu = mu.reshape(-1, 1)
         mf = mf.reshape(-1, 1)
         A = β.T; δ = (μq-mu)
         μf = mf + A@δ
-        return μf, Σf, A, δ, mf
+        return μf, Σg, Σh, Σf, A, δ, mf
 
     if isinstance(k, CovMultipleOutputIndependent):
         mvn_marginal_variational_fn = vmap(
@@ -1557,16 +1559,19 @@ def SVGP_pred_f_details(self, Xs):
     else:
         mvn_marginal_variational_fn = mvn_marginal_variational_details
 
-    μf, Σf, A, δ, mf = mvn_marginal_variational_fn(Kss, Kus, ms,
+    μf, Σg, Σh, Σf, A, δ, mf = mvn_marginal_variational_fn(Kss, Kus, ms,
                                          Luu, mu, μq, Lq, False)
-    # μf,      Σf,     A,        δ,       mf
+    # μf,      Σf/Σg/Σh,  A,        δ,       mf
     # (N, D), (N, D), (N, M, D), (M, D), (N, D)
     N, D = Σf.shape
     μf = μf.reshape((N,D))
     A = A.reshape((N,-1,D))
     δ = δ.reshape((-1,D))
     mf = mf.reshape((N,D))
-    return μf, Σf, A, δ, mf
+    if output_gh:
+        return μf, Σg, Σh, Σf, A, δ, mf
+    else:
+        return μf, Σf, A, δ, mf
 
 
 class InducingLocations(nn.Module):
@@ -2137,6 +2142,7 @@ class CNNMnist(nn.Module):
         return x
 
 
+
 class CNNMnistTrunk(nn.Module):
     # in_shape: (1, 28, 28, 1)
     # receptive field: (10, 10)
@@ -2165,16 +2171,13 @@ class CNNMnistTrunk(nn.Module):
                 'CNNMnistTrunk.gz(x) does not have correct shape')
         x = x[:, 1, 1, :].squeeze()
         return x
-
+    
     @classmethod
-    def get_XL(self, image_shape=(28, 28, 1)):
-        if image_shape not in [(28, 28, 1), (14, 14, 1)]:
-            raise ValueError('CNNMnistTrunk.getXL() invalid image shape')
-
+    def get_start_ind(self, image_shape):
         if image_shape == (14, 14, 1):
             start_ind = np.array([[0, 0], [0, 1], [0, 5], [1, 0], [
                                  1, 1], [1, 5], [5, 0], [5, 1], [5, 5]])
-        if image_shape == (28, 28, 1):
+        elif image_shape == (28, 28, 1):
             start_ind = np.array(
                 [[0, 0], [0, 1], [0, 5], [0, 9], [0, 13], [0, 17], [0, 21],
                  [1, 0], [1, 1], [1, 5], [1, 9], [1, 13], [1, 17], [1, 21],
@@ -2184,11 +2187,23 @@ class CNNMnistTrunk(nn.Module):
                  [13, 21], [17, 0], [17, 1], [17, 5], [17, 9], [17, 13],
                  [17, 17], [17, 21], [21, 0], [21, 1], [21, 5], [21, 9],
                  [21, 13], [21, 17], [21, 21]])
+        else:
+            start_ind, _ = compute_receptive_fields_start_ind_extrap(
+                CNNMnistTrunk, (1,)+image_shape)
+        return start_ind
+
+    @classmethod
+    def get_XL(self, image_shape=(28, 28, 1)):
+        if image_shape not in [(28, 28, 1), (14, 14, 1)]:
+            raise ValueError('CNNMnistTrunk.getXL() invalid image shape')
+        start_ind = self.get_start_ind(image_shape)
         scal, transl = startind_to_scal_transl(
             image_shape[:2], (10, 10), start_ind)
         scal = np.repeat(scal[np.newaxis, ...], len(transl), axis=0)
         XL = np.column_stack([scal, transl])
         return XL
+    
+
 
 
 def compute_receptive_fields(model_def, in_shape, spike_loc=None):
@@ -2919,13 +2934,13 @@ def plt_spatial_transform(axs, Gs, S, T):
     Xs = Xs_flat.reshape((h, w))
     Ys = Ys_flat.reshape((h, w))
 
-    ax = axs[0]
+    ax = axs[1]
     ax.set_xticks([])
     ax.set_yticks([])
     ax.scatter(Xs, Ys, marker='+', c='r', s=40, lw=1)
     ax.imshow(S, cmap='Greys', extent=(-1, 1, 1, -1), origin='upper')
 
-    ax = axs[1]
+    ax = axs[0]
     ax.set_xticks([])
     ax.set_yticks([])
     ax.scatter(Xt, Yt, marker='+', c='r', s=40, lw=1)
@@ -2934,7 +2949,7 @@ def plt_spatial_transform(axs, Gs, S, T):
 
 def plt_inducing_inputs_spatial_transform(params, model, max_show=10):
     
-    ind = np.arange(min(max_show, n_inducing))
+    ind = np.arange(max_show)
     
     m = model.bind(params)
     A = m.Xu.transform.T
