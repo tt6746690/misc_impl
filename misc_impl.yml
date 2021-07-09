@@ -10,4 +10,4 @@ dependencies:
     - gpytorch
     - jupyter
     - nb_conda
-
+    - faiss-cpu

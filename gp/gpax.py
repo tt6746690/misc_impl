@@ -2756,6 +2756,23 @@ def extract_patches_2d_vmap(ims, patch_size):
     return vmap(extract_patches_2d, (0, None), 0)(ims, patch_size)
 
 
+def extract_patches_2d_startind(im, patch_size, hwi):
+    """Extract patches with size `patch_size` from image `im` 
+            Given start indices of patches
+    """
+    if im.ndim == 3 and im.shape[2] != 1:
+        raise ValueError('`extract_patches_2d` only supports C=1')
+    C = im.shape[2]
+    h, w = patch_size
+    def f(hwi): return jax.lax.dynamic_slice(im, (hwi[0], hwi[1], 0), (h, w, C))
+    patches = jax.lax.map(f, hwi)
+    return patches
+
+
+def extract_patches_2d_startind_vmap(ims, patch_size, hwi):
+    return vmap(extract_patches_2d_startind, (0, None, None))(ims, patch_size, hwi)
+
+
 def extract_patches_2d_scal_transl(image_shape, patch_shape):
     """Computes scaling `s` and translation `t` 
             in the sense of spatial transforms impl 
