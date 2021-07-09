@@ -23,6 +23,7 @@ sudo dpkg -i <libcudd>.deb
     - performance
 - p(Z) as PPS/DPP ?
     - initialize with cluster center ?
+    - want to re-initialize inducing variables if not used as evidence...
 - argument for using large weights of posterior mean as prototypes ?
     - decompose posterior process to 2 component 
     - data component is deterministic function of inducing variables
