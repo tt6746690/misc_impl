@@ -1588,17 +1588,18 @@ class InducingLocations(nn.Module):
         return X
 
 
+
 def transform_to_matrix(θ, T_type, A_init_val):
     """Given trainable parameter `θ`,  
         convert to 2x3 affine change of coordinate matrix `A` """
     assert(θ.ndim == 1)
     if T_type == 'transl':
-        ind = jax.ops.index[[0, 1], [2, 2]]
+        ind = jax.ops.index[[1, 0], [2, 2]]
     elif T_type == 'transl+isot_scal':
-        ind = jax.ops.index[[0, 1, 0, 1], [0, 1, 2, 2]]
+        ind = jax.ops.index[[1, 0, 1, 0], [0, 1, 2, 2]]
         θ = np.array([θ[0], θ[0], θ[1], θ[2]])
     elif T_type == 'transl+anis_scal':
-        ind = jax.ops.index[[0, 1, 0, 1], [0, 1, 2, 2]]
+        ind = jax.ops.index[[1, 0, 1, 0], [0, 1, 2, 2]]
     elif T_type == 'affine':
         ind = jax.ops.index[[0, 0, 0, 1, 1, 1], [0, 1, 2, 0, 1, 2]]
     A = jax.ops.index_update(A_init_val, ind, θ)
@@ -1607,8 +1608,11 @@ def transform_to_matrix(θ, T_type, A_init_val):
 
 def spatial_transform_bound_init_fn(in_shape, out_shape):
     scal, transl = extract_patches_2d_scal_transl(in_shape, out_shape)
-    bnd_transly = np.array((np.min(transl[:, 0]), np.max(transl[:, 0])))
-    bnd_translx = np.array((np.min(transl[:, 1]), np.max(transl[:, 1])))
+    bnd_transl_margin = 1.5 # using `bij` needs some margin to prevent np.nan
+    bnd_transly = np.array((np.min(transl[:, 0])*bnd_transl_margin,
+                            np.max(transl[:, 0])*bnd_transl_margin))
+    bnd_translx = np.array((np.min(transl[:, 1])*bnd_transl_margin,
+                            np.max(transl[:, 1])*bnd_transl_margin))
     bnd_scal = np.array([np.max(np.array((0.5*np.min(scal), np.array(0.)))),
                          np.min(np.array((1.5*np.max(scal), np.array(1.))))])
     return bnd_scal, bnd_transly, bnd_translx
@@ -1639,8 +1643,9 @@ class SpatialTransform(nn.Module):
         T_init_shape, T_init_fn = self.default_T_init()
         if self.T_init_fn is not None:
             T_init_fn = self.T_init_fn
-        self.T = self.params_to_matrix(
-            self.param('T', T_init_fn, T_init_shape))
+            
+        self.θ = self.param('θ', T_init_fn, T_init_shape)
+        self.T = self.params_to_matrix(self.θ)
 
     def default_T_init(self):
         """Get initial shape and init_fn for spatial transformation θ 
@@ -1648,12 +1653,12 @@ class SpatialTransform(nn.Module):
                 the bouned space, e.g. init_scal=1 -> middle of scale bound """
         T_type, n = self.T_type, self.n_transforms
         if T_type == 'transl':
-            init_shape, init_val = (n, 2), np.array([0, 0.])  # (tx, ty)
+            init_shape, init_val = (n, 2), np.array([0, 0.])  # (ty, tx)
         elif T_type == 'transl+isot_scal':
-            init_shape, init_val = (n, 3), np.array([1, 0, 0.])  # (s, tx, ty)
+            init_shape, init_val = (n, 3), np.array([1, 0, 0.])  # (s, ty, tx)
         elif T_type == 'transl+anis_scal':
             init_shape, init_val = (n, 4), np.array(
-                [1, 1, 0, 0.])  # (sx, sy, tx, ty)
+                [1, 1, 0, 0.])  # (sy, sx, ty, tx)
         elif T_type == 'affine':
             init_shape, init_val = (n, 6), np.array([1, 0, 0, 0, 1, 0.])
 
@@ -1665,11 +1670,11 @@ class SpatialTransform(nn.Module):
         T_type = self.T_type
         bnd_scal, bnd_transly, bnd_translx = self.bound_init_fn()
         if T_type == 'transl':
-            bnds = [bnd_translx, bnd_transly]
+            bnds = [bnd_transly, bnd_translx]
         elif T_type == 'transl+isot_scal':
-            bnds = [bnd_scal, bnd_translx, bnd_transly]
+            bnds = [bnd_scal, bnd_transly, bnd_translx]
         elif T_type == 'transl+anis_scal':
-            bnds = [bnd_scal, bnd_scal, bnd_translx, bnd_transly]
+            bnds = [bnd_scal, bnd_scal, bnd_transly, bnd_translx]
         elif T_type == 'affine':
             # for now just standard Sigmoid applied to free-form transform
             bnds = [np.array([0, 1]) for _ in range(6)]
@@ -1677,9 +1682,10 @@ class SpatialTransform(nn.Module):
         return BijSigmoid(bound)
 
     def param_bij(self, θ, direction):
-        if self.bound_init_fn is None:
+        if self.bound_init_fn is not None:
+            return getattr(self.bij, direction)(θ)
+        else:
             return θ
-        return getattr(self.bij, direction)(θ)
 
     def param_bij_forward(self, θ):
         return self.param_bij(θ, 'forward')
@@ -1695,11 +1701,11 @@ class SpatialTransform(nn.Module):
 
     @property
     def scal(self):
-        return self.T[:, [1, 0], [1, 0]]  # (sy, sx)
+        return self.T[:, [0, 1], [0, 1]]  # (sy, sx)
 
     @property
     def transl(self):
-        return self.T[:, [1, 0], 2]  # (ty, tx)
+        return self.T[:, [0, 1], 2]  # (ty, tx)
 
     def __call__(self, X):
         """Spatially transforms batched image X (N, H, W, 1)
@@ -1712,6 +1718,7 @@ class SpatialTransform(nn.Module):
             return X, np.column_stack([self.scal, self.transl])
         else:
             return X
+        
 
 
 class MultivariateNormalTril(object):
@@ -2202,8 +2209,6 @@ class CNNMnistTrunk(nn.Module):
         scal = np.repeat(scal[np.newaxis, ...], len(transl), axis=0)
         XL = np.column_stack([scal, transl])
         return XL
-    
-
 
 
 def compute_receptive_fields(model_def, in_shape, spike_loc=None):
@@ -2964,7 +2969,7 @@ def plt_spatial_transform(axs, Gs, S, T):
     ax.imshow(T, cmap='Greys', extent=(-1, 1, 1, -1), origin='upper')
 
 
-def plt_inducing_inputs_spatial_transform(params, model, max_show=10):
+def plt_inducing_inputs_spatial_transform(params, model, patch_shape, max_show=10):
     
     ind = np.arange(max_show)
     

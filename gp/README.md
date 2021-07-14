@@ -24,6 +24,10 @@ sudo dpkg -i <libcudd>.deb
 - p(Z) as PPS/DPP ?
     - initialize with cluster center ?
     - want to re-initialize inducing variables if not used as evidence...
+    - probably can just impl this
+        - prior is inversely proportional to evidence ...
+        - resample inducing patches not used after training a few iterations 
+        - 
 - argument for using large weights of posterior mean as prototypes ?
     - decompose posterior process to 2 component 
     - data component is deterministic function of inducing variables
