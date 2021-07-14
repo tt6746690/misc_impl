@@ -693,15 +693,15 @@ class TestSpatialTransformations(unittest.TestCase):
         n = 1
         x = random.normal(key, (n,14,14,1))
         target_shape = (5, 5)
-        T_type = 'transl';
+        T_type = 'transl'
         A_init_val = np.array([[.25,0,0], [0,.25,0]])
         st = SpatialTransform(target_shape, n, T_type)
         params = st.init(key, x)
         t = st.apply(params, x)
         self.assertTrue(t.shape == (n, *target_shape, 1))
 
-        Ts = pytree_leaf(params, 'params/T')
-        self.assertTrue(Ts.shape == st.apply(params, method=st.default_T_init)[0])
+        θs = pytree_leaf(params, 'params/θ')
+        self.assertTrue(θs.shape == st.apply(params, method=st.default_T_init)[0])
 
     def test_SpatialTransformBounds(self):
 
@@ -714,26 +714,26 @@ class TestSpatialTransformations(unittest.TestCase):
                                 out_shape=patch_shape)
         bnd_scal, bnd_transly, bnd_translx = bound_init_fn()
         st = SpatialTransform(shape=patch_shape,
-                            n_transforms=3,
-                            T_type=T_type,
-                            output_transform=True,
-                            bound_init_fn=bound_init_fn)
+                              n_transforms=3,
+                              T_type=T_type,
+                              output_transform=True,
+                              bound_init_fn=bound_init_fn)
 
         x = random.normal(key, (3,*image_shape,1))
         params = st.init(key, x)
-        params = pytree_mutate(params, {'params/T': random.normal(key, (3,3))})
+        params = pytree_mutate(params, {'params/θ': random.normal(key, (3,3))})
         st = st.bind(params)
         Tx, scal_transl = st(x)
-        θ = pytree_leaf(params, 'params/T')
-        translx_correct = np.all(BijSigmoid(bnd_translx).forward(θ[:,1]) == scal_transl[:,1+2])
-        transly_correct = np.all(BijSigmoid(bnd_transly).forward(θ[:,2]) == scal_transl[:,0+2])
-        scalx_correct = np.all(BijSigmoid(bnd_scal).forward(θ[:,0]) == scal_transl[:,0])
-        scaly_correct = np.all(BijSigmoid(bnd_scal).forward(θ[:,0]) == scal_transl[:,1])
+        θ = pytree_leaf(params, 'params/θ')
+        transly_correct = np.all(BijSigmoid(bnd_transly).forward(θ[:,1]) == scal_transl[:,0+2])
+        translx_correct = np.all(BijSigmoid(bnd_translx).forward(θ[:,2]) == scal_transl[:,1+2])
+        scaly_correct = np.all(BijSigmoid(bnd_scal).forward(θ[:,0]) == scal_transl[:,0])
+        scalx_correct = np.all(BijSigmoid(bnd_scal).forward(θ[:,0]) == scal_transl[:,1])
 
-        self.assertTrue(translx_correct)
         self.assertTrue(transly_correct)
-        self.assertTrue(scalx_correct)
+        self.assertTrue(translx_correct)
         self.assertTrue(scaly_correct)
+        self.assertTrue(scalx_correct)
 
 
 

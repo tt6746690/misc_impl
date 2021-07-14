@@ -1588,18 +1588,17 @@ class InducingLocations(nn.Module):
         return X
 
 
-
 def transform_to_matrix(θ, T_type, A_init_val):
     """Given trainable parameter `θ`,  
         convert to 2x3 affine change of coordinate matrix `A` """
     assert(θ.ndim == 1)
     if T_type == 'transl':
-        ind = jax.ops.index[[1, 0], [2, 2]]
+        ind = jax.ops.index[[1, 0], [2, 2]] # [ty, tx]
     elif T_type == 'transl+isot_scal':
-        ind = jax.ops.index[[1, 0, 1, 0], [0, 1, 2, 2]]
+        ind = jax.ops.index[[0, 1, 1, 0], [0, 1, 2, 2]] # [s, ty, tx]
         θ = np.array([θ[0], θ[0], θ[1], θ[2]])
     elif T_type == 'transl+anis_scal':
-        ind = jax.ops.index[[1, 0, 1, 0], [0, 1, 2, 2]]
+        ind = jax.ops.index[[1, 0, 1, 0], [1, 0, 2, 2]] # [sy, sx, ty, tx]
     elif T_type == 'affine':
         ind = jax.ops.index[[0, 0, 0, 1, 1, 1], [0, 1, 2, 0, 1, 2]]
     A = jax.ops.index_update(A_init_val, ind, θ)
@@ -1701,11 +1700,11 @@ class SpatialTransform(nn.Module):
 
     @property
     def scal(self):
-        return self.T[:, [0, 1], [0, 1]]  # (sy, sx)
+        return self.T[:, [1, 0], [1, 0]]  # (sy, sx)
 
     @property
     def transl(self):
-        return self.T[:, [0, 1], 2]  # (ty, tx)
+        return self.T[:, [1, 0], 2]  # (ty, tx)
 
     def __call__(self, X):
         """Spatially transforms batched image X (N, H, W, 1)
@@ -1718,7 +1717,6 @@ class SpatialTransform(nn.Module):
             return X, np.column_stack([self.scal, self.transl])
         else:
             return X
-        
 
 
 class MultivariateNormalTril(object):
