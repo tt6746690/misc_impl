@@ -1652,8 +1652,8 @@ class SpatialTransform(nn.Module):
     shape: Tuple[int]  # (h, w) output shape
     n_transforms: int
     T_type: str
-    T_init_fn: Callable = None
-    A_init_val: np.ndarray = np.array([[1, 0, 0],
+    θ_init_fn: Callable = None
+    T_init_val: np.ndarray = np.array([[1, 0, 0],
                                        [0, 1, 0]], dtype=np.float32)
     output_transform: bool = False
     bij_init_fn: Callable = BijIdentity
@@ -1669,14 +1669,14 @@ class SpatialTransform(nn.Module):
 
         self.bij = self.bij_init_fn()
 
-        T_init_shape, T_init_fn = self.default_T_init()
-        if self.T_init_fn is not None:
-            T_init_fn = self.T_init_fn
-
-        self.θ = self.param('θ', T_init_fn, T_init_shape)
+        θ_init_shape, θ_init_fn = self.default_θ_init()
+        if self.θ_init_fn is not None:
+            θ_init_fn = self.θ_init_fn
+            
+        self.θ = self.param('θ', θ_init_fn, θ_init_shape)
         self.T = self.params_to_matrix(self.θ)
 
-    def default_T_init(self):
+    def default_θ_init(self):
         """Get initial shape and init_fn for spatial transformation θ 
                 If `bound_fn` used, then these initial values lives in 
                 the bouned space, e.g. init_scal=1 -> middle of scale bound """
@@ -1699,7 +1699,7 @@ class SpatialTransform(nn.Module):
         """ θ -> A """
         θ = self.bij.forward(θ)
         fn = vmap(transform_to_matrix, (0, None, None), 0)
-        return fn(θ, self.T_type, self.A_init_val)
+        return fn(θ, self.T_type, self.T_init_val)
 
     @property
     def scal(self):
@@ -1720,6 +1720,7 @@ class SpatialTransform(nn.Module):
             return X, np.column_stack([self.scal, self.transl])
         else:
             return X
+        
 
 
 class MultivariateNormalTril(object):
