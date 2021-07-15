@@ -1531,7 +1531,7 @@ def SVGP_pred_f_details(self, Xs, output_gh=False):
     Kus = k.Kuf(Xu, Xs)
     Kuu = k.Kuu(Xu)
     Luu = cholesky_jitter_vmap(Kuu, jitter=5e-5)  # (P, M, M)
-    
+
     def mvn_marginal_variational_details(Kff, Kuf, mf,
                                          Luu, mu, μq, Lq, full_cov=False):
         α = solve_triangular(Luu, Kuf, lower=True)
@@ -1539,7 +1539,7 @@ def SVGP_pred_f_details(self, Xs, output_gh=False):
         γ = Lq.T@β
         if full_cov:
             Σg = γ.T@γ       # completely dependent on u, within data uncertainty
-            Σh = Kff - α.T@α # completely indp of u, distributional uncertainty
+            Σh = Kff - α.T@α  # completely indp of u, distributional uncertainty
             Σf = Σg + Σh
         else:
             Σg = np.sum(np.square(γ), axis=0)
@@ -1549,7 +1549,8 @@ def SVGP_pred_f_details(self, Xs, output_gh=False):
         μq = μq.reshape(-1, 1)
         mu = mu.reshape(-1, 1)
         mf = mf.reshape(-1, 1)
-        A = β.T; δ = (μq-mu)
+        A = β.T
+        δ = (μq-mu)
         μf = mf + A@δ
         return μf, Σg, Σh, Σf, A, δ, mf
 
@@ -1560,14 +1561,14 @@ def SVGP_pred_f_details(self, Xs, output_gh=False):
         mvn_marginal_variational_fn = mvn_marginal_variational_details
 
     μf, Σg, Σh, Σf, A, δ, mf = mvn_marginal_variational_fn(Kss, Kus, ms,
-                                         Luu, mu, μq, Lq, False)
+                                                           Luu, mu, μq, Lq, False)
     # μf,      Σf/Σg/Σh,  A,        δ,       mf
     # (N, D), (N, D), (N, M, D), (M, D), (N, D)
     N, D = Σf.shape
-    μf = μf.reshape((N,D))
-    A = A.reshape((N,-1,D))
-    δ = δ.reshape((-1,D))
-    mf = mf.reshape((N,D))
+    μf = μf.reshape((N, D))
+    A = A.reshape((N, -1, D))
+    δ = δ.reshape((-1, D))
+    mf = mf.reshape((N, D))
     if output_gh:
         return μf, Σg, Σh, Σf, A, δ, mf
     else:
@@ -1593,12 +1594,12 @@ def transform_to_matrix(θ, T_type, A_init_val):
         convert to 2x3 affine change of coordinate matrix `A` """
     assert(θ.ndim == 1)
     if T_type == 'transl':
-        ind = jax.ops.index[[1, 0], [2, 2]] # [ty, tx]
+        ind = jax.ops.index[[1, 0], [2, 2]]  # [ty, tx]
     elif T_type == 'transl+isot_scal':
-        ind = jax.ops.index[[0, 1, 1, 0], [0, 1, 2, 2]] # [s, ty, tx]
+        ind = jax.ops.index[[0, 1, 1, 0], [0, 1, 2, 2]]  # [s, ty, tx]
         θ = np.array([θ[0], θ[0], θ[1], θ[2]])
     elif T_type == 'transl+anis_scal':
-        ind = jax.ops.index[[1, 0, 1, 0], [1, 0, 2, 2]] # [sy, sx, ty, tx]
+        ind = jax.ops.index[[1, 0, 1, 0], [1, 0, 2, 2]]  # [sy, sx, ty, tx]
     elif T_type == 'affine':
         ind = jax.ops.index[[0, 0, 0, 1, 1, 1], [0, 1, 2, 0, 1, 2]]
     A = jax.ops.index_update(A_init_val, ind, θ)
@@ -1607,7 +1608,7 @@ def transform_to_matrix(θ, T_type, A_init_val):
 
 def spatial_transform_bound_init_fn(in_shape, out_shape):
     scal, transl = extract_patches_2d_scal_transl(in_shape, out_shape)
-    bnd_transl_margin = 1.5 # using `bij` needs some margin to prevent np.nan
+    bnd_transl_margin = 1.5  # using `bij` needs some margin to prevent np.nan
     bnd_transly = np.array((np.min(transl[:, 0])*bnd_transl_margin,
                             np.max(transl[:, 0])*bnd_transl_margin))
     bnd_translx = np.array((np.min(transl[:, 1])*bnd_transl_margin,
@@ -1615,6 +1616,36 @@ def spatial_transform_bound_init_fn(in_shape, out_shape):
     bnd_scal = np.array([np.max(np.array((0.5*np.min(scal), np.array(0.)))),
                          np.min(np.array((1.5*np.max(scal), np.array(1.))))])
     return bnd_scal, bnd_transly, bnd_translx
+
+
+class BijSpatialTransform(object):
+
+    def __init__(self, T_type, image_shape, patch_shape):
+        self.T_type = T_type
+        self.image_shape = image_shape
+        self.patch_shape = patch_shape
+        self.bij = self.get_bij()
+
+    def get_bij(self):
+        T_type = self.T_type
+        bnd_scal, bnd_transly, bnd_translx = spatial_transform_bound_init_fn(
+            self.image_shape, self.patch_shape)
+        if T_type == 'transl':
+            bnds = [bnd_transly, bnd_translx]
+        elif T_type == 'transl+isot_scal':
+            bnds = [bnd_scal, bnd_transly, bnd_translx]
+        elif T_type == 'transl+anis_scal':
+            bnds = [bnd_scal, bnd_scal, bnd_transly, bnd_translx]
+        elif T_type == 'affine':
+            bnds = [np.array([0, 1]) for _ in range(6)]
+        bij = BijSigmoid(np.column_stack(bnds))
+        return bij
+
+    def forward(self, x):
+        return self.bij.forward(x)
+
+    def reverse(self, y):
+        return self.bij.reverse(y)
 
 
 class SpatialTransform(nn.Module):
@@ -1625,7 +1656,7 @@ class SpatialTransform(nn.Module):
     A_init_val: np.ndarray = np.array([[1, 0, 0],
                                        [0, 1, 0]], dtype=np.float32)
     output_transform: bool = False
-    bound_init_fn: Callable = None
+    bij_init_fn: Callable = BijIdentity
 
     def setup(self):
         if len(self.shape) != 2:
@@ -1636,13 +1667,12 @@ class SpatialTransform(nn.Module):
             raise ValueError(
                 f'`self.T_type`={self.T_type} not Implemented')
 
-        if self.bound_init_fn is not None:
-            self.bij = self.get_bij()
+        self.bij = self.bij_init_fn()
 
         T_init_shape, T_init_fn = self.default_T_init()
         if self.T_init_fn is not None:
             T_init_fn = self.T_init_fn
-            
+
         self.θ = self.param('θ', T_init_fn, T_init_shape)
         self.T = self.params_to_matrix(self.θ)
 
@@ -1665,36 +1695,9 @@ class SpatialTransform(nn.Module):
             return np.tile(init_val, (s[0], 1))
         return init_shape, init_fn
 
-    def get_bij(self):
-        T_type = self.T_type
-        bnd_scal, bnd_transly, bnd_translx = self.bound_init_fn()
-        if T_type == 'transl':
-            bnds = [bnd_transly, bnd_translx]
-        elif T_type == 'transl+isot_scal':
-            bnds = [bnd_scal, bnd_transly, bnd_translx]
-        elif T_type == 'transl+anis_scal':
-            bnds = [bnd_scal, bnd_scal, bnd_transly, bnd_translx]
-        elif T_type == 'affine':
-            # for now just standard Sigmoid applied to free-form transform
-            bnds = [np.array([0, 1]) for _ in range(6)]
-        bound = np.column_stack(bnds)
-        return BijSigmoid(bound)
-
-    def param_bij(self, θ, direction):
-        if self.bound_init_fn is not None:
-            return getattr(self.bij, direction)(θ)
-        else:
-            return θ
-
-    def param_bij_forward(self, θ):
-        return self.param_bij(θ, 'forward')
-
-    def param_bij_reverse(self, θ):
-        return self.param_bij(θ, 'reverse')
-
     def params_to_matrix(self, θ):
         """ θ -> A """
-        θ = self.param_bij_forward(θ)
+        θ = self.bij.forward(θ)
         fn = vmap(transform_to_matrix, (0, None, None), 0)
         return fn(θ, self.T_type, self.A_init_val)
 
@@ -1799,6 +1802,15 @@ class VariationalMultivariateNormal(nn.Module):
 
     def __call__(self):
         return MultivariateNormalTril(self.μ, self.L)
+
+
+class BijIdentity(object):
+
+    def forward(self, x):
+        return x
+
+    def reverse(self, y):
+        return y
 
 
 class BijExp(object):
@@ -2147,7 +2159,6 @@ class CNNMnist(nn.Module):
         return x
 
 
-
 class CNNMnistTrunk(nn.Module):
     # in_shape: (1, 28, 28, 1)
     # receptive field: (10, 10)
@@ -2176,7 +2187,7 @@ class CNNMnistTrunk(nn.Module):
                 'CNNMnistTrunk.gz(x) does not have correct shape')
         x = x[:, 1, 1, :].squeeze()
         return x
-    
+
     @classmethod
     def get_start_ind(self, image_shape):
         if image_shape == (14, 14, 1):
@@ -2354,10 +2365,8 @@ def compute_receptive_fields_start_ind_extrap(model_def, in_shape):
                                        np.arange(-1, Px-1)))
     ind_start = np.array(ind_start)*step + offset_border
     ind_start = np.maximum(0, ind_start)
-    
+
     return ind_start, rf
-
-
 
 
 def cholesky_jitter(K, jitter=1e-5):
@@ -2767,7 +2776,8 @@ def extract_patches_2d_startind(im, patch_size, hwi):
         raise ValueError('`extract_patches_2d` only supports C=1')
     C = im.shape[2]
     h, w = patch_size
-    def f(hwi): return jax.lax.dynamic_slice(im, (hwi[0], hwi[1], 0), (h, w, C))
+    def f(hwi): return jax.lax.dynamic_slice(
+        im, (hwi[0], hwi[1], 0), (h, w, C))
     patches = jax.lax.map(f, hwi)
     return patches
 
@@ -2968,20 +2978,20 @@ def plt_spatial_transform(axs, Gs, S, T):
 
 
 def plt_inducing_inputs_spatial_transform(params, model, patch_shape, max_show=10):
-    
+
     ind = np.arange(max_show)
-    
+
     m = model.bind(params)
     A = m.Xu.transform.T
     S = pytree_leaf(params, 'params/Xu/X')
-    A = A[ind]; S = S[ind]
+    A = A[ind]
+    S = S[ind]
 
     fn = vmap(spatial_transform_details, (0, 0, None), 0)
     T, Gs = fn(A, S, patch_shape)
-    fig, axs = plt.subplots(2, len(A), figsize=(3*len(A),3*2))
+    fig, axs = plt.subplots(2, len(A), figsize=(3*len(A), 3*2))
     for i in range(len(T)):
-        plt_spatial_transform(axs[:,i], Gs[i], S[i], T[i])
+        plt_spatial_transform(axs[:, i], Gs[i], S[i], T[i])
     fig.tight_layout()
-    
+
     return fig
-    
