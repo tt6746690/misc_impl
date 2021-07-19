@@ -3054,6 +3054,7 @@ def plt_spatial_transform(axs, Gs, S, T):
 
 
 def plt_inducing_inputs_spatial_transform(params, model, patch_shape, max_show=10):
+    import matplotlib.pyplot as plt
 
     ind = np.arange(max_show)
 

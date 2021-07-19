@@ -31,6 +31,11 @@ def get_config_base():
     config.inducing_patch = True
     config.n_inducing = 20
 
+    # Inducing patch initialization 
+    config.inducing_init_fn = 'random'
+    # If True, use Softmax bijector for constrained optimization
+    config.inducing_constrained_optimization = True
+
     # SpatialTransform
     # {'transl', 'trans+isot_scal'}
     config.T_type = 'transl'
@@ -61,6 +66,7 @@ def get_config_mnist():
 
     config.output_dim = 3
     config.n_inducing = 40
+    config.inducing_init_fn = 'kmeans'
     
     return config
 
@@ -121,18 +127,29 @@ def get_model_cls(key, config, X):
             key, X, config.n_inducing, config.image_shape, config.patch_shape)
         transform_cls = LayerIdentity
     else:
-        Xu_ind = random.randint(key, (config.n_inducing,), 0, len(X))
+        Xu_ind, scal, transl = get_init_patches_transform(key, X,
+            config.n_inducing, config.image_shape, config.patch_shape, g_cls, config.inducing_init_fn)
         Xu_initial = np.take(X, Xu_ind, axis=0).reshape((-1, *config.image_shape))
-        scal = np.array(config.patch_shape)/np.array(config.image_shape[:2])
-        bound_init_fn = partial(spatial_transform_bound_init_fn, in_shape=config.image_shape,
-                                                                 out_shape=config.patch_shape)
+        if config.inducing_constrained_optimization:
+            bij_init_fn = partial(BijSpatialTransform, T_type=config.T_type,
+                                                       image_shape=config.image_shape,
+                                                       patch_shape=config.patch_shape)
+        else:
+            bij_init_fn = BijIdentity
+        if transl is not None:
+            assert(config.inducing_init_fn == 'kmeans')
+            θ_init_fn = lambda k, s: bij_init_fn().reverse(transl)
+        else:
+            θ_init_fn = None
+
+        T_init_val = trans2x3_from_scal_transl(scal, (0, 0))
         transform_cls = partial(SpatialTransform, shape=config.patch_shape,
-                                                  n_transforms=config.n_inducing, 
+                                                  n_transforms=config.n_inducing,
                                                   T_type=config.T_type,
-                                                  T_init_fn=None,
-                                                  A_init_val=trans2x3_from_scal_transl(scal,(0,0)),
+                                                  θ_init_fn=θ_init_fn,
+                                                  T_init_val=T_init_val,
                                                   output_transform=config.use_loc_kernel,
-                                                  bound_init_fn=bound_init_fn)
+                                                  bij_init_fn=bij_init_fn)
 
     inducing_loc_cls = partial(InducingLocations,
                                shape=Xu_initial.shape,
