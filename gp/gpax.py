@@ -543,29 +543,6 @@ class CovConvolutional(Kernel):
         return Kg
 
 
-def get_init_patches(key, X, M, image_shape, patch_shape, init_method='unique'):
-    """ `random` might result in many duplicate initializations 
-        Currently, cannot be jitted, since requires calling to numpy.unique
-    """
-    import numpy as onp
-    k1, k2, k3 = random.split(key, 3)
-    ind = random.randint(k2, (M,), 0, len(X))
-    X = np.take(X, ind, axis=0).reshape((-1, *image_shape))
-    jit_extract_patches_2d_vmap = jit(extract_patches_2d_vmap,
-                                      static_argnums=(1,))
-    patches = jit_extract_patches_2d_vmap(X, patch_shape)  # (N, P, h, w)
-    patches = patches.reshape(-1, patch_shape[0]*patch_shape[1])  # (N*P, h*w)
-    if init_method == 'random':
-        ind = random.randint(k3, (M,), 0, len(patches))
-        patches = np.take(patches, ind, axis=0)
-        patches += random.normal(key, (*patches.shape,))*.001
-    elif init_method == 'unique':
-        patches = onp.unique(patches, axis=0)
-        ind = random.randint(k3, (M,), 0, len(patches))
-        patches = np.take(patches, ind, axis=0)
-    return patches
-
-
 class CovIndex(Kernel):
     """A kernel applied to indices over a lookup table B
             K[i,j] = B[i,j]
@@ -1589,6 +1566,67 @@ class InducingLocations(nn.Module):
         return X
 
 
+def get_init_patches(key, X, M, image_shape, patch_shape, init_method='unique'):
+    """ `random` might result in many duplicate initializations 
+        Currently, cannot be jitted, since requires calling to numpy.unique
+    """
+    import numpy as onp
+    k1, k2, k3 = random.split(key, 3)
+    ind = random.randint(k2, (M,), 0, len(X))
+    X = np.take(X, ind, axis=0).reshape((-1, *image_shape))
+    jit_extract_patches_2d_vmap = jit(extract_patches_2d_vmap,
+                                      static_argnums=(1,))
+    patches = jit_extract_patches_2d_vmap(X, patch_shape)  # (N, P, h, w)
+    patches = patches.reshape(-1, patch_shape[0]*patch_shape[1])  # (N*P, h*w)
+    if init_method == 'random':
+        ind = random.randint(k3, (M,), 0, len(patches))
+        patches = np.take(patches, ind, axis=0)
+        patches += random.normal(key, (*patches.shape,))*.001
+    elif init_method == 'unique':
+        patches = onp.unique(patches, axis=0)
+        ind = random.randint(k3, (M,), 0, len(patches))
+        patches = np.take(patches, ind, axis=0)
+    return patches
+
+
+def get_init_patches_transform(key, X, M, image_shape, patch_shape, trunk_def, init_method='kmeans'):
+    """ Initialize patches/transforms 
+            patch_shape=(10,10) image_shape=(28,28,1) P=49 
+            
+        `init_method`
+            - random: randomly select images
+            - kmeans: compute k-means of patches ... 
+                currently works for `T_type=transl` only
+    """
+    N = len(X)
+    
+    if init_method == 'random':
+        X_ind = random.randint(key, (M,), 0, len(X))
+        scal = np.array(patch_shape) / np.array(image_shape[:2])
+        transl = None
+        cent = None
+    elif init_method == 'kmeans':
+        # Determine #patches from an image
+        start_ind = trunk_def.get_start_ind(image_shape)
+        patches = extract_patches_2d_startind_vmap(X[:1], patch_shape, start_ind)
+        P = patches.shape[1]
+        # Extract patches
+        patches = extract_patches_2d_startind_vmap(X, patch_shape, start_ind)
+        patches = patches.reshape((len(X)*P, *patch_shape))
+        # K-means of patches
+        kmeans, I = run_kmeans(patches, ncentroids=M)
+        cent = patches[I].reshape(M, *patch_shape)
+        X_ind, P_ind = np.unravel_index(I, (N, P))
+        X_ind = X_ind.squeeze()
+        P_ind = P_ind.squeeze()
+        # convert position coordinate to spatial transform θ=[ty,tx]
+        XL = trunk_def.get_XL(image_shape)
+        scal, transl = XL[0,:2], XL[:,-2:]
+        transl = transl[P_ind]
+        
+    return X_ind, scal, transl
+
+
 def transform_to_matrix(θ, T_type, A_init_val):
     """Given trainable parameter `θ`,  
         convert to 2x3 affine change of coordinate matrix `A` """
@@ -1604,7 +1642,6 @@ def transform_to_matrix(θ, T_type, A_init_val):
         ind = jax.ops.index[[0, 0, 0, 1, 1, 1], [0, 1, 2, 0, 1, 2]]
     A = jax.ops.index_update(A_init_val, ind, θ)
     return A
-
 
 def spatial_transform_bound_init_fn(in_shape, out_shape):
     scal, transl = extract_patches_2d_scal_transl(in_shape, out_shape)
@@ -1646,6 +1683,15 @@ class BijSpatialTransform(object):
 
     def reverse(self, y):
         return self.bij.reverse(y)
+
+
+class BijIdentity(object):
+
+    def forward(self, x):
+        return x
+
+    def reverse(self, y):
+        return y
 
 
 class SpatialTransform(nn.Module):
@@ -1720,7 +1766,6 @@ class SpatialTransform(nn.Module):
             return X, np.column_stack([self.scal, self.transl])
         else:
             return X
-        
 
 
 class MultivariateNormalTril(object):
@@ -1804,14 +1849,6 @@ class VariationalMultivariateNormal(nn.Module):
     def __call__(self):
         return MultivariateNormalTril(self.μ, self.L)
 
-
-class BijIdentity(object):
-
-    def forward(self, x):
-        return x
-
-    def reverse(self, y):
-        return y
 
 
 class BijExp(object):
@@ -2195,15 +2232,7 @@ class CNNMnistTrunk(nn.Module):
             start_ind = np.array([[0, 0], [0, 1], [0, 5], [1, 0], [
                                  1, 1], [1, 5], [5, 0], [5, 1], [5, 5]])
         elif image_shape == (28, 28, 1):
-            start_ind = np.array(
-                [[0, 0], [0, 1], [0, 5], [0, 9], [0, 13], [0, 17], [0, 21],
-                 [1, 0], [1, 1], [1, 5], [1, 9], [1, 13], [1, 17], [1, 21],
-                 [5, 0], [5, 1], [5, 5], [5, 9], [5, 13], [5, 17], [5, 21],
-                 [9, 0], [9, 1], [9, 5], [9, 9], [9, 13], [9, 17], [9, 21],
-                 [13, 0], [13, 1], [13, 5], [13, 9], [13, 13], [13, 17],
-                 [13, 21], [17, 0], [17, 1], [17, 5], [17, 9], [17, 13],
-                 [17, 17], [17, 21], [21, 0], [21, 1], [21, 5], [21, 9],
-                 [21, 13], [21, 17], [21, 21]])
+            start_ind = np.array([[-3, -3], [-3, 1], [-3, 5], [-3, 9], [-3, 13], [-3, 17], [-3, 21], [1, -3], [1, 1], [1, 5], [1, 9], [1, 13], [1, 17], [1, 21], [5, -3], [5, 1], [5, 5], [5, 9], [5, 13], [5, 17], [5, 21], [9, -3], [9, 1], [9, 5], [9, 9], [9, 13], [9, 17], [9, 21], [13, -3], [13, 1], [13, 5], [13, 9], [13, 13], [13, 17], [13, 21], [17, -3], [17, 1], [17, 5], [17, 9], [17, 13], [17, 17], [17, 21], [21, -3], [21, 1], [21, 5], [21, 9], [21, 13], [21, 17], [21, 21]])
         else:
             start_ind, _ = compute_receptive_fields_start_ind_extrap(
                 CNNMnistTrunk, (1,)+image_shape)
@@ -2365,7 +2394,8 @@ def compute_receptive_fields_start_ind_extrap(model_def, in_shape):
     ind_start = list(itertools.product(np.arange(-1, Py-1),
                                        np.arange(-1, Px-1)))
     ind_start = np.array(ind_start)*step + offset_border
-    ind_start = np.maximum(0, ind_start)
+    # # Allows for negative indices !
+    # ind_start = np.maximum(0, ind_start)
 
     return ind_start, rf
 
@@ -2733,6 +2763,33 @@ def preproc_data(data, T):
     return X, y
 
 
+def run_kmeans(X, ncentroids=1, whiten=False):
+    """ Find cluster centers in `X`, their nearest neighbor in `X` """
+    import faiss
+    import numpy
+    
+    if isinstance(X, jax.numpy.ndarray):
+        X = numpy.array(X)
+    
+    X = X.reshape((X.shape[0], -1))
+    
+    if whiten:
+        import scipy.cluster.vq as vq
+        X = vq.whiten(X)
+
+    ## Run kmeans
+    d = X.shape[1]
+    kmeans = faiss.Kmeans(d, ncentroids, niter=20, verbose=True)
+    kmeans.train(X)
+    
+    ## Find nearest neighbor in data to cluster center
+    index = faiss.IndexFlatL2(d)
+    index.add(X)
+    _, I = index.search(kmeans.centroids, 1)
+    
+    return kmeans, I
+
+
 def extract_patches_2d_nojit(im, patch_size):
     if im.ndim == 3 and im.shape[2] != 1:
         raise ValueError('`extract_patches_2d` only supports C=1')
@@ -2772,6 +2829,7 @@ def extract_patches_2d_vmap(ims, patch_size):
 def extract_patches_2d_startind(im, patch_size, hwi):
     """Extract patches with size `patch_size` from image `im` 
             Given start indices of patches
+        Note, handling of negative indices in `hwi` in `vmap` only 
     """
     if im.ndim == 3 and im.shape[2] != 1:
         raise ValueError('`extract_patches_2d` only supports C=1')
@@ -2784,6 +2842,23 @@ def extract_patches_2d_startind(im, patch_size, hwi):
 
 
 def extract_patches_2d_startind_vmap(ims, patch_size, hwi):
+    """ Extract patches from images,
+        Also handles case where `hwi` has negative indices with padding
+    """
+    if ims.ndim != 4:
+        raise ValueError('`extract_patches_2d` im must be '
+                         '(bsz, H, W, C)')
+    bsz, H, W, C = ims.shape
+    pad_bef = np.maximum(-np.min(hwi, axis=0), 0)
+    pad_aft = np.max(hwi, axis=0) + \
+              np.array(patch_size) - \
+              np.array([H, W])
+    pad_width = np.vstack(((0, 0),
+                           np.stack((pad_bef, pad_aft)),
+                           (0, 0)))
+    ims = np.pad(ims, mode='constant',
+                      pad_width=pad_width)
+    hwi = hwi + pad_bef
     return vmap(extract_patches_2d_startind, (0, None, None))(ims, patch_size, hwi)
 
 
