@@ -27,7 +27,9 @@ sudo dpkg -i <libcudd>.deb
     - probably can just impl this
         - prior is inversely proportional to evidence ...
         - resample inducing patches not used after training a few iterations 
-        - 
+    - think about quality/diversity decomposition 
+        - dpp as prior ? or dpp as variational parameter
+        - or maybe just sampling from dpp is enough
 - argument for using large weights of posterior mean as prototypes ?
     - decompose posterior process to 2 component 
     - data component is deterministic function of inducing variables
