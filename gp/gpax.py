@@ -3072,3 +3072,21 @@ def plt_inducing_inputs_spatial_transform(params, model, patch_shape, max_show=1
     fig.tight_layout()
 
     return fig
+
+
+def jax_configure(cuda_ids):
+    import os
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+    os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
+    os.environ["XLA_PYTHON_CLIENT_ALLOCATOR"] = "platform"
+    
+    
+def jax_status():
+    import jax
+    from jax.lib import xla_bridge
+    print('jax/jaxlib:\t', jax.__version__, jax.lib.version)
+    print('platform:\t', xla_bridge.get_backend().platform)
+    print('gpu counts:\t', jax.local_device_count())
+    print('devices:\t', jax.devices())
+    
