@@ -2790,67 +2790,63 @@ def run_kmeans(X, ncentroids=1, whiten=False):
     return kmeans, I
 
 
-def extract_patches_2d_nojit(im, patch_size):
-    if im.ndim == 3 and im.shape[2] != 1:
-        raise ValueError('`extract_patches_2d` only supports C=1')
-    h, w = patch_size
-    H, W = im.shape[0], im.shape[1]
-    P = (H-h+1)*(W-w+1)
-    patches = []
-    for hi in range(H-h+1):
-        for wi in range(W-w+1):
-            patches.append(im[hi:hi+h, wi:wi+w, ...])
-    patches = np.stack(patches)
-    return patches
-
-
-def extract_patches_2d(im, patch_size):
-    """Extract patches with size `patch_size` from image `im` 
+def extract_patches_2d(im, patch_size, color_channel_separate):
+    """Extract every patch with size `patch_size` from image `im` 
             (H, W, 1) -> (P, h, w) where P=#patches
     """
-    if im.ndim == 3 and im.shape[2] != 1:
-        raise ValueError('`extract_patches_2d` only supports C=1')
     h, w = patch_size
-    H, W = im.shape[0], im.shape[1]
-    im = im.reshape((H, W))
-    P = (H-h+1)*(W-w+1)
+    H, W, C = im.shape
     hi = np.arange(H-h+1)
     wi = np.arange(W-w+1)
-    hwi = np.array(list(itertools.product(hi, wi)))
-    def f(hwi): return jax.lax.dynamic_slice(im, (hwi[0], hwi[1]), (h, w))
-    patches = jax.lax.map(f, hwi)
+    Ci = np.arange(C)
+    start_ind = itertools.product(hi, wi, Ci) if color_channel_separate \
+        else itertools.product(hi, wi)
+    start_ind = np.array(list(start_ind))
+    patches = extract_patches_2d_startind(
+        im, patch_size, start_ind, color_channel_separate)
     return patches
 
 
-def extract_patches_2d_vmap(ims, patch_size):
-    return vmap(extract_patches_2d, (0, None), 0)(ims, patch_size)
+def extract_patches_2d_vmap(ims, patch_size, color_channel_separate=False):
+    return vmap(extract_patches_2d, (0, None, None), 0)(ims, patch_size, color_channel_separate)
 
 
-def extract_patches_2d_startind(im, patch_size, hwi):
+def extract_patches_2d_startind(im, patch_size, start_ind, color_channel_separate):
     """Extract patches with size `patch_size` from image `im` 
             Given start indices of patches
-        Note, handling of negative indices in `hwi` in `vmap` only 
+        Note, handling of negative indices in `start_ind` in outer scopes only
+        
+        `color_channel_separate`
+            If True,   `start_ind`  (N, 3)
+            Otherwise, `start_ind`  (N, 2)
     """
-    if im.ndim == 3 and im.shape[2] != 1:
-        raise ValueError('`extract_patches_2d` only supports C=1')
-    C = im.shape[2]
+    assert(im.ndim == 3)
+    if im.shape[2] not in [1, 3]:
+        raise ValueError(
+            '`extract_patches_2d` only supports C=1 or C=3')
     h, w = patch_size
-    def f(hwi): return jax.lax.dynamic_slice(
-        im, (hwi[0], hwi[1], 0), (h, w, C))
-    patches = jax.lax.map(f, hwi)
-    return patches
+    H, W, C = im.shape
+    if color_channel_separate:
+        def f(ind): return jax.lax.dynamic_slice(
+            im, (ind[0], ind[1], ind[2]), (h, w, 1))
+    else:
+        def f(ind): return jax.lax.dynamic_slice(
+            im, (ind[0], ind[1], 0), (h, w, C))
+    return jax.lax.map(f, start_ind)
 
 
-def extract_patches_2d_startind_vmap(ims, patch_size, hwi):
-    """ Extract patches from images,
-        Also handles case where `hwi` has negative indices with padding
+def extract_patches_2d_startind_vmap(ims, patch_size, start_ind):
+    """ Extract patches from images and handles case 
+            where `start_ind` has negative indices with padding
+        Note, color channels are not properly handled here,
+            currently only supports `color_channel_separate=False`
     """
     if ims.ndim != 4:
         raise ValueError('`extract_patches_2d` im must be '
                          '(bsz, H, W, C)')
     bsz, H, W, C = ims.shape
-    pad_bef = np.maximum(-np.min(hwi, axis=0), 0)
-    pad_aft = np.max(hwi, axis=0) + \
+    pad_bef = np.maximum(-np.min(start_ind, axis=0), 0)
+    pad_aft = np.max(start_ind, axis=0) + \
               np.array(patch_size) - \
               np.array([H, W])
     pad_width = np.vstack(((0, 0),
@@ -2858,8 +2854,8 @@ def extract_patches_2d_startind_vmap(ims, patch_size, hwi):
                            (0, 0)))
     ims = np.pad(ims, mode='constant',
                       pad_width=pad_width)
-    hwi = hwi + pad_bef
-    return vmap(extract_patches_2d_startind, (0, None, None))(ims, patch_size, hwi)
+    start_ind = start_ind + pad_bef
+    return vmap(extract_patches_2d_startind, (0, None, None, None))(ims, patch_size, start_ind, False)
 
 
 def extract_patches_2d_scal_transl(image_shape, patch_shape):

@@ -65,6 +65,57 @@ class TestJaxUtilities(unittest.TestCase):
         self.assertTrue(np.array_equal(a, b))
 
 
+
+class TestExtractPatches(unittest.TestCase):
+
+    def test_extract_patch_2d(self):
+
+        def extract_patches_2d_nojit(im, patch_size, color_channel_separate=False):
+            """ Extract patches with strides=1
+                    `color_channel_separate` if True then extract patches 
+                    separately for each of the color channels 
+            """
+            assert(im.ndim == 3)
+            if im.shape[2] not in [1, 3]:
+                raise ValueError(
+                    '`extract_patches_2d` only supports C=1 or C=3')
+            h, w = patch_size
+            H, W, C = im.shape
+            patches = []
+            if color_channel_separate:
+                P = (H-h+1)*(W-w+1)*C
+                for hi in range(H-h+1):
+                    for wi in range(W-w+1):
+                        for ci in range(C):
+                            patches.append(im[hi:hi+h, wi:wi+w, (ci,)])
+            else:
+                P = (H-h+1)*(W-w+1)
+                for hi in range(H-h+1):
+                    for wi in range(W-w+1):
+                        patches.append(im[hi:hi+h, wi:wi+w, ...])
+            patches = np.stack(patches)
+            return patches
+
+
+        key = random.PRNGKey(0)
+        h, w = 5, 5
+        patch_size = (h, w)
+        H, W = 10, 10
+
+        for color_channel_separate, C in [(False, 1),
+                                          (False, 3),
+                                          (True, 1),
+                                          (True, 3)]:
+            im = random.normal(key, (H, W, C))
+            patches1 = extract_patches_2d_nojit(im, patch_size, color_channel_separate)
+            patches2 = extract_patches_2d(im, patch_size, color_channel_separate)
+            patches_same = np.all(patches1 == patches2)
+            P = (H-h+1)*(W-w+1)*C if color_channel_separate else (H-h+1)*(W-w+1)
+            num_patches_correct = ( patches1.shape[0] == P )
+            self.assertTrue(num_patches_correct)
+            self.assertTrue(patches_same)
+
+
 class TestReceptiveFields(unittest.TestCase):
 
     def test_cnnmnist(self):
