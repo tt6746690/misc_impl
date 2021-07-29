@@ -2228,11 +2228,13 @@ class CNNMnistTrunk(nn.Module):
 
     @classmethod
     def get_start_ind(self, image_shape):
-        if image_shape == (14, 14, 1):
+        if  image_shape[:2] == (14, 14):
             start_ind = np.array([[0, 0], [0, 1], [0, 5], [1, 0], [
                                  1, 1], [1, 5], [5, 0], [5, 1], [5, 5]])
-        elif image_shape == (28, 28, 1):
+        elif image_shape[:2] == (28, 28):
             start_ind = np.array([[-3, -3], [-3, 1], [-3, 5], [-3, 9], [-3, 13], [-3, 17], [-3, 21], [1, -3], [1, 1], [1, 5], [1, 9], [1, 13], [1, 17], [1, 21], [5, -3], [5, 1], [5, 5], [5, 9], [5, 13], [5, 17], [5, 21], [9, -3], [9, 1], [9, 5], [9, 9], [9, 13], [9, 17], [9, 21], [13, -3], [13, 1], [13, 5], [13, 9], [13, 13], [13, 17], [13, 21], [17, -3], [17, 1], [17, 5], [17, 9], [17, 13], [17, 17], [17, 21], [21, -3], [21, 1], [21, 5], [21, 9], [21, 13], [21, 17], [21, 21]])
+        elif image_shape[:2] == (32, 32):
+            start_ind = np.array([[-3, -3], [-3, 1], [-3, 5], [-3, 9], [-3, 13], [-3, 17], [-3, 21], [-3, 25], [1, -3], [1, 1], [1, 5], [1, 9], [1, 13], [1, 17], [1, 21], [1, 25], [5, -3], [5, 1], [5, 5], [5, 9], [5, 13], [5, 17], [5, 21], [5, 25], [9, -3], [9, 1], [9, 5], [9, 9], [9, 13], [9, 17], [9, 21], [9, 25], [13, -3], [13, 1], [13, 5], [13, 9], [13, 13], [13, 17], [13, 21], [13, 25], [17, -3], [17, 1], [17, 5], [17, 9], [17, 13], [17, 17], [17, 21], [17, 25], [21, -3], [21, 1], [21, 5], [21, 9], [21, 13], [21, 17], [21, 21], [21, 25], [25, -3], [25, 1], [25, 5], [25, 9], [25, 13], [25, 17], [25, 21], [25, 25]])
         else:
             start_ind, _ = compute_receptive_fields_start_ind_extrap(
                 CNNMnistTrunk, (1,)+image_shape)
@@ -2240,11 +2242,12 @@ class CNNMnistTrunk(nn.Module):
 
     @classmethod
     def get_XL(self, image_shape=(28, 28, 1)):
-        if image_shape not in [(28, 28, 1), (14, 14, 1)]:
+        if image_shape[:2] not in [(14, 14), (28, 28), (32, 32)]:
             raise ValueError('CNNMnistTrunk.getXL() invalid image shape')
+        patch_size = (10, 10)
         start_ind = self.get_start_ind(image_shape)
         scal, transl = startind_to_scal_transl(
-            image_shape[:2], (10, 10), start_ind)
+            image_shape[:2], patch_size, start_ind)
         scal = np.repeat(scal[np.newaxis, ...], len(transl), axis=0)
         XL = np.column_stack([scal, transl])
         return XL
@@ -2938,8 +2941,9 @@ def homogeneous_grid(height, width):
 
 
 def grid_sample(S, G):
-    """Use bilinear interpolation to interpolate values 
-        of `S` at source grid `G`'s location
+    """ Use bilinear interpolation to interpolate values 
+           of `S` at source grid `G`'s location
+        Processes interpolation of color channel independently
     '"""
     w, h, c = S.shape
     X, Y = G
@@ -2955,6 +2959,8 @@ def grid_sample(S, G):
 
     Xmax = w-1
     Ymax = h-1
+
+    # Clip coordinates to image borders
     X0 = np.clip(X0, 0, Xmax)
     X1 = np.clip(X1, 0, Xmax)
     Y0 = np.clip(Y0, 0, Ymax)
@@ -3022,7 +3028,7 @@ def spatial_transform_details(A, S, Tsize):
     return T, Gs
 
 
-def plt_spatial_transform(axs, Gs, S, T):
+def plt_spatial_transform(axs, Gs, S, T, overlay=False):
     """ Given `axs` of size 2, source grid `Gs` 
             draw source image `S` with source grid `Gs` and
             target spatially transformed image `T`
@@ -3036,17 +3042,29 @@ def plt_spatial_transform(axs, Gs, S, T):
     Xs = Xs_flat.reshape((h, w))
     Ys = Ys_flat.reshape((h, w))
 
-    ax = axs[1]
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.scatter(Xs, Ys, marker='+', c='r', s=40, lw=1)
-    ax.imshow(S, cmap='Greys', extent=(-1, 1, 1, -1), origin='upper')
+    if overlay:
+        Xsmin, Xsmax = np.min(Xs), np.max(Xs)
+        Ysmin, Ysmax = np.min(Ys), np.max(Ys)
 
-    ax = axs[0]
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.scatter(Xt, Yt, marker='+', c='r', s=40, lw=1)
-    ax.imshow(T, cmap='Greys', extent=(-1, 1, 1, -1), origin='upper')
+        ax = axs
+        ax.set_xticks([])
+        ax.set_yticks([])
+        rect = mpl.patches.Rectangle((Xsmin, Ysmin), Xsmax-Xsmin, Ysmax-Ysmin,
+                                     linewidth=3, edgecolor='r', facecolor='none')
+        ax.add_patch(rect)
+        ax.imshow(S, cmap='Greys', extent=(-1, 1, 1, -1), origin='upper')
+    else:
+        ax = axs[0]
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.scatter(Xt, Yt, marker='+', c='r', s=40, lw=1)
+        ax.imshow(T, cmap='Greys', extent=(-1, 1, 1, -1), origin='upper')
+        
+        ax = axs[1]
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.scatter(Xs, Ys, marker='+', c='r', s=40, lw=1)
+        ax.imshow(S, cmap='Greys', extent=(-1, 1, 1, -1), origin='upper')
 
 
 def plt_inducing_inputs_spatial_transform(params, model, patch_shape, max_show=10):

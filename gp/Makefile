@@ -34,3 +34,6 @@ uninstall_jax:
 
 rsync_assets_r2l:
 	rsync -a wasabi.csail.mit.edu:/data/vision/polina/scratch/wpq/github/misc_impl/gp/summary/assets/ summary/assets/
+
+rsync_cub:
+	rsync -a CUB_200_2011.tgz wpq@wasabi.csail.mit.edu:/data/vision/polina/scratch/wpq/github/misc_impl/gp/data/
