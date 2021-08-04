@@ -2315,10 +2315,13 @@ def compute_receptive_fields_start_ind(model_def, in_shape):
     spike_locs = np.array(spike_locs, dtype=np.int32)
 
     x = np.ones(in_shape)
+    key = random.PRNGKey(0)
     model = model_def()
-    params = model.init(random.PRNGKey(0), x)
-    params = freeze(jax.tree_map(lambda w: np.ones(w.shape),
-                                 unfreeze(params)))
+    params = model.init(key, x)
+    params = unfreeze(params)
+    params['params'] = jax.tree_map(lambda w: 1e-1*random.normal(key, w.shape),
+                                    params['params'])
+    params = freeze(params)
 
     def f(x): return model.apply(params, x)
     y, vjp_fn = vjp(f, x)
@@ -2331,8 +2334,12 @@ def compute_receptive_fields_start_ind(model_def, in_shape):
         gy = jax.ops.index_update(gy, ind, 1)
         gx = vjp_fn(gy)[0]
         return gx
-    # (P, *image_shape)  squeeze batch-dim
-    gx = vmap(construct_gy)(spike_locs).squeeze(1)
+    # (P, *image_shape)
+    gx = []
+    for spike_loc in spike_locs:
+        gx.append(construct_gy(spike_loc))
+    gx = np.vstack(gx)
+
     ind = []
     for p in range(len(gx)):
         gxp = gx[p]
@@ -2366,10 +2373,13 @@ def compute_receptive_fields_start_ind_extrap(model_def, in_shape):
     spike_locs = np.array(spike_locs, dtype=np.int32)
 
     x = np.ones(in_shape)
+    key = random.PRNGKey(0)
     model = model_def()
-    params = model.init(random.PRNGKey(0), x)
-    params = freeze(jax.tree_map(lambda w: np.ones(w.shape),
-                                 unfreeze(params)))
+    params = model.init(key, x)
+    params = unfreeze(params)
+    params['params'] = jax.tree_map(lambda w: 1e-1*random.normal(key, w.shape),
+                                    params['params'])
+    params = freeze(params)
 
     def f(x): return model.apply(params, x)
     y, vjp_fn = vjp(f, x)
@@ -2382,8 +2392,12 @@ def compute_receptive_fields_start_ind_extrap(model_def, in_shape):
         gy = jax.ops.index_update(gy, ind, 1)
         gx = vjp_fn(gy)[0]
         return gx
-    # (P, *image_shape)  squeeze batch-dim
-    gx = vmap(construct_gy)(spike_locs).squeeze(1)
+    # (P, *image_shape)
+    gx = []
+    for spike_loc in spike_locs:
+        gx.append(construct_gy(spike_loc))
+    gx = np.vstack(gx)
+
     ind = []
     for p in range(len(gx)):
         gxp = gx[p]
@@ -2397,7 +2411,7 @@ def compute_receptive_fields_start_ind_extrap(model_def, in_shape):
     if not np.all((ind[:, :, 1]-ind[:, :, 0]+1) <= rf):
         # Note patches on boundary have < receptive_field!
         raise ValueError('leaky gradient, `gx` has'
-                         'more nonzero entries than possible')
+                        'more nonzero entries than possible')
     # (P, wi)
     ind_start = ind[:, 1, 0]
     offset_border = ind_start[1]-ind_start[0]

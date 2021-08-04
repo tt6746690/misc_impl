@@ -28,7 +28,7 @@ from functools import partial
 from typing import Any, Callable, Sequence, Tuple
 
 from flax import linen as nn
-import jax.numpy as jnp
+import jax.numpy as np
 
 ModuleDef = Any
 
@@ -100,7 +100,7 @@ class ResNet(nn.Module):
     block_cls: ModuleDef
     num_classes: int
     num_filters: int = 64
-    dtype: Any = jnp.float32
+    dtype: Any = np.float32
     act: Callable = nn.relu
 
     @nn.compact
@@ -130,11 +130,11 @@ class ResNet(nn.Module):
                                    norm=norm,
                                    act=self.act)(x)
         # (bsz, 7, 7, 512)
-        x = jnp.mean(x, axis=(1, 2))
+        x = np.mean(x, axis=(1, 2))
         # (bsz, 512)
         x = nn.Dense(self.num_classes, dtype=self.dtype)(x)
         # (bsz, num_classes)
-        x = jnp.asarray(x, self.dtype)
+        x = np.asarray(x, self.dtype)
         return x
 
 
@@ -145,7 +145,7 @@ class ResNetTrunk(nn.Module):
     stage_sizes: Sequence[int]
     block_cls: ModuleDef
     num_filters: int = 64
-    dtype: Any = jnp.float32
+    dtype: Any = np.float32
     act: Callable = nn.relu
     disable_bn: bool = False
 
@@ -336,7 +336,7 @@ class BagNetTrunk(nn.Module):
     block_cls: ModuleDef
     num_conv3x3_per_stage: Sequence[int]
     num_filters: int = 64
-    dtype: Any = jnp.float32
+    dtype: Any = np.float32
     act: Callable = nn.relu
     disable_bn: bool = False
 
@@ -399,7 +399,7 @@ class BagNet(nn.Module):
     num_conv3x3_per_stage: Sequence[int]
     num_classes: int
     num_filters: int = 64
-    dtype: Any = jnp.float32
+    dtype: Any = np.float32
     act: Callable = nn.relu
     disable_bn: bool = False
 
