@@ -138,8 +138,6 @@ class ResNet(nn.Module):
         return x
 
 
-
-
 class ResNetTrunk(nn.Module):
     """ResNetV1. Trunk """
     stage_sizes: Sequence[int]
@@ -186,13 +184,12 @@ class ResNetTrunk(nn.Module):
         return x
 
 
-    
 ResNet18Trunk = partial(ResNetTrunk, stage_sizes=[2, 2, 2, 2],
-                   block_cls=ResNetBlock)
+                        block_cls=ResNetBlock)
 ResNet34Trunk = partial(ResNetTrunk, stage_sizes=[3, 4, 6, 3],
-                   block_cls=ResNetBlock)
+                        block_cls=ResNetBlock)
 ResNet50Trunk = partial(ResNetTrunk, stage_sizes=[3, 4, 6, 3],
-                   block_cls=BottleneckResNetBlock)
+                        block_cls=BottleneckResNetBlock)
 
 ResNet18 = partial(ResNet, stage_sizes=[2, 2, 2, 2],
                    block_cls=ResNetBlock)
@@ -209,37 +206,37 @@ ResNet200 = partial(ResNet, stage_sizes=[3, 24, 36, 3],
                     block_cls=BottleneckResNetBlock)
 
 
-#### BagNet
+# BagNet
 #
 # References
 # pytorchcv: https://github.com/osmr/imgclsmob/blob/master/pytorch/pytorchcv/models/bagnet.py
 # rebias: https://github.com/clovaai/rebias/blob/master/models/imagenet_models.py (basicblock modification)
-# imgclsmob(torch): https://github.com/osmr/imgclsmob/blob/master/pytorch/pytorchcv/models/bagnet.py 
+# imgclsmob(torch): https://github.com/osmr/imgclsmob/blob/master/pytorch/pytorchcv/models/bagnet.py
 #
 #
-# What does bagnet do ? 
-# In resnet50, 1 BottleneckBlock has 
-#             [conv1x1, conv3x3(stride=1,padding=1), conv1x1] 
+# What does bagnet do ?
+# In resnet50, 1 BottleneckBlock has
+#             [conv1x1, conv3x3(stride=1,padding=1), conv1x1]
 #                 for all blocks in first stage
-#             [conv1x1, conv3x3(stride=2,padding=1), conv1x1] 
+#             [conv1x1, conv3x3(stride=2,padding=1), conv1x1]
 #                 for all blocks in subsequent stage
 # In bagnet
 #     `kernel3` is the number of `conv3x3`s in each stage of resnet
-#     bagnet essentially replace conv3x3 with conv1x1s 
+#     bagnet essentially replace conv3x3 with conv1x1s
 #        initial_conv has receptive field of (7, 7)
-#        any subsequent conv3x3 increase receptive field 
+#        any subsequent conv3x3 increase receptive field
 #            by 1 when stride=1
-#            by 
+#            by
 #
-#     if kernel3=1, 
-#         BottleneckBlock has 
-#             [conv1x1, conv3x3(stride=2), conv1x1] 
+#     if kernel3=1,
+#         BottleneckBlock has
+#             [conv1x1, conv3x3(stride=2), conv1x1]
 #                 for first block in each stage
 #             [conv1x1, conv1x1(stride=1), conv1x1]
 #                 for subsequent block in each stage
 #     if kernel3=0,
 #         BottleneckBlock has
-#             [conv1x1, conv1x1(stride=2), conv1x1] 
+#             [conv1x1, conv1x1(stride=2), conv1x1]
 #                 for all block in each stage ...
 #
 # Note, conv3x3->conv1x1 just need to change padding=1->padding=0
@@ -321,7 +318,7 @@ class BottleneckBagNetBlock(nn.Module):
         y = self.act(y)
         y = self.conv(self.filters * 4, (1, 1))(y)
         y = self.norm(scale_init=nn.initializers.zeros)(y)
-        
+
         if residual.shape != y.shape:
             residual = self.conv(self.filters * 4, (1, 1),
                                  self.strides, name='conv_proj')(residual)
@@ -350,7 +347,7 @@ class BagNetTrunk(nn.Module):
                        dtype=self.dtype)
         if self.disable_bn:
             norm = NormIdentity
-        
+
         # (bsz, 224, 224, 1)
         x = conv(self.num_filters, (1, 1), (1, 1))(x)
         x = conv(self.num_filters, (3, 3), (1, 1))(x)
@@ -368,23 +365,23 @@ class BagNetTrunk(nn.Module):
                 #     first `num_conv3x3` are conv3x3
                 num_conv3x3 = self.num_conv3x3_per_stage[i]
                 conv2_ksize = 3 if j < num_conv3x3 else 1
-                
+
                 x = self.block_cls(self.num_filters * 2 ** i,
                                    strides=strides,
                                    conv=conv,
                                    norm=norm,
                                    act=self.act,
                                    conv2_ksize=conv2_ksize)(x)
-            
+
             # i=0 (bsz, 112, 112,  256)
             # i=1 (bsz,  56,  56,  512)
             # i=2 (bsz,  28,  28, 1024)
             # i=3 (bsz,  14,  14, 2048)
         return x
-    
+
     @property
     def receptive_field(self):
-        filtered = list(filter(lambda x: x[0]==self.num_conv3x3_per_stage,
+        filtered = list(filter(lambda x: x[0] == self.num_conv3x3_per_stage,
                                bagnet_num_conv3x3_and_receptive_fields))
         if len(filtered) != 1:
             raise ValueError(f'{self.num_conv3x3_per_stage} not supported')
@@ -413,7 +410,7 @@ class BagNet(nn.Module):
                        dtype=self.dtype)
         if self.disable_bn:
             norm = NormIdentity
-        
+
         # (bsz, 224, 224, 1)
         x = conv(self.num_filters, (1, 1), (1, 1))(x)
         x = conv(self.num_filters, (3, 3), (1, 1))(x)
@@ -431,14 +428,14 @@ class BagNet(nn.Module):
                 #     first `num_conv3x3` are conv3x3
                 num_conv3x3 = self.num_conv3x3_per_stage[i]
                 conv2_ksize = 3 if j < num_conv3x3 else 1
-                
+
                 x = self.block_cls(self.num_filters * 2 ** i,
                                    strides=strides,
                                    conv=conv,
                                    norm=norm,
                                    act=self.act,
                                    conv2_ksize=conv2_ksize)(x)
-            
+
             # i=0 (bsz, 112, 112,  256)
             # i=1 (bsz,  56,  56,  512)
             # i=2 (bsz,  28,  28, 1024)
@@ -449,10 +446,10 @@ class BagNet(nn.Module):
         # (bsz, num_classes)
         x = np.asarray(x, self.dtype)
         return x
-    
+
     @property
     def receptive_field(self):
-        filtered = list(filter(lambda x: x[0]==self.num_conv3x3_per_stage,
+        filtered = list(filter(lambda x: x[0] == self.num_conv3x3_per_stage,
                                bagnet_num_conv3x3_and_receptive_fields))
         if len(filtered) != 1:
             raise ValueError(f'{self.num_conv3x3_per_stage} not supported')
@@ -479,60 +476,72 @@ def _bagnet(resnet_version, receptive_field, trunk):
         stage_sizes = [3, 4, 6, 3]
         block_cls = BottleneckBagNetBlock
 
-    filtered = list(filter(lambda x: x[1]==receptive_field,
+    filtered = list(filter(lambda x: x[1] == receptive_field,
                            bagnet_num_conv3x3_and_receptive_fields))
     if len(filtered) != 1:
         raise ValueError(f'receptive_field={receptive_field} not supported')
     else:
         num_conv3x3_per_stage = filtered[0][0]
-        
+
     if trunk:
         backbone = BagNetTrunk
     else:
         backbone = BagNet
-    
-    return partial(backbone, stage_sizes=stage_sizes,
-                             block_cls=block_cls,
-                             num_conv3x3_per_stage=num_conv3x3_per_stage,)
 
+    return partial(backbone, stage_sizes=stage_sizes,
+                   block_cls=block_cls,
+                   num_conv3x3_per_stage=num_conv3x3_per_stage,)
 
 
 BagNet18x11Trunk = _bagnet('resnet18', 11, True)
+BagNet18x19Trunk = _bagnet('resnet18', 19, True)
 BagNet18x35Trunk = _bagnet('resnet18', 35, True)
 BagNet18x47Trunk = _bagnet('resnet18', 47, True)
 BagNet18x63Trunk = _bagnet('resnet18', 63, True)
+BagNet18x95Trunk = _bagnet('resnet18', 95, True)
 BagNet50x11Trunk = _bagnet('resnet50', 11, True)
+BagNet50x19Trunk = _bagnet('resnet50', 19, True)
 BagNet50x35Trunk = _bagnet('resnet50', 35, True)
 BagNet50x47Trunk = _bagnet('resnet50', 47, True)
 BagNet50x63Trunk = _bagnet('resnet50', 63, True)
+BagNet50x95Trunk = _bagnet('resnet50', 95, True)
 
 
 BagNet18x11 = _bagnet('resnet18', 11, False)
+BagNet18x19 = _bagnet('resnet18', 19, False)
 BagNet18x35 = _bagnet('resnet18', 35, False)
 BagNet18x47 = _bagnet('resnet18', 47, False)
 BagNet18x63 = _bagnet('resnet18', 63, False)
+BagNet18x95 = _bagnet('resnet18', 95, False)
 BagNet50x11 = _bagnet('resnet50', 11, False)
+BagNet50x19 = _bagnet('resnet50', 19, False)
 BagNet50x35 = _bagnet('resnet50', 35, False)
 BagNet50x47 = _bagnet('resnet50', 47, False)
 BagNet50x63 = _bagnet('resnet50', 63, False)
+BagNet50x95 = _bagnet('resnet50', 95, False)
 
 
 def print_num_params():
-    # Print some statistics for parameters
+    # Prints number of parameters for some models 
     #
     #     #parameters for models((224, 224, 3))
     #     ResNet18Trunk       : 11.18 M
     #     ResNet34Trunk       : 21.28 M
     #     ResNet50Trunk       : 23.51 M
+    #
     #     BagNet18x11Trunk    :  1.54 M
+    #     BagNet18x19Trunk    :  1.80 M
     #     BagNet18x35Trunk    :  2.85 M
     #     BagNet18x47Trunk    :  3.01 M
     #     BagNet18x63Trunk    :  3.54 M
+    #     BagNet18x95Trunk    :  5.63 M
     #     BagNet50x11Trunk    : 13.64 M
+    #     BagNet50x19Trunk    : 14.16 M
     #     BagNet50x35Trunk    : 16.26 M
     #     BagNet50x47Trunk    : 16.43 M
     #     BagNet50x63Trunk    : 16.95 M
-
+    #     BagNet50x95Trunk    : 19.05 M
+    #
     key = random.PRNGKey(0)
     resnet_trunks = [
         ('ResNet18Trunk', ResNet18Trunk),
@@ -542,13 +551,17 @@ def print_num_params():
 
     bagnet_trunks = [
         ('BagNet18x11Trunk', BagNet18x11Trunk),
+        ('BagNet18x19Trunk', BagNet18x19Trunk),
         ('BagNet18x35Trunk', BagNet18x35Trunk),
         ('BagNet18x47Trunk', BagNet18x47Trunk),
         ('BagNet18x63Trunk', BagNet18x63Trunk),
+        ('BagNet18x95Trunk', BagNet18x95Trunk),
         ('BagNet50x11Trunk', BagNet50x11Trunk),
+        ('BagNet50x19Trunk', BagNet50x19Trunk),
         ('BagNet50x35Trunk', BagNet50x35Trunk),
         ('BagNet50x47Trunk', BagNet50x47Trunk),
         ('BagNet50x63Trunk', BagNet50x63Trunk),
+        ('BagNet50x95Trunk', BagNet50x95Trunk),
     ]
 
     in_shape = (224, 224, 3)
@@ -559,3 +572,4 @@ def print_num_params():
         params = m.init(key, random.normal(key, in_shape))
         num_params = pytree_num_parameters(params['params'])
         print(f'{name:20}: {num_params/1e6:5.2f} M')
+        

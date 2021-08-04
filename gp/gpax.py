@@ -2360,7 +2360,9 @@ def compute_receptive_fields_start_ind(model_def, in_shape):
 
 
 def compute_receptive_fields_start_ind_extrap(model_def, in_shape):
-    """ Just 3 evalution of `vjp`, rest extrapolated ... """
+    """ Just 3 evalution of `vjp`, rest extrapolated ... 
+            Relies on max coordinate of first three activations < width of image
+    """
 
     if len(in_shape) != 4:
         raise ValueError('`in_shape` has dims (N, H, W, C)')
