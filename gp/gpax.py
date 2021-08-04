@@ -2180,7 +2180,7 @@ class CNN(nn.Module):
 
 
 class CNNMnist(nn.Module):
-    output_dim: int = 2
+    output_dim: int = 10
 
     @nn.compact
     def __call__(self, x):
@@ -2226,6 +2226,10 @@ class CNNMnistTrunk(nn.Module):
         x = x[:, 1, 1, :].squeeze()
         return x
 
+    @property
+    def receptive_field(self):
+        return 10
+
     @classmethod
     def get_start_ind(self, image_shape):
         if  image_shape[:2] == (14, 14):
@@ -2253,15 +2257,20 @@ class CNNMnistTrunk(nn.Module):
         return XL
 
 
+
 def compute_receptive_fields(model_def, in_shape, spike_loc=None):
     """Computes receptive fields using gradients
         For images, returns receptive fields for (h, w)
     """
+    key = random.PRNGKey(0)
     x = np.ones(in_shape)
     model = model_def()
     params = model.init(random.PRNGKey(0), x)
-    params = freeze(jax.tree_map(lambda w: np.ones(w.shape),
-                                 unfreeze(params)))
+    params = unfreeze(params)
+    params['params'] = jax.tree_map(lambda w: 1e-1*random.normal(key, w.shape),
+                                    params['params'])
+    params = freeze(params)
+    
     # vjp (𝑥,𝑣)↦∂𝑓(𝑥)ᵀv
     # vjp :: (a -> b) -> a -> (b, CT b -> CT a)
     #     vjp: (f, x) -> (f(x), vjp_fn) where vjp_fn: u -> v
@@ -2275,7 +2284,7 @@ def compute_receptive_fields(model_def, in_shape, spike_loc=None):
         ind = jax.ops.index[0, S[1]//2, S[2]//2, ...]
     gy = jax.ops.index_update(gy, ind, 1)
     gx = vjp_fn(gy)[0]
-    I = np.where(gx != 0)
+    I = np.where(gx > np.mean(gx)*.1)
     rf = np.array([np.max(idx)-np.min(idx)+1
                    for idx in I])[np.array([1, 2])]  # (y, x)
     return rf, gx, gy
@@ -2513,10 +2522,10 @@ def pytree_path_contains_keywords(path, kwds):
 
 
 def pytree_get_kvs(tree):
-    """Gets `tree['params']` to {path: np.ndarray, ...} """
+    """Gets `tree` to {path: np.ndarray, ...} """
     kvs = {}
     for k, v in flax.traverse_util.flatten_dict(
-            unfreeze(tree['params'])).items():
+            unfreeze(tree)).items():
         kvs['/'.join(k)] = v
     return kvs
 
@@ -2576,6 +2585,17 @@ def pytree_leaf(tree, path):
 def pytree_keys(tree):
     kvs = flax.traverse_util.flatten_dict(unfreeze(tree))
     return ['/'.join(k) for k, v in kvs.items()]
+
+
+def pytree_num_parameters(tree, take_sum=True):
+    num_parameters = jax.tree_util.tree_map(
+        lambda x: x.size, tree)
+    if take_sum:
+        num_parameters = [v for v in pytree_get_kvs(num_parameters).values()]
+        num_parameters = np.sum(np.stack(num_parameters))
+        return num_parameters.item()
+    else:
+        return num_parameters
 
 
 def flax_check_traversal(params, traversal):

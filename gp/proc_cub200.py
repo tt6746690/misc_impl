@@ -11,6 +11,7 @@ import cv2
 
 dir_cub200 = './data/CUB_200_2011'
 crop_by_bbox = True
+crop_margin_factor = 1.3 # crop larger than usual to allow for randomcrop(224) before resize(256)
 
 
 ## Load metadata
@@ -64,17 +65,17 @@ for idx, row in meta_df.iterrows():
 
         H, W, C = im.shape
         if w>h:
-            side_len = w
-            xx = x
+            side_len = w*crop_margin_factor
+            xx = int(max(0, x+(w-side_len)/2))
             yy = int(max(0, y+(h-side_len)/2))
-            ww = w
+            ww = int(min(W-1, xx+side_len))-xx
             hh = int(min(H-1, yy+side_len))-yy
         else:
-            side_len = h
+            side_len = h*crop_margin_factor
             xx = int(max(0, x+(w-side_len)/2))
-            yy = y
+            yy = int(max(0, y+(h-side_len)/2))
             ww = int(min(W-1, xx+side_len))-xx
-            hh = h
+            hh = int(min(H-1, yy+side_len))-yy
 
         im_crop = im[yy:yy+hh,xx:xx+ww,:]
         cv2.imwrite(im_dst, im_crop)
