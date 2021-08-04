@@ -559,25 +559,3 @@ def print_num_params():
         params = m.init(key, random.normal(key, in_shape))
         num_params = pytree_num_parameters(params['params'])
         print(f'{name:20}: {num_params/1e6:5.2f} M')
-
-
-def test_bagnet_receptive_field():
-    bagnet_trunks = [
-        ('BagNet18x11Trunk', BagNet18x11Trunk),
-        ('BagNet18x35Trunk', BagNet18x35Trunk),
-        ('BagNet18x47Trunk', BagNet18x47Trunk),
-        ('BagNet18x63Trunk', BagNet18x63Trunk),
-        ('BagNet50x11Trunk', BagNet50x11Trunk),
-        ('BagNet50x35Trunk', BagNet50x35Trunk),
-        ('BagNet50x47Trunk', BagNet50x47Trunk),
-        ('BagNet50x63Trunk', BagNet50x63Trunk),
-    ]
-
-    in_shape = (1, 224, 224, 1)
-
-    for name, model_def in bagnet_trunks:
-        model_def = partial(model_def, disable_bn=True)
-        rf, _, _ = compute_receptive_fields(model_def, in_shape)
-        rf_true = model_def().receptive_field
-        print(f'{tuple(rf) == (rf_true, rf_true)}')
-

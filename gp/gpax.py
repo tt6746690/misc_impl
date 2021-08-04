@@ -2412,13 +2412,12 @@ def compute_receptive_fields_start_ind_extrap(model_def, in_shape):
         # Note patches on boundary have < receptive_field!
         raise ValueError('leaky gradient, `gx` has'
                         'more nonzero entries than possible')
-    # (P, wi)
-    ind_start = ind[:, 1, 0]
-    offset_border = ind_start[1]-ind_start[0]
-    step = ind_start[2]-ind_start[1]
 
-    ind_start = list(itertools.product(np.arange(-1, Py-1),
-                                       np.arange(-1, Px-1)))
+    # (P, wi_min/wi_max)
+    ind_start = list(itertools.product(np.arange(0, Py),
+                                       np.arange(0, Px)))
+    offset_border = - ( rf[0] - ind[0, 1, 1] - 1 )
+    step = ind[-1, 1, 1]-ind[-2, 1, 1]
     ind_start = np.array(ind_start)*step + offset_border
     # # Allows for negative indices !
     # ind_start = np.maximum(0, ind_start)
