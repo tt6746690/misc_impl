@@ -577,6 +577,41 @@ class TestKernel(unittest.TestCase):
         self.assertTrue(np.allclose(Atrue, A))
 
 
+class TestJaxModels(unittest.TestCase):
+
+    def test_compute_patch_respose(self):
+        
+        patch_response_info_ = [
+            (CNNMnistTrunk,    CNNMnistTrunk, (1,  1), (1, 1), (3, 3), 10, 64),
+            (BagNet18x11Trunk, BagNetTrunk,   (10, 0), (1, 1), (2, 2), 11, 512),
+            (BagNet18x19Trunk, BagNetTrunk,   (10, 0), (1, 1), (2, 2), 19, 512),
+            (BagNet18x35Trunk, BagNetTrunk,   (10, 0), (1, 1), (3, 3), 35, 512),
+            (BagNet18x47Trunk, BagNetTrunk,   (1, 10), (1, 1), (4, 4), 47, 512), # not exactly match, but close ...
+            (BagNet18x63Trunk, BagNetTrunk,   (9,  2), (2, 2), (5, 5), 63, 512), # not exactly match, but close ...
+            (BagNet18x95Trunk, BagNetTrunk,   (9,  2), (3, 3), (7, 7), 95, 512), # not exactly match, but cloee ...
+        ]
+
+
+        key = random.PRNGKey(0)
+        n = 1
+
+        for ( model_def, model_type, pad_hw, spatial_coord, z_shape, receptive_field, feat_len ) in patch_response_info_:
+            
+            in_shape = (n, receptive_field, receptive_field, 1)
+            x = random.normal(key, in_shape)
+            
+            if model_type == BagNetTrunk:
+                model_def = partial(model_def, disable_bn=True)
+                
+            m = model_def()
+            m = m.bind(m.init(key, x))
+            z = compute_patch_response(m, x)
+            
+            shape_correct = ( z.shape == (n, feat_len) )
+            self.assertTrue(shape_correct)
+
+
+
 class TestKL(unittest.TestCase):
 
     def test_kl_mvn(self):

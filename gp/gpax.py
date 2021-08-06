@@ -807,7 +807,7 @@ class CovMultipleOutputIndependent(Kernel):
 
         if isinstance(self.ks[0], CovConvolutional) and \
                 self.ks[0].inducing_patch == True and \
-                check_patch_response_impl(self.g) is not None:
+                check_patch_response_impl(self.g) is None:
             raise ValueError(f'`CovConvolutional(inducing_patch=True)`'
                              f'requires `compute_patch_response(g, xp)` implemented',
                              f'{check_patch_response_impl(self.g)}')
