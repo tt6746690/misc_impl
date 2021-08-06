@@ -493,6 +493,7 @@ def _bagnet(resnet_version, receptive_field, trunk):
                    num_conv3x3_per_stage=num_conv3x3_per_stage,)
 
 
+
 BagNet18x11Trunk = _bagnet('resnet18', 11, True)
 BagNet18x19Trunk = _bagnet('resnet18', 19, True)
 BagNet18x35Trunk = _bagnet('resnet18', 35, True)

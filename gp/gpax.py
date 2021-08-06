@@ -16,6 +16,8 @@ from flax.core import freeze, unfreeze
 from flax import optim, struct
 from flax import linen as nn
 
+from jax_models import *
+
 
 class Mean(nn.Module):
 
@@ -2197,6 +2199,66 @@ class CNNMnist(nn.Module):
         return x
 
 
+# class CNNMnistTrunk(nn.Module):
+#     # in_shape: (1, 28, 28, 1)
+#     # receptive field: (10, 10)
+
+#     @nn.compact
+#     def __call__(self, x):
+#         # (N, H, W, C)
+#         x = nn.Conv(features=32, kernel_size=(3, 3))(x)
+#         x = nn.relu(x)
+#         x = nn.avg_pool(x, window_shape=(2, 2), strides=(2, 2))
+#         x = nn.Conv(features=64, kernel_size=(3, 3))(x)
+#         x = nn.relu(x)
+#         x = nn.avg_pool(x, window_shape=(2, 2), strides=(2, 2))
+#         # (N, Px, Py, L)
+#         return x
+
+#     def gz(self, x):
+#         if x.ndim == 3:
+#             x = x[..., np.newaxis]  # add color channel
+#         x = np.pad(x, pad_width=((0, 0), (1, 1), (1, 1), (0, 0)),
+#                    mode='constant',
+#                    constant_values=0)
+#         x = self.__call__(x)
+#         if x.shape[1:3] != (3, 3):
+#             raise ValueError(
+#                 'CNNMnistTrunk.gz(x) does not have correct shape')
+#         x = x[:, 1, 1, :].squeeze()
+#         return x
+
+#     @property
+#     def receptive_field(self):
+#         return 10
+
+#     @classmethod
+#     def get_start_ind(self, image_shape):
+#         if  image_shape[:2] == (14, 14):
+#             start_ind = np.array([[0, 0], [0, 1], [0, 5], [1, 0], [
+#                                  1, 1], [1, 5], [5, 0], [5, 1], [5, 5]])
+#         elif image_shape[:2] == (28, 28):
+#             start_ind = np.array([[-3, -3], [-3, 1], [-3, 5], [-3, 9], [-3, 13], [-3, 17], [-3, 21], [1, -3], [1, 1], [1, 5], [1, 9], [1, 13], [1, 17], [1, 21], [5, -3], [5, 1], [5, 5], [5, 9], [5, 13], [5, 17], [5, 21], [9, -3], [9, 1], [9, 5], [9, 9], [9, 13], [9, 17], [9, 21], [13, -3], [13, 1], [13, 5], [13, 9], [13, 13], [13, 17], [13, 21], [17, -3], [17, 1], [17, 5], [17, 9], [17, 13], [17, 17], [17, 21], [21, -3], [21, 1], [21, 5], [21, 9], [21, 13], [21, 17], [21, 21]])
+#         elif image_shape[:2] == (32, 32):
+#             start_ind = np.array([[-3, -3], [-3, 1], [-3, 5], [-3, 9], [-3, 13], [-3, 17], [-3, 21], [-3, 25], [1, -3], [1, 1], [1, 5], [1, 9], [1, 13], [1, 17], [1, 21], [1, 25], [5, -3], [5, 1], [5, 5], [5, 9], [5, 13], [5, 17], [5, 21], [5, 25], [9, -3], [9, 1], [9, 5], [9, 9], [9, 13], [9, 17], [9, 21], [9, 25], [13, -3], [13, 1], [13, 5], [13, 9], [13, 13], [13, 17], [13, 21], [13, 25], [17, -3], [17, 1], [17, 5], [17, 9], [17, 13], [17, 17], [17, 21], [17, 25], [21, -3], [21, 1], [21, 5], [21, 9], [21, 13], [21, 17], [21, 21], [21, 25], [25, -3], [25, 1], [25, 5], [25, 9], [25, 13], [25, 17], [25, 21], [25, 25]])
+#         else:
+#             start_ind, _ = compute_receptive_fields_start_ind_extrap(
+#                 CNNMnistTrunk, (1,)+image_shape)
+#         return start_ind
+
+#     @classmethod
+#     def get_XL(self, image_shape=(28, 28, 1)):
+#         if image_shape[:2] not in [(14, 14), (28, 28), (32, 32)]:
+#             raise ValueError('CNNMnistTrunk.getXL() invalid image shape')
+#         patch_size = (10, 10)
+#         start_ind = self.get_start_ind(image_shape)
+#         scal, transl = startind_to_scal_transl(
+#             image_shape[:2], patch_size, start_ind)
+#         scal = np.repeat(scal[np.newaxis, ...], len(transl), axis=0)
+#         XL = np.column_stack([scal, transl])
+#         return XL
+
+
 class CNNMnistTrunk(nn.Module):
     # in_shape: (1, 28, 28, 1)
     # receptive field: (10, 10)
@@ -2214,17 +2276,7 @@ class CNNMnistTrunk(nn.Module):
         return x
 
     def gz(self, x):
-        if x.ndim == 3:
-            x = x[..., np.newaxis]  # add color channel
-        x = np.pad(x, pad_width=((0, 0), (1, 1), (1, 1), (0, 0)),
-                   mode='constant',
-                   constant_values=0)
-        x = self.__call__(x)
-        if x.shape[1:3] != (3, 3):
-            raise ValueError(
-                'CNNMnistTrunk.gz(x) does not have correct shape')
-        x = x[:, 1, 1, :].squeeze()
-        return x
+        return compute_patch_response(self, x)
 
     @property
     def receptive_field(self):
@@ -2256,6 +2308,56 @@ class CNNMnistTrunk(nn.Module):
         XL = np.column_stack([scal, transl])
         return XL
 
+
+gz_info = [
+    (CNNMnistTrunk,    CNNMnistTrunk, (1,  1), (1, 1), (3, 3), 10),
+    (BagNet18x11Trunk, BagNetTrunk,   (10, 0), (1, 1), (2, 2), 11),
+    (BagNet18x19Trunk, BagNetTrunk,   (10, 0), (1, 1), (2, 2), 19),
+    (BagNet18x35Trunk, BagNetTrunk,   (10, 0), (1, 1), (3, 3), 35),
+    (BagNet18x47Trunk, BagNetTrunk,   (1, 10), (1, 1), (4, 4), 47), # not exactly match, but close ...
+    (BagNet18x63Trunk, BagNetTrunk,   (9,  2), (2, 2), (5, 5), 63), # not exactly match, but close ...
+    (BagNet18x95Trunk, BagNetTrunk,   (9,  2), (3, 3), (7, 7), 95), # not exactly match, but cloee ...
+]
+
+
+
+def compute_patch_response(m, x):
+    """ Computes `m(x)` where `m` is some patch response function
+            where patch `x` is first padded, encoded, and corresponding 
+            locations of embedding retrieved  
+    """ 
+    if isinstance(m, LayerIdentity):
+        return x
+
+
+    if x.ndim == 3:
+        x = x[..., np.newaxis]
+    if x.ndim != 4:
+        raise ValueError(
+            'Input patch should have `ndim`=4')    
+    if x.shape[1:1+2] != ( m.receptive_field,
+                           m.receptive_field ):
+        raise ValueError(
+            'Input patch should be same as models receptive field')
+
+    filtered = list(filter(lambda x: isinstance(m, x[1]) and \
+                           m.receptive_field==x[5], gz_info))
+
+    if len(filtered) != 1:
+        raise ValueError('Cannot find corresponding model entry')
+
+    pad_hw, spatial_coord, out_shape = filtered[0][2:2+3]
+
+    x = np.pad(x, pad_width=((0, 0), pad_hw, pad_hw, (0, 0)),
+                  mode='constant', constant_values=0)
+
+    x = m.__call__(x)
+    if x.shape[1:1+2] != out_shape:
+        raise ValueError('gz(x) does not have correct shape')    
+
+    x = x[:, spatial_coord[0], spatial_coord[1], :]
+    
+    return x
 
 
 def compute_receptive_fields(model_def, in_shape, spike_loc=None):
