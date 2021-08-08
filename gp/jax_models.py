@@ -574,3 +574,68 @@ def print_num_params():
         num_params = pytree_num_parameters(params['params'])
         print(f'{name:20}: {num_params/1e6:5.2f} M')
         
+
+
+
+## Regular Convolutional Networks 
+
+
+class CNN(nn.Module):
+
+    @nn.compact
+    def __call__(self, x):
+        conv = partial(nn.Conv, kernel_size=(4, 4), strides=(2, 2))
+        assert(x.shape[1] == 224 and x.shape[2] == 224)
+        x = x.reshape(-1, 224, 224, 1)
+        # (1, 224, 224, 1)
+        x = conv(features=16)(x)
+        x = nn.relu(x)
+        x = conv(features=32)(x)
+        x = nn.relu(x)
+        x = conv(features=64)(x)
+        x = nn.relu(x)
+        x = conv(features=128)(x)
+        x = nn.relu(x)
+        # (1, 14, 14, 128)
+        x = np.mean(x, axis=(1, 2))
+        # (1, 128)
+        return x
+
+
+class CNNMnist(nn.Module):
+    output_dim: int = 10
+
+    @nn.compact
+    def __call__(self, x):
+        x = nn.Conv(features=32, kernel_size=(3, 3))(x)
+        x = nn.relu(x)
+        x = nn.avg_pool(x, window_shape=(2, 2), strides=(2, 2))
+        x = nn.Conv(features=64, kernel_size=(3, 3))(x)
+        x = nn.relu(x)
+        x = nn.avg_pool(x, window_shape=(2, 2), strides=(2, 2))
+        x = x.reshape((x.shape[0], -1))
+        x = nn.Dense(features=128)(x)
+        x = nn.relu(x)
+        x = nn.Dense(features=self.output_dim)(x)
+        return x
+
+
+class CNNMnistTrunk(nn.Module):
+    # in_shape: (1, 28, 28, 1)
+    # receptive field: (10, 10)
+
+    @nn.compact
+    def __call__(self, x):
+        # (N, H, W, C)
+        x = nn.Conv(features=32, kernel_size=(3, 3))(x)
+        x = nn.relu(x)
+        x = nn.avg_pool(x, window_shape=(2, 2), strides=(2, 2))
+        x = nn.Conv(features=64, kernel_size=(3, 3))(x)
+        x = nn.relu(x)
+        x = nn.avg_pool(x, window_shape=(2, 2), strides=(2, 2))
+        # (N, Px, Py, L)
+        return x
+
+    @property
+    def receptive_field(self):
+        return 10

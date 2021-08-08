@@ -36,9 +36,15 @@ __latexindent_temp.tex
 
 # data
 *.pkl
+*.npy
+
+# extra files
+gp/bagnet.py
+gp/resnet.py
 
 # external library 
 knockoff/external
 registration/output
 registration/output_*
 registration/writeup2
+

@@ -24,7 +24,7 @@ def get_config_base():
     config.output_dim = 2
 
     # {None, 'CNNMnist'}
-    config.patch_encoder = 'CNNMnist'
+    config.patch_encoder = 'CNNMnistTrunk'
 
     # Place inducing inputs over space of patches
     #     Usually set to True, for computational efficiency
@@ -101,11 +101,11 @@ def get_model_cls(key, config, X):
         kl_cls = partial(CovConstant, output_scaling=False)
 
 
-    available_encoders = CovPatchEncoder.get_available_encoders()
-    if config.patch_encoder in available_encoders:
-        g_cls = available_encoders[config.patch_encoder]
+    encoder_info = find_encoder_info(config.patch_encoder)
+    if encoder_info is not None:
+        g_cls = encoder_info.model_def
         kg_cls = partial(CovPatchEncoder, encoder=config.patch_encoder,
-                                          XL_init_fn=partial(g_cls.get_XL,
+                                          XL_init_fn=partial(encoder_info.get_XL,
                                                              image_shape=config.image_shape),
                                           kp_cls=CovSE,
                                           kl_cls=kl_cls)

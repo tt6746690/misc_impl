@@ -436,13 +436,14 @@ class CovPatch(CovPatchBase):
 class CovPatchEncoder(CovPatchBase):
     """ Patch based kernel where patch based responses
             are computed using an encoder, e.g. bagnet """
-    encoder: 'str' = 'CNNMnist'
+    encoder: 'str' = 'CNNMnistTrunk'
     XL_init_fn: Callable = None
 
     def setup(self):
-        if self.encoder not in self.available_encoders:
+        if not any([self.encoder == x.name for x in encoder_infos]):
             raise ValueError(
-                f'CovPatchEncoder.encoder should be in {list(patch_encoders.keys())}')
+                f'CovPatchEncoder.encoder={self.encoder} should '
+                f'be in {[x.name for x in encoder_infos]}')
         if getattr(self, 'g', None) is not None:
             raise ValueError('`CovPatchEncoder.g` should not be implemented')
         self.kp = self.kp_cls()
@@ -451,7 +452,8 @@ class CovPatchEncoder(CovPatchBase):
         if self.XL_init_fn is not None:
             self.XL = self.XL_init_fn()
         else:
-            self.XL = self.available_encoders[self.encoder].get_XL()
+            encoder_info = find_encoder_info(self.encoder)
+            self.XL = encoder_info.get_XL()
 
     def proc_image(self, X):
         # (N, Px, Py, L)
@@ -476,14 +478,6 @@ class CovPatchEncoder(CovPatchBase):
         else:
             Xp, XL = X, X
         return Xp, XL
-
-    @property
-    def available_encoders(self):
-        return CovPatchEncoder.get_available_encoders()
-
-    @classmethod
-    def get_available_encoders(self):
-        return {'CNNMnist': CNNMnistTrunk, }
 
 
 class CovConvolutional(Kernel):
@@ -807,10 +801,10 @@ class CovMultipleOutputIndependent(Kernel):
 
         if isinstance(self.ks[0], CovConvolutional) and \
                 self.ks[0].inducing_patch == True and \
-                check_patch_response_impl(self.g) is None:
+                find_encoder_info(self.g) is None:
             raise ValueError(f'`CovConvolutional(inducing_patch=True)`'
                              f'requires `compute_patch_response(g, xp)` implemented',
-                             f'{check_patch_response_impl(self.g)}')
+                             f'{find_encoder_info(self.g)}')
 
     def K(self, X, Y=None):
         Ks = np.stack([k(X, Y, full_cov=True) for k in self.ks])   # (P, N, N')
@@ -1607,7 +1601,7 @@ def get_init_patches_transform(key, X, M, image_shape, patch_shape, trunk_def, i
         cent = None
     elif init_method == 'kmeans':
         # Determine #patches from an image
-        start_ind = trunk_def.get_start_ind(image_shape)
+        start_ind = model_get_start_ind(trunk_def(), image_shape)
         patches = extract_patches_2d_startind_vmap(X[:1], patch_shape, start_ind)
         P = patches.shape[1]
         # Extract patches
@@ -2157,108 +2151,112 @@ def kl_mvn_tril_zero_mean_prior(μ0, L0, L1):
     return kl
 
 
-class CNN(nn.Module):
-
-    @nn.compact
-    def __call__(self, x):
-        conv = partial(nn.Conv, kernel_size=(4, 4), strides=(2, 2))
-        assert(x.shape[1] == 224 and x.shape[2] == 224)
-        x = x.reshape(-1, 224, 224, 1)
-        # (1, 224, 224, 1)
-        x = conv(features=16)(x)
-        x = nn.relu(x)
-        x = conv(features=32)(x)
-        x = nn.relu(x)
-        x = conv(features=64)(x)
-        x = nn.relu(x)
-        x = conv(features=128)(x)
-        x = nn.relu(x)
-        # (1, 14, 14, 128)
-        x = np.mean(x, axis=(1, 2))
-        # (1, 128)
-        return x
-
-
-class CNNMnist(nn.Module):
-    output_dim: int = 10
-
-    @nn.compact
-    def __call__(self, x):
-        x = nn.Conv(features=32, kernel_size=(3, 3))(x)
-        x = nn.relu(x)
-        x = nn.avg_pool(x, window_shape=(2, 2), strides=(2, 2))
-        x = nn.Conv(features=64, kernel_size=(3, 3))(x)
-        x = nn.relu(x)
-        x = nn.avg_pool(x, window_shape=(2, 2), strides=(2, 2))
-        x = x.reshape((x.shape[0], -1))
-        x = nn.Dense(features=128)(x)
-        x = nn.relu(x)
-        x = nn.Dense(features=self.output_dim)(x)
-        return x
-
-
-class CNNMnistTrunk(nn.Module):
-    # in_shape: (1, 28, 28, 1)
-    # receptive field: (10, 10)
-
-    @nn.compact
-    def __call__(self, x):
-        # (N, H, W, C)
-        x = nn.Conv(features=32, kernel_size=(3, 3))(x)
-        x = nn.relu(x)
-        x = nn.avg_pool(x, window_shape=(2, 2), strides=(2, 2))
-        x = nn.Conv(features=64, kernel_size=(3, 3))(x)
-        x = nn.relu(x)
-        x = nn.avg_pool(x, window_shape=(2, 2), strides=(2, 2))
-        # (N, Px, Py, L)
-        return x
-
-    @property
-    def receptive_field(self):
-        return 10
-
-    @classmethod
+@dataclass
+class EncoderInfo:
+    
+    name: str
+    model_def: Callable
+    model_type: any
+    receptive_field: int
+    # padding/coordinate information are needed when
+    #    computing patch response via `compute_patch_response`
+    pad_hw: Tuple[int]
+    z_spatial_coord: Tuple[int]
+    z_shape: Tuple[int]
+    z_len: Tuple[int]
+    # Typical input image side lengths 
+    #     when using the encoder, used to
+    #     precompute `start_ind`
+    start_ind_input_len: Sequence[int]
+        
     def get_start_ind(self, image_shape):
-        if  image_shape[:2] == (14, 14):
-            start_ind = np.array([[0, 0], [0, 1], [0, 5], [1, 0], [
-                                 1, 1], [1, 5], [5, 0], [5, 1], [5, 5]])
-        elif image_shape[:2] == (28, 28):
-            start_ind = np.array([[-3, -3], [-3, 1], [-3, 5], [-3, 9], [-3, 13], [-3, 17], [-3, 21], [1, -3], [1, 1], [1, 5], [1, 9], [1, 13], [1, 17], [1, 21], [5, -3], [5, 1], [5, 5], [5, 9], [5, 13], [5, 17], [5, 21], [9, -3], [9, 1], [9, 5], [9, 9], [9, 13], [9, 17], [9, 21], [13, -3], [13, 1], [13, 5], [13, 9], [13, 13], [13, 17], [13, 21], [17, -3], [17, 1], [17, 5], [17, 9], [17, 13], [17, 17], [17, 21], [21, -3], [21, 1], [21, 5], [21, 9], [21, 13], [21, 17], [21, 21]])
-        elif image_shape[:2] == (32, 32):
-            start_ind = np.array([[-3, -3], [-3, 1], [-3, 5], [-3, 9], [-3, 13], [-3, 17], [-3, 21], [-3, 25], [1, -3], [1, 1], [1, 5], [1, 9], [1, 13], [1, 17], [1, 21], [1, 25], [5, -3], [5, 1], [5, 5], [5, 9], [5, 13], [5, 17], [5, 21], [5, 25], [9, -3], [9, 1], [9, 5], [9, 9], [9, 13], [9, 17], [9, 21], [9, 25], [13, -3], [13, 1], [13, 5], [13, 9], [13, 13], [13, 17], [13, 21], [13, 25], [17, -3], [17, 1], [17, 5], [17, 9], [17, 13], [17, 17], [17, 21], [17, 25], [21, -3], [21, 1], [21, 5], [21, 9], [21, 13], [21, 17], [21, 21], [21, 25], [25, -3], [25, 1], [25, 5], [25, 9], [25, 13], [25, 17], [25, 21], [25, 25]])
-        else:
-            start_ind, _ = compute_receptive_fields_start_ind_extrap(
-                CNNMnistTrunk, (1,)+image_shape)
-        return start_ind
-
-    @classmethod
-    def get_XL(self, image_shape=(28, 28, 1)):
-        if image_shape[:2] not in [(14, 14), (28, 28), (32, 32)]:
-            raise ValueError('CNNMnistTrunk.getXL() invalid image shape')
-        patch_size = (10, 10)
+        if len(image_shape) != 2 and image_shape[0]!=image_shape[1]:
+            raise ValueError(
+                'EncoderInfo.get_start_ind() image_shape should'
+                'be a 2-Tuple of same values')
+        start_inds = model_start_ind_load()
+        key = (self.name, image_shape[0])
+        if key not in start_inds:
+            raise ValueError(
+                f'{key} not in precomputed `start_inds`')
+        return start_inds[key]
+    
+    def get_XL(self, image_shape):
+        if len(image_shape) != 2 and image_shape[0]!=image_shape[1]:
+            raise ValueError(
+                'EncoderInfo.get_XL() image_shape should'
+                'be a 2-Tuple of same values')
+        patch_shape = (self.receptive_field,
+                       self.receptive_field)
         start_ind = self.get_start_ind(image_shape)
         scal, transl = startind_to_scal_transl(
-            image_shape[:2], patch_size, start_ind)
+            image_shape, patch_shape, start_ind)
         scal = np.repeat(scal[np.newaxis, ...], len(transl), axis=0)
         XL = np.column_stack([scal, transl])
         return XL
+    
 
-
-patch_response_info = [
-    (CNNMnistTrunk,    CNNMnistTrunk, (1,  1), (1, 1), (3, 3), 10),
-    (BagNet18x11Trunk, BagNetTrunk,   (10, 0), (1, 1), (2, 2), 11),
-    (BagNet18x19Trunk, BagNetTrunk,   (10, 0), (1, 1), (2, 2), 19),
-    (BagNet18x35Trunk, BagNetTrunk,   (10, 0), (1, 1), (3, 3), 35),
-    (BagNet18x47Trunk, BagNetTrunk,   (1, 10), (1, 1), (4, 4), 47), # not exactly match, but close ...
-    (BagNet18x63Trunk, BagNetTrunk,   (9,  2), (2, 2), (5, 5), 63), # not exactly match, but close ...
-    (BagNet18x95Trunk, BagNetTrunk,   (9,  2), (3, 3), (7, 7), 95), # not exactly match, but cloee ...
+encoder_infos = [
+    EncoderInfo('CNNMnistTrunk',    CNNMnistTrunk,  CNNMnistTrunk, 10,  (1,  1), (1, 1), (3, 3),   64, [14,28,32]),
+    EncoderInfo('BagNet18x11Trunk', BagNet18x11Trunk, BagNetTrunk, 11,  (10, 0), (1, 1), (2, 2),  512, [224]),
+    EncoderInfo('BagNet18x19Trunk', BagNet18x19Trunk, BagNetTrunk, 19,  (10, 0), (1, 1), (2, 2),  512, [224]),
+    EncoderInfo('BagNet18x35Trunk', BagNet18x35Trunk, BagNetTrunk, 35,  (10, 0), (1, 1), (3, 3),  512, [224]),
+    EncoderInfo('BagNet18x47Trunk', BagNet18x47Trunk, BagNetTrunk, 47,  (1, 10), (1, 1), (4, 4),  512, [224]),
+    EncoderInfo('BagNet18x63Trunk', BagNet18x63Trunk, BagNetTrunk, 63,  (9,  2), (2, 2), (5, 5),  512, [224]),
+    EncoderInfo('BagNet18x95Trunk', BagNet18x95Trunk, BagNetTrunk, 95,  (9,  2), (3, 3), (7, 7),  512, [224]),
+    EncoderInfo('BagNet50x11Trunk', BagNet50x11Trunk, BagNetTrunk, 11,  (10, 0), (1, 1), (2, 2), 2048, [224]),
+    EncoderInfo('BagNet50x19Trunk', BagNet50x19Trunk, BagNetTrunk, 19,  (10, 0), (1, 1), (2, 2), 2048, [224]),
+    EncoderInfo('BagNet50x35Trunk', BagNet50x35Trunk, BagNetTrunk, 35,  (10, 0), (1, 1), (3, 3), 2048, [224]),
+    EncoderInfo('BagNet50x47Trunk', BagNet50x47Trunk, BagNetTrunk, 47,  (1, 10), (1, 1), (4, 4), 2048, [224]),
+    EncoderInfo('BagNet50x63Trunk', BagNet50x63Trunk, BagNetTrunk, 63,  (9,  2), (2, 2), (5, 5), 2048, [224]),
+    EncoderInfo('BagNet50x95Trunk', BagNet50x95Trunk, BagNetTrunk, 95,  (9,  2), (3, 3), (7, 7), 2048, [224]),
 ]
 
 
-def check_patch_response_impl(m):
-    """ Checks if model `m` implements patch response """
-    filtered = list(filter(lambda x: isinstance(m, x[1]) and \
-                           m.receptive_field==x[5], patch_response_info))
+def model_start_ind_compute_and_save(encoder_infos,
+                                     start_ind_info_path='start_ind_info.npy'):
+    start_inds = {}
+    for enc_info in encoder_infos:
+        name = enc_info.name
+        model_def = enc_info.model_def
+        if name.startswith('BagNet'):
+            model_def = partial(model_def, disable_bn=True)
+        for im_len in enc_info.start_ind_input_len:
+            print(f'proc {name}, {im_len}')
+            start_ind, rf = compute_receptive_fields_start_ind_extrap(
+                model_def, (1, im_len, im_len, 1))
+            start_inds[(name, im_len)] = start_ind
+    np.save(start_ind_info_path, start_inds)
+    return start_inds
+
+        
+def model_start_ind_load(start_ind_info_path='start_ind_info.npy'):
+    return np.load(start_ind_info_path, allow_pickle=True)[()]
+
+
+def model_get_start_ind(m, image_shape):
+    encoder_info = find_encoder_info(m)
+    if encoder_info is None:
+        raise ValueError('Cannot find corresponding model entry')
+    start_ind = encoder_info.get_start_ind(image_shape)
+    return start_ind
+
+
+def find_encoder_info(m):
+    """ Checks if model `m` implements patch response 
+            `m` can be either an instantiation or name
+    """
+    if isinstance(m, str):
+        filtered = list(filter(lambda x: x.name == m, encoder_infos))
+    else:
+        filtered = list(filter(lambda x: isinstance(m, x.model_type) and \
+                               m.receptive_field==x.receptive_field, encoder_infos))
+        if len(filtered) > 1:
+            if not all([x.model_type==BagNetTrunk for x in filtered]):
+                raise ValueError('len(filtered)>1 should only happen'
+                                 'to distinguish resnet18|50 backbones')
+            filtered = list(filter(lambda x: x.model_def().stage_sizes == m.stage_sizes,
+                                   filtered))
     if len(filtered) == 1:
         return filtered[0]
     else:
@@ -2284,20 +2282,20 @@ def compute_patch_response(m, x):
         raise ValueError(
             'Input patch should be same as models receptive field')
 
-    entry = check_patch_response_impl(m)
-    if entry is None:
+    encoder_info = find_encoder_info(m)
+    if encoder_info is None:
         raise ValueError('Cannot find corresponding model entry')
-
-    pad_hw, spatial_coord, out_shape = entry[2:2+3]
-
-    x = np.pad(x, pad_width=((0, 0), pad_hw, pad_hw, (0, 0)),
+        
+    pad_width = ((0, 0), encoder_info.pad_hw, encoder_info.pad_hw, (0, 0))
+    x = np.pad(x, pad_width=pad_width,
                   mode='constant', constant_values=0)
 
     x = m.__call__(x)
-    if x.shape[1:1+2] != out_shape:
+    if x.shape[1:1+2] != encoder_info.z_shape:
         raise ValueError('m(pad(x)) does not have correct shape')
-
-    x = x[:, spatial_coord[0], spatial_coord[1], :]
+        
+    x = x[:, encoder_info.z_spatial_coord[0],
+             encoder_info.z_spatial_coord[1], :]
     
     return x
 

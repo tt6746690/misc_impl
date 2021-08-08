@@ -383,13 +383,15 @@ class TestKernel(unittest.TestCase):
         xl = random.normal(key, (Np, 4))
         yl = random.normal(key, (Mp, 4))
 
-        g_cls = CNNMnistTrunk
-        kg_cls = CovPatchEncoder
+        encoder_info = find_encoder_info('CNNMnistTrunk')
+        g_cls = encoder_info.model_def
+        XL_init_fn = partial(encoder_info.get_XL, image_shape=image_shape[:2])
+        kg_cls = partial(CovPatchEncoder, XL_init_fn=XL_init_fn)
         kf_cls = partial(CovConvolutional, kg_cls=kg_cls,
                                            inducing_patch=False)
         k_cls = partial(CovMultipleOutputIndependent, k_cls=kf_cls,
-                                                    output_dim=O,
-                                                    g_cls=g_cls)
+                                                      output_dim=O,
+                                                      g_cls=g_cls)
         k = k_cls()
         params = k.init(key, x)
 
@@ -405,8 +407,8 @@ class TestKernel(unittest.TestCase):
         kf_cls = partial(CovConvolutional, kg_cls=kg_cls,
                                            inducing_patch=True)
         k_cls = partial(CovMultipleOutputIndependent, k_cls=kf_cls,
-                                                    output_dim=O,
-                                                    g_cls=g_cls)
+                                                      output_dim=O,
+                                                      g_cls=g_cls)
         k = k_cls()
         params = k.init(key, x)
 
@@ -426,12 +428,13 @@ class TestKernel(unittest.TestCase):
         #      and use non-constant location kernel kl
         xpl = (xp, xl)
         ypl = (yp, yl)
-        kg_cls = partial(CovPatchEncoder, kl_cls=CovSE)
+        kg_cls = partial(CovPatchEncoder, XL_init_fn=XL_init_fn,
+                                          kl_cls=CovSE)
         kf_cls = partial(CovConvolutional, kg_cls=kg_cls,
                                            inducing_patch=True)
         k_cls = partial(CovMultipleOutputIndependent, k_cls=kf_cls,
-                                                    output_dim=O,
-                                                    g_cls=g_cls)
+                                                      output_dim=O,
+                                                      g_cls=g_cls)
         k = k_cls()
         params = k.init(key, x)
 
@@ -580,7 +583,7 @@ class TestKernel(unittest.TestCase):
 class TestJaxModels(unittest.TestCase):
 
     def test_compute_patch_respose(self):
-        
+    
         patch_response_info_ = [
             (CNNMnistTrunk,    CNNMnistTrunk, (1,  1), (1, 1), (3, 3), 10, 64),
             (BagNet18x11Trunk, BagNetTrunk,   (10, 0), (1, 1), (2, 2), 11, 512),
@@ -596,20 +599,33 @@ class TestJaxModels(unittest.TestCase):
         n = 1
 
         for ( model_def, model_type, pad_hw, spatial_coord, z_shape, receptive_field, feat_len ) in patch_response_info_:
-            
+
             in_shape = (n, receptive_field, receptive_field, 1)
             x = random.normal(key, in_shape)
-            
+
             if model_type == BagNetTrunk:
                 model_def = partial(model_def, disable_bn=True)
-                
+
             m = model_def()
             m = m.bind(m.init(key, x))
             z = compute_patch_response(m, x)
             
+            ## shape agrees
+
             shape_correct = ( z.shape == (n, feat_len) )
             self.assertTrue(shape_correct)
-
+            
+            ## padding different values do not change output much 
+            
+            xp1 = np.pad(x, pad_width=((0,0), pad_hw, pad_hw, (0, 0)), constant_values=0)
+            xp2 = np.pad(x, pad_width=((0,0), pad_hw, pad_hw, (0, 0)), constant_values=100)
+            z1 = m(xp1).squeeze()
+            z2 = m(xp2).squeeze()
+            norm = np.linalg.norm(z1[spatial_coord]-z2[spatial_coord])
+            
+            norm_small = ( norm < 5 )
+            self.assertTrue(norm_small)
+            
 
 
 class TestKL(unittest.TestCase):
