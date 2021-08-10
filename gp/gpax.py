@@ -453,7 +453,7 @@ class CovPatchEncoder(CovPatchBase):
             self.XL = self.XL_init_fn()
         else:
             encoder_info = find_encoder_info(self.encoder)
-            self.XL = encoder_info.get_XL()
+            self.XL = encoder_info.get_XL(image_shape=(28, 28))
 
     def proc_image(self, X):
         # (N, Px, Py, L)
@@ -2163,10 +2163,9 @@ class EncoderInfo:
     pad_hw: Tuple[int]
     z_spatial_coord: Tuple[int]
     z_shape: Tuple[int]
-    z_len: Tuple[int]
-    # Typical input image side lengths 
-    #     when using the encoder, used to
-    #     precompute `start_ind`
+    z_len: int
+    # Typical input image side lengths when using 
+    #     the encoder, used to precompute `start_ind`
     start_ind_input_len: Sequence[int]
         
     def get_start_ind(self, image_shape):
