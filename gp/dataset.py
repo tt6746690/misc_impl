@@ -129,3 +129,17 @@ def XY_subset(X, Y, Y_subset):
     Y = to_new_label[Y]
     
     return X, Y
+
+
+def get_dataset(dataset, Y_subset=None):
+    
+    if dataset == 'mnist':
+        X_train, y_train, X_test, y_test = load_mnist()
+    if dataset == 'cifar10':
+        X_train, y_train, X_test, y_test = load_cifar10()
+        
+    if Y_subset is not None:
+        X_train, y_train = XY_subset(X_train, y_train, Y_subset)
+        X_test, y_test = XY_subset(X_test, y_test, Y_subset)
+
+    return X_train, y_train, X_test, y_test

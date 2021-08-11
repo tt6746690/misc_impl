@@ -1,4 +1,4 @@
-import math
+import os, math
 from typing import Any, Callable, Sequence, Optional, Tuple, Union, List, Iterable
 import functools
 import itertools
@@ -15,6 +15,7 @@ import flax
 from flax.core import freeze, unfreeze
 from flax import optim, struct
 from flax import linen as nn
+from flax.training import train_state, checkpoints
 
 from jax_models import *
 
@@ -2780,6 +2781,20 @@ def pytree_load(tree, path):
         output = pickle.load(file)  # onp.ndarray
     new_tree = serialization.from_state_dict(tree, output)
     return new_tree
+
+
+def checkpoint_save(work_dir, state, step=None):
+    ckpt_dir = os.path.join(work_dir, 'checkpoints')
+    if step is None:
+        step = int(state.step)
+    return checkpoints.save_checkpoint(
+        ckpt_dir, state, step, keep=1e3)
+
+
+def checkpoint_restore(work_dir, state):
+    ckpt_dir = os.path.join(work_dir, 'checkpoints')
+    return checkpoints.restore_checkpoint(
+        ckpt_dir, state)
 
 
 def is_symm(A, rtol=1e-05, atol=1e-08):

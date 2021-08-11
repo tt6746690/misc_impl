@@ -583,7 +583,7 @@ def print_num_params():
 class CNN(nn.Module):
 
     @nn.compact
-    def __call__(self, x):
+    def __call__(self, x, train = None):
         conv = partial(nn.Conv, kernel_size=(4, 4), strides=(2, 2))
         assert(x.shape[1] == 224 and x.shape[2] == 224)
         x = x.reshape(-1, 224, 224, 1)
@@ -603,10 +603,10 @@ class CNN(nn.Module):
 
 
 class CNNMnist(nn.Module):
-    output_dim: int = 10
+    num_classes: int = 10
 
     @nn.compact
-    def __call__(self, x):
+    def __call__(self, x, train = None):
         x = nn.Conv(features=32, kernel_size=(3, 3))(x)
         x = nn.relu(x)
         x = nn.avg_pool(x, window_shape=(2, 2), strides=(2, 2))
@@ -616,7 +616,7 @@ class CNNMnist(nn.Module):
         x = x.reshape((x.shape[0], -1))
         x = nn.Dense(features=128)(x)
         x = nn.relu(x)
-        x = nn.Dense(features=self.output_dim)(x)
+        x = nn.Dense(features=self.num_classes)(x)
         return x
 
 
@@ -625,7 +625,7 @@ class CNNMnistTrunk(nn.Module):
     # receptive field: (10, 10)
 
     @nn.compact
-    def __call__(self, x):
+    def __call__(self, x, train = None):
         # (N, H, W, C)
         x = nn.Conv(features=32, kernel_size=(3, 3))(x)
         x = nn.relu(x)
@@ -639,3 +639,13 @@ class CNNMnistTrunk(nn.Module):
     @property
     def receptive_field(self):
         return 10
+
+
+def get_jax_model_def(model):
+    try:
+        return globals()[model]
+    except:
+        raise ValueError(
+            f'{model} not implemented in `jax_models.py`')
+
+

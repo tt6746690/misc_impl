@@ -41,6 +41,7 @@ __latexindent_temp.tex
 # extra files
 gp/bagnet.py
 gp/resnet.py
+gp/results
 
 # external library 
 knockoff/external
