@@ -1,15 +1,23 @@
+-f https://download.pytorch.org/whl/torch_stable.html
+torch==1.9.0+cu111
+torchvision==0.10.0+cu111
+
+-f https://storage.googleapis.com/jax-releases/jax_releases.html
+jax[cuda111]
+
+# basics
+pytest
+pytest-xdist
+tabulate
 scipy
 scikit-learn
 numpy
 pandas
 matplotlib
-jax
-jaxlib
+
+# jax related
 flax
 optax
 jax-resnet
-tabulate
-pytest
-pytest-xdist
 ml-collections
 clu

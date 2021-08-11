@@ -190,7 +190,7 @@ def train_and_evaluate(config, work_dir):
     model = model_def(num_classes=config.num_classes)
 
     state = create_train_state(state_key, config, model)
-    step_offset, state = checkpoint_restore(work_dir, state)
+    step_offset, state = checkpoint_restore(config.ckpt_dir, state)
     step_offset = 0 if step_offset is None \
         else step_offset+1
 
@@ -205,9 +205,10 @@ def train_and_evaluate(config, work_dir):
         periodic_actions.Profile(logdir=config.metrics_dir,
                                  num_profile_steps=5)
     ]
-    train_metrics = []
 
     for epoch in range(step_offset, config.n_epochs):
+
+        train_metrics = []
         for it in range(train_n_batches):
             batch = next(train_batches)
             step = epoch*train_n_batches+it
@@ -225,7 +226,7 @@ def train_and_evaluate(config, work_dir):
                                               for k, v in train_metrics.items()})
                 train_metrics = []
 
-        checkpoint_save(work_dir, state, step=epoch)
+        checkpoint_save(config.ckpt_dir, state, step=epoch)
         test_metrics = eval_model(state, data_test)
         test_metrics['epoch'] = epoch
         writer.write_scalars(epoch+1, {f'eval/{k}': v

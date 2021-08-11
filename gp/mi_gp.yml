@@ -4,9 +4,6 @@ channels:
     - conda-forge
 dependencies:
     - python=3.7
-    - pytorch::pytorch
-    - pytorch::torchvision
-    - gpytorch
     - jupyter
     - nb_conda
 

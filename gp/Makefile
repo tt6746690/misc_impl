@@ -22,6 +22,9 @@ pytest_time:
 create_env:
 	conda env create -f mi_gp.yml
 
+remove_env:
+	conda env remove --name mi_gp
+
 install_jax:
 	# pip install --upgrade jax==0.2.3 jaxlib==0.1.56+cuda100 -f https://storage.googleapis.com/jax-releases/jax_releases.html
 	# pip install flax==0.2.2
@@ -31,11 +34,15 @@ install_jax:
 	pip install --upgrade jax jaxlib==0.1.66+cuda111 -f https://storage.googleapis.com/jax-releases/jax_releases.html
 	pip install flax
 
+install_torch:
+	pip install torch==1.9.0+cu111 torchvision==0.10.0+cu111 -f https://download.pytorch.org/whl/torch_stable.html
+
 install_pkg_via_pip:
 	pip install -r requirements.txt
 
 setup:
 	create_env
+	install_torch
 	install_jax
 	install_pkg_via_pip
 
