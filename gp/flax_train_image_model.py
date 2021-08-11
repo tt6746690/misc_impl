@@ -11,7 +11,7 @@ from jax import random, device_put, vmap, vjp, jit
 import jax
 from absl import app, flags, logging
 from ml_collections import config_flags
-from collections import defaultdict
+from clu import metric_writers, periodic_actions
 from functools import partial
 from typing import (Any, Callable, Sequence, Optional,
                     Tuple, Union, List, Iterable)
@@ -109,9 +109,9 @@ def train_step(state, batch):
         batch_stats=mutable_state['batch_stats'],
         rng=state_rng)
     metrics = compute_metrics(logits, y)
-    log = {'loss': loss,
-           'accuracy': metrics['accuracy']}
-    return state, log
+    metrics = {'loss': loss,
+               'accuracy': metrics['accuracy']}
+    return state, metrics
 
 
 def eval_model(state, data_test):
@@ -161,6 +161,11 @@ def train_and_evaluate(config, work_dir):
     key = random.PRNGKey(0)
     key, state_key, data_key = random.split(key, 3)
 
+    # logging
+
+    writer = metric_writers.create_default_writer(
+        logdir=config.metrics_dir)
+
     # dataset
 
     Y_subset = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
@@ -173,8 +178,8 @@ def train_and_evaluate(config, work_dir):
 
     data_train = (X_train, y_train)
     data_test = (X_test, y_test)
-    print('shape (X_train, y_train): ',
-          X_train.shape, y_train.shape)
+    logging.info(f'shape (X_train, y_train): '
+                 f'{X_train.shape}, {y_train.shape}')
 
     train_n_batches, train_batches = get_data_stream(
         data_key, config.batch_size, data_train)
@@ -186,43 +191,62 @@ def train_and_evaluate(config, work_dir):
 
     state = create_train_state(state_key, config, model)
     step_offset, state = checkpoint_restore(work_dir, state)
+    step_offset = 0 if step_offset is None \
+        else step_offset+1
 
-    step_offset = 0 if step_offset is None else step_offset+1
     logging.info(f'Start at step_offset={step_offset}')
 
     # training/evaluation loop
 
-    for epoch in range(step_offset, config.n_epochs):
-        logs = defaultdict(list)
-        for it in range(train_n_batches):
-            step = epoch*train_n_batches+it
-            batch = next(train_batches)
-            state, log = train_step(state, batch)
-            variables = state.variables
+    hooks = [
+        periodic_actions.ReportProgress(
+            num_train_steps=config.n_epochs*train_n_batches,
+            every_steps=train_n_batches-1, writer=writer),
+        periodic_actions.Profile(logdir=config.metrics_dir,
+                                 num_profile_steps=5)
+    ]
+    train_metrics = []
 
-            for k, v in log.items():
-                logs[k].append(v)
-            if step % (train_n_batches//10) == 0:
-                avg_metrics = {k: np.mean(np.array(v))
-                               for k, v in logs.items()}
-                print(f'[{epoch:3}|{100*it/train_n_batches:5.2f}%]\t'
-                      f'Loss={avg_metrics["loss"]:.3f}\t'
-                      f'accuracy={avg_metrics["accuracy"]:.3f}\t')
+    for epoch in range(step_offset, config.n_epochs):
+        for it in range(train_n_batches):
+            batch = next(train_batches)
+            step = epoch*train_n_batches+it
+            for h in hooks:
+                h(step)
+
+            state, metrics = train_step(state, batch)
+            train_metrics.append(metrics)
+
+            if (step+1) % (train_n_batches//10) == 0:
+                train_metrics = jax.tree_map(lambda x: x.mean(),
+                                             stack_forest(train_metrics))
+                train_metrics['epoch'] = step/train_n_batches
+                writer.write_scalars(step+1, {f'train/{k}': v
+                                              for k, v in train_metrics.items()})
+                train_metrics = []
 
         checkpoint_save(work_dir, state, step=epoch)
-        metrics = eval_model(state, data_test)
-        print(f'[{epoch:3}] test \t'
-              f'Loss={metrics["loss"]:.3f}\t'
-              f'accuracy={metrics["accuracy"]:.3f}\t')
+        test_metrics = eval_model(state, data_test)
+        test_metrics['epoch'] = epoch
+        writer.write_scalars(epoch+1, {f'eval/{k}': v
+                                       for k, v in test_metrics.items()})
+        writer.flush()
 
 
 def main(argv):
     if len(argv) > 1:
         raise app.UsageError('Too many command-line arguments.')
 
+    logging.set_verbosity(logging.INFO)
+
     config = FLAGS.config
     work_dir = FLAGS.work_dir if (FLAGS.work_dir is not None) \
         else f'./results/{config.dataset}_{config.model}'
+
+    with config.unlocked():
+        config.work_dir = work_dir
+        config.metrics_dir = os.path.join(config.work_dir, 'metrics')
+        config.ckpt_dir = os.path.join(config.work_dir, 'checkpoints')
 
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "0"
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"

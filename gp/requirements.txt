@@ -1,4 +1,3 @@
-# Compatible with PyTorch=1.5.1
 scipy
 scikit-learn
 numpy
@@ -7,8 +6,10 @@ matplotlib
 jax
 jaxlib
 flax
+optax
+jax-resnet
 tabulate
 pytest
 pytest-xdist
 ml-collections
-jax-resnet
+clu

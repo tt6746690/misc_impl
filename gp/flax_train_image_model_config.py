@@ -7,16 +7,10 @@ def get_config_base():
     # runtime 
     config.gpu_id = '0'
     
-    # dataset 
-    config.dataset = 'cifar10'
-    
-    # model
-    config.model = 'CNNMnist'
-    
     # opitmization 
     config.learning_rate = .03
     config.batch_size = 64
-    config.n_epochs = 2
+    config.n_epochs = 1
     
     return config
 
@@ -24,8 +18,11 @@ def get_config_base():
 def get_config_mnist():
     
     config = get_config_base()
+
     config.image_shape = (28, 28, 1)
     config.dataset = 'mnist'
+
+    config.model = 'CNNMnist'
     config.num_classes = 10
     
     return config
@@ -34,8 +31,11 @@ def get_config_mnist():
 def get_config_cifar10():
     
     config = get_config_base()
+
     config.image_shape = (32, 32, 3)
     config.dataset = 'cifar10'
+
+    config.model = 'ResNet18'
     config.num_classes = 10
     
     return config

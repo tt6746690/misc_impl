@@ -19,6 +19,9 @@ pytest_time:
 	python -m pytest --collect-only
 
 
+create_env:
+	conda env create -f mi_gp.yml
+
 install_jax:
 	# pip install --upgrade jax==0.2.3 jaxlib==0.1.56+cuda100 -f https://storage.googleapis.com/jax-releases/jax_releases.html
 	# pip install flax==0.2.2
@@ -27,7 +30,14 @@ install_jax:
 
 	pip install --upgrade jax jaxlib==0.1.66+cuda111 -f https://storage.googleapis.com/jax-releases/jax_releases.html
 	pip install flax
-	
+
+install_pkg_via_pip:
+	pip install -r requirements.txt
+
+setup:
+	create_env
+	install_jax
+	install_pkg_via_pip
 
 autoremove:
 	pip install pip-autoremove

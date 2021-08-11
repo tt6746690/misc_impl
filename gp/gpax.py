@@ -2783,8 +2783,7 @@ def pytree_load(tree, path):
     return new_tree
 
 
-def checkpoint_latest_step(work_dir):
-    ckpt_dir = os.path.join(work_dir, 'checkpoints')
+def checkpoint_latest_step(ckpt_dir):
     path = checkpoints.latest_checkpoint(ckpt_dir)
     if path is not None:
         splits = os.path.basename(path).split('_')
@@ -2795,14 +2794,25 @@ def checkpoint_latest_step(work_dir):
         return None
 
 
-def checkpoint_restore(work_dir, state):
+def checkpoint_restore(ckpt_dir, state):
     """ Note `step` here represents `epochs` and potentially 
             different from `state.step` """
-    ckpt_dir = os.path.join(work_dir, 'checkpoints')
-    step = checkpoint_latest_step(work_dir)
+    step = checkpoint_latest_step(ckpt_dir)
     ckpt = checkpoints.restore_checkpoint(
         ckpt_dir, state, step=step)
     return step, ckpt
+
+
+def checkpoint_save(ckpt_dir, state, step=None):
+    if step is None:
+        step = int(state.step)
+    return checkpoints.save_checkpoint(
+        ckpt_dir, state, step=step)
+
+
+def stack_forest(forest):
+    stack_args = lambda *args: np.stack(args)
+    return jax.tree_multimap(stack_args, *forest)
 
 
 def is_symm(A, rtol=1e-05, atol=1e-08):
