@@ -6,10 +6,25 @@ nbconvert:
 test:
 	/Users/wpq/opt/miniconda3/envs/misc_impl/bin/python3 gpax_test.py -v
 
-train:
-	python flax_train_image_model.py \
-		--config=flax_train_image_model_config.py:mnist \
-		--config.gpu_id='2'
+train_mnist:
+	CUDA_VISIBLE_DEVICES=0 python flax_train_image_model.py \
+		--config=flax_train_image_model_config.py:mnist
+
+train_cifa10:
+	CUDA_VISIBLE_DEVICES=0 python flax_train_image_model.py \
+		--config=flax_train_image_model_config.py:cifar10 \
+		--config.model='CNNMnist' \
+		--config.n_epochs=50
+	CUDA_VISIBLE_DEVICES=1 python flax_train_image_model.py \
+		--config=flax_train_image_model_config.py:cifar10 \
+		--config.model='ResNet18' \
+		--config.n_epochs=50
+
+train_cub200:
+	CUDA_VISIBLE_DEVICES=0 python flax_train_image_model.py \
+		--config=flax_train_image_model_config.py:cub200 \
+		--config.model='ResNet18' \
+		--config.n_epochs=100
 
 pytest:
 	python -m pytest -v -n 2 --durations=10

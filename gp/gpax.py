@@ -2807,7 +2807,7 @@ def checkpoint_save(ckpt_dir, state, step=None):
     if step is None:
         step = int(state.step)
     return checkpoints.save_checkpoint(
-        ckpt_dir, state, step=step)
+        ckpt_dir, state, step=step, keep=1000)
 
 
 def stack_forest(forest):

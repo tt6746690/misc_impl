@@ -79,8 +79,8 @@ def load_mnist():
 
     X_train = proc_X(train_dataset.data)
     Y_train = proc_Y(train_dataset.targets)
-    X_test = proc_X(train_dataset.data)
-    Y_test = proc_Y(train_dataset.targets)
+    X_test = proc_X(test_dataset.data)
+    Y_test = proc_Y(test_dataset.targets)
 
     return X_train, Y_train, X_test, Y_test
 
@@ -109,8 +109,8 @@ def load_cifar10():
 
     X_train = proc_X(train_dataset.data)
     Y_train = proc_Y(train_dataset.targets)
-    X_test = proc_X(train_dataset.data)
-    Y_test = proc_Y(train_dataset.targets)
+    X_test = proc_X(test_dataset.data)
+    Y_test = proc_Y(test_dataset.targets)
 
     return X_train, Y_train, X_test, Y_test
 
